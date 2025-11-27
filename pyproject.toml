@@ -1,0 +1,36 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "entropy"
+version = "0.1.0"
+description = "Simulate how populations respond to scenarios"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "typer>=0.12.0",
+    "rich>=13.0.0",
+    "fastapi>=0.115.0",
+    "uvicorn>=0.32.0",
+    "openai>=1.50.0",
+    "numpy>=2.0.0",
+    "scipy>=1.14.0",
+    "networkx>=3.4.0",
+    "pydantic>=2.9.0",
+    "pydantic-settings>=2.6.0",
+    "python-dotenv>=1.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-asyncio>=0.24.0",
+]
+
+[project.scripts]
+entropy = "entropy.cli:app"
+
+[tool.hatch.build.targets.wheel]
+packages = ["entropy"]
+
