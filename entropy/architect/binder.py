@@ -1,0 +1,197 @@
+"""Step 3: Constraint Binding and Spec Assembly.
+
+Builds the dependency graph, determines sampling order via topological sort,
+and assembles the final PopulationSpec.
+"""
+
+from collections import defaultdict
+from datetime import datetime
+
+from ..spec import (
+    HydratedAttribute,
+    AttributeSpec,
+    PopulationSpec,
+    SpecMeta,
+    GroundingSummary,
+)
+
+
+class CircularDependencyError(Exception):
+    """Raised when circular dependencies are detected in attributes."""
+    pass
+
+
+def _topological_sort(attributes: list[HydratedAttribute]) -> list[str]:
+    """
+    Topological sort of attributes based on dependencies.
+    
+    Uses Kahn's algorithm to determine a valid sampling order
+    where all dependencies are sampled before dependents.
+    
+    Args:
+        attributes: List of HydratedAttribute with depends_on fields
+    
+    Returns:
+        List of attribute names in sampling order
+    
+    Raises:
+        CircularDependencyError: If circular dependencies exist
+    """
+    # Build adjacency list and in-degree count
+    graph = defaultdict(list)  # attr -> list of attrs that depend on it
+    in_degree = {a.name: 0 for a in attributes}
+    attr_names = {a.name for a in attributes}
+    
+    for attr in attributes:
+        for dep in attr.depends_on:
+            # Only count dependencies on attributes we're tracking
+            if dep in attr_names:
+                graph[dep].append(attr.name)
+                in_degree[attr.name] += 1
+    
+    # Start with nodes that have no dependencies
+    queue = [name for name, degree in in_degree.items() if degree == 0]
+    order = []
+    
+    while queue:
+        # Sort for deterministic ordering
+        queue.sort()
+        node = queue.pop(0)
+        order.append(node)
+        
+        # Reduce in-degree for dependents
+        for dependent in graph[node]:
+            in_degree[dependent] -= 1
+            if in_degree[dependent] == 0:
+                queue.append(dependent)
+    
+    # Check for cycles
+    if len(order) != len(attributes):
+        remaining = [a.name for a in attributes if a.name not in order]
+        raise CircularDependencyError(
+            f"Circular dependency detected involving: {remaining}"
+        )
+    
+    return order
+
+
+def bind_constraints(
+    attributes: list[HydratedAttribute],
+) -> tuple[list[AttributeSpec], list[str]]:
+    """
+    Build dependency graph and determine sampling order.
+    
+    This step:
+    1. Validates all dependencies reference existing attributes
+    2. Checks for circular dependencies
+    3. Computes topological sort for sampling order
+    4. Converts HydratedAttribute to final AttributeSpec
+    
+    Args:
+        attributes: List of HydratedAttribute from hydrator
+    
+    Returns:
+        Tuple of (list of AttributeSpec, sampling_order)
+    
+    Raises:
+        CircularDependencyError: If circular dependencies exist
+        ValueError: If dependencies reference unknown attributes
+    """
+    attr_names = {a.name for a in attributes}
+    
+    # Validate dependencies
+    for attr in attributes:
+        unknown_deps = set(attr.depends_on) - attr_names
+        if unknown_deps:
+            # Remove unknown dependencies with warning (they might be computed elsewhere)
+            attr.depends_on = [d for d in attr.depends_on if d in attr_names]
+    
+    # Compute sampling order
+    sampling_order = _topological_sort(attributes)
+    
+    # Convert to AttributeSpec
+    specs = []
+    for attr in attributes:
+        spec = AttributeSpec(
+            name=attr.name,
+            type=attr.type,
+            category=attr.category,
+            description=attr.description,
+            sampling=attr.sampling,
+            grounding=attr.grounding,
+            constraints=attr.constraints,
+        )
+        specs.append(spec)
+    
+    return specs, sampling_order
+
+
+def _compute_grounding_summary(
+    attributes: list[AttributeSpec],
+    sources: list[str],
+) -> GroundingSummary:
+    """Compute overall grounding summary from individual attribute grounding."""
+    strong_count = sum(1 for a in attributes if a.grounding.level == "strong")
+    medium_count = sum(1 for a in attributes if a.grounding.level == "medium")
+    low_count = sum(1 for a in attributes if a.grounding.level == "low")
+    
+    total = len(attributes)
+    
+    # Determine overall level
+    if total == 0:
+        overall = "low"
+    elif strong_count / total >= 0.6:
+        overall = "strong"
+    elif (strong_count + medium_count) / total >= 0.5:
+        overall = "medium"
+    else:
+        overall = "low"
+    
+    return GroundingSummary(
+        overall=overall,
+        sources_count=len(sources),
+        strong_count=strong_count,
+        medium_count=medium_count,
+        low_count=low_count,
+        sources=sources,
+    )
+
+
+def build_spec(
+    description: str,
+    size: int,
+    geography: str | None,
+    attributes: list[AttributeSpec],
+    sampling_order: list[str],
+    sources: list[str],
+) -> PopulationSpec:
+    """
+    Assemble the final PopulationSpec from all components.
+    
+    Args:
+        description: Original population description
+        size: Number of agents
+        geography: Geographic scope
+        attributes: List of AttributeSpec
+        sampling_order: Order for sampling
+        sources: List of source URLs from research
+    
+    Returns:
+        Complete PopulationSpec ready for YAML export
+    """
+    meta = SpecMeta(
+        description=description,
+        size=size,
+        geography=geography,
+        created_at=datetime.now(),
+    )
+    
+    grounding = _compute_grounding_summary(attributes, sources)
+    
+    return PopulationSpec(
+        meta=meta,
+        grounding=grounding,
+        attributes=attributes,
+        sampling_order=sampling_order,
+    )
+

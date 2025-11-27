@@ -1,41 +1,33 @@
-"""CLI for Entropy."""
+"""CLI for Entropy - Architect Layer."""
 
-import random
 import time
+from pathlib import Path
 from threading import Event, Thread
-from typing import Optional
 
-import numpy as np
 import typer
 from rich.console import Console
 from rich.live import Live
-from rich.panel import Panel
-from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn, TaskProgressColumn
-from rich.table import Table
-from rich.text import Text
 
-from . import db
-from .population import (
-    Distributions,
-    generate_network,
-    parse_context,
-    sample_agents,
-    synthesize_personas,
-    ProgressCallbacks,
+from .architect import (
+    check_sufficiency,
+    select_attributes,
+    hydrate_attributes,
+    bind_constraints,
+    build_spec,
 )
-from .search import conduct_research
-from .models import Population
+from .architect.binder import CircularDependencyError
+from .spec import DiscoveredAttribute, PopulationSpec
 
 app = typer.Typer(
     name="entropy",
-    help="Simulate how populations respond to scenarios.",
+    help="Generate population specs for agent-based simulation.",
     no_args_is_help=True,
 )
 
 console = Console()
 
 
-def grounding_indicator(level: str) -> str:
+def _grounding_indicator(level: str) -> str:
     """Get colored grounding indicator."""
     indicators = {
         "strong": "[green]🟢 Strong[/green]",
@@ -54,420 +46,286 @@ def _format_elapsed(seconds: float) -> str:
     return f"{seconds:.0f}s"
 
 
-def _display_research_summary(research, parsed_context) -> None:
-    """Display rich research summary for confirmation."""
+def _display_discovered_attributes(attributes: list[DiscoveredAttribute], geography: str | None) -> None:
+    """Display discovered attributes grouped by category."""
     console.print()
-    console.print("╭" + "─" * 58 + "╮")
-    console.print("│" + " RESEARCH SUMMARY".center(58) + "│")
-    console.print("╰" + "─" * 58 + "╯")
+    console.print("┌" + "─" * 58 + "┐")
+    console.print("│" + " DISCOVERED ATTRIBUTES".center(58) + "│")
+    console.print("└" + "─" * 58 + "┘")
     console.print()
     
-    # Demographics
-    console.print("[bold]Demographics discovered:[/bold]")
-    demo_keys = []
-    for key, value in research.demographics.items():
-        if value:
-            demo_keys.append(key.replace("_distribution", ""))
-    console.print(f"  {', '.join(demo_keys)}")
+    # Group by category
+    by_category = {
+        "universal": [],
+        "population_specific": [],
+        "context_specific": [],
+        "personality": [],
+    }
+    for attr in attributes:
+        by_category[attr.category].append(attr)
     
-    # Situation schema
+    category_labels = {
+        "universal": "Universal",
+        "population_specific": "Population-specific",
+        "context_specific": "Context-specific",
+        "personality": "Personality",
+    }
+    
+    for cat, cat_label in category_labels.items():
+        cat_attrs = by_category[cat]
+        if not cat_attrs:
+            continue
+        
+        console.print(f"[bold]{cat_label} ({len(cat_attrs)}):[/bold]")
+        for attr in cat_attrs:
+            type_str = f"[dim]({attr.type})[/dim]"
+            dep_str = ""
+            if attr.depends_on:
+                dep_str = f" [cyan]← depends on: {', '.join(attr.depends_on)}[/cyan]"
+            console.print(f"  • {attr.name} {type_str}{dep_str}")
+        console.print()
+
+
+def _display_spec_summary(spec: PopulationSpec) -> None:
+    """Display spec summary before saving."""
     console.print()
-    console.print(f"[bold]Situation attributes ({len(research.situation_schema)} per-agent):[/bold]")
-    for schema in research.situation_schema[:8]:
-        type_info = f"[dim]({schema.field_type})[/dim]"
-        range_info = ""
-        if schema.min_value is not None and schema.max_value is not None:
-            range_info = f" [dim][{schema.min_value:.0f}-{schema.max_value:.0f}][/dim]"
-        elif schema.options:
-            opts = schema.options[:3]
-            range_info = f" [dim][{', '.join(opts)}{'...' if len(schema.options) > 3 else ''}][/dim]"
-        console.print(f"  • {schema.name} {type_info}{range_info}")
-    
-    if len(research.situation_schema) > 8:
-        console.print(f"  [dim]... and {len(research.situation_schema) - 8} more[/dim]")
-    
-    # Grounding
+    console.print("┌" + "─" * 58 + "┐")
+    console.print("│" + " SPEC READY".center(58) + "│")
+    console.print("└" + "─" * 58 + "┘")
     console.print()
-    console.print(f"[bold]Grounding:[/bold] {grounding_indicator(research.grounding_level)}")
-    console.print(f"  Sources consulted: {len(research.sources)}")
     
+    console.print(f"[bold]{spec.meta.description}[/bold] ({spec.meta.size} agents)")
+    console.print(f"Grounding: {_grounding_indicator(spec.grounding.overall)} ({spec.grounding.sources_count} sources)")
+    console.print()
+    
+    # Show attributes with grounding
+    console.print("[bold]Attributes:[/bold]")
+    for attr in spec.attributes[:12]:
+        level_icon = {"strong": "🟢", "medium": "🟡", "low": "🔴"}.get(attr.grounding.level, "⚪")
+        
+        # Format distribution info
+        dist_info = ""
+        if attr.sampling.distribution:
+            dist = attr.sampling.distribution
+            if hasattr(dist, "mean") and hasattr(dist, "std"):
+                dist_info = f"μ={dist.mean:.0f}"
+                if dist.min is not None and dist.max is not None:
+                    dist_info = f"{dist.min:.0f}-{dist.max:.0f}, {dist_info}"
+            elif hasattr(dist, "options"):
+                opts = dist.options[:2]
+                dist_info = f"{', '.join(opts)}{'...' if len(dist.options) > 2 else ''}"
+            elif hasattr(dist, "min") and hasattr(dist, "max"):
+                dist_info = f"{dist.min:.1f}-{dist.max:.1f}"
+            elif hasattr(dist, "probability_true"):
+                dist_info = f"P={dist.probability_true:.0%}"
+        
+        method_str = f"[dim]— {attr.grounding.method}[/dim]"
+        console.print(f"  {level_icon} {attr.name} [dim]({dist_info})[/dim] {method_str}")
+    
+    if len(spec.attributes) > 12:
+        console.print(f"  [dim]... and {len(spec.attributes) - 12} more[/dim]")
+    
+    console.print()
+    console.print(f"[bold]Sampling order:[/bold]")
+    order_preview = " → ".join(spec.sampling_order[:6])
+    if len(spec.sampling_order) > 6:
+        order_preview += " → ..."
+    console.print(f"  {order_preview}")
     console.print()
 
 
-@app.command()
-def create(
-    context: str = typer.Argument(..., help="Natural language population description"),
-    name: str = typer.Option(..., "--name", "-n", help="Name for the population"),
-    seed: Optional[int] = typer.Option(None, "--seed", "-s", help="Random seed for reproducibility"),
-    yes: bool = typer.Option(False, "--yes", "-y", help="Skip confirmation prompt"),
+@app.command("spec")
+def spec_command(
+    description: str = typer.Argument(..., help="Natural language population description"),
+    output: Path = typer.Option(..., "--output", "-o", help="Output YAML file path"),
+    yes: bool = typer.Option(False, "--yes", "-y", help="Skip confirmation prompts"),
 ):
     """
-    Create a new population from natural language context.
-
+    Generate a population spec from a description.
+    
+    Discovers attributes, researches distributions, and saves
+    a complete PopulationSpec to YAML.
+    
     Example:
-        entropy create "2000 Netflix subscribers in the US" --name netflix_us
+        entropy spec "500 German surgeons" -o surgeons.yaml
+        entropy spec "1000 Indian smallholder farmers" -o farmers.yaml
     """
-    # Check if population already exists
-    if db.population_exists(name):
-        console.print(f"[red]Error:[/red] Population '{name}' already exists. Use a different name or delete it first.")
-        raise typer.Exit(1)
-
-    if seed is not None:
-        np.random.seed(seed)
-        random.seed(seed)
-
     start_time = time.time()
-    
-    # Step 1: Parse context (fast)
     console.print()
-    parsed = None
-    parse_error = None
-    with console.status("[cyan]Parsing context...[/cyan]"):
-        try:
-            parsed = parse_context(context)
-        except Exception as e:
-            parse_error = e
     
-    if parse_error or not parsed:
-        console.print(f"[red]✗[/red] Error parsing context: {parse_error}")
+    # =========================================================================
+    # Step 0: Context Sufficiency Check
+    # =========================================================================
+    
+    sufficiency_result = None
+    with console.status("[cyan]Checking context sufficiency...[/cyan]"):
+        try:
+            sufficiency_result = check_sufficiency(description)
+        except Exception as e:
+            console.print(f"[red]✗[/red] Error checking sufficiency: {e}")
+            raise typer.Exit(1)
+    
+    if not sufficiency_result.sufficient:
+        console.print(f"[red]✗[/red] Description needs clarification:")
+        for q in sufficiency_result.clarifications_needed:
+            console.print(f"  • {q}")
         raise typer.Exit(1)
-    console.print(f"[green]✓[/green] Parsing context... {parsed.context_entity or parsed.base_population} ({parsed.size} agents)")
     
-    # Step 2: Research with live timer
+    size = sufficiency_result.size
+    geography = sufficiency_result.geography
+    geo_str = f", {geography}" if geography else ""
+    console.print(f"[green]✓[/green] Context sufficient ({size} agents{geo_str})")
+    
+    # =========================================================================
+    # Step 1: Attribute Selection
+    # =========================================================================
+    
     console.print()
-    research_start = time.time()
-    research = None
-    research_done = Event()
-    research_error = None
+    selection_start = time.time()
+    attributes = None
+    selection_done = Event()
+    selection_error = None
     
-    def do_research():
-        nonlocal research, research_error
+    def do_selection():
+        nonlocal attributes, selection_error
         try:
-            research = conduct_research(parsed)
+            attributes = select_attributes(description, size, geography)
         except Exception as e:
-            research_error = e
+            selection_error = e
         finally:
-            research_done.set()
+            selection_done.set()
     
-    # Start research in background thread
-    research_thread = Thread(target=do_research, daemon=True)
-    research_thread.start()
+    selection_thread = Thread(target=do_selection, daemon=True)
+    selection_thread.start()
     
-    # Live update timer while research runs
     with Live(console=console, refresh_per_second=1, transient=True) as live:
-        while not research_done.is_set():
-            elapsed = time.time() - research_start
-            live.update(f"[cyan]⠋[/cyan] Researching demographics & situation... {_format_elapsed(elapsed)}")
+        while not selection_done.is_set():
+            elapsed = time.time() - selection_start
+            live.update(f"[cyan]⠋[/cyan] Discovering attributes... {_format_elapsed(elapsed)}")
             time.sleep(0.1)
     
-    research_elapsed = time.time() - research_start
+    selection_elapsed = time.time() - selection_start
     
-    if research_error:
-        console.print(f"\r[red]✗[/red] Research failed: {research_error}")
+    if selection_error:
+        console.print(f"[red]✗[/red] Attribute selection failed: {selection_error}")
         raise typer.Exit(1)
     
-    console.print(f"[green]✓[/green] Researching demographics & situation... {_format_elapsed(research_elapsed)} ({len(research.sources)} sources)")
+    console.print(f"[green]✓[/green] Found {len(attributes)} attributes ({_format_elapsed(selection_elapsed)})")
     
-    # Step 3: Display summary and confirm
-    _display_research_summary(research, parsed)
+    # =========================================================================
+    # Human Checkpoint #1: Confirm Attributes
+    # =========================================================================
+    
+    _display_discovered_attributes(attributes, geography)
     
     if not yes:
-        proceed = typer.confirm("Proceed with agent generation?", default=True)
-        if not proceed:
+        choice = typer.prompt(
+            "[Y] Proceed  [n] Cancel",
+            default="Y",
+            show_default=False,
+        ).strip().lower()
+        
+        if choice == "n":
             console.print("[dim]Cancelled.[/dim]")
             raise typer.Exit(0)
     
+    # =========================================================================
+    # Step 2: Distribution Research (Hydration)
+    # =========================================================================
+    
     console.print()
+    hydration_start = time.time()
+    hydrated = None
+    sources = []
+    hydration_done = Event()
+    hydration_error = None
     
-    # Step 4: Build distributions
-    with console.status("[cyan]Building distributions...[/cyan]"):
-        distributions = Distributions(research, parsed)
-    console.print(f"[green]✓[/green] Building distributions")
+    def do_hydration():
+        nonlocal hydrated, sources, hydration_error
+        try:
+            hydrated, sources = hydrate_attributes(attributes, description, geography)
+        except Exception as e:
+            hydration_error = e
+        finally:
+            hydration_done.set()
     
-    # Step 5: Sample agents with progress
-    with Progress(
-        SpinnerColumn(),
-        TextColumn("[progress.description]{task.description}"),
-        BarColumn(bar_width=30),
-        TaskProgressColumn(),
-        console=console,
-        transient=True,
-    ) as progress:
-        task = progress.add_task(f"[cyan]Generating {parsed.size} agents...", total=parsed.size)
-        
-        def agent_progress(n: int):
-            progress.update(task, completed=n)
-        
-        agents = sample_agents(distributions, parsed.size, progress_callback=agent_progress)
+    hydration_thread = Thread(target=do_hydration, daemon=True)
+    hydration_thread.start()
     
-    console.print(f"[green]✓[/green] Generating {parsed.size} agents")
+    with Live(console=console, refresh_per_second=1, transient=True) as live:
+        while not hydration_done.is_set():
+            elapsed = time.time() - hydration_start
+            live.update(f"[cyan]⠋[/cyan] Researching distributions... {_format_elapsed(elapsed)}")
+            time.sleep(0.1)
     
-    # Step 6: Generate network
-    with console.status("[cyan]Building social network...[/cyan]"):
-        agents = generate_network(agents)
-    console.print(f"[green]✓[/green] Building social network")
+    hydration_elapsed = time.time() - hydration_start
     
-    # Step 7: Synthesize personas
-    with Progress(
-        SpinnerColumn(),
-        TextColumn("[progress.description]{task.description}"),
-        BarColumn(bar_width=30),
-        TaskProgressColumn(),
-        console=console,
-        transient=True,
-    ) as progress:
-        task = progress.add_task(f"[cyan]Synthesizing personas...", total=parsed.size)
-        
-        def persona_progress(n: int):
-            progress.update(task, completed=n)
-        
-        agents = synthesize_personas(agents, parsed, progress_callback=persona_progress)
-    
-    console.print(f"[green]✓[/green] Synthesizing personas")
-    
-    # Create population object
-    population = Population(
-        name=name,
-        size=parsed.size,
-        context_raw=context,
-        context_parsed=parsed,
-        research=research,
-        agents=agents,
-    )
-    
-    # Save to database
-    with console.status("[cyan]Saving population...[/cyan]"):
-        db.save_population(population)
-    console.print(f"[green]✓[/green] Saving population")
-
-    elapsed = time.time() - start_time
-
-    # Display final summary
-    console.print()
-    console.print("═" * 60)
-    console.print(f'[bold]Population "{name}" created[/bold]')
-    console.print("═" * 60)
-    console.print()
-
-    # Stats table
-    stats_table = Table(show_header=False, box=None, padding=(0, 2))
-    stats_table.add_column("Key", style="dim")
-    stats_table.add_column("Value")
-
-    stats_table.add_row("Agents:", f"[bold]{population.size:,}[/bold]")
-    stats_table.add_row("Grounding:", grounding_indicator(population.research.grounding_level))
-    source_preview = ", ".join(s[:30] + "..." if len(s) > 30 else s for s in population.research.sources[:3]) if population.research.sources else "None"
-    stats_table.add_row("Sources:", f"{len(population.research.sources)} ({source_preview})")
-    stats_table.add_row("Time:", f"[cyan]{_format_elapsed(elapsed)}[/cyan]")
-
-    console.print(stats_table)
-
-    # Situation schema (dynamically generated)
-    if population.research.situation_schema:
-        console.print()
-        console.print("[bold]Situation schema (generated):[/bold]")
-        for schema in population.research.situation_schema[:6]:
-            type_info = f"[dim]({schema.field_type})[/dim]"
-            range_info = ""
-            if schema.min_value is not None and schema.max_value is not None:
-                range_info = f" [{schema.min_value}-{schema.max_value}]"
-            elif schema.options:
-                range_info = f" [{', '.join(schema.options[:3])}...]"
-            console.print(f"  • {schema.name} {type_info}{range_info}")
-
-    # Sample agent
-    if population.agents:
-        console.print()
-        console.print("[bold]Sample agent:[/bold]")
-        agent = population.agents[0]
-        demo = agent.demographics
-        psych = agent.psychographics
-
-        console.print(f"  ID: [cyan]{agent.id}[/cyan]")
-        console.print(f"  Age: {demo.age} | Gender: {demo.gender.upper()[0]} | Location: {demo.location.get('urban_rural', 'urban').capitalize()} {demo.location.get('state', 'US')} | Income: ${demo.income:,}")
-        console.print(f"  Openness: {psych.openness:.2f} | Extraversion: {psych.extraversion:.2f}")
-
-        # Situation summary
-        if agent.situation:
-            sit_parts = []
-            for k, v in list(agent.situation.items())[:4]:
-                if isinstance(v, float):
-                    sit_parts.append(f"{k.replace('_', ' ')}: {v:.1f}")
-                elif isinstance(v, list):
-                    sit_parts.append(f"{k.replace('_', ' ')}: {len(v)} items")
-                else:
-                    sit_parts.append(f"{k.replace('_', ' ')}: {v}")
-            console.print(f"  Situation: {', '.join(sit_parts)}")
-
-        console.print(f"  Connections: [cyan]{len(agent.network.connections)}[/cyan] agents")
-
-    console.print()
-    console.print("═" * 60)
-    console.print(f"[dim]Run 'entropy inspect {name}' for full details.[/dim]")
-
-
-@app.command("list")
-def list_populations():
-    """List all populations."""
-    populations = db.list_populations()
-
-    if not populations:
-        console.print("[dim]No populations found. Create one with 'entropy create'.[/dim]")
-        return
-
-    table = Table(title="Populations", show_header=True)
-    table.add_column("Name", style="cyan")
-    table.add_column("Size", justify="right")
-    table.add_column("Context")
-    table.add_column("Created", style="dim")
-
-    for pop in populations:
-        context_short = pop["context"][:40] + "..." if len(pop["context"]) > 40 else pop["context"]
-        created = pop["created_at"].strftime("%Y-%m-%d %H:%M")
-        table.add_row(pop["name"], f"{pop['size']:,}", context_short, created)
-
-    console.print(table)
-
-
-@app.command()
-def inspect(
-    name: str = typer.Argument(..., help="Name of the population to inspect"),
-    sample: int = typer.Option(5, "--sample", "-s", help="Number of sample agents to show"),
-):
-    """Inspect a population in detail."""
-    population = db.load_population(name, include_agents=False)
-
-    if not population:
-        console.print(f"[red]Error:[/red] Population '{name}' not found.")
+    if hydration_error:
+        console.print(f"[red]✗[/red] Distribution research failed: {hydration_error}")
         raise typer.Exit(1)
-
-    # Header
-    console.print()
-    console.print(Panel(f"[bold]{population.name}[/bold]", expand=False))
-
-    # Basic info
-    info_table = Table(show_header=False, box=None, padding=(0, 2))
-    info_table.add_column("Key", style="dim")
-    info_table.add_column("Value")
-
-    info_table.add_row("Context:", population.context_raw)
-    info_table.add_row("Size:", f"{population.size:,} agents")
-    info_table.add_row("Grounding:", grounding_indicator(population.research.grounding_level))
-    info_table.add_row("Created:", population.created_at.strftime("%Y-%m-%d %H:%M:%S"))
-
-    console.print(info_table)
-
-    # Parsed context
-    console.print()
-    console.print("[bold]Parsed Context:[/bold]")
-    ctx = population.context_parsed
-    console.print(f"  Base population: {ctx.base_population}")
-    console.print(f"  Context type: {ctx.context_type}")
-    console.print(f"  Entity: {ctx.context_entity or 'N/A'}")
-    console.print(f"  Geography: {ctx.geography or 'N/A'}")
-
-    # Sources
-    if population.research.sources:
-        console.print()
-        console.print("[bold]Sources:[/bold]")
-        for source in population.research.sources[:10]:
-            console.print(f"  • {source}")
-
-    # Situation schema
-    if population.research.situation_schema:
-        console.print()
-        console.print("[bold]Situation Schema:[/bold]")
-        schema_table = Table(show_header=True, box=None)
-        schema_table.add_column("Attribute")
-        schema_table.add_column("Type", style="dim")
-        schema_table.add_column("Description")
-
-        for schema in population.research.situation_schema:
-            schema_table.add_row(schema.name, schema.field_type, schema.description[:50] + "..." if len(schema.description) > 50 else schema.description)
-
-        console.print(schema_table)
-
-    # Sample agents
-    if sample > 0:
-        console.print()
-        console.print(f"[bold]Sample Agents ({sample}):[/bold]")
-
-        sample_agents = db.get_sample_agents(name, sample)
-
-        for agent in sample_agents:
-            console.print()
-            demo = agent.demographics
-            console.print(f"  [cyan]Agent {agent.id}[/cyan]")
-            console.print(f"    {demo.age}yo {demo.gender} | {demo.occupation} | ${demo.income:,}")
-            console.print(f"    {demo.location.get('urban_rural', '')} {demo.location.get('state', '')} | {demo.education}")
-
-            psych = agent.psychographics
-            console.print(f"    Big Five: O={psych.openness:.2f} C={psych.conscientiousness:.2f} E={psych.extraversion:.2f} A={psych.agreeableness:.2f} N={psych.neuroticism:.2f}")
-
-            if agent.situation:
-                sit_str = " | ".join(f"{k}: {v}" for k, v in list(agent.situation.items())[:3])
-                console.print(f"    Situation: {sit_str}")
-
-            console.print(f"    Connections: {len(agent.network.connections)} | Influence: {agent.network.influence_score:.2f}")
-
-
-@app.command()
-def delete(
-    name: str = typer.Argument(..., help="Name of the population to delete"),
-    force: bool = typer.Option(False, "--force", "-f", help="Skip confirmation"),
-):
-    """Delete a population."""
-    if not db.population_exists(name):
-        console.print(f"[red]Error:[/red] Population '{name}' not found.")
-        raise typer.Exit(1)
-
-    if not force:
-        confirm = typer.confirm(f"Delete population '{name}'?")
-        if not confirm:
+    
+    console.print(f"[green]✓[/green] Researched distributions ({_format_elapsed(hydration_elapsed)}, {len(sources)} sources)")
+    
+    # =========================================================================
+    # Step 3: Constraint Binding
+    # =========================================================================
+    
+    with console.status("[cyan]Binding constraints...[/cyan]"):
+        try:
+            bound_attrs, sampling_order = bind_constraints(hydrated)
+        except CircularDependencyError as e:
+            console.print(f"[red]✗[/red] Circular dependency detected: {e}")
+            raise typer.Exit(1)
+        except Exception as e:
+            console.print(f"[red]✗[/red] Constraint binding failed: {e}")
+            raise typer.Exit(1)
+    
+    console.print(f"[green]✓[/green] Constraints bound, sampling order determined")
+    
+    # =========================================================================
+    # Step 4: Build Spec
+    # =========================================================================
+    
+    with console.status("[cyan]Building spec...[/cyan]"):
+        population_spec = build_spec(
+            description=description,
+            size=size,
+            geography=geography,
+            attributes=bound_attrs,
+            sampling_order=sampling_order,
+            sources=sources,
+        )
+    
+    console.print(f"[green]✓[/green] Spec assembled")
+    
+    # =========================================================================
+    # Human Checkpoint #2: Confirm and Save
+    # =========================================================================
+    
+    _display_spec_summary(population_spec)
+    
+    if not yes:
+        choice = typer.prompt(
+            "[Y] Save spec  [n] Cancel",
+            default="Y",
+            show_default=False,
+        ).strip().lower()
+        
+        if choice == "n":
             console.print("[dim]Cancelled.[/dim]")
-            return
-
-    db.delete_population(name)
-    console.print(f"[green]✓[/green] Population '{name}' deleted.")
-
-
-# Phase 2/3 placeholder commands
-
-
-@app.command()
-def scenario(
-    description: str = typer.Argument(..., help="Scenario description"),
-    population: str = typer.Option(..., "--population", "-p", help="Population name"),
-    name: str = typer.Option(..., "--name", "-n", help="Scenario name"),
-):
-    """[Phase 2] Create a scenario for a population."""
-    console.print("[yellow]Phase 2 not yet implemented.[/yellow]")
-    console.print(f"Would create scenario '{name}' for population '{population}':")
-    console.print(f"  {description}")
-
-
-@app.command()
-def simulate(
-    population: str = typer.Argument(..., help="Population name"),
-    scenario: str = typer.Option(..., "--scenario", "-s", help="Scenario name"),
-    mode: str = typer.Option("single", "--mode", "-m", help="Simulation mode: single or continuous"),
-):
-    """[Phase 3] Run a simulation."""
-    console.print("[yellow]Phase 3 not yet implemented.[/yellow]")
-    console.print(f"Would simulate scenario '{scenario}' on population '{population}' in {mode} mode.")
-
-
-@app.command()
-def results(
-    population: str = typer.Argument(..., help="Population name"),
-    by: Optional[str] = typer.Option(None, "--by", help="Group results by attribute"),
-    timeline: bool = typer.Option(False, "--timeline", help="Show timeline"),
-):
-    """[Phase 3] View simulation results."""
-    console.print("[yellow]Phase 3 not yet implemented.[/yellow]")
-    console.print(f"Would show results for population '{population}'.")
+            raise typer.Exit(0)
+    
+    # Save to YAML
+    population_spec.to_yaml(output)
+    
+    elapsed = time.time() - start_time
+    
+    console.print()
+    console.print("═" * 60)
+    console.print(f"[green]✓[/green] Spec saved to [bold]{output}[/bold]")
+    console.print(f"[dim]Total time: {_format_elapsed(elapsed)}[/dim]")
+    console.print("═" * 60)
 
 
 if __name__ == "__main__":
     app()
-
