@@ -113,10 +113,13 @@ def _display_spec_summary(spec: PopulationSpec) -> None:
         dist_info = ""
         if attr.sampling.distribution:
             dist = attr.sampling.distribution
-            if hasattr(dist, "mean") and hasattr(dist, "std"):
+            if hasattr(dist, "mean") and dist.mean is not None:
                 dist_info = f"μ={dist.mean:.0f}"
                 if dist.min is not None and dist.max is not None:
                     dist_info = f"{dist.min:.0f}-{dist.max:.0f}, {dist_info}"
+            elif hasattr(dist, "mean_formula") and dist.mean_formula:
+                # Formula-based distribution (conditional)
+                dist_info = f"μ={dist.mean_formula}"
             elif hasattr(dist, "options"):
                 opts = dist.options[:2]
                 dist_info = f"{', '.join(opts)}{'...' if len(dist.options) > 2 else ''}"
