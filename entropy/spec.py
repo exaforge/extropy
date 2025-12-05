@@ -36,13 +36,39 @@ class GroundingInfo(BaseModel):
 
 
 class NormalDistribution(BaseModel):
-    """Normal/Gaussian distribution parameters."""
+    """Normal/Gaussian distribution parameters.
+
+    For conditional attributes with continuous dependencies, use mean_formula
+    instead of mean to express the relationship (e.g., "age - 28" for experience).
+    """
 
     type: Literal["normal"] = "normal"
-    mean: float
-    std: float
+    # Static parameters (use these OR formula versions, not both)
+    mean: float | None = None
+    std: float | None = None
     min: float | None = None
     max: float | None = None
+    # Formula-based parameters (for conditional with continuous dependency)
+    mean_formula: str | None = Field(
+        default=None,
+        description="Formula for mean, e.g., 'age - 28'"
+    )
+    std_formula: str | None = Field(
+        default=None,
+        description="Formula for std (rare, but supported)"
+    )
+
+
+class LognormalDistribution(BaseModel):
+    """Lognormal distribution parameters."""
+
+    type: Literal["lognormal"] = "lognormal"
+    mean: float | None = None
+    std: float | None = None
+    min: float | None = None
+    max: float | None = None
+    mean_formula: str | None = None
+    std_formula: str | None = None
 
 
 class UniformDistribution(BaseModel):
@@ -51,6 +77,16 @@ class UniformDistribution(BaseModel):
     type: Literal["uniform"] = "uniform"
     min: float
     max: float
+
+
+class BetaDistribution(BaseModel):
+    """Beta distribution parameters (useful for probabilities and proportions)."""
+
+    type: Literal["beta"] = "beta"
+    alpha: float
+    beta: float
+    min: float | None = None  # For scaling
+    max: float | None = None  # For scaling
 
 
 class CategoricalDistribution(BaseModel):
@@ -70,7 +106,9 @@ class BooleanDistribution(BaseModel):
 
 Distribution = (
     NormalDistribution
+    | LognormalDistribution
     | UniformDistribution
+    | BetaDistribution
     | CategoricalDistribution
     | BooleanDistribution
 )
@@ -81,12 +119,47 @@ Distribution = (
 # =============================================================================
 
 
+class NumericModifier(BaseModel):
+    """Modifies numeric distributions via multiply/add.
+
+    Multiple matching modifiers STACK multiplicatively.
+    E.g., base × 1.8 × 1.15 for chief at private clinic.
+    """
+
+    when: str = Field(description="Python expression, e.g., \"role == 'chief'\"")
+    multiply: float = 1.0
+    add: float = 0.0
+
+
+class CategoricalModifier(BaseModel):
+    """Replaces weights for categorical distributions.
+
+    The LAST matching modifier wins (they don't stack).
+    """
+
+    when: str = Field(description="Python expression for when to apply")
+    weight_overrides: dict[str, float] = Field(
+        description="Map of option -> new weight, must sum to ~1.0"
+    )
+
+
+class BooleanModifier(BaseModel):
+    """Replaces probability for boolean distributions."""
+
+    when: str = Field(description="Python expression for when to apply")
+    probability_override: float = Field(ge=0, le=1)
+
+
+# Legacy modifier for backwards compatibility
 class Modifier(BaseModel):
-    """A conditional modifier for sampling."""
+    """A conditional modifier for sampling (legacy format)."""
 
     when: str = Field(description="Python expression using other attribute names")
     multiply: float | None = None
     add: float | None = None
+    # New type-specific fields
+    weight_overrides: dict[str, float] | None = None
+    probability_override: float | None = None
 
 
 class SamplingConfig(BaseModel):
@@ -117,16 +190,23 @@ class SamplingConfig(BaseModel):
 
 
 class Constraint(BaseModel):
-    """A constraint on an attribute value."""
+    """A constraint on an attribute value.
 
-    type: Literal["min", "max", "expression"] = Field(
-        description="min/max for bounds, expression for complex constraints"
+    Constraints should be set WIDER than observed data to preserve valid outliers.
+    E.g., if research shows surgeons are typically 28-65, set hard_min: 26, hard_max: 78.
+    """
+
+    type: Literal["hard_min", "hard_max", "expression", "min", "max"] = Field(
+        description="hard_min/hard_max for bounds, expression for complex constraints. 'min'/'max' are legacy aliases."
     )
     value: float | None = Field(
-        default=None, description="Value for min/max constraints"
+        default=None, description="Value for hard_min/hard_max constraints"
     )
     expression: str | None = Field(
-        default=None, description="Python expression for expression constraints"
+        default=None, description="Python expression for expression constraints, e.g., 'value <= age - 24'"
+    )
+    reason: str | None = Field(
+        default=None, description="Why this constraint exists"
     )
 
 
@@ -362,7 +442,11 @@ class PopulationSpec(BaseModel):
 
 
 class DiscoveredAttribute(BaseModel):
-    """An attribute discovered during attribute selection (Step 1)."""
+    """An attribute discovered during attribute selection (Step 1).
+
+    Includes strategy to indicate how the attribute should be sampled,
+    which determines which hydration step processes it.
+    """
 
     name: str
     type: Literal["int", "float", "categorical", "boolean"]
@@ -370,11 +454,19 @@ class DiscoveredAttribute(BaseModel):
         "universal", "population_specific", "context_specific", "personality"
     ]
     description: str
+    strategy: Literal["independent", "derived", "conditional"] = Field(
+        default="independent",
+        description="independent: sample directly; derived: zero-variance formula; conditional: probabilistic dependency"
+    )
     depends_on: list[str] = Field(default_factory=list)
 
 
 class HydratedAttribute(BaseModel):
-    """An attribute with distribution data from research (Step 2)."""
+    """An attribute with distribution data from research (Step 2).
+
+    Contains the complete sampling configuration including distribution,
+    modifiers (for conditional), formula (for derived), and constraints.
+    """
 
     name: str
     type: Literal["int", "float", "categorical", "boolean"]
@@ -382,6 +474,10 @@ class HydratedAttribute(BaseModel):
         "universal", "population_specific", "context_specific", "personality"
     ]
     description: str
+    strategy: Literal["independent", "derived", "conditional"] = Field(
+        default="independent",
+        description="Sampling strategy determined in Step 1"
+    )
     depends_on: list[str] = Field(default_factory=list)
     sampling: SamplingConfig
     grounding: GroundingInfo
