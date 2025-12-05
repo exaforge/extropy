@@ -7,7 +7,7 @@ and assembles the final PopulationSpec.
 from collections import defaultdict
 from datetime import datetime
 
-from ..spec import (
+from ..models import (
     HydratedAttribute,
     AttributeSpec,
     PopulationSpec,

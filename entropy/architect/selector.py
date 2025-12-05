@@ -8,7 +8,7 @@ Discovers all relevant attributes for a population across four categories:
 """
 
 from ..llm import reasoning_call
-from ..spec import AttributeSpec, DiscoveredAttribute
+from ..models import AttributeSpec, DiscoveredAttribute
 
 
 # JSON schema for attribute selection response

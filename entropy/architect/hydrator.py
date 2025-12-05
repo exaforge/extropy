@@ -10,7 +10,7 @@ Each step is processed separately with specialized prompts and validation.
 """
 
 from ..llm import agentic_research, reasoning_call
-from ..spec import (
+from ..models import (
     AttributeSpec,
     DiscoveredAttribute,
     HydratedAttribute,

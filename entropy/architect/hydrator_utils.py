@@ -9,7 +9,7 @@ This module provides supporting functions for the hydration pipeline:
 import ast
 import re
 
-from ..spec import (
+from ..models import (
     Constraint,
     GroundingInfo,
     HydratedAttribute,

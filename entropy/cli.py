@@ -16,7 +16,7 @@ from .architect import (
     build_spec,
 )
 from .architect.binder import CircularDependencyError
-from .spec import DiscoveredAttribute, PopulationSpec
+from .models import DiscoveredAttribute, PopulationSpec
 
 app = typer.Typer(
     name="entropy",
