@@ -47,7 +47,7 @@ def hydrate_independent(
     context: list[AttributeSpec] | None = None,
     model: str = "gpt-5",
     reasoning_effort: str = "low",
-) -> tuple[list[HydratedAttribute], list[str]]:
+) -> tuple[list[HydratedAttribute], list[str], list[str]]:
     """
     Research distributions for independent attributes (Step 2a).
 
@@ -62,14 +62,14 @@ def hydrate_independent(
         reasoning_effort: "low", "medium", or "high"
 
     Returns:
-        Tuple of (list of HydratedAttribute, list of source URLs)
+        Tuple of (list of HydratedAttribute, list of source URLs, list of validation errors)
     """
     if not attributes:
-        return [], []
+        return [], [], []
 
     independent_attrs = [a for a in attributes if a.strategy == "independent"]
     if not independent_attrs:
-        return [], []
+        return [], [], []
 
     geo_context = f" in {geography}" if geography else ""
 
@@ -200,12 +200,7 @@ Return JSON with distribution, constraints, and grounding for each attribute."""
         )
 
     errors = validate_independent_hydration(hydrated)
-    if errors:
-        print(f"  [Validation warnings for independent attributes: {len(errors)}]")
-        for err in errors[:3]:
-            print(f"    - {err}")
-
-    return hydrated, sources
+    return hydrated, sources, errors
 
 
 # =============================================================================
@@ -221,7 +216,7 @@ def hydrate_derived(
     context: list[AttributeSpec] | None = None,
     model: str = "gpt-5",
     reasoning_effort: str = "low",
-) -> list[HydratedAttribute]:
+) -> tuple[list[HydratedAttribute], list[str]]:
     """
     Specify formulas for derived attributes (Step 2b).
 
@@ -237,14 +232,14 @@ def hydrate_derived(
         reasoning_effort: "low", "medium", or "high"
 
     Returns:
-        List of HydratedAttribute with formulas
+        Tuple of (list of HydratedAttribute with formulas, list of validation errors)
     """
     if not attributes:
-        return []
+        return [], []
 
     derived_attrs = [a for a in attributes if a.strategy == "derived"]
     if not derived_attrs:
-        return []
+        return [], []
 
     # Build context sections
     context_section = ""
@@ -359,12 +354,7 @@ Return JSON array with formula for each attribute."""
 
     all_names = {a.name for a in (independent_attrs or [])} | {a.name for a in derived_attrs}
     errors = validate_derived_hydration(hydrated, all_names)
-    if errors:
-        print(f"  [Validation warnings for derived attributes: {len(errors)}]")
-        for err in errors[:3]:
-            print(f"    - {err}")
-
-    return hydrated
+    return hydrated, errors
 
 
 # =============================================================================
@@ -381,7 +371,7 @@ def hydrate_conditional_base(
     context: list[AttributeSpec] | None = None,
     model: str = "gpt-5",
     reasoning_effort: str = "low",
-) -> tuple[list[HydratedAttribute], list[str]]:
+) -> tuple[list[HydratedAttribute], list[str], list[str]]:
     """
     Research BASE distributions for conditional attributes (Step 2c).
 
@@ -398,14 +388,14 @@ def hydrate_conditional_base(
         reasoning_effort: "low", "medium", or "high"
 
     Returns:
-        Tuple of (list of HydratedAttribute with base distributions, list of source URLs)
+        Tuple of (list of HydratedAttribute, list of source URLs, list of validation errors)
     """
     if not attributes:
-        return [], []
+        return [], [], []
 
     conditional_attrs = [a for a in attributes if a.strategy == "conditional"]
     if not conditional_attrs:
-        return [], []
+        return [], [], []
 
     geo_context = f" in {geography}" if geography else ""
 
@@ -544,12 +534,7 @@ Return JSON with distribution, constraints, and grounding for each attribute."""
         )
 
     errors = validate_conditional_base(hydrated)
-    if errors:
-        print(f"  [Validation warnings for conditional base: {len(errors)}]")
-        for err in errors[:3]:
-            print(f"    - {err}")
-
-    return hydrated, sources
+    return hydrated, sources, errors
 
 
 # =============================================================================
@@ -566,7 +551,7 @@ def hydrate_conditional_modifiers(
     context: list[AttributeSpec] | None = None,
     model: str = "gpt-5",
     reasoning_effort: str = "low",
-) -> tuple[list[HydratedAttribute], list[str]]:
+) -> tuple[list[HydratedAttribute], list[str], list[str]]:
     """
     Specify MODIFIERS for conditional attributes (Step 2d).
 
@@ -583,10 +568,10 @@ def hydrate_conditional_modifiers(
         reasoning_effort: "low", "medium", or "high"
 
     Returns:
-        Tuple of (updated HydratedAttribute list with modifiers, list of source URLs)
+        Tuple of (updated HydratedAttribute list, list of source URLs, list of validation errors)
     """
     if not conditional_attrs:
-        return [], []
+        return [], [], []
 
     geo_context = f" in {geography}" if geography else ""
 
@@ -718,12 +703,7 @@ Return JSON array with modifiers for each conditional attribute."""
 
     all_attrs = {a.name: a for a in (independent_attrs or []) + (derived_attrs or []) + updated}
     errors = validate_modifiers(updated, all_attrs)
-    if errors:
-        print(f"  [Validation warnings for modifiers: {len(errors)}]")
-        for err in errors[:3]:
-            print(f"    - {err}")
-
-    return updated, sources
+    return updated, sources, errors
 
 
 # =============================================================================
@@ -745,7 +725,7 @@ def hydrate_attributes(
     model: str = "gpt-5",
     reasoning_effort: str = "low",
     on_progress: ProgressCallback | None = None,
-) -> tuple[list[HydratedAttribute], list[str]]:
+) -> tuple[list[HydratedAttribute], list[str], list[str]]:
     """
     Research distributions for discovered attributes using split hydration.
 
@@ -768,12 +748,13 @@ def hydrate_attributes(
         on_progress: Optional callback for progress updates (step, status, count)
 
     Returns:
-        Tuple of (list of HydratedAttribute, list of source URLs)
+        Tuple of (list of HydratedAttribute, list of source URLs, list of validation warnings)
     """
     if not attributes:
-        return [], []
+        return [], [], []
 
     all_sources = []
+    all_warnings = []
     population = description
 
     def report(step: str, status: str, count: int | None = None):
@@ -788,7 +769,7 @@ def hydrate_attributes(
 
     # Step 2a: Independent attributes
     report("2a", "Researching independent distributions...")
-    independent_attrs, independent_sources = hydrate_independent(
+    independent_attrs, independent_sources, independent_errors = hydrate_independent(
         attributes=attributes,
         population=population,
         geography=geography,
@@ -797,11 +778,12 @@ def hydrate_attributes(
         reasoning_effort=reasoning_effort,
     )
     all_sources.extend(independent_sources)
+    all_warnings.extend([f"[2a] {e}" for e in independent_errors])
     report("2a", f"Hydrated {len(independent_attrs)} independent", len(independent_sources))
 
     # Step 2b: Derived attributes
     report("2b", "Specifying derived formulas...")
-    derived_attrs = hydrate_derived(
+    derived_attrs, derived_errors = hydrate_derived(
         attributes=attributes,
         population=population,
         geography=geography,
@@ -810,11 +792,12 @@ def hydrate_attributes(
         model=model,
         reasoning_effort=reasoning_effort,
     )
+    all_warnings.extend([f"[2b] {e}" for e in derived_errors])
     report("2b", f"Hydrated {len(derived_attrs)} derived", 0)
 
     # Step 2c: Conditional base distributions
     report("2c", "Researching conditional distributions...")
-    conditional_base_attrs, conditional_sources = hydrate_conditional_base(
+    conditional_base_attrs, conditional_sources, conditional_errors = hydrate_conditional_base(
         attributes=attributes,
         population=population,
         geography=geography,
@@ -825,11 +808,12 @@ def hydrate_attributes(
         reasoning_effort=reasoning_effort,
     )
     all_sources.extend(conditional_sources)
+    all_warnings.extend([f"[2c] {e}" for e in conditional_errors])
     report("2c", f"Hydrated {len(conditional_base_attrs)} conditional", len(conditional_sources))
 
     # Step 2d: Conditional modifiers
     report("2d", "Specifying conditional modifiers...")
-    conditional_attrs, modifier_sources = hydrate_conditional_modifiers(
+    conditional_attrs, modifier_sources, modifier_errors = hydrate_conditional_modifiers(
         conditional_attrs=conditional_base_attrs,
         population=population,
         geography=geography,
@@ -840,10 +824,11 @@ def hydrate_attributes(
         reasoning_effort=reasoning_effort,
     )
     all_sources.extend(modifier_sources)
+    all_warnings.extend([f"[2d] {e}" for e in modifier_errors])
     report("2d", f"Added modifiers to {len(conditional_attrs)}", len(modifier_sources))
 
     # Combine all hydrated attributes
     all_hydrated = independent_attrs + derived_attrs + conditional_attrs
     unique_sources = list(set(all_sources))
 
-    return all_hydrated, unique_sources
+    return all_hydrated, unique_sources, all_warnings
