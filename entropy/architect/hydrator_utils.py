@@ -49,10 +49,28 @@ def extract_names_from_formula(formula: str) -> set[str]:
 
 
 def extract_names_from_condition(condition: str) -> set[str]:
-    """Extract attribute names referenced in a when condition."""
-    tokens = re.findall(r'\b([a-z_][a-z0-9_]*)\b', condition, re.IGNORECASE)
-    keywords = {'and', 'or', 'not', 'in', 'is', 'True', 'False', 'None', 'if', 'else'}
-    return {t for t in tokens if t not in keywords and t not in BUILTIN_NAMES}
+    """Extract attribute names referenced in a when condition.
+
+    Uses AST parsing to correctly identify variable references
+    while ignoring string literals and other constants.
+    """
+    try:
+        tree = ast.parse(condition, mode='eval')
+        names = set()
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Name):
+                name = node.id
+                if name not in BUILTIN_NAMES:
+                    names.add(name)
+        return names
+    except SyntaxError:
+        # Fallback to regex for malformed expressions
+        # First, remove quoted strings to avoid matching their contents
+        cleaned = re.sub(r"'[^']*'", '', condition)
+        cleaned = re.sub(r'"[^"]*"', '', cleaned)
+        tokens = re.findall(r'\b([a-z_][a-z0-9_]*)\b', cleaned, re.IGNORECASE)
+        keywords = {'and', 'or', 'not', 'in', 'is', 'True', 'False', 'None', 'if', 'else'}
+        return {t for t in tokens if t not in keywords and t not in BUILTIN_NAMES}
 
 
 # =============================================================================
