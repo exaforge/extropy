@@ -5,7 +5,7 @@ to proceed with attribute discovery and spec generation.
 """
 
 from ..llm import simple_call
-from ..spec import SufficiencyResult
+from ..models import SufficiencyResult
 
 
 # JSON schema for sufficiency check response

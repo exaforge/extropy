@@ -7,12 +7,13 @@ and assembles the final PopulationSpec.
 from collections import defaultdict
 from datetime import datetime
 
-from ..spec import (
+from ..models import (
     HydratedAttribute,
     AttributeSpec,
     PopulationSpec,
     SpecMeta,
     GroundingSummary,
+    SamplingConfig,
 )
 
 
@@ -22,15 +23,15 @@ class CircularDependencyError(Exception):
     pass
 
 
-def _topological_sort(attributes: list[HydratedAttribute]) -> list[str]:
+def _topological_sort_specs(attributes: list[AttributeSpec]) -> list[str]:
     """
-    Topological sort of attributes based on dependencies.
+    Topological sort of AttributeSpec based on dependencies.
 
     Uses Kahn's algorithm to determine a valid sampling order
     where all dependencies are sampled before dependents.
 
     Args:
-        attributes: List of HydratedAttribute with depends_on fields
+        attributes: List of AttributeSpec with sampling.depends_on fields
 
     Returns:
         List of attribute names in sampling order
@@ -44,7 +45,7 @@ def _topological_sort(attributes: list[HydratedAttribute]) -> list[str]:
     attr_names = {a.name for a in attributes}
 
     for attr in attributes:
-        for dep in attr.depends_on:
+        for dep in attr.sampling.depends_on:
             # Only count dependencies on attributes we're tracking
             if dep in attr_names:
                 graph[dep].append(attr.name)
@@ -114,30 +115,36 @@ def bind_constraints(
     context_names = {a.name for a in context} if context else set()
     known_names = attr_names | context_names
 
-    # Validate dependencies
-    for attr in attributes:
-        unknown_deps = set(attr.depends_on) - known_names
-        if unknown_deps:
-            # Remove unknown dependencies with warning (they might be computed elsewhere)
-            attr.depends_on = [d for d in attr.depends_on if d in known_names]
-
-    # Compute sampling order (only for new attributes, not context)
-    # Context attributes are already sampled, so they don't need ordering
-    sampling_order = _topological_sort(attributes)
-
-    # Convert to AttributeSpec
+    # Filter unknown dependencies and create specs
+    # Note: we don't mutate input objects - we filter during spec creation
     specs = []
     for attr in attributes:
+        # Filter depends_on to only known attributes
+        filtered_depends_on = [d for d in attr.depends_on if d in known_names]
+
+        # Create new SamplingConfig with filtered depends_on
+        filtered_sampling = SamplingConfig(
+            strategy=attr.sampling.strategy,
+            distribution=attr.sampling.distribution,
+            formula=attr.sampling.formula,
+            depends_on=filtered_depends_on,
+            modifiers=attr.sampling.modifiers,
+        )
+
         spec = AttributeSpec(
             name=attr.name,
             type=attr.type,
             category=attr.category,
             description=attr.description,
-            sampling=attr.sampling,
+            sampling=filtered_sampling,
             grounding=attr.grounding,
             constraints=attr.constraints,
         )
         specs.append(spec)
+
+    # Compute sampling order using specs (which have filtered depends_on)
+    # Context attributes are already sampled, so they don't need ordering
+    sampling_order = _topological_sort_specs(specs)
 
     return specs, sampling_order
 

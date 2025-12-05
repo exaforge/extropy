@@ -16,7 +16,7 @@ from .architect import (
     build_spec,
 )
 from .architect.binder import CircularDependencyError
-from .spec import DiscoveredAttribute, PopulationSpec
+from .models import DiscoveredAttribute, PopulationSpec
 
 app = typer.Typer(
     name="entropy",
@@ -284,18 +284,26 @@ def overlay_command(
     hydration_start = time.time()
     hydrated = None
     sources = []
+    warnings = []
     hydration_done = Event()
     hydration_error = None
+    current_step = ["2a", "Starting..."]  # [step, status] - mutable for thread access
+
+    def on_progress(step: str, status: str, count: int | None):
+        """Update current step for display."""
+        current_step[0] = step
+        current_step[1] = status
 
     def do_hydration():
-        nonlocal hydrated, sources, hydration_error
+        nonlocal hydrated, sources, warnings, hydration_error
         try:
             # Pass base attributes as context - hydrator can reference them in formulas
-            hydrated, sources = hydrate_attributes(
+            hydrated, sources, warnings = hydrate_attributes(
                 attributes=new_attributes,
                 description=f"{base.meta.description} + {scenario}",
                 geography=base.meta.geography,
                 context=base.attributes,  # KEY: pass context
+                on_progress=on_progress,
             )
         except Exception as e:
             hydration_error = e
@@ -305,11 +313,12 @@ def overlay_command(
     hydration_thread = Thread(target=do_hydration, daemon=True)
     hydration_thread.start()
 
-    with Live(console=console, refresh_per_second=1, transient=True) as live:
+    with Live(console=console, refresh_per_second=4, transient=True) as live:
         while not hydration_done.is_set():
             elapsed = time.time() - hydration_start
+            step, status = current_step
             live.update(
-                f"[cyan]⠋[/cyan] Researching distributions... {_format_elapsed(elapsed)}"
+                f"[cyan]⠋[/cyan] Step {step}: {status} {_format_elapsed(elapsed)}"
             )
             time.sleep(0.1)
 
@@ -322,6 +331,14 @@ def overlay_command(
     console.print(
         f"[green]✓[/green] Researched distributions ({_format_elapsed(hydration_elapsed)}, {len(sources)} sources)"
     )
+
+    # Show validation warnings if any
+    if warnings:
+        console.print(f"[yellow]⚠[/yellow] {len(warnings)} validation warning(s):")
+        for w in warnings[:5]:  # Show first 5
+            console.print(f"  [dim]- {w}[/dim]")
+        if len(warnings) > 5:
+            console.print(f"  [dim]... and {len(warnings) - 5} more[/dim]")
 
     # =========================================================================
     # Step 3: Constraint Binding (with Context)
@@ -511,13 +528,22 @@ def spec_command(
     hydration_start = time.time()
     hydrated = None
     sources = []
+    warnings = []
     hydration_done = Event()
     hydration_error = None
+    current_step = ["2a", "Starting..."]  # [step, status] - mutable for thread access
+
+    def on_progress(step: str, status: str, count: int | None):
+        """Update current step for display."""
+        current_step[0] = step
+        current_step[1] = status
 
     def do_hydration():
-        nonlocal hydrated, sources, hydration_error
+        nonlocal hydrated, sources, warnings, hydration_error
         try:
-            hydrated, sources = hydrate_attributes(attributes, description, geography)
+            hydrated, sources, warnings = hydrate_attributes(
+                attributes, description, geography, on_progress=on_progress
+            )
         except Exception as e:
             hydration_error = e
         finally:
@@ -526,11 +552,12 @@ def spec_command(
     hydration_thread = Thread(target=do_hydration, daemon=True)
     hydration_thread.start()
 
-    with Live(console=console, refresh_per_second=1, transient=True) as live:
+    with Live(console=console, refresh_per_second=4, transient=True) as live:
         while not hydration_done.is_set():
             elapsed = time.time() - hydration_start
+            step, status = current_step
             live.update(
-                f"[cyan]⠋[/cyan] Researching distributions... {_format_elapsed(elapsed)}"
+                f"[cyan]⠋[/cyan] Step {step}: {status} {_format_elapsed(elapsed)}"
             )
             time.sleep(0.1)
 
@@ -543,6 +570,14 @@ def spec_command(
     console.print(
         f"[green]✓[/green] Researched distributions ({_format_elapsed(hydration_elapsed)}, {len(sources)} sources)"
     )
+
+    # Show validation warnings if any
+    if warnings:
+        console.print(f"[yellow]⚠[/yellow] {len(warnings)} validation warning(s):")
+        for w in warnings[:5]:  # Show first 5
+            console.print(f"  [dim]- {w}[/dim]")
+        if len(warnings) > 5:
+            console.print(f"  [dim]... and {len(warnings) - 5} more[/dim]")
 
     # =========================================================================
     # Step 3: Constraint Binding

@@ -8,7 +8,7 @@ Discovers all relevant attributes for a population across four categories:
 """
 
 from ..llm import reasoning_call
-from ..spec import AttributeSpec, DiscoveredAttribute
+from ..models import AttributeSpec, DiscoveredAttribute
 
 
 # JSON schema for attribute selection response
@@ -43,13 +43,18 @@ ATTRIBUTE_SELECTION_SCHEMA = {
                         "type": "string",
                         "description": "One-line description of what this attribute represents",
                     },
+                    "strategy": {
+                        "type": "string",
+                        "enum": ["independent", "derived", "conditional"],
+                        "description": "Sampling strategy: independent (no dependencies), derived (zero-variance formula), conditional (probabilistic dependency)",
+                    },
                     "depends_on": {
                         "type": "array",
                         "items": {"type": "string"},
-                        "description": "Names of other attributes this depends on (for derived values)",
+                        "description": "Names of other attributes this depends on (empty for independent)",
                     },
                 },
-                "required": ["name", "type", "category", "description", "depends_on"],
+                "required": ["name", "type", "category", "description", "strategy", "depends_on"],
                 "additionalProperties": False,
             },
         },
@@ -198,12 +203,33 @@ Traits that affect behavior in simulations:
 - Big Five (openness, conscientiousness, extraversion, agreeableness, neuroticism)
 - 1-3 domain-specific traits (e.g., risk_tolerance, trust_in_institutions)
 
+## Sampling Strategy
+
+For each attribute, determine the sampling strategy:
+
+**independent**: Attribute stands alone, sampled directly from a distribution.
+- Most base attributes: age, gender, surgical_specialty, employer_type
+- Has NO dependencies (depends_on is empty)
+
+**derived**: ONLY for ZERO-VARIANCE, definitional transformations:
+- age_bracket derived from age (categorical binning)
+- is_senior derived from years_experience (boolean flag)
+- bmi derived from height and weight (physics formula)
+- ⚠️ DERIVED IS RARE. If two people with the same inputs could have different outputs, use CONDITIONAL.
+
+**conditional**: Any probabilistic relationship where variance exists:
+- years_experience depends on age (correlated, but two 50-year-olds can have different experience)
+- income depends on role (chiefs earn more on average, but there's variance)
+- research_activity depends on employer_type (university hospitals skew toward research)
+
 ## Dependencies
 
-Only mark depends_on if there's a LOGICAL constraint:
-- years_experience depends on age (can't exceed age - training_years)
-- income may depend on experience, role
-- Max 3 dependencies. Leave empty if independent.
+Only mark depends_on if there's a LOGICAL relationship:
+- depends_on must only reference attributes that will be sampled BEFORE this one
+- No circular dependencies (A→B→A)
+- Independent attributes MUST have empty depends_on
+- Derived and conditional MUST have non-empty depends_on
+- Max 3 dependencies per attribute
 
 ## Output Format
 
@@ -212,7 +238,8 @@ For each attribute:
 - type: int, float, categorical, boolean
 - category: universal, population_specific, context_specific, personality
 - description: One clear sentence
-- depends_on: List of attribute names (max 3, empty if none)"""
+- strategy: independent, derived, or conditional
+- depends_on: List of attribute names (max 3, empty if independent)"""
 
     data = reasoning_call(
         prompt=prompt,
@@ -224,12 +251,25 @@ For each attribute:
 
     attributes = []
     for attr_data in data.get("attributes", []):
+        # Determine strategy - default to independent if not specified
+        strategy = attr_data.get("strategy", "independent")
+        depends_on = attr_data.get("depends_on", [])
+
+        # Validate strategy/depends_on consistency
+        if strategy == "independent" and depends_on:
+            # Independent can't have dependencies - likely LLM error, switch to conditional
+            strategy = "conditional"
+        elif strategy in ("derived", "conditional") and not depends_on:
+            # Derived/conditional need dependencies - default to independent
+            strategy = "independent"
+
         attr = DiscoveredAttribute(
             name=attr_data["name"],
             type=attr_data["type"],
             category=attr_data["category"],
             description=attr_data["description"],
-            depends_on=attr_data.get("depends_on", []),
+            strategy=strategy,
+            depends_on=depends_on,
         )
         attributes.append(attr)
 
@@ -252,6 +292,7 @@ For each attribute:
                         type="float",
                         category="personality",
                         description=f"Big Five personality trait: {trait} (0-1 scale)",
+                        strategy="independent",  # Personality traits are independent
                         depends_on=[],
                     )
                 )
