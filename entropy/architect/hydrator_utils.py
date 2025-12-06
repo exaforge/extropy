@@ -424,8 +424,9 @@ def parse_distribution(dist_data: dict, attr_type: str):
             max=dist_data.get("max"),
         )
     elif dist_type == "categorical":
-        options = dist_data.get("options", [])
-        weights = dist_data.get("weights")
+        # Handle explicit null from LLM response (get returns None, not default)
+        options = dist_data.get("options") or []
+        weights = dist_data.get("weights") or []
         if not weights or len(weights) != len(options):
             weights = [1.0 / len(options)] * len(options) if options else []
         return CategoricalDistribution(
