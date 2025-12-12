@@ -113,20 +113,29 @@ def _display_spec_summary(spec: PopulationSpec) -> None:
         dist_info = ""
         if attr.sampling.distribution:
             dist = attr.sampling.distribution
-            if hasattr(dist, "mean") and dist.mean is not None:
+            # Check BetaDistribution first (has alpha/beta) - must come before min/max check
+            # since BetaDistribution has min/max attributes that can be None
+            if hasattr(dist, "alpha") and hasattr(dist, "beta"):
+                dist_info = f"β(α={dist.alpha:.1f}, β={dist.beta:.1f})"
+            elif hasattr(dist, "mean") and dist.mean is not None:
                 dist_info = f"μ={dist.mean:.0f}"
                 if dist.min is not None and dist.max is not None:
                     dist_info = f"{dist.min:.0f}-{dist.max:.0f}, {dist_info}"
             elif hasattr(dist, "mean_formula") and dist.mean_formula:
                 # Formula-based distribution (conditional)
                 dist_info = f"μ={dist.mean_formula}"
-            elif hasattr(dist, "options"):
+            elif hasattr(dist, "options") and dist.options:
+                # Check options is truthy before slicing
                 opts = dist.options[:2]
                 dist_info = f"{', '.join(opts)}{'...' if len(dist.options) > 2 else ''}"
             elif hasattr(dist, "min") and hasattr(dist, "max"):
-                dist_info = f"{dist.min:.1f}-{dist.max:.1f}"
+                # Only format if both min and max are not None
+                if dist.min is not None and dist.max is not None:
+                    dist_info = f"{dist.min:.1f}-{dist.max:.1f}"
             elif hasattr(dist, "probability_true"):
-                dist_info = f"P={dist.probability_true:.0%}"
+                # Check probability_true is not None before formatting
+                if dist.probability_true is not None:
+                    dist_info = f"P={dist.probability_true:.0%}"
 
         method_str = f"[dim]— {attr.grounding.method}[/dim]"
         console.print(
@@ -350,7 +359,7 @@ def overlay_command(
     with console.status("[cyan]Binding constraints...[/cyan]"):
         try:
             # Pass base attributes as context for cross-layer dependencies
-            bound_attrs, sampling_order = bind_constraints(
+            bound_attrs, sampling_order, bind_warnings = bind_constraints(
                 hydrated,
                 context=base.attributes,  # KEY: pass context
             )
@@ -362,6 +371,14 @@ def overlay_command(
             raise typer.Exit(1)
 
     console.print(f"[green]✓[/green] Constraints bound")
+
+    # Show binding warnings if any
+    if bind_warnings:
+        console.print(f"[yellow]⚠[/yellow] {len(bind_warnings)} binding warning(s):")
+        for w in bind_warnings[:5]:  # Show first 5
+            console.print(f"  [dim]- {w}[/dim]")
+        if len(bind_warnings) > 5:
+            console.print(f"  [dim]... and {len(bind_warnings) - 5} more[/dim]")
 
     # =========================================================================
     # Step 4: Build Overlay Spec and Merge
@@ -588,7 +605,7 @@ def spec_command(
 
     with console.status("[cyan]Binding constraints...[/cyan]"):
         try:
-            bound_attrs, sampling_order = bind_constraints(hydrated)
+            bound_attrs, sampling_order, bind_warnings = bind_constraints(hydrated)
         except CircularDependencyError as e:
             console.print(f"[red]✗[/red] Circular dependency detected: {e}")
             raise typer.Exit(1)
@@ -597,6 +614,14 @@ def spec_command(
             raise typer.Exit(1)
 
     console.print(f"[green]✓[/green] Constraints bound, sampling order determined")
+
+    # Show binding warnings if any
+    if bind_warnings:
+        console.print(f"[yellow]⚠[/yellow] {len(bind_warnings)} binding warning(s):")
+        for w in bind_warnings[:5]:  # Show first 5
+            console.print(f"  [dim]- {w}[/dim]")
+        if len(bind_warnings) > 5:
+            console.print(f"  [dim]... and {len(bind_warnings) - 5} more[/dim]")
 
     # =========================================================================
     # Step 4: Build Spec

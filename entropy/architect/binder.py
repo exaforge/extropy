@@ -80,7 +80,7 @@ def _topological_sort_specs(attributes: list[AttributeSpec]) -> list[str]:
 def bind_constraints(
     attributes: list[HydratedAttribute],
     context: list[AttributeSpec] | None = None,
-) -> tuple[list[AttributeSpec], list[str]]:
+) -> tuple[list[AttributeSpec], list[str], list[str]]:
     """
     Build dependency graph and determine sampling order.
 
@@ -98,7 +98,7 @@ def bind_constraints(
         context: Existing attributes from base population (for overlay mode)
 
     Returns:
-        Tuple of (list of AttributeSpec, sampling_order)
+        Tuple of (list of AttributeSpec, sampling_order, warnings)
 
     Raises:
         CircularDependencyError: If circular dependencies exist
@@ -106,19 +106,28 @@ def bind_constraints(
 
     Example:
         # Base mode
-        >>> specs, order = bind_constraints(hydrated_attrs)
+        >>> specs, order, warnings = bind_constraints(hydrated_attrs)
 
         # Overlay mode - allows dependencies on context attrs
-        >>> specs, order = bind_constraints(overlay_attrs, context=base_spec.attributes)
+        >>> specs, order, warnings = bind_constraints(overlay_attrs, context=base_spec.attributes)
     """
     attr_names = {a.name for a in attributes}
     context_names = {a.name for a in context} if context else set()
     known_names = attr_names | context_names
+    warnings = []
 
     # Filter unknown dependencies and create specs
     # Note: we don't mutate input objects - we filter during spec creation
     specs = []
     for attr in attributes:
+        # Collect unknown dependencies before filtering
+        unknown_deps = [d for d in attr.depends_on if d not in known_names]
+        if unknown_deps:
+            for dep in unknown_deps:
+                warnings.append(
+                    f"{attr.name}: removed unknown dependency '{dep}'"
+                )
+
         # Filter depends_on to only known attributes
         filtered_depends_on = [d for d in attr.depends_on if d in known_names]
 
@@ -146,7 +155,7 @@ def bind_constraints(
     # Context attributes are already sampled, so they don't need ordering
     sampling_order = _topological_sort_specs(specs)
 
-    return specs, sampling_order
+    return specs, sampling_order, warnings
 
 
 def _compute_grounding_summary(
