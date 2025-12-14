@@ -89,17 +89,57 @@ def validate_independent_hydration(attributes: list[HydratedAttribute]) -> list[
             errors.append(f"{attr.name}: independent attribute missing distribution")
             continue
 
+        # Categorical validation
         if attr.type == "categorical":
             if not isinstance(dist, CategoricalDistribution):
                 errors.append(f"{attr.name}: categorical attribute needs categorical distribution")
-            elif abs(sum(dist.weights) - 1.0) > 0.02:
-                errors.append(f"{attr.name}: weights sum to {sum(dist.weights)}, should be ~1.0")
+            else:
+                # Check for empty options list
+                if not dist.options:
+                    errors.append(f"{attr.name}: categorical distribution has no options")
+                # Check for mismatched options/weights array lengths
+                elif dist.weights and len(dist.options) != len(dist.weights):
+                    errors.append(
+                        f"{attr.name}: options ({len(dist.options)}) and weights ({len(dist.weights)}) length mismatch"
+                    )
+                # Check weights sum to ~1.0
+                elif dist.weights and abs(sum(dist.weights) - 1.0) > 0.02:
+                    errors.append(f"{attr.name}: weights sum to {sum(dist.weights):.2f}, should be ~1.0")
 
+        # Boolean validation
+        if attr.type == "boolean":
+            if not isinstance(dist, BooleanDistribution):
+                errors.append(f"{attr.name}: boolean attribute needs boolean distribution")
+            elif dist.probability_true is not None:
+                if dist.probability_true < 0 or dist.probability_true > 1:
+                    errors.append(
+                        f"{attr.name}: probability_true ({dist.probability_true}) must be between 0 and 1"
+                    )
+
+        # Numeric (int/float) validation
         if attr.type in ("int", "float"):
             if isinstance(dist, (NormalDistribution, LognormalDistribution)):
+                # Check for negative standard deviation
+                if dist.std is not None and dist.std < 0:
+                    errors.append(f"{attr.name}: std ({dist.std}) cannot be negative")
+                # Check for zero standard deviation (should use derived strategy)
+                elif dist.std is not None and dist.std == 0:
+                    errors.append(
+                        f"{attr.name}: std is 0 (no variance) — use derived strategy instead"
+                    )
+                # Check min/max validity
                 if dist.min is not None and dist.max is not None:
                     if dist.min >= dist.max:
                         errors.append(f"{attr.name}: min ({dist.min}) >= max ({dist.max})")
+
+            # Beta distribution validation
+            if isinstance(dist, BetaDistribution):
+                # Check for missing or non-positive alpha
+                if dist.alpha is None or dist.alpha <= 0:
+                    errors.append(f"{attr.name}: beta distribution alpha must be positive")
+                # Check for missing or non-positive beta
+                if dist.beta is None or dist.beta <= 0:
+                    errors.append(f"{attr.name}: beta distribution beta must be positive")
 
     return errors
 
@@ -161,18 +201,156 @@ def validate_conditional_base(attributes: list[HydratedAttribute]) -> list[str]:
 def validate_modifiers(
     attributes: list[HydratedAttribute],
     all_attributes: dict[str, HydratedAttribute]
-) -> list[str]:
-    """Validate modifiers for conditional attributes."""
+) -> tuple[list[str], list[str]]:
+    """Validate modifiers for conditional attributes.
+
+    Returns:
+        Tuple of (errors, warnings)
+    """
     errors = []
+    warnings = []
 
     for attr in attributes:
+        dist = attr.sampling.distribution
+
         for i, mod in enumerate(attr.sampling.modifiers):
+            # Validate 'when' clause references
             referenced = extract_names_from_condition(mod.when)
             for name in referenced:
                 if name not in attr.depends_on:
                     errors.append(
                         f"{attr.name} modifier {i}: 'when' references '{name}' not in depends_on"
                     )
+
+            # Type/modifier compatibility validation
+            if attr.type in ("int", "float"):
+                # Numeric attributes: can only use multiply/add
+                if mod.weight_overrides is not None:
+                    errors.append(
+                        f"{attr.name} modifier {i}: numeric attribute cannot use weight_overrides"
+                    )
+                if mod.probability_override is not None:
+                    errors.append(
+                        f"{attr.name} modifier {i}: numeric attribute cannot use probability_override"
+                    )
+            elif attr.type == "categorical":
+                # Categorical attributes: can only use weight_overrides
+                if mod.multiply is not None and mod.multiply != 1.0:
+                    errors.append(
+                        f"{attr.name} modifier {i}: categorical attribute cannot use multiply"
+                    )
+                if mod.add is not None and mod.add != 0:
+                    errors.append(
+                        f"{attr.name} modifier {i}: categorical attribute cannot use add"
+                    )
+                if mod.probability_override is not None:
+                    errors.append(
+                        f"{attr.name} modifier {i}: categorical attribute cannot use probability_override"
+                    )
+                # Validate weight_override keys match distribution options
+                if mod.weight_overrides and dist and isinstance(dist, CategoricalDistribution):
+                    valid_options = set(dist.options) if dist.options else set()
+                    for key in mod.weight_overrides.keys():
+                        if key not in valid_options:
+                            errors.append(
+                                f"{attr.name} modifier {i}: weight_override key '{key}' not in options"
+                            )
+            elif attr.type == "boolean":
+                # Boolean attributes: can only use probability_override
+                if mod.multiply is not None and mod.multiply != 1.0:
+                    errors.append(
+                        f"{attr.name} modifier {i}: boolean attribute cannot use multiply"
+                    )
+                if mod.add is not None and mod.add != 0:
+                    errors.append(
+                        f"{attr.name} modifier {i}: boolean attribute cannot use add"
+                    )
+                if mod.weight_overrides is not None:
+                    errors.append(
+                        f"{attr.name} modifier {i}: boolean attribute cannot use weight_overrides"
+                    )
+
+            # P2 Warning: Check for no-op modifiers
+            is_noop = True
+            if mod.multiply is not None and mod.multiply != 1.0:
+                is_noop = False
+            if mod.add is not None and mod.add != 0:
+                is_noop = False
+            if mod.weight_overrides:
+                is_noop = False
+            if mod.probability_override is not None:
+                is_noop = False
+
+            if is_noop:
+                warnings.append(
+                    f"{attr.name} modifier {i}: no-op modifier (multiply=1.0, add=0, no overrides)"
+                )
+
+    return errors, warnings
+
+
+def validate_strategy_consistency(attributes: list[HydratedAttribute]) -> list[str]:
+    """Validate that attributes have correct fields for their declared strategy.
+
+    Rules:
+    - Independent strategy: Must have distribution. Must not have formula, modifiers, or depends_on.
+    - Derived strategy: Must have formula and depends_on. Must not have distribution or modifiers.
+    - Conditional strategy: Must have distribution and depends_on. Must not have formula. Modifiers optional.
+
+    Args:
+        attributes: List of HydratedAttribute to validate
+
+    Returns:
+        List of error messages
+    """
+    errors = []
+
+    for attr in attributes:
+        strategy = attr.sampling.strategy
+        has_dist = attr.sampling.distribution is not None
+        has_formula = bool(attr.sampling.formula)
+        has_depends = bool(attr.sampling.depends_on)
+        has_modifiers = bool(attr.sampling.modifiers)
+
+        if strategy == "independent":
+            # Must have distribution
+            if not has_dist:
+                errors.append(f"{attr.name}: independent strategy requires distribution")
+            # Must not have formula
+            if has_formula:
+                errors.append(f"{attr.name}: independent strategy cannot have formula")
+            # Must not have modifiers
+            if has_modifiers:
+                errors.append(f"{attr.name}: independent strategy cannot have modifiers")
+            # Must not have depends_on
+            if has_depends:
+                errors.append(f"{attr.name}: independent strategy cannot have depends_on")
+
+        elif strategy == "derived":
+            # Must have formula
+            if not has_formula:
+                errors.append(f"{attr.name}: derived strategy requires formula")
+            # Must have depends_on
+            if not has_depends:
+                errors.append(f"{attr.name}: derived strategy requires depends_on")
+            # Must not have distribution
+            if has_dist:
+                errors.append(f"{attr.name}: derived strategy cannot have distribution")
+            # Must not have modifiers
+            if has_modifiers:
+                errors.append(f"{attr.name}: derived strategy cannot have modifiers")
+
+        elif strategy == "conditional":
+            # Must have distribution
+            if not has_dist:
+                errors.append(f"{attr.name}: conditional strategy requires distribution")
+            # Must have depends_on
+            if not has_depends:
+                errors.append(f"{attr.name}: conditional strategy requires depends_on")
+            # Must not have formula
+            if has_formula:
+                errors.append(f"{attr.name}: conditional strategy cannot have formula")
+            # Modifiers are optional for conditional
 
     return errors
 
@@ -387,11 +565,18 @@ def build_modifiers_schema() -> dict:
 
 
 def parse_distribution(dist_data: dict, attr_type: str):
-    """Parse distribution from LLM response data."""
+    """Parse distribution from LLM response data.
+
+    Includes defensive checks and fallbacks for incomplete or invalid data.
+    """
     if not dist_data:
         return default_distribution(attr_type)
 
     dist_type = dist_data.get("type")
+
+    # If distribution type is None or unrecognized, return a default distribution
+    if dist_type is None:
+        return default_distribution(attr_type)
 
     if dist_type == "normal":
         return NormalDistribution(
@@ -417,9 +602,16 @@ def parse_distribution(dist_data: dict, attr_type: str):
             max=dist_data.get("max", 1),
         )
     elif dist_type == "beta":
+        # Default alpha/beta to 2.0 if missing or non-positive
+        alpha = dist_data.get("alpha")
+        beta_val = dist_data.get("beta")
+        if alpha is None or alpha <= 0:
+            alpha = 2.0
+        if beta_val is None or beta_val <= 0:
+            beta_val = 2.0
         return BetaDistribution(
-            alpha=dist_data.get("alpha", 2),
-            beta=dist_data.get("beta", 2),
+            alpha=alpha,
+            beta=beta_val,
             min=dist_data.get("min"),
             max=dist_data.get("max"),
         )
@@ -427,15 +619,22 @@ def parse_distribution(dist_data: dict, attr_type: str):
         # Handle explicit null from LLM response (get returns None, not default)
         options = dist_data.get("options") or []
         weights = dist_data.get("weights") or []
+        # If no options, return a default categorical
+        if not options:
+            return CategoricalDistribution(options=["unknown"], weights=[1.0])
         if not weights or len(weights) != len(options):
-            weights = [1.0 / len(options)] * len(options) if options else []
+            weights = [1.0 / len(options)] * len(options)
         return CategoricalDistribution(
             options=options,
             weights=weights,
         )
     elif dist_type == "boolean":
+        # Default probability_true to 0.5 if missing
+        prob = dist_data.get("probability_true")
+        if prob is None:
+            prob = 0.5
         return BooleanDistribution(
-            probability_true=dist_data.get("probability_true", 0.5),
+            probability_true=prob,
         )
 
     return default_distribution(attr_type)

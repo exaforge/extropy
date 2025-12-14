@@ -25,6 +25,7 @@ from .hydrator_utils import (
     validate_derived_hydration,
     validate_conditional_base,
     validate_modifiers,
+    validate_strategy_consistency,
     # Schemas
     build_independent_schema,
     build_derived_schema,
@@ -707,8 +708,10 @@ Return JSON array with modifiers for each conditional attribute."""
         updated.append(original)
 
     all_attrs = {a.name: a for a in (independent_attrs or []) + (derived_attrs or []) + updated}
-    errors = validate_modifiers(updated, all_attrs)
-    return updated, sources, errors
+    errors, warnings = validate_modifiers(updated, all_attrs)
+    # Combine errors and warnings - errors are blocking, warnings are informational
+    all_issues = errors + warnings
+    return updated, sources, all_issues
 
 
 # =============================================================================
@@ -832,5 +835,9 @@ def hydrate_attributes(
     # Combine all hydrated attributes
     all_hydrated = independent_attrs + derived_attrs + conditional_attrs
     unique_sources = list(set(all_sources))
+
+    # Validate strategy consistency across all attributes
+    strategy_errors = validate_strategy_consistency(all_hydrated)
+    all_warnings.extend([f"[strategy] {e}" for e in strategy_errors])
 
     return all_hydrated, unique_sources, all_warnings
