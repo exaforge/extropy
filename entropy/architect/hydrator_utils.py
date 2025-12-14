@@ -89,57 +89,60 @@ def validate_independent_hydration(attributes: list[HydratedAttribute]) -> list[
             errors.append(f"{attr.name}: independent attribute missing distribution")
             continue
 
-        # Categorical validation
-        if attr.type == "categorical":
-            if not isinstance(dist, CategoricalDistribution):
-                errors.append(f"{attr.name}: categorical attribute needs categorical distribution")
-            else:
-                # Check for empty options list
-                if not dist.options:
-                    errors.append(f"{attr.name}: categorical distribution has no options")
-                # Check for mismatched options/weights array lengths
-                elif dist.weights and len(dist.options) != len(dist.weights):
-                    errors.append(
-                        f"{attr.name}: options ({len(dist.options)}) and weights ({len(dist.weights)}) length mismatch"
-                    )
-                # Check weights sum to ~1.0
-                elif dist.weights and abs(sum(dist.weights) - 1.0) > 0.02:
-                    errors.append(f"{attr.name}: weights sum to {sum(dist.weights):.2f}, should be ~1.0")
+        # Validate based on distribution type (not attribute type)
+        # This catches mismatches between declared type and actual distribution
 
-        # Boolean validation
-        if attr.type == "boolean":
-            if not isinstance(dist, BooleanDistribution):
-                errors.append(f"{attr.name}: boolean attribute needs boolean distribution")
-            elif dist.probability_true is not None:
+        # Categorical distribution validation
+        if isinstance(dist, CategoricalDistribution):
+            # Check for empty options list
+            if not dist.options:
+                errors.append(f"{attr.name}: categorical distribution has no options")
+            # Check for mismatched options/weights array lengths
+            elif dist.weights and len(dist.options) != len(dist.weights):
+                errors.append(
+                    f"{attr.name}: options ({len(dist.options)}) and weights ({len(dist.weights)}) length mismatch"
+                )
+            # Check weights sum to ~1.0
+            elif dist.weights and abs(sum(dist.weights) - 1.0) > 0.02:
+                errors.append(f"{attr.name}: weights sum to {sum(dist.weights):.2f}, should be ~1.0")
+
+        # Boolean distribution validation
+        elif isinstance(dist, BooleanDistribution):
+            if dist.probability_true is not None:
                 if dist.probability_true < 0 or dist.probability_true > 1:
                     errors.append(
                         f"{attr.name}: probability_true ({dist.probability_true}) must be between 0 and 1"
                     )
 
-        # Numeric (int/float) validation
-        if attr.type in ("int", "float"):
-            if isinstance(dist, (NormalDistribution, LognormalDistribution)):
-                # Check for negative standard deviation
-                if dist.std is not None and dist.std < 0:
-                    errors.append(f"{attr.name}: std ({dist.std}) cannot be negative")
-                # Check for zero standard deviation (should use derived strategy)
-                elif dist.std is not None and dist.std == 0:
-                    errors.append(
-                        f"{attr.name}: std is 0 (no variance) — use derived strategy instead"
-                    )
-                # Check min/max validity
-                if dist.min is not None and dist.max is not None:
-                    if dist.min >= dist.max:
-                        errors.append(f"{attr.name}: min ({dist.min}) >= max ({dist.max})")
+        # Normal/Lognormal distribution validation
+        elif isinstance(dist, (NormalDistribution, LognormalDistribution)):
+            # Check for negative standard deviation
+            if dist.std is not None and dist.std < 0:
+                errors.append(f"{attr.name}: std ({dist.std}) cannot be negative")
+            # Check for zero standard deviation (should use derived strategy)
+            elif dist.std is not None and dist.std == 0:
+                errors.append(
+                    f"{attr.name}: std is 0 (no variance) — use derived strategy instead"
+                )
+            # Check min/max validity
+            if dist.min is not None and dist.max is not None:
+                if dist.min >= dist.max:
+                    errors.append(f"{attr.name}: min ({dist.min}) >= max ({dist.max})")
 
-            # Beta distribution validation
-            if isinstance(dist, BetaDistribution):
-                # Check for missing or non-positive alpha
-                if dist.alpha is None or dist.alpha <= 0:
-                    errors.append(f"{attr.name}: beta distribution alpha must be positive")
-                # Check for missing or non-positive beta
-                if dist.beta is None or dist.beta <= 0:
-                    errors.append(f"{attr.name}: beta distribution beta must be positive")
+        # Beta distribution validation
+        elif isinstance(dist, BetaDistribution):
+            # Check for missing or non-positive alpha
+            if dist.alpha is None or dist.alpha <= 0:
+                errors.append(f"{attr.name}: beta distribution alpha must be positive")
+            # Check for missing or non-positive beta
+            if dist.beta is None or dist.beta <= 0:
+                errors.append(f"{attr.name}: beta distribution beta must be positive")
+
+        # Uniform distribution validation
+        elif isinstance(dist, UniformDistribution):
+            if dist.min is not None and dist.max is not None:
+                if dist.min >= dist.max:
+                    errors.append(f"{attr.name}: min ({dist.min}) >= max ({dist.max})")
 
     return errors
 
@@ -222,52 +225,57 @@ def validate_modifiers(
                         f"{attr.name} modifier {i}: 'when' references '{name}' not in depends_on"
                     )
 
-            # Type/modifier compatibility validation
-            if attr.type in ("int", "float"):
-                # Numeric attributes: can only use multiply/add
+            # Distribution type/modifier compatibility validation
+            # Check the actual distribution type, not just the attribute type
+            is_numeric_dist = isinstance(dist, (NormalDistribution, LognormalDistribution, UniformDistribution, BetaDistribution))
+            is_categorical_dist = isinstance(dist, CategoricalDistribution)
+            is_boolean_dist = isinstance(dist, BooleanDistribution)
+
+            if is_numeric_dist:
+                # Numeric distributions: can only use multiply/add
                 if mod.weight_overrides is not None:
                     errors.append(
-                        f"{attr.name} modifier {i}: numeric attribute cannot use weight_overrides"
+                        f"{attr.name} modifier {i}: numeric distribution cannot use weight_overrides"
                     )
                 if mod.probability_override is not None:
                     errors.append(
-                        f"{attr.name} modifier {i}: numeric attribute cannot use probability_override"
+                        f"{attr.name} modifier {i}: numeric distribution cannot use probability_override"
                     )
-            elif attr.type == "categorical":
-                # Categorical attributes: can only use weight_overrides
+            elif is_categorical_dist:
+                # Categorical distributions: can only use weight_overrides
                 if mod.multiply is not None and mod.multiply != 1.0:
                     errors.append(
-                        f"{attr.name} modifier {i}: categorical attribute cannot use multiply"
+                        f"{attr.name} modifier {i}: categorical distribution cannot use multiply"
                     )
                 if mod.add is not None and mod.add != 0:
                     errors.append(
-                        f"{attr.name} modifier {i}: categorical attribute cannot use add"
+                        f"{attr.name} modifier {i}: categorical distribution cannot use add"
                     )
                 if mod.probability_override is not None:
                     errors.append(
-                        f"{attr.name} modifier {i}: categorical attribute cannot use probability_override"
+                        f"{attr.name} modifier {i}: categorical distribution cannot use probability_override"
                     )
                 # Validate weight_override keys match distribution options
-                if mod.weight_overrides and dist and isinstance(dist, CategoricalDistribution):
-                    valid_options = set(dist.options) if dist.options else set()
+                if mod.weight_overrides and dist.options:
+                    valid_options = set(dist.options)
                     for key in mod.weight_overrides.keys():
                         if key not in valid_options:
                             errors.append(
                                 f"{attr.name} modifier {i}: weight_override key '{key}' not in options"
                             )
-            elif attr.type == "boolean":
-                # Boolean attributes: can only use probability_override
+            elif is_boolean_dist:
+                # Boolean distributions: can only use probability_override
                 if mod.multiply is not None and mod.multiply != 1.0:
                     errors.append(
-                        f"{attr.name} modifier {i}: boolean attribute cannot use multiply"
+                        f"{attr.name} modifier {i}: boolean distribution cannot use multiply"
                     )
                 if mod.add is not None and mod.add != 0:
                     errors.append(
-                        f"{attr.name} modifier {i}: boolean attribute cannot use add"
+                        f"{attr.name} modifier {i}: boolean distribution cannot use add"
                     )
                 if mod.weight_overrides is not None:
                     errors.append(
-                        f"{attr.name} modifier {i}: boolean attribute cannot use weight_overrides"
+                        f"{attr.name} modifier {i}: boolean distribution cannot use weight_overrides"
                     )
 
             # P2 Warning: Check for no-op modifiers

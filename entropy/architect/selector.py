@@ -184,7 +184,7 @@ The goal is realistic variance, not exhaustive detail. We need attributes that:
 ### 1. UNIVERSAL (8-12)
 Core demographics that everyone has:
 - age, gender, location, income, education, marital_status, household_size
-- Adapt to local context (e.g., caste for India, Bundesland for Germany)
+- Adapt to local context (e.g., region/state/province names appropriate for the geography)
 
 ### 2. POPULATION-SPECIFIC (10-18)
 What defines THIS population's identity and work/life:
