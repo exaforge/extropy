@@ -17,6 +17,7 @@ from .architect import (
 )
 from .architect.binder import CircularDependencyError
 from .models import DiscoveredAttribute, PopulationSpec
+from .validator import validate_spec, Severity
 
 app = typer.Typer(
     name="entropy",
@@ -177,6 +178,106 @@ def _display_overlay_attributes(
         console.print(f"  • {attr.name} {type_str}{dep_str}")
 
     console.print()
+
+
+def _display_validation_result(result, strict: bool = False) -> bool:
+    """Display validation result and return True if should proceed.
+
+    Args:
+        result: ValidationResult from validate_spec()
+        strict: If True, treat warnings as errors
+
+    Returns:
+        True if validation passed (no errors, or only warnings and not strict)
+    """
+    if result.valid and not result.warnings:
+        console.print("[green]✓[/green] Spec validated")
+        return True
+
+    if result.errors:
+        console.print(f"[red]✗[/red] Spec has {len(result.errors)} error(s)")
+        for err in result.errors[:10]:
+            loc = err.attribute
+            if err.modifier_index is not None:
+                loc = f"{err.attribute}[{err.modifier_index}]"
+            console.print(f"  [red]✗[/red] {loc}: {err.message}")
+            if err.suggestion:
+                console.print(f"    [dim]→ {err.suggestion}[/dim]")
+        if len(result.errors) > 10:
+            console.print(f"  [dim]... and {len(result.errors) - 10} more error(s)[/dim]")
+        return False
+
+    if result.warnings:
+        if strict:
+            console.print(f"[red]✗[/red] Spec has {len(result.warnings)} warning(s) (strict mode)")
+            for warn in result.warnings[:5]:
+                loc = warn.attribute
+                if warn.modifier_index is not None:
+                    loc = f"{warn.attribute}[{warn.modifier_index}]"
+                console.print(f"  [yellow]⚠[/yellow] {loc}: {warn.message}")
+            if len(result.warnings) > 5:
+                console.print(f"  [dim]... and {len(result.warnings) - 5} more warning(s)[/dim]")
+            return False
+        else:
+            console.print(f"[green]✓[/green] Spec validated with {len(result.warnings)} warning(s)")
+            for warn in result.warnings[:3]:
+                loc = warn.attribute
+                if warn.modifier_index is not None:
+                    loc = f"{warn.attribute}[{warn.modifier_index}]"
+                console.print(f"  [yellow]⚠[/yellow] {loc}: {warn.message}")
+            if len(result.warnings) > 3:
+                console.print(f"  [dim]... and {len(result.warnings) - 3} more warning(s)[/dim]")
+            return True
+
+    return True
+
+
+@app.command("validate")
+def validate_command(
+    spec_file: Path = typer.Argument(..., help="Population spec YAML file to validate"),
+    strict: bool = typer.Option(False, "--strict", help="Treat warnings as errors"),
+):
+    """
+    Validate a population spec for structural correctness.
+
+    Checks for type/modifier compatibility, range violations, weight validity,
+    distribution parameters, dependencies, conditions, formulas, duplicates,
+    and strategy consistency.
+
+    Example:
+        entropy validate surgeons.yaml
+        entropy validate surgeons.yaml --strict
+    """
+    console.print()
+
+    if not spec_file.exists():
+        console.print(f"[red]✗[/red] Spec file not found: {spec_file}")
+        raise typer.Exit(1)
+
+    with console.status("[cyan]Loading spec...[/cyan]"):
+        try:
+            spec = PopulationSpec.from_yaml(spec_file)
+        except Exception as e:
+            console.print(f"[red]✗[/red] Failed to load spec: {e}")
+            raise typer.Exit(1)
+
+    console.print(f"[green]✓[/green] Loaded: [bold]{spec.meta.description}[/bold] ({len(spec.attributes)} attributes)")
+    console.print()
+
+    with console.status("[cyan]Validating spec...[/cyan]"):
+        result = validate_spec(spec)
+
+    if not _display_validation_result(result, strict):
+        raise typer.Exit(1)
+
+    # Show summary
+    console.print()
+    if result.errors:
+        console.print(f"[red]Validation failed[/red]: {len(result.errors)} error(s)")
+    elif result.warnings and strict:
+        console.print(f"[red]Validation failed[/red]: {len(result.warnings)} warning(s) in strict mode")
+    else:
+        console.print("[green]Validation passed[/green]")
 
 
 @app.command("overlay")
@@ -401,6 +502,18 @@ def overlay_command(
     console.print(
         f"[green]✓[/green] Merged: {len(base.attributes)} base + {len(bound_attrs)} overlay = {len(merged_spec.attributes)} total"
     )
+
+    # =========================================================================
+    # Validation Gate
+    # =========================================================================
+
+    with console.status("[cyan]Validating merged spec...[/cyan]"):
+        validation_result = validate_spec(merged_spec)
+
+    if not _display_validation_result(validation_result):
+        console.print()
+        console.print("[red]Spec validation failed. Please fix the errors above.[/red]")
+        raise typer.Exit(1)
 
     # =========================================================================
     # Human Checkpoint #2: Confirm and Save
@@ -638,6 +751,18 @@ def spec_command(
         )
 
     console.print(f"[green]✓[/green] Spec assembled")
+
+    # =========================================================================
+    # Validation Gate
+    # =========================================================================
+
+    with console.status("[cyan]Validating spec...[/cyan]"):
+        validation_result = validate_spec(population_spec)
+
+    if not _display_validation_result(validation_result):
+        console.print()
+        console.print("[red]Spec validation failed. Please fix the errors above.[/red]")
+        raise typer.Exit(1)
 
     # =========================================================================
     # Human Checkpoint #2: Confirm and Save

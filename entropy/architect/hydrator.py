@@ -634,17 +634,70 @@ def hydrate_conditional_modifiers(
 
 For EACH conditional attribute, specify how its base distribution should be MODIFIED.
 
-### Type-Specific Modifiers
+### CRITICAL: Type-Specific Modifier Rules
 
-**For NUMERIC attributes (int/float) — use multiply/add:**
-Multiple matching modifiers STACK.
+Different attribute types require different modifier fields. Using the wrong type causes sampling to fail.
 
-**For CATEGORICAL attributes — use weight_overrides:**
-The LAST matching modifier wins.
+| Distribution Type | ALLOWED Fields | FORBIDDEN Fields |
+|-------------------|----------------|------------------|
+| normal, lognormal, uniform, beta | multiply, add | weight_overrides, probability_override |
+| categorical | weight_overrides | multiply, add, probability_override |
+| boolean | probability_override | multiply, add, weight_overrides |
 
-**For BOOLEAN attributes — use probability_override:**
+⚠️ COMMON MISTAKE: Do NOT use multiply/add on categorical attributes.
+Instead of `multiply: 1.2, add: 0.3` → Use `weight_overrides: {{"option1": 0.4, "option2": 0.6}}`
 
-### Modifier Conditions
+⚠️ COMMON MISTAKE: Do NOT use multiply/add on boolean attributes.
+Instead of `multiply: 1.5` → Use `probability_override: 0.75`
+
+### Scale Warning for Beta Distributions
+
+Beta distributions output values between 0 and 1.
+
+If an attribute uses beta distribution (common for proportions, shares, rates):
+- Base output is already 0-1 (e.g., 0.25 = 25%)
+- Use small `add` values: ±0.05 to ±0.15
+- NEVER use add > 0.5 or add < -0.5
+
+❌ WRONG: add: 5.0 (thinking "add 5 percentage points")
+✓ RIGHT: add: 0.05 (actually adds 5 percentage points to 0-1 scale)
+
+Example for private_insurance_patient_share (beta, mean ~0.25):
+- To increase by ~5 percentage points: multiply: 1.0, add: 0.05
+- To increase by ~20%: multiply: 1.2, add: 0.0
+
+### Categorical Weight Overrides
+
+When using weight_overrides, you MUST:
+1. Include ALL options from the base distribution
+2. Weights MUST sum to exactly 1.0
+
+Example - if base distribution has options [urban, suburban, rural]:
+
+✓ CORRECT:
+weight_overrides:
+  urban: 0.70
+  suburban: 0.20
+  rural: 0.10
+  # Sum = 1.0, all options included
+
+❌ WRONG:
+weight_overrides:
+  urban: 0.70
+  suburban: 0.30
+  # Missing 'rural', sum = 1.0 but incomplete
+
+### Condition Rules
+
+The `when` clause can ONLY reference attributes listed in that attribute's depends_on.
+
+If the attribute has `depends_on: [age, employer_type]`, then:
+✓ VALID: when: age > 50
+✓ VALID: when: employer_type == 'university_hospital'
+✓ VALID: when: age > 50 and employer_type == 'university_hospital'
+❌ INVALID: when: gender == 'female' (gender not in depends_on)
+
+### Modifier Conditions Syntax
 
 The `when` clause supports:
 - Equality: `role == 'chief'`

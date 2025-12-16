@@ -184,7 +184,7 @@ The goal is realistic variance, not exhaustive detail. We need attributes that:
 ### 1. UNIVERSAL (8-12)
 Core demographics that everyone has:
 - age, gender, location, income, education, marital_status, household_size
-- Adapt to local context (e.g., caste for India, Bundesland for Germany)
+- Adapt to local context (e.g., region/state/province names appropriate for the geography)
 
 ### 2. POPULATION-SPECIFIC (10-18)
 What defines THIS population's identity and work/life:
@@ -200,8 +200,20 @@ Only if a product/service/brand is mentioned:
 
 ### 4. PERSONALITY (5-8)
 Traits that affect behavior in simulations:
-- Big Five (openness, conscientiousness, extraversion, agreeableness, neuroticism)
-- 1-3 domain-specific traits (e.g., risk_tolerance, trust_in_institutions)
+
+**Big Five (EXACTLY these 5 names, no variations):**
+- openness
+- conscientiousness
+- extraversion
+- agreeableness
+- neuroticism
+
+Do NOT use alternative names like big_five_openness, o_openness, trait_openness, etc.
+Do NOT include Big Five twice under different names.
+
+**Domain-specific traits (1-3):**
+- e.g., risk_tolerance, trust_in_institutions
+- These should be specific to the population context
 
 ## Sampling Strategy
 
@@ -284,8 +296,19 @@ For each attribute:
         }
         existing_names = {a.name for a in attributes}
 
+        # Check for both exact matches and partial matches (e.g., big_five_openness)
+        def trait_already_exists(trait: str, existing: set[str]) -> bool:
+            """Check if trait exists exactly or as part of another name."""
+            if trait in existing:
+                return True
+            # Check for common variations like big_five_openness, o_openness, etc.
+            for name in existing:
+                if trait in name.lower():
+                    return True
+            return False
+
         for trait in big_five_names:
-            if trait not in existing_names:
+            if not trait_already_exists(trait, existing_names):
                 attributes.append(
                     DiscoveredAttribute(
                         name=trait,
