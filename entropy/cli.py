@@ -797,5 +797,243 @@ def spec_command(
     console.print("═" * 60)
 
 
+@app.command("sample")
+def sample_command(
+    spec_file: Path = typer.Argument(..., help="Population spec YAML file to sample from"),
+    output: Path = typer.Option(..., "--output", "-o", help="Output file path (.json or .db)"),
+    count: int | None = typer.Option(None, "--count", "-n", help="Number of agents (default: spec.meta.size)"),
+    seed: int | None = typer.Option(None, "--seed", help="Random seed for reproducibility"),
+    format: str = typer.Option("json", "--format", "-f", help="Output format: json or sqlite"),
+    report: bool = typer.Option(False, "--report", "-r", help="Show distribution summaries and stats"),
+    skip_validation: bool = typer.Option(False, "--skip-validation", help="Skip validator errors"),
+):
+    """
+    Generate agents from a population spec.
+
+    Samples from a PopulationSpec YAML file, producing a population of agents
+    with attributes matching the spec's distributions and dependencies.
+
+    Example:
+        entropy sample surgeons.yaml -o agents.json
+        entropy sample surgeons.yaml -n 500 -o agents.json --seed 42
+        entropy sample surgeons.yaml -n 1000 -o agents.db --format sqlite
+        entropy sample surgeons.yaml -o agents.json --report
+    """
+    from .sampler import sample_population, save_json, save_sqlite, SamplingError
+
+    start_time = time.time()
+    console.print()
+
+    # =========================================================================
+    # Load Spec
+    # =========================================================================
+
+    if not spec_file.exists():
+        console.print(f"[red]✗[/red] Spec file not found: {spec_file}")
+        raise typer.Exit(1)
+
+    with console.status("[cyan]Loading spec...[/cyan]"):
+        try:
+            spec = PopulationSpec.from_yaml(spec_file)
+        except Exception as e:
+            console.print(f"[red]✗[/red] Failed to load spec: {e}")
+            raise typer.Exit(1)
+
+    effective_count = count if count is not None else spec.meta.size
+    console.print(
+        f"[green]✓[/green] Loaded: [bold]{spec.meta.description}[/bold] "
+        f"({len(spec.attributes)} attributes, sampling {effective_count} agents)"
+    )
+
+    # =========================================================================
+    # Validation Gate
+    # =========================================================================
+
+    console.print()
+    with console.status("[cyan]Validating spec...[/cyan]"):
+        validation_result = validate_spec(spec)
+
+    if not validation_result.valid:
+        if skip_validation:
+            console.print(
+                f"[yellow]⚠[/yellow] Spec has {len(validation_result.errors)} error(s) - "
+                f"skipping validation (--skip-validation)"
+            )
+            for err in validation_result.errors[:5]:
+                console.print(f"  [red]✗[/red] {err.attribute}: {err.message}")
+            if len(validation_result.errors) > 5:
+                console.print(f"  [dim]... and {len(validation_result.errors) - 5} more[/dim]")
+        else:
+            console.print(f"[red]✗[/red] Spec has {len(validation_result.errors)} error(s)")
+            for err in validation_result.errors[:10]:
+                console.print(f"  [red]✗[/red] {err.attribute}: {err.message}")
+                if err.suggestion:
+                    console.print(f"    [dim]→ {err.suggestion}[/dim]")
+            if len(validation_result.errors) > 10:
+                console.print(f"  [dim]... and {len(validation_result.errors) - 10} more[/dim]")
+            console.print()
+            console.print("[dim]Use --skip-validation to sample anyway[/dim]")
+            raise typer.Exit(1)
+    else:
+        if validation_result.warnings:
+            console.print(
+                f"[green]✓[/green] Spec validated with {len(validation_result.warnings)} warning(s)"
+            )
+        else:
+            console.print("[green]✓[/green] Spec validated")
+
+    # =========================================================================
+    # Sampling
+    # =========================================================================
+
+    console.print()
+    sampling_start = time.time()
+    result = None
+    sampling_error = None
+
+    # Show progress for larger populations
+    show_progress = effective_count >= 100
+
+    if show_progress:
+        from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn, TaskProgressColumn
+
+        with Progress(
+            SpinnerColumn(),
+            TextColumn("[cyan]Sampling agents...[/cyan]"),
+            BarColumn(),
+            TaskProgressColumn(),
+            console=console,
+            transient=True,
+        ) as progress:
+            task = progress.add_task("Sampling", total=effective_count)
+
+            def on_progress(current: int, total: int):
+                progress.update(task, completed=current)
+
+            try:
+                result = sample_population(
+                    spec,
+                    count=effective_count,
+                    seed=seed,
+                    on_progress=on_progress,
+                )
+            except SamplingError as e:
+                sampling_error = e
+    else:
+        with console.status("[cyan]Sampling agents...[/cyan]"):
+            try:
+                result = sample_population(
+                    spec,
+                    count=effective_count,
+                    seed=seed,
+                )
+            except SamplingError as e:
+                sampling_error = e
+
+    if sampling_error:
+        console.print(f"[red]✗[/red] Sampling failed: {sampling_error}")
+        raise typer.Exit(1)
+
+    sampling_elapsed = time.time() - sampling_start
+    console.print(
+        f"[green]✓[/green] Sampled {len(result.agents)} agents "
+        f"({_format_elapsed(sampling_elapsed)}, seed={result.meta['seed']})"
+    )
+
+    # =========================================================================
+    # Report (optional)
+    # =========================================================================
+
+    if report:
+        console.print()
+        console.print("┌" + "─" * 58 + "┐")
+        console.print("│" + " SAMPLING REPORT".center(58) + "│")
+        console.print("└" + "─" * 58 + "┘")
+        console.print()
+
+        # Numeric attribute stats
+        numeric_attrs = [a for a in spec.attributes if a.type in ("int", "float")]
+        if numeric_attrs:
+            console.print("[bold]Numeric Attributes:[/bold]")
+            for attr in numeric_attrs[:15]:
+                mean = result.stats.attribute_means.get(attr.name, 0)
+                std = result.stats.attribute_stds.get(attr.name, 0)
+                console.print(f"  {attr.name}: μ={mean:.2f}, σ={std:.2f}")
+            if len(numeric_attrs) > 15:
+                console.print(f"  [dim]... and {len(numeric_attrs) - 15} more[/dim]")
+            console.print()
+
+        # Categorical attribute stats
+        cat_attrs = [a for a in spec.attributes if a.type == "categorical"]
+        if cat_attrs:
+            console.print("[bold]Categorical Attributes:[/bold]")
+            for attr in cat_attrs[:10]:
+                counts = result.stats.categorical_counts.get(attr.name, {})
+                total = sum(counts.values()) or 1
+                top_3 = sorted(counts.items(), key=lambda x: -x[1])[:3]
+                dist_str = ", ".join(f"{k}:{v/total:.0%}" for k, v in top_3)
+                console.print(f"  {attr.name}: {dist_str}")
+            if len(cat_attrs) > 10:
+                console.print(f"  [dim]... and {len(cat_attrs) - 10} more[/dim]")
+            console.print()
+
+        # Boolean attribute stats
+        bool_attrs = [a for a in spec.attributes if a.type == "boolean"]
+        if bool_attrs:
+            console.print("[bold]Boolean Attributes:[/bold]")
+            for attr in bool_attrs:
+                counts = result.stats.boolean_counts.get(attr.name, {True: 0, False: 0})
+                total = sum(counts.values()) or 1
+                pct_true = counts.get(True, 0) / total
+                console.print(f"  {attr.name}: {pct_true:.1%} true")
+            console.print()
+
+        # Modifier triggers
+        triggered_mods = {k: v for k, v in result.stats.modifier_triggers.items() if any(v.values())}
+        if triggered_mods:
+            console.print("[bold]Modifier Triggers:[/bold]")
+            for attr_name, triggers in list(triggered_mods.items())[:10]:
+                attr = spec.get_attribute(attr_name)
+                if attr:
+                    for idx, count in triggers.items():
+                        if count > 0 and idx < len(attr.sampling.modifiers):
+                            mod = attr.sampling.modifiers[idx]
+                            console.print(f"  {attr_name}[{idx}] '{mod.when}': {count} times")
+            console.print()
+
+        # Constraint violations
+        if result.stats.constraint_violations:
+            console.print("[bold]Expression Constraint Violations:[/bold]")
+            for expr, count in list(result.stats.constraint_violations.items())[:10]:
+                console.print(f"  [yellow]⚠[/yellow] {expr}: {count} agents")
+            console.print()
+
+    # =========================================================================
+    # Save Output
+    # =========================================================================
+
+    console.print()
+    output_format = format.lower()
+
+    # Auto-detect format from extension if not explicitly set
+    if output.suffix.lower() == ".db":
+        output_format = "sqlite"
+    elif output.suffix.lower() == ".json":
+        output_format = "json"
+
+    with console.status(f"[cyan]Saving to {output_format}...[/cyan]"):
+        if output_format == "sqlite":
+            save_sqlite(result, output)
+        else:
+            save_json(result, output)
+
+    elapsed = time.time() - start_time
+
+    console.print("═" * 60)
+    console.print(f"[green]✓[/green] Saved {len(result.agents)} agents to [bold]{output}[/bold]")
+    console.print(f"[dim]Total time: {_format_elapsed(elapsed)}[/dim]")
+    console.print("═" * 60)
+
+
 if __name__ == "__main__":
     app()
