@@ -102,11 +102,14 @@ def validate_scenario(
         known_attributes = {attr.name for attr in population_spec.attributes}
 
     # Build set of known edge types from network
+    # Check both 'edge_type' and 'type' fields (different network formats)
     known_edge_types: set[str] = set()
     if network and 'edges' in network:
         for edge in network['edges']:
             if 'edge_type' in edge:
                 known_edge_types.add(edge['edge_type'])
+            elif 'type' in edge:
+                known_edge_types.add(edge['type'])
 
     # Build set of defined channels
     defined_channels = {ch.name for ch in spec.seed_exposure.channels}

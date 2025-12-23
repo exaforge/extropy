@@ -75,8 +75,11 @@ def _load_network_summary(network_path: Path) -> dict | None:
 
         if 'edges' in network:
             for edge in network['edges']:
+                # Check both 'edge_type' and 'type' fields (different network formats)
                 if 'edge_type' in edge:
                     edge_types.add(edge['edge_type'])
+                elif 'type' in edge:
+                    edge_types.add(edge['type'])
 
         return {
             'node_count': node_count,
