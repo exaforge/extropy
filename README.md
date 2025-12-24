@@ -32,7 +32,7 @@ entropy scenario "AI diagnostic tool announcement" \
 |-------|--------------|-----|--------|
 | **Phase 1: Population Creation** | Generate population specs, sample agents, create networks | OpenAI API (GPT-5) | ✅ Implemented |
 | **Phase 2: Scenario Injection** | Define events, exposure rules, interaction models, outcomes | OpenAI API (GPT-5) | ✅ Implemented |
-| **Phase 3: Simulation** | Agents respond; opinions evolve with social influence | LM Studio (local) | 📋 Planned |
+| **Phase 3: Simulation** | Agents respond; opinions evolve with social influence | OpenAI API (GPT-5) | ✅ Implemented |
 
 ---
 
@@ -424,6 +424,148 @@ sampling_order:
 
 ---
 
+## Phase 3: Simulation Engine
+
+Phase 3 executes scenarios against populations, simulating opinion dynamics with agent reasoning and network propagation.
+
+### `entropy simulate`
+
+Run a simulation from a scenario spec.
+
+```bash
+entropy simulate <scenario.yaml> -o <results_dir> [options]
+```
+
+**Arguments:**
+- `scenario`: Scenario spec YAML file (required)
+- `-o, --output`: Output results directory (required)
+- `-m, --model`: LLM model for agent reasoning (default: gpt-5-mini)
+- `-t, --threshold`: Multi-touch threshold for re-reasoning (default: 3)
+- `--seed`: Random seed for reproducibility
+- `-q, --quiet`: Suppress progress output
+
+**Pipeline:**
+1. Load scenario, population spec, agents, and network
+2. Initialize agent states in SQLite database
+3. For each timestep:
+   - Apply seed exposures based on Phase 2 rules
+   - Propagate through network from sharing agents
+   - Agents who are newly aware (or have N+ new exposures) reason via LLM
+   - Update states with positions, sentiments, and sharing intent
+4. Check stopping conditions (max timesteps, exposure rate, convergence)
+5. Export results to output directory
+
+**Example:**
+```bash
+entropy simulate scenario.yaml -o results/
+entropy simulate scenario.yaml -o results/ --model gpt-5-nano --seed 42
+```
+
+**Output:**
+```
+Simulating: scenario.yaml
+Output: results/
+Model: gpt-5-mini | Threshold: 3
+
+⠋ Timestep 45/168 (27%) | Exposure: 67.2% | 1m 23s
+
+════════════════════════════════════════════════════════════
+✓ Simulation complete
+════════════════════════════════════════════════════════════
+
+Duration: 32m 14s (87 timesteps)
+Stopped: exposure_rate > 0.95
+Reasoning calls: 18,432
+Final exposure rate: 96.1%
+
+Outcome Distributions:
+  cancel_intent: will_cancel:18.4%, seriously_considering:27.1%, staying:23.3%
+  sentiment: mean=-0.34
+
+Results saved to: results/
+```
+
+### `entropy results`
+
+Display simulation results.
+
+```bash
+entropy results <results_dir> [options]
+```
+
+**Arguments:**
+- `results_dir`: Results directory from simulation (required)
+- `-s, --segment`: Attribute to segment by
+- `-t, --timeline`: Show timeline view
+- `-a, --agent`: Show single agent details
+
+**Views:**
+
+1. **Summary (default):**
+```bash
+entropy results results/
+```
+Shows overall statistics, exposure rates, and outcome distributions.
+
+2. **Segment breakdown:**
+```bash
+entropy results results/ --segment plan_tier
+```
+Breaks down results by any agent attribute.
+
+3. **Timeline:**
+```bash
+entropy results results/ --timeline
+```
+Shows metrics over time: exposure rate, sentiment, positions.
+
+4. **Agent details:**
+```bash
+entropy results results/ --agent agent_001
+```
+Shows single agent's attributes, state, and reasoning.
+
+**Example output (summary):**
+```
+═══════════════════════════════════════════════════════════════
+SIMULATION RESULTS: netflix_price_increase
+═══════════════════════════════════════════════════════════════
+
+Population: 5,000 agents
+Duration: 87 timesteps
+Model: gpt-5-mini
+
+EXPOSURE
+────────────────────────────────────────
+Final exposure rate: 96.1%
+Total exposures: 24,891
+Reasoning calls: 18,432
+
+OUTCOMES
+────────────────────────────────────────
+cancel_intent:
+  will_cancel          18.4%  ████████░░░░░░░░░░░░
+  seriously_considering 27.1%  ████████████░░░░░░░░
+  might_consider       31.2%  ██████████████░░░░░░
+  staying              23.3%  ██████████░░░░░░░░░░
+
+sentiment: mean -0.34 (std 0.42)
+```
+
+### Results Directory Structure
+
+```
+results/
+├── simulation.db              # SQLite database with all state
+├── timeline.jsonl             # Streaming event log
+├── agent_states.json          # Final state per agent
+├── by_timestep.json           # Metrics over time
+├── outcome_distributions.json # Final outcome distributions
+└── meta.json                  # Run configuration
+```
+
+---
+
 ## Complete Workflow Example
 
 ```bash
@@ -440,8 +582,9 @@ entropy scenario "Netflix announces $3/month price increase for all tiers" \
 entropy validate netflix_users.yaml
 entropy validate-scenario price_increase.yaml
 
-# Phase 3: Run simulation (coming soon)
-# entropy simulate price_increase.yaml -o results/
+# Phase 3: Run simulation
+entropy simulate price_increase.yaml -o results/
+entropy results results/
 ```
 
 ---
