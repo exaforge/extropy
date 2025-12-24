@@ -35,6 +35,8 @@ from .hydrator_utils import (
     parse_distribution,
     parse_constraints,
     parse_modifiers,
+    # Sanitization
+    sanitize_formula,
 )
 
 
@@ -324,7 +326,7 @@ Return JSON array with formula for each attribute."""
         if not original:
             continue
 
-        formula = attr_data.get("formula", "")
+        formula = sanitize_formula(attr_data.get("formula", "")) or ""
 
         grounding = GroundingInfo(
             level="strong",

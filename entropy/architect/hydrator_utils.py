@@ -27,7 +27,7 @@ from ..models import (
 # Constants
 # =============================================================================
 
-BUILTIN_NAMES = {'True', 'False', 'None', 'abs', 'min', 'max', 'round', 'int', 'float', 'str', 'len'}
+BUILTIN_NAMES = {'True', 'False', 'true', 'false', 'None', 'abs', 'min', 'max', 'round', 'int', 'float', 'str', 'len'}
 
 
 # =============================================================================
@@ -69,8 +69,46 @@ def extract_names_from_condition(condition: str) -> set[str]:
         cleaned = re.sub(r"'[^']*'", '', condition)
         cleaned = re.sub(r'"[^"]*"', '', cleaned)
         tokens = re.findall(r'\b([a-z_][a-z0-9_]*)\b', cleaned, re.IGNORECASE)
-        keywords = {'and', 'or', 'not', 'in', 'is', 'True', 'False', 'None', 'if', 'else'}
+        keywords = {'and', 'or', 'not', 'in', 'is', 'True', 'False', 'true', 'false', 'None', 'if', 'else'}
         return {t for t in tokens if t not in keywords and t not in BUILTIN_NAMES}
+
+
+# =============================================================================
+# Formula Sanitization
+# =============================================================================
+
+
+def sanitize_formula(formula: str | None) -> str | None:
+    """Sanitize a formula/expression by fixing common LLM mistakes.
+
+    Common issues fixed:
+    - Stray braces from JSON examples (e.g., "age - 28}" -> "age - 28")
+    - Leading/trailing whitespace
+    - Lowercase boolean literals (true/false -> True/False)
+
+    Args:
+        formula: The formula string to sanitize
+
+    Returns:
+        Sanitized formula, or None if input is None/empty
+    """
+    if not formula:
+        return None
+
+    result = formula.strip()
+
+    # Remove stray braces at start/end (common LLM mistake from JSON examples)
+    while result.endswith('}') and result.count('{') < result.count('}'):
+        result = result[:-1].rstrip()
+    while result.startswith('{') and result.count('{') > result.count('}'):
+        result = result[1:].lstrip()
+
+    # Fix lowercase boolean literals to Python style
+    # Only replace standalone words, not parts of identifiers
+    result = re.sub(r'\btrue\b', 'True', result)
+    result = re.sub(r'\bfalse\b', 'False', result)
+
+    return result if result else None
 
 
 # =============================================================================
@@ -592,8 +630,8 @@ def parse_distribution(dist_data: dict, attr_type: str):
             std=dist_data.get("std"),
             min=dist_data.get("min"),
             max=dist_data.get("max"),
-            mean_formula=dist_data.get("mean_formula"),
-            std_formula=dist_data.get("std_formula"),
+            mean_formula=sanitize_formula(dist_data.get("mean_formula")),
+            std_formula=sanitize_formula(dist_data.get("std_formula")),
         )
     elif dist_type == "lognormal":
         return LognormalDistribution(
@@ -601,8 +639,8 @@ def parse_distribution(dist_data: dict, attr_type: str):
             std=dist_data.get("std"),
             min=dist_data.get("min"),
             max=dist_data.get("max"),
-            mean_formula=dist_data.get("mean_formula"),
-            std_formula=dist_data.get("std_formula"),
+            mean_formula=sanitize_formula(dist_data.get("mean_formula")),
+            std_formula=sanitize_formula(dist_data.get("std_formula")),
         )
     elif dist_type == "uniform":
         return UniformDistribution(
@@ -684,7 +722,7 @@ def parse_modifiers(modifiers_data: list[dict] | None) -> list[Modifier]:
     for mod in modifiers_data:
         modifiers.append(
             Modifier(
-                when=mod["when"],
+                when=sanitize_formula(mod["when"]) or mod["when"],
                 multiply=mod.get("multiply"),
                 add=mod.get("add"),
                 weight_overrides=mod.get("weight_overrides"),
