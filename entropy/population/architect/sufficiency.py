@@ -4,6 +4,7 @@ Verifies that the population description has enough information
 to proceed with attribute discovery and spec generation.
 """
 
+from ...config import ModelProfile
 from ...core.llm import simple_call
 from ...core.models import SufficiencyResult
 
@@ -38,7 +39,8 @@ SUFFICIENCY_SCHEMA = {
 def check_sufficiency(
     description: str,
     default_size: int = 1000,
-    model: str = "gpt-5-mini",
+    model: str | None = None,
+    profile: ModelProfile | None = None,
 ) -> SufficiencyResult:
     """
     Check if a population description is sufficient for spec generation.
@@ -51,7 +53,8 @@ def check_sufficiency(
     Args:
         description: Natural language population description
         default_size: Default size if not specified
-        model: Model to use (gpt-5-mini recommended for speed)
+        model: Explicit model override (e.g., "openai/gpt-4o-mini")
+        profile: ModelProfile to use (uses profile.fast if no explicit model)
 
     Returns:
         SufficiencyResult with sufficient flag, size, and any clarifications needed
@@ -92,6 +95,7 @@ Be lenient - if you can reasonably infer a specific population, mark as sufficie
         response_schema=SUFFICIENCY_SCHEMA,
         schema_name="sufficiency_check",
         model=model,
+        profile=profile,
     )
 
     return SufficiencyResult(

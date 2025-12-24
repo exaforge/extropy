@@ -7,6 +7,7 @@ and form opinions using structured LLM calls.
 import logging
 from typing import Any
 
+from ..config import ModelProfile
 from ..core.llm import simple_call
 from ..core.models import (
     ScenarioSpec,
@@ -188,6 +189,7 @@ def reason_agent(
     context: ReasoningContext,
     scenario: ScenarioSpec,
     config: SimulationRunConfig,
+    profile: ModelProfile | None = None,
 ) -> ReasoningResponse | None:
     """Call LLM to get agent's reasoning and response.
 
@@ -195,6 +197,7 @@ def reason_agent(
         context: Reasoning context with persona, event, exposures
         scenario: Scenario specification
         config: Simulation run configuration
+        profile: ModelProfile to use (uses profile.fast if no model in config)
 
     Returns:
         ReasoningResponse with extracted outcomes, or None if failed
@@ -210,7 +213,8 @@ def reason_agent(
                 prompt=prompt,
                 response_schema=schema,
                 schema_name="agent_response",
-                model=config.model,
+                model=config.model if config.model else None,
+                profile=profile,
                 log=True,
             )
 
@@ -260,6 +264,7 @@ def batch_reason_agents(
     contexts: list[ReasoningContext],
     scenario: ScenarioSpec,
     config: SimulationRunConfig,
+    profile: ModelProfile | None = None,
 ) -> list[tuple[str, ReasoningResponse | None]]:
     """Reason multiple agents (sequentially for now).
 
@@ -269,6 +274,7 @@ def batch_reason_agents(
         contexts: List of reasoning contexts
         scenario: Scenario specification
         config: Simulation run configuration
+        profile: ModelProfile to use for reasoning calls
 
     Returns:
         List of (agent_id, response) tuples
@@ -276,7 +282,7 @@ def batch_reason_agents(
     results = []
 
     for context in contexts:
-        response = reason_agent(context, scenario, config)
+        response = reason_agent(context, scenario, config, profile=profile)
         results.append((context.agent_id, response))
 
     return results

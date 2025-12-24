@@ -7,6 +7,7 @@ Discovers all relevant attributes for a population across four categories:
 - Personality: Behavioral/psychological traits when relevant
 """
 
+from ...config import ModelProfile
 from ...core.llm import reasoning_call
 from ...core.models import AttributeSpec, DiscoveredAttribute
 
@@ -77,13 +78,14 @@ def select_attributes(
     size: int,
     geography: str | None = None,
     context: list[AttributeSpec] | None = None,
-    model: str = "gpt-5",
-    reasoning_effort: str = "low",
+    model: str | None = None,
+    profile: ModelProfile | None = None,
+    reasoning_effort: str | None = None,
 ) -> list[DiscoveredAttribute]:
     """
     Discover all relevant attributes for a population.
 
-    Uses GPT-5 with reasoning to analyze the population and identify
+    Uses LLM with reasoning to analyze the population and identify
     attributes across all applicable categories. The model considers:
     - What makes this population unique
     - Geographic/cultural context
@@ -98,8 +100,9 @@ def select_attributes(
         size: Number of agents (for context)
         geography: Geographic scope if known
         context: Existing attributes from base population (for overlay mode)
-        model: Model to use
-        reasoning_effort: "low", "medium", or "high"
+        model: Explicit model override (e.g., "anthropic/claude-sonnet-4")
+        profile: ModelProfile to use (uses profile.reasoning if no explicit model)
+        reasoning_effort: Override reasoning effort ("low", "medium", "high")
 
     Returns:
         List of DiscoveredAttribute objects
@@ -258,6 +261,7 @@ For each attribute:
         response_schema=ATTRIBUTE_SELECTION_SCHEMA,
         schema_name="attribute_selection",
         model=model,
+        profile=profile,
         reasoning_effort=reasoning_effort,
     )
 

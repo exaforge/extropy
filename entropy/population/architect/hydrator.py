@@ -11,6 +11,7 @@ Each step is processed separately with specialized prompts and validation.
 
 from typing import Callable
 
+from ...config import ModelProfile
 from ...core.llm import agentic_research, reasoning_call
 from ...core.models import (
     AttributeSpec,
@@ -50,21 +51,23 @@ def hydrate_independent(
     population: str,
     geography: str | None = None,
     context: list[AttributeSpec] | None = None,
-    model: str = "gpt-5",
-    reasoning_effort: str = "low",
+    model: str | None = None,
+    profile: ModelProfile | None = None,
+    reasoning_effort: str | None = None,
 ) -> tuple[list[HydratedAttribute], list[str], list[str]]:
     """
     Research distributions for independent attributes (Step 2a).
 
-    Uses GPT-5 with web search to find real-world distribution data.
+    Uses LLM with web search to find real-world distribution data.
 
     Args:
         attributes: List of DiscoveredAttribute with strategy=independent
         population: Population description (e.g., "German surgeons")
         geography: Geographic scope (e.g., "Germany")
         context: Existing attributes from base population (for overlay mode)
-        model: Model to use
-        reasoning_effort: "low", "medium", or "high"
+        model: Explicit model override (e.g., "openai/gpt-4o")
+        profile: ModelProfile to use (uses profile.research if no explicit model)
+        reasoning_effort: Override reasoning effort ("low", "medium", "high")
 
     Returns:
         Tuple of (list of HydratedAttribute, list of source URLs, list of validation errors)
@@ -159,6 +162,7 @@ Return JSON with distribution, constraints, and grounding for each attribute."""
         response_schema=build_independent_schema(),
         schema_name="independent_hydration",
         model=model,
+        profile=profile,
         reasoning_effort=reasoning_effort,
     )
 
@@ -219,13 +223,14 @@ def hydrate_derived(
     geography: str | None = None,
     independent_attrs: list[HydratedAttribute] | None = None,
     context: list[AttributeSpec] | None = None,
-    model: str = "gpt-5",
-    reasoning_effort: str = "low",
+    model: str | None = None,
+    profile: ModelProfile | None = None,
+    reasoning_effort: str | None = None,
 ) -> tuple[list[HydratedAttribute], list[str]]:
     """
     Specify formulas for derived attributes (Step 2b).
 
-    Uses GPT-5 WITHOUT web search (formulas are deterministic).
+    Uses LLM WITHOUT web search (formulas are deterministic).
 
     Args:
         attributes: List of DiscoveredAttribute with strategy=derived
@@ -233,8 +238,9 @@ def hydrate_derived(
         geography: Geographic scope
         independent_attrs: Already hydrated independent attributes for reference
         context: Existing attributes from base population (for overlay mode)
-        model: Model to use
-        reasoning_effort: "low", "medium", or "high"
+        model: Explicit model override (e.g., "anthropic/claude-sonnet-4")
+        profile: ModelProfile to use (uses profile.reasoning if no explicit model)
+        reasoning_effort: Override reasoning effort ("low", "medium", "high")
 
     Returns:
         Tuple of (list of HydratedAttribute with formulas, list of validation errors)
@@ -314,6 +320,7 @@ Return JSON array with formula for each attribute."""
         response_schema=build_derived_schema(),
         schema_name="derived_hydration",
         model=model,
+        profile=profile,
         reasoning_effort=reasoning_effort,
     )
 
@@ -377,13 +384,14 @@ def hydrate_conditional_base(
     independent_attrs: list[HydratedAttribute] | None = None,
     derived_attrs: list[HydratedAttribute] | None = None,
     context: list[AttributeSpec] | None = None,
-    model: str = "gpt-5",
-    reasoning_effort: str = "low",
+    model: str | None = None,
+    profile: ModelProfile | None = None,
+    reasoning_effort: str | None = None,
 ) -> tuple[list[HydratedAttribute], list[str], list[str]]:
     """
     Research BASE distributions for conditional attributes (Step 2c).
 
-    Uses GPT-5 with web search. Does NOT include modifiers - those come in Step 2d.
+    Uses LLM with web search. Does NOT include modifiers - those come in Step 2d.
 
     Args:
         attributes: List of DiscoveredAttribute with strategy=conditional
@@ -392,8 +400,9 @@ def hydrate_conditional_base(
         independent_attrs: Already hydrated independent attributes
         derived_attrs: Already hydrated derived attributes
         context: Existing attributes from base population (for overlay mode)
-        model: Model to use
-        reasoning_effort: "low", "medium", or "high"
+        model: Explicit model override (e.g., "openai/gpt-4o")
+        profile: ModelProfile to use (uses profile.research if no explicit model)
+        reasoning_effort: Override reasoning effort ("low", "medium", "high")
 
     Returns:
         Tuple of (list of HydratedAttribute, list of source URLs, list of validation errors)
@@ -496,6 +505,7 @@ Return JSON with distribution, constraints, and grounding for each attribute."""
         response_schema=build_conditional_base_schema(),
         schema_name="conditional_base_hydration",
         model=model,
+        profile=profile,
         reasoning_effort=reasoning_effort,
     )
 
@@ -557,13 +567,14 @@ def hydrate_conditional_modifiers(
     independent_attrs: list[HydratedAttribute] | None = None,
     derived_attrs: list[HydratedAttribute] | None = None,
     context: list[AttributeSpec] | None = None,
-    model: str = "gpt-5",
-    reasoning_effort: str = "low",
+    model: str | None = None,
+    profile: ModelProfile | None = None,
+    reasoning_effort: str | None = None,
 ) -> tuple[list[HydratedAttribute], list[str], list[str]]:
     """
     Specify MODIFIERS for conditional attributes (Step 2d).
 
-    Uses GPT-5 with web search to find how distributions vary by dependency values.
+    Uses LLM with web search to find how distributions vary by dependency values.
 
     Args:
         conditional_attrs: List of HydratedAttribute from Step 2c (with base distributions)
@@ -572,8 +583,9 @@ def hydrate_conditional_modifiers(
         independent_attrs: Already hydrated independent attributes
         derived_attrs: Already hydrated derived attributes
         context: Existing attributes from base population (for overlay mode)
-        model: Model to use
-        reasoning_effort: "low", "medium", or "high"
+        model: Explicit model override (e.g., "openai/gpt-4o")
+        profile: ModelProfile to use (uses profile.research if no explicit model)
+        reasoning_effort: Override reasoning effort ("low", "medium", "high")
 
     Returns:
         Tuple of (updated HydratedAttribute list, list of source URLs, list of validation errors)
@@ -740,6 +752,7 @@ Return JSON array with modifiers for each conditional attribute."""
         response_schema=build_modifiers_schema(),
         schema_name="conditional_modifiers_hydration",
         model=model,
+        profile=profile,
         reasoning_effort=reasoning_effort,
     )
 
@@ -801,8 +814,9 @@ def hydrate_attributes(
     description: str,
     geography: str | None = None,
     context: list[AttributeSpec] | None = None,
-    model: str = "gpt-5",
-    reasoning_effort: str = "low",
+    model: str | None = None,
+    profile: ModelProfile | None = None,
+    reasoning_effort: str | None = None,
     on_progress: ProgressCallback | None = None,
 ) -> tuple[list[HydratedAttribute], list[str], list[str]]:
     """
@@ -822,8 +836,9 @@ def hydrate_attributes(
         description: Original population description
         geography: Geographic scope for research
         context: Existing attributes from base population (for overlay mode)
-        model: Model to use
-        reasoning_effort: "low", "medium", or "high"
+        model: Explicit model override for all steps
+        profile: ModelProfile to use for model selection
+        reasoning_effort: Override reasoning effort ("low", "medium", "high")
         on_progress: Optional callback for progress updates (step, status, count)
 
     Returns:
@@ -854,6 +869,7 @@ def hydrate_attributes(
         geography=geography,
         context=context,
         model=model,
+        profile=profile,
         reasoning_effort=reasoning_effort,
     )
     all_sources.extend(independent_sources)
@@ -869,6 +885,7 @@ def hydrate_attributes(
         independent_attrs=independent_attrs,
         context=context,
         model=model,
+        profile=profile,
         reasoning_effort=reasoning_effort,
     )
     all_warnings.extend([f"[2b] {e}" for e in derived_errors])
@@ -884,6 +901,7 @@ def hydrate_attributes(
         derived_attrs=derived_attrs,
         context=context,
         model=model,
+        profile=profile,
         reasoning_effort=reasoning_effort,
     )
     all_sources.extend(conditional_sources)
@@ -900,6 +918,7 @@ def hydrate_attributes(
         derived_attrs=derived_attrs,
         context=context,
         model=model,
+        profile=profile,
         reasoning_effort=reasoning_effort,
     )
     all_sources.extend(modifier_sources)
