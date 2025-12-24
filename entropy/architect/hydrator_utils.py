@@ -27,7 +27,7 @@ from ..models import (
 # Constants
 # =============================================================================
 
-BUILTIN_NAMES = {'True', 'False', 'None', 'abs', 'min', 'max', 'round', 'int', 'float', 'str', 'len'}
+BUILTIN_NAMES = {'True', 'False', 'true', 'false', 'None', 'abs', 'min', 'max', 'round', 'int', 'float', 'str', 'len'}
 
 
 # =============================================================================
@@ -69,7 +69,7 @@ def extract_names_from_condition(condition: str) -> set[str]:
         cleaned = re.sub(r"'[^']*'", '', condition)
         cleaned = re.sub(r'"[^"]*"', '', cleaned)
         tokens = re.findall(r'\b([a-z_][a-z0-9_]*)\b', cleaned, re.IGNORECASE)
-        keywords = {'and', 'or', 'not', 'in', 'is', 'True', 'False', 'None', 'if', 'else'}
+        keywords = {'and', 'or', 'not', 'in', 'is', 'True', 'False', 'true', 'false', 'None', 'if', 'else'}
         return {t for t in tokens if t not in keywords and t not in BUILTIN_NAMES}
 
 

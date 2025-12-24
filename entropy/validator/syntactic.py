@@ -24,8 +24,8 @@ from ..models import (
 # Constants
 # =============================================================================
 
-BUILTIN_NAMES = {'True', 'False', 'None', 'abs', 'min', 'max', 'round', 'int', 'float', 'str', 'len'}
-PYTHON_KEYWORDS = {'and', 'or', 'not', 'in', 'is', 'True', 'False', 'None', 'if', 'else'}
+BUILTIN_NAMES = {'True', 'False', 'true', 'false', 'None', 'abs', 'min', 'max', 'round', 'int', 'float', 'str', 'len'}
+PYTHON_KEYWORDS = {'and', 'or', 'not', 'in', 'is', 'True', 'False', 'true', 'false', 'None', 'if', 'else'}
 
 
 # =============================================================================
