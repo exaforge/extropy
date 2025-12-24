@@ -117,9 +117,16 @@ def validate_spec(spec: PopulationSpec) -> ValidationResult:
     )
 
 
+from .fixer import fix_modifier_conditions, fix_spec_file, ConditionFix, FixResult
+
+
 __all__ = [
     "Severity",
     "ValidationIssue",
     "ValidationResult",
     "validate_spec",
+    "fix_modifier_conditions",
+    "fix_spec_file",
+    "ConditionFix",
+    "FixResult",
 ]

@@ -589,7 +589,12 @@ def hydrate_conditional_modifiers(
         context_section = "## READ-ONLY CONTEXT ATTRIBUTES (from base population)\n\n"
         context_section += "These attributes already exist. You can reference them in 'when' conditions.\n\n"
         for attr in context:
-            context_section += f"- {attr.name} ({attr.type}): {attr.description}\n"
+            opt_info = ""
+            if attr.sampling.distribution and hasattr(attr.sampling.distribution, "options"):
+                opts = attr.sampling.distribution.options
+                if opts:
+                    opt_info = f"\n    VALID OPTIONS (use exactly): {opts}"
+            context_section += f"- {attr.name} ({attr.type}): {attr.description}{opt_info}\n"
         context_section += "\n---\n\n"
 
     context_summary = context_section + "## Full Context\n\n"
@@ -600,8 +605,9 @@ def hydrate_conditional_modifiers(
             dist_info = ""
             if attr.sampling.distribution:
                 dist = attr.sampling.distribution
-                if hasattr(dist, "options"):
-                    dist_info = f" — options: {', '.join(dist.options)}"
+                if hasattr(dist, "options") and dist.options:
+                    # List options explicitly for easy copy-paste
+                    dist_info = f"\n    VALID OPTIONS (use exactly): {dist.options}"
                 elif hasattr(dist, "mean") and dist.mean is not None:
                     dist_info = f" — mean={dist.mean}, std={getattr(dist, 'std', '?')}"
             context_summary += f"- {attr.name} ({attr.type}): {attr.description}{dist_info}\n"
@@ -707,12 +713,25 @@ The `when` clause supports:
 - Membership: `specialty in ['cardiac', 'neuro']`
 - Compound: `role == 'chief' and employer_type == 'university'`
 
+### ⚠️ CRITICAL: Use EXACT Option Names in Conditions
+
+When referencing categorical attributes in `when` conditions, you MUST use the EXACT option names as defined in the attribute's distribution. Copy-paste them exactly.
+
+Common naming mismatches that WILL FAIL:
+- ❌ 'University hospital' → ✓ 'University_hospital'
+- ❌ 'Senior/Oberarzt' → ✓ 'Senior_Oberarzt'
+- ❌ 'lead/PI' → ✓ 'lead_PI'
+- ❌ 'Private hospital' → ✓ 'Private_hospital'
+
+The valid option values are listed in the "Full Context" section above for each categorical attribute. Use those EXACT strings in your conditions.
+
 ### Rules
 
 1. Numeric uses multiply/add. Categorical uses weight_overrides. Boolean uses probability_override.
 2. Only add modifiers where distribution meaningfully differs from base.
 3. Don't include no-ops like {{"multiply": 1.0, "add": 0}}.
 4. `when` can only reference attributes in depends_on.
+5. ALWAYS use EXACT option names from the attribute definitions - do NOT paraphrase or reformat them.
 
 Return JSON array with modifiers for each conditional attribute."""
 
