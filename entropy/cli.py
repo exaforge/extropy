@@ -8,16 +8,16 @@ import typer
 from rich.console import Console
 from rich.live import Live
 
-from .architect import (
+from .population.architect import (
     check_sufficiency,
     select_attributes,
     hydrate_attributes,
     bind_constraints,
     build_spec,
 )
-from .architect.binder import CircularDependencyError
-from .models import DiscoveredAttribute, PopulationSpec
-from .validator import validate_spec, Severity, fix_modifier_conditions, fix_spec_file
+from .population.architect.binder import CircularDependencyError
+from .core.models import DiscoveredAttribute, PopulationSpec
+from .population.validator import validate_spec, Severity, fix_modifier_conditions, fix_spec_file
 
 app = typer.Typer(
     name="entropy",
@@ -899,7 +899,7 @@ def sample_command(
         entropy sample surgeons.yaml -n 1000 -o agents.db --format sqlite
         entropy sample surgeons.yaml -o agents.json --report
     """
-    from .sampler import sample_population, save_json, save_sqlite, SamplingError
+    from .population.sampler import sample_population, save_json, save_sqlite, SamplingError
 
     start_time = time.time()
     console.print()

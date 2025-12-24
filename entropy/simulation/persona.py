@@ -6,7 +6,7 @@ be used as context for LLM reasoning calls.
 
 from typing import Any
 
-from ..models import PopulationSpec, AttributeSpec
+from ..core.models import PopulationSpec, AttributeSpec
 
 
 # Personality trait descriptors for Big Five

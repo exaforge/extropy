@@ -14,8 +14,8 @@ from datetime import datetime
 from pathlib import Path
 from typing import Callable
 
-from ..models import PopulationSpec
-from .models import (
+from ..core.models import (
+    PopulationSpec,
     ScenarioMeta,
     ScenarioSpec,
     SimulationConfig,

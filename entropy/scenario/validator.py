@@ -9,8 +9,8 @@ import json
 import re
 from pathlib import Path
 
-from ..models import PopulationSpec
-from .models import (
+from ..core.models import (
+    PopulationSpec,
     ScenarioSpec,
     ValidationError,
     ValidationWarning,

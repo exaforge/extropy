@@ -10,7 +10,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Iterator
 
-from .models import SimulationEvent, SimulationEventType
+from ..core.models import SimulationEvent, SimulationEventType
 
 
 class TimelineManager:

@@ -8,8 +8,7 @@ import logging
 import re
 from typing import Any
 
-from ..models.scenario import SimulationConfig
-from .models import TimestepSummary
+from ..core.models import SimulationConfig, TimestepSummary
 from .state import StateManager
 
 logger = logging.getLogger(__name__)

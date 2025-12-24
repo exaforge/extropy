@@ -7,8 +7,8 @@ Discovers all relevant attributes for a population across four categories:
 - Personality: Behavioral/psychological traits when relevant
 """
 
-from ..llm import reasoning_call
-from ..models import AttributeSpec, DiscoveredAttribute
+from ...core.llm import reasoning_call
+from ...core.models import AttributeSpec, DiscoveredAttribute
 
 
 # JSON schema for attribute selection response

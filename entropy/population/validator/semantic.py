@@ -7,7 +7,7 @@ They help identify potential issues but don't indicate structural problems.
 import re
 
 from . import Severity, ValidationIssue
-from ..models import (
+from ...core.models import (
     PopulationSpec,
     AttributeSpec,
     NormalDistribution,

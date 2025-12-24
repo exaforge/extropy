@@ -2,6 +2,13 @@
 
 A PopulationSpec is a complete blueprint for generating a population,
 containing all attribute definitions, distributions, and sampling order.
+
+This module contains all Phase 1 (Population Creation) models:
+- Distributions: Normal, Uniform, Categorical, Boolean, etc.
+- Modifiers: Numeric, Categorical, Boolean modifiers
+- Sampling: SamplingConfig, Constraint
+- Attributes: AttributeSpec, DiscoveredAttribute, HydratedAttribute
+- Spec: PopulationSpec with YAML I/O
 """
 
 from datetime import datetime

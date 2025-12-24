@@ -1,8 +1,17 @@
-"""Pydantic models for Scenario Compiler (Phase 2).
+"""Scenario models for Entropy (Phase 2).
 
 A ScenarioSpec defines how an event/information propagates through a population
 and what outcomes to measure. It is the bridge between population creation (Phase 1)
 and simulation execution (Phase 3).
+
+This module contains:
+- Event: EventType, Event
+- Exposure: ExposureChannel, ExposureRule, SeedExposure
+- Interaction: InteractionType, InteractionConfig, SpreadModifier, SpreadConfig
+- Outcomes: OutcomeType, OutcomeDefinition, OutcomeConfig
+- Config: TimestepUnit, SimulationConfig
+- Spec: ScenarioMeta, ScenarioSpec with YAML I/O
+- Validation: ValidationError, ValidationWarning, ValidationResult
 """
 
 from datetime import datetime

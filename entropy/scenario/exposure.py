@@ -5,9 +5,9 @@ generating exposure rules based on the event type, population characteristics,
 and network structure.
 """
 
-from ..llm import reasoning_call
-from ..models import PopulationSpec
-from .models import (
+from ..core.llm import reasoning_call
+from ..core.models import (
+    PopulationSpec,
     Event,
     ExposureChannel,
     ExposureRule,

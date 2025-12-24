@@ -34,7 +34,7 @@ Output:
     - meta.json: Run configuration
 """
 
-from .models import (
+from ..core.models import (
     # Event types
     SimulationEventType,
     # State models
@@ -57,7 +57,7 @@ from .engine import (
 from .state import StateManager
 from .persona import generate_persona, generate_persona_for_reasoning
 from .reasoning import reason_agent, build_reasoning_prompt, build_response_schema
-from .exposure import (
+from .propagation import (
     apply_seed_exposures,
     propagate_through_network,
     evaluate_exposure_rule,

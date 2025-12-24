@@ -1,6 +1,15 @@
-"""Pydantic models for the Simulation Engine (Phase 3).
+"""Simulation Engine models for Entropy (Phase 3).
 
-Defines all state and event models used during simulation execution.
+Defines all state and event models used during simulation execution:
+- SimulationEventType: Enum of event types
+- ExposureRecord: Record of a single exposure
+- AgentState: Complete agent state during simulation
+- SimulationEvent: Timeline event
+- PeerOpinion: Opinion of connected peer
+- ReasoningContext: Context for agent reasoning
+- ReasoningResponse: Response from agent LLM call
+- SimulationRunConfig: Configuration for a run
+- TimestepSummary: Summary statistics per timestep
 """
 
 from datetime import datetime

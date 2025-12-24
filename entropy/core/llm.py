@@ -13,7 +13,7 @@ from typing import Any
 
 from openai import OpenAI
 
-from .config import get_settings
+from ..config import get_settings
 
 
 def _get_logs_dir() -> Path:

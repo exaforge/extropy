@@ -4,8 +4,8 @@ Verifies that the population description has enough information
 to proceed with attribute discovery and spec generation.
 """
 
-from ..llm import simple_call
-from ..models import SufficiencyResult
+from ...core.llm import simple_call
+from ...core.models import SufficiencyResult
 
 
 # JSON schema for sufficiency check response

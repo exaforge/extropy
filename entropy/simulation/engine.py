@@ -12,11 +12,9 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Callable
 
-from ..models import PopulationSpec
-from ..models.scenario import ScenarioSpec
-from ..network import load_agents_json
-
-from .models import (
+from ..core.models import (
+    PopulationSpec,
+    ScenarioSpec,
     AgentState,
     ExposureRecord,
     PeerOpinion,
@@ -26,10 +24,11 @@ from .models import (
     SimulationRunConfig,
     TimestepSummary,
 )
+from ..network import load_agents_json
 from .state import StateManager
 from .persona import generate_persona
 from .reasoning import reason_agent, create_reasoning_context
-from .exposure import apply_seed_exposures, propagate_through_network, get_neighbors
+from .propagation import apply_seed_exposures, propagate_through_network, get_neighbors
 from .stopping import evaluate_stopping_conditions
 from .timeline import TimelineManager
 from .aggregation import (

@@ -13,7 +13,7 @@ import random
 import re
 from typing import Any
 
-from ..models import (
+from ...core.models import (
     NormalDistribution,
     LognormalDistribution,
     UniformDistribution,

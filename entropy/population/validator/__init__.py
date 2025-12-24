@@ -12,7 +12,7 @@ Module structure:
 from enum import Enum
 from dataclasses import dataclass, field
 
-from ..models import PopulationSpec
+from ...core.models import PopulationSpec
 
 
 class Severity(Enum):

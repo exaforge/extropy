@@ -17,7 +17,7 @@ from copy import deepcopy
 from dataclasses import dataclass
 from difflib import SequenceMatcher
 
-from ..models import (
+from ...core.models import (
     PopulationSpec,
     AttributeSpec,
     CategoricalDistribution,

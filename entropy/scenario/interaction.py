@@ -4,9 +4,9 @@ Selects the appropriate interaction model for how agents will discuss/respond
 to the event and configures how information spreads through the network.
 """
 
-from ..llm import reasoning_call
-from ..models import PopulationSpec
-from .models import (
+from ..core.llm import reasoning_call
+from ..core.models import (
+    PopulationSpec,
     Event,
     InteractionConfig,
     InteractionType,

@@ -24,7 +24,7 @@ Usage:
     True
 """
 
-from .models import (
+from ..core.models import (
     # Event
     EventType,
     Event,

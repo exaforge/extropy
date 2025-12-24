@@ -4,9 +4,8 @@ Parses a natural language scenario description into a structured Event definitio
 with type, content, source, credibility, ambiguity, and emotional valence.
 """
 
-from ..llm import reasoning_call
-from ..models import PopulationSpec
-from .models import Event, EventType
+from ..core.llm import reasoning_call
+from ..core.models import PopulationSpec, Event, EventType
 
 
 # JSON schema for event parsing response

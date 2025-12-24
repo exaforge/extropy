@@ -7,10 +7,7 @@ segment breakdowns, and outcome distributions.
 from collections import defaultdict
 from typing import Any
 
-from ..models import PopulationSpec
-from ..models.scenario import ScenarioSpec, OutcomeDefinition
-
-from .models import TimestepSummary
+from ..core.models import PopulationSpec, ScenarioSpec, OutcomeDefinition, TimestepSummary
 from .state import StateManager
 
 

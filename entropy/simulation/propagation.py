@@ -9,10 +9,8 @@ import logging
 import random
 from typing import Any
 
-from ..models.scenario import ScenarioSpec, ExposureRule, SpreadConfig
-from ..sampler import eval_condition, ConditionError
-
-from .models import ExposureRecord, SimulationEvent, SimulationEventType
+from ..core.models import ScenarioSpec, ExposureRule, SpreadConfig, ExposureRecord, SimulationEvent, SimulationEventType
+from ..population.sampler import eval_condition, ConditionError
 from .state import StateManager
 
 logger = logging.getLogger(__name__)

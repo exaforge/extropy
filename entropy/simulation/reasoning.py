@@ -7,10 +7,11 @@ and form opinions using structured LLM calls.
 import logging
 from typing import Any
 
-from ..llm import simple_call
-from ..models.scenario import ScenarioSpec, OutcomeConfig, OutcomeDefinition
-
-from .models import (
+from ..core.llm import simple_call
+from ..core.models import (
+    ScenarioSpec,
+    OutcomeConfig,
+    OutcomeDefinition,
     ReasoningContext,
     ReasoningResponse,
     SimulationRunConfig,

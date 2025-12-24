@@ -10,7 +10,7 @@ import logging
 import random
 from typing import Any
 
-from ..models import (
+from ...core.models import (
     Modifier,
     Distribution,
     NormalDistribution,

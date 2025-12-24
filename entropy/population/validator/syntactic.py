@@ -8,7 +8,7 @@ import ast
 import re
 
 from . import Severity, ValidationIssue
-from ..models import (
+from ...core.models import (
     PopulationSpec,
     AttributeSpec,
     NormalDistribution,

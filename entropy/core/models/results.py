@@ -1,7 +1,13 @@
-"""Pydantic models for simulation results.
+"""Simulation Results models for Entropy (Phase 4).
 
 Defines the structure of results data for loading, querying,
-and displaying simulation outcomes.
+and displaying simulation outcomes:
+- SimulationSummary: Summary of a completed run
+- AgentFinalState: Final state of a single agent
+- SegmentAggregate: Aggregate stats for a population segment
+- TimelinePoint: Single point in timeline
+- RunMeta: Metadata about a run
+- SimulationResults: Complete results bundle
 """
 
 from datetime import datetime

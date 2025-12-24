@@ -9,7 +9,7 @@ from typing import Any
 from rich.console import Console
 from rich.table import Table
 
-from .models import (
+from ..core.models import (
     SimulationSummary,
     SegmentAggregate,
     TimelinePoint,

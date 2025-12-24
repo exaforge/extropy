@@ -13,7 +13,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Callable
 
-from ..models import PopulationSpec, AttributeSpec
+from ...core.models import PopulationSpec, AttributeSpec
 from .distributions import sample_distribution, coerce_to_type
 from .modifiers import apply_modifiers_and_sample
 from .eval_safe import eval_formula, FormulaError

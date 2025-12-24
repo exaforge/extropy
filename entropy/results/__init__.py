@@ -22,7 +22,7 @@ Usage:
     agent = reader.get_agent_state("agent_001")
 """
 
-from .models import (
+from ..core.models import (
     SimulationSummary,
     AgentFinalState,
     SegmentAggregate,

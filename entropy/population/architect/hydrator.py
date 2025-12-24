@@ -11,8 +11,8 @@ Each step is processed separately with specialized prompts and validation.
 
 from typing import Callable
 
-from ..llm import agentic_research, reasoning_call
-from ..models import (
+from ...core.llm import agentic_research, reasoning_call
+from ...core.models import (
     AttributeSpec,
     DiscoveredAttribute,
     HydratedAttribute,
