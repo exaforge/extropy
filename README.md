@@ -33,11 +33,11 @@ entropy results results/
 
 ## Three Phases
 
-| Phase | What It Does | LLM | Status |
-|-------|--------------|-----|--------|
-| **Phase 1: Population Creation** | Generate population specs, sample agents, create networks | OpenAI API (GPT-5) | ✅ Implemented |
-| **Phase 2: Scenario Injection** | Define events, exposure rules, interaction models, outcomes | OpenAI API (GPT-5) | ✅ Implemented |
-| **Phase 3: Simulation** | Agents respond; opinions evolve with social influence | OpenAI API (GPT-5) | ✅ Implemented |
+| Phase                            | What It Does                                                | LLM                | Status         |
+| -------------------------------- | ----------------------------------------------------------- | ------------------ | -------------- |
+| **Phase 1: Population Creation** | Generate population specs, sample agents, create networks   | OpenAI API (GPT-5) | ✅ Implemented |
+| **Phase 2: Scenario Injection**  | Define events, exposure rules, interaction models, outcomes | OpenAI API (GPT-5) | ✅ Implemented |
+| **Phase 3: Simulation**          | Agents respond; opinions evolve with social influence       | OpenAI API (GPT-5) | ✅ Implemented |
 
 ---
 
@@ -54,6 +54,7 @@ entropy spec "500 German surgeons" -o surgeons_base.yaml
 ```
 
 **What happens:**
+
 - Validates description has enough context
 - Discovers 25-40 base attributes (age, specialty, income, etc.)
 - Researches distributions from authoritative sources
@@ -72,6 +73,7 @@ entropy overlay surgeons_base.yaml \
 ```
 
 **What happens:**
+
 - Loads base population spec
 - Discovers NEW scenario-specific attributes (e.g., `tech_adoption_tendency`, `ai_trust_level`, `workflow_flexibility`)
 - New attributes can depend on base attributes
@@ -89,6 +91,7 @@ entropy validate surgeons.yaml
 ```
 
 **What happens:**
+
 - Checks distribution parameters are valid
 - Verifies dependencies are resolvable
 - Confirms no circular references
@@ -103,6 +106,7 @@ entropy sample surgeons.yaml -o agents.json --seed 42
 ```
 
 **What happens:**
+
 - Samples each attribute in topological order
 - Applies conditional modifiers based on other attributes
 - Computes derived attributes from formulas
@@ -119,6 +123,7 @@ entropy network agents.json -o network.json --avg-degree 20
 ```
 
 **What happens:**
+
 - Groups agents by profession/location for clustering
 - Uses Watts-Strogatz model for small-world properties
 - Weights edges by relationship type
@@ -136,6 +141,7 @@ entropy scenario "Hospital announces new AI diagnostic tool for surgery planning
 ```
 
 **What happens:**
+
 - Parses event (type, content, credibility, emotional valence)
 - Generates exposure rules (who learns when, via what channel)
 - Defines interaction model (how agents discuss)
@@ -152,6 +158,7 @@ entropy validate-scenario ai_tool.yaml
 ```
 
 **What happens:**
+
 - Checks attribute references in `when` clauses exist
 - Verifies edge types match network
 - Validates probabilities are in [0, 1]
@@ -166,6 +173,7 @@ entropy simulate ai_tool.yaml -o results/ --seed 42
 ```
 
 **What happens:**
+
 - Initializes agent states in SQLite database
 - For each timestep:
   - Applies seed exposures from Phase 2 rules
@@ -176,6 +184,7 @@ entropy simulate ai_tool.yaml -o results/ --seed 42
 - Exports all results
 
 **Output:** `results/` directory with:
+
 - `simulation.db` - SQLite database
 - `timeline.jsonl` - Event stream
 - `agent_states.json` - Final states
@@ -280,11 +289,13 @@ entropy spec "<description>" -o <output.yaml> [--yes]
 ```
 
 **Arguments:**
+
 - `description`: Natural language population description (e.g., "2000 Netflix subscribers in the US")
 - `-o, --output`: Output YAML file path (required)
 - `-y, --yes`: Skip confirmation prompts (for automation)
 
 **Pipeline:**
+
 1. **Step 0**: Validates description has enough context
 2. **Step 1**: Discovers 25-40 relevant attributes
 3. **Human checkpoint**: Review/edit attributes
@@ -297,6 +308,7 @@ entropy spec "<description>" -o <output.yaml> [--yes]
 6. **Human checkpoint**: Review and save spec
 
 **Example:**
+
 ```bash
 entropy spec "500 German surgeons" -o surgeons.yaml
 entropy spec "1000 Indian farmers in Maharashtra" -o farmers.yaml
@@ -311,18 +323,21 @@ entropy overlay <base.yaml> -s "<scenario>" -o <output.yaml> [--yes]
 ```
 
 **Arguments:**
+
 - `base`: Path to existing population spec YAML
 - `-s, --scenario`: Scenario description
 - `-o, --output`: Output YAML file path (required)
 - `-y, --yes`: Skip confirmation prompts
 
 **How it works:**
+
 - Loads base population (e.g., 35 attributes)
 - Discovers NEW scenario-specific attributes (e.g., 8 attributes)
 - New attributes can depend on base attributes
 - Merges into final spec with recomputed sampling order
 
 **Example:**
+
 ```bash
 entropy overlay farmers.yaml \
   -s "Drought-resistant seed adoption decision" \
@@ -338,10 +353,12 @@ entropy validate <spec.yaml> [--strict]
 ```
 
 **Arguments:**
+
 - `spec`: Population spec YAML file to validate
 - `--strict`: Treat warnings as errors
 
 **Checks:**
+
 - Type/modifier compatibility
 - Range violations
 - Weight validity
@@ -350,6 +367,7 @@ entropy validate <spec.yaml> [--strict]
 - Strategy consistency
 
 **Example:**
+
 ```bash
 entropy validate surgeons.yaml
 entropy validate surgeons.yaml --strict
@@ -364,6 +382,7 @@ entropy fix <spec.yaml> [-o <output.yaml>] [--dry-run] [-c <confidence>]
 ```
 
 **Arguments:**
+
 - `spec`: Population spec YAML file to fix
 - `-o, --output`: Output file (defaults to overwriting input)
 - `-n, --dry-run`: Preview fixes without applying them
@@ -373,6 +392,7 @@ entropy fix <spec.yaml> [-o <output.yaml>] [--dry-run] [-c <confidence>]
 The LLM sometimes generates modifier `when` conditions that reference categorical options with inconsistent naming (e.g., `'University hospital'` instead of `'University_hospital'`). This command uses fuzzy matching to automatically correct these mismatches.
 
 **Example:**
+
 ```bash
 # Preview fixes without applying
 entropy fix surgeons.yaml --dry-run
@@ -388,6 +408,7 @@ entropy fix surgeons.yaml -c 0.8
 ```
 
 **Output:**
+
 ```
 ✓ Loaded: 500 German surgeons (35 attributes)
 
@@ -415,6 +436,7 @@ entropy sample <spec.yaml> -o <output.json> [options]
 ```
 
 **Arguments:**
+
 - `spec`: Population spec YAML file
 - `-o, --output`: Output file path (.json or .db)
 - `-n, --count`: Number of agents (default: spec.meta.size)
@@ -424,6 +446,7 @@ entropy sample <spec.yaml> -o <output.json> [options]
 - `--skip-validation`: Skip validator errors
 
 **Example:**
+
 ```bash
 entropy sample surgeons.yaml -o agents.json
 entropy sample surgeons.yaml -n 500 -o agents.json --seed 42
@@ -439,6 +462,7 @@ entropy network <agents.json> -o <network.json> [options]
 ```
 
 **Arguments:**
+
 - `agents`: Agents JSON file
 - `-o, --output`: Output network JSON file
 - `--avg-degree`: Target average degree (default: 20.0)
@@ -448,6 +472,7 @@ entropy network <agents.json> -o <network.json> [options]
 - `--no-metrics`: Skip computing node metrics (faster)
 
 **Example:**
+
 ```bash
 entropy network agents.json -o network.json
 entropy network agents.json -o network.json --avg-degree 25 --validate
@@ -474,6 +499,7 @@ entropy scenario "<description>" \
 ```
 
 **Arguments:**
+
 - `description`: Natural language scenario (e.g., "Netflix announces $3 price increase")
 - `-p, --population`: Population spec YAML file (required)
 - `-a, --agents`: Sampled agents JSON file (required)
@@ -482,6 +508,7 @@ entropy scenario "<description>" \
 - `-y, --yes`: Skip confirmation prompts
 
 **Pipeline:**
+
 1. **Step 1**: Parse scenario → Event definition (type, content, source, credibility)
 2. **Step 2**: Generate seed exposure → How agents learn about the event
 3. **Step 3**: Determine interaction model → How agents discuss and respond
@@ -489,12 +516,14 @@ entropy scenario "<description>" \
 5. **Step 5**: Assemble and validate → Complete scenario spec
 
 **Example:**
+
 ```bash
 entropy scenario "Netflix announces $3 price increase" \
   -p netflix_users.yaml -a agents.json -n network.json -o scenario.yaml
 ```
 
 **Output preview:**
+
 ```
 Creating scenario for: "Netflix announces $3 price increase"
 
@@ -543,9 +572,11 @@ entropy validate-scenario <scenario.yaml>
 ```
 
 **Arguments:**
+
 - `scenario`: Scenario spec YAML file to validate
 
 **Checks:**
+
 - All attribute references in `when` clauses exist in population spec
 - All edge type references exist in network
 - All probabilities are in valid range [0, 1]
@@ -555,11 +586,13 @@ entropy validate-scenario <scenario.yaml>
 - Referenced files exist and are consistent
 
 **Example:**
+
 ```bash
 entropy validate-scenario scenario.yaml
 ```
 
 **Output:**
+
 ```
 Validating scenario: price_increase.yaml
 
@@ -719,6 +752,7 @@ entropy simulate <scenario.yaml> -o <results_dir> [options]
 ```
 
 **Arguments:**
+
 - `scenario`: Scenario spec YAML file (required)
 - `-o, --output`: Output results directory (required)
 - `-m, --model`: LLM model for agent reasoning (default: gpt-5-mini)
@@ -727,6 +761,7 @@ entropy simulate <scenario.yaml> -o <results_dir> [options]
 - `-q, --quiet`: Suppress progress output
 
 **Pipeline:**
+
 1. Load scenario, population spec, agents, and network
 2. Initialize agent states in SQLite database
 3. For each timestep:
@@ -738,12 +773,14 @@ entropy simulate <scenario.yaml> -o <results_dir> [options]
 5. Export results to output directory
 
 **Example:**
+
 ```bash
 entropy simulate scenario.yaml -o results/
 entropy simulate scenario.yaml -o results/ --model gpt-5-nano --seed 42
 ```
 
 **Output:**
+
 ```
 Simulating: scenario.yaml
 Output: results/
@@ -776,6 +813,7 @@ entropy results <results_dir> [options]
 ```
 
 **Arguments:**
+
 - `results_dir`: Results directory from simulation (required)
 - `-s, --segment`: Attribute to segment by
 - `-t, --timeline`: Show timeline view
@@ -784,30 +822,39 @@ entropy results <results_dir> [options]
 **Views:**
 
 1. **Summary (default):**
+
 ```bash
 entropy results results/
 ```
+
 Shows overall statistics, exposure rates, and outcome distributions.
 
 2. **Segment breakdown:**
+
 ```bash
 entropy results results/ --segment plan_tier
 ```
+
 Breaks down results by any agent attribute.
 
 3. **Timeline:**
+
 ```bash
 entropy results results/ --timeline
 ```
+
 Shows metrics over time: exposure rate, sentiment, positions.
 
 4. **Agent details:**
+
 ```bash
 entropy results results/ --agent agent_001
 ```
+
 Shows single agent's attributes, state, and reasoning.
 
 **Example output (summary):**
+
 ```
 ═══════════════════════════════════════════════════════════════
 SIMULATION RESULTS: netflix_price_increase
