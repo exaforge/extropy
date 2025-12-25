@@ -26,7 +26,7 @@ from .parser import parse_scenario
 from .exposure import generate_seed_exposure
 from .interaction import determine_interaction_model
 from .outcomes import define_outcomes
-from .validator import validate_scenario
+from .validator import validate_scenario, get_agent_count
 
 
 def _generate_scenario_name(description: str) -> str:
@@ -240,10 +240,9 @@ def create_scenario(
     # Validate
     # =========================================================================
 
-    # Note: We skip loading agents.json content here - it was only used for a
-    # count validation warning. The file path is stored in metadata and Phase 3
-    # (simulation) will load it when needed. This saves memory/time for large
-    # agent files.
+    # Note: We validate agent count consistency, which requires loading the file.
+    # We use get_agent_count() to do this safely/robustly.
+    agent_count = get_agent_count(agents_path)
 
     # Load network for validation (needed for edge type reference validation)
     network = None
@@ -254,7 +253,7 @@ def create_scenario(
         except Exception:
             pass
 
-    validation_result = validate_scenario(spec, population_spec, None, network)
+    validation_result = validate_scenario(spec, population_spec, agent_count, network)
 
     # =========================================================================
     # Save if requested

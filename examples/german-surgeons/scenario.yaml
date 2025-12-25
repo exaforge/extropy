@@ -1,0 +1,378 @@
+meta:
+  name: ai_announcement
+  description: AI announcement
+  population_spec: surgeons.yaml
+  agents_file: agents.json
+  network_file: network.json
+  created_at: '2025-12-24T21:08:11.506868'
+event:
+  type: announcement
+  content: "Subject: National pilot program to support AI-assisted preoperative planning\
+    \ in surgery\n\nThe German Society for Surgery (DGCH), in cooperation with the\
+    \ Federal Institute for Drugs and Medical Devices (BfArM) and the Charité–Universitätsmedizin\
+    \ Berlin, announces the launch of the 12‑month \"KI-OP-Plan\" pilot program to\
+    \ evaluate and support adoption of CE‑marked AI diagnostic decision-support tools\
+    \ for surgical planning across multiple specialties.\n\nKey points:\n- Scope:\
+    \ AI tools to assist with imaging-based diagnosis, segmentation, risk stratification,\
+    \ and structured preoperative planning for general, orthopedics/trauma, visceral,\
+    \ vascular, neurosurgery, cardiac, thoracic, pediatric, plastic, urology, and\
+    \ gynecologic surgery.\n- Certification: Participating solutions are MDR-certified\
+    \ (Class IIa/IIb as applicable) and CE-marked; intended as decision-support for\
+    \ licensed physicians, not autonomous decision-makers.\n- Integration: Vendor-agnostic;\
+    \ supports DICOM, HL7 v2, and FHIR R4 for PACS/RIS/KIS workflows. On-premises\
+    \ or certified German cloud deployment options.\n- Data protection: GDPR-compliant\
+    \ processing; patient data remains within the EU. De-identified data may be used\
+    \ for model improvement only with explicit institutional approval and patient\
+    \ consent according to local policies. Data processing agreements (AVV) and DPIAs\
+    \ templates provided. \n- Funding: Up to 80% subsidy on software license fees\
+    \ for the first 12 months; integration grant up to €25,000 per site; CME-accredited\
+    \ training (20 hours) at no cost for participating surgeons; protected IT implementation\
+    \ support.\n- Eligibility: German acute-care hospitals and MVZs with surgical\
+    \ departments; priority for sites with existing PACS/KIS integration capabilities\
+    \ and data protection officer (DSB) in place. Individual surgeons must be board-certified\
+    \ or in advanced training under supervision.\n- Timeline: Application window opens\
+    \ 5 January 2026 and closes 31 January 2026; program start 1 March 2026; interim\
+    \ evaluation at 6 months; final report Q2 2027.\n- Evaluation metrics: Diagnostic\
+    \ accuracy and inter-rater agreement, time-to-plan, case throughput, complication/readmission\
+    \ rates, surgical margins (where relevant), user adoption and satisfaction, health\
+    \ equity impact across patient subgroups, and cost-effectiveness.\n- Participation\
+    \ requirements: Sign participation agreement and AVV; complete onboarding training;\
+    \ report predefined quality and safety metrics monthly; maintain human-in-the-loop\
+    \ oversight with documented final clinical responsibility by the attending surgeon.\n\
+    - Safety and oversight: Local clinical governance with incident reporting to BfArM;\
+    \ immediate rollback procedures available; continuous post-market surveillance\
+    \ by vendors.\n\nAction required: Interested departments should designate a clinical\
+    \ lead and IT contact and submit the online application with a brief implementation\
+    \ plan at https://dgch.de/ki-op-plan by 31 January 2026. Questions: ki-op-plan@dgch.de.\n\
+    \nThis announcement is distributed to surgical department heads, hospital IT leads,\
+    \ and licensed surgeons across Germany via DGCH mailing lists and professional\
+    \ chambers."
+  source: German Society for Surgery (DGCH) in cooperation with BfArM and Charité–Universitätsmedizin
+    Berlin
+  credibility: 0.92
+  ambiguity: 0.3
+  emotional_valence: 0.4
+seed_exposure:
+  channels:
+  - name: dgch_mailing_broadcast
+    description: Official DGCH/BfArM/Charité email announcement to department heads
+      and licensed surgeons via DGCH lists
+    reach: broadcast
+    credibility_modifier: 1.25
+  - name: professional_chamber_newsletter
+    description: Regional/state medical chamber newsletters and portals relaying the
+      program call
+    reach: broadcast
+    credibility_modifier: 1.2
+  - name: hospital_it_bulletin
+    description: Internal IT/integration teams forwarding opportunity via hospital
+      intranet/email and project lists
+    reach: targeted
+    credibility_modifier: 1.15
+  - name: specialty_society_webinar
+    description: DGCH/specialty sections host short webinars/Q&A and CME info sessions;
+      promoted to research-active and tech-forward clinicians
+    reach: targeted
+    credibility_modifier: 1.1
+  - name: peer_word_of_mouth
+    description: Informal sharing in MDTs, colleague chats, conference/section meetings,
+      and messenger groups
+    reach: organic
+    credibility_modifier: 0.95
+  rules:
+  - channel: dgch_mailing_broadcast
+    when: professional_rank in ['senior/Oberarzt','chief/Chefarzt']
+    probability: 1.0
+    timestep: 0
+  - channel: dgch_mailing_broadcast
+    when: board_certified == True and professional_rank in ['specialist/Facharzt','practice
+      owner/partner']
+    probability: 0.9
+    timestep: 0
+  - channel: dgch_mailing_broadcast
+    when: federal_state == 'Berlin'
+    probability: 1.0
+    timestep: 0
+  - channel: dgch_mailing_broadcast
+    when: board_certified == False and professional_rank == 'resident/assistant'
+    probability: 0.3
+    timestep: 0
+  - channel: professional_chamber_newsletter
+    when: board_certified == True
+    probability: 0.6
+    timestep: 1
+  - channel: professional_chamber_newsletter
+    when: board_certified == False and professional_rank == 'resident/assistant'
+    probability: 0.35
+    timestep: 1
+  - channel: professional_chamber_newsletter
+    when: guideline_adherence_orientation >= 0.7 or trust_in_institutions >= 0.7
+    probability: 0.8
+    timestep: 1
+  - channel: hospital_it_bulletin
+    when: employer_type in ['university hospital','public non-university hospital','private
+      hospital'] and facility_size_category in ['medium hospital','large tertiary
+      center'] and it_support_capacity in ['adequate','robust']
+    probability: 0.75
+    timestep: 1
+  - channel: hospital_it_bulletin
+    when: device_procurement_influence in ['advisory','decision-making'] or administrative_load_pct
+      >= 20.0
+    probability: 0.8
+    timestep: 1
+  - channel: hospital_it_bulletin
+    when: employer_type == 'medical practice/MVZ' and it_support_capacity == 'adequate'
+    probability: 0.4
+    timestep: 2
+  - channel: specialty_society_webinar
+    when: research_activity_level in ['regular','leading/PI'] or ai_training_hours_past_year
+      >= 5.0 or technology_self_efficacy >= 0.7
+    probability: 0.7
+    timestep: 2
+  - channel: specialty_society_webinar
+    when: prior_ai_tool_experience in ['pilot_only','research_only','routine_clinical_use']
+    probability: 0.75
+    timestep: 2
+  - channel: specialty_society_webinar
+    when: surgical_specialty in ['neurosurgery','cardiac','vascular','thoracic','urology','gynecologic
+      surgery','orthopedics/trauma','visceral','general','pediatric','plastic'] and
+      imaging_availability_level in ['standard','advanced']
+    probability: 0.5
+    timestep: 2
+  - channel: peer_word_of_mouth
+    when: peer_influence_exposure >= 0.6 or mdt_meeting_frequency_per_month >= 3
+    probability: 0.6
+    timestep: 2
+  - channel: peer_word_of_mouth
+    when: urbanity == 'urban' and access_to_ai_tool_at_facility == True
+    probability: 0.65
+    timestep: 2
+  - channel: peer_word_of_mouth
+    when: workflow_integration_barriers == 'low' or technology_self_efficacy >= 0.6
+    probability: 0.5
+    timestep: 3
+  - channel: peer_word_of_mouth
+    when: prior_ai_tool_experience == 'none' and trust_in_institutions < 0.5 and data_privacy_concern
+      >= 0.7
+    probability: 0.25
+    timestep: 3
+  - channel: peer_word_of_mouth
+    when: federal_state in ['Berlin','Bavaria','North Rhine-Westphalia','Baden-Württemberg','Lower
+      Saxony']
+    probability: 0.4
+    timestep: 3
+interaction:
+  primary_model: broadcast_response
+  secondary_model: direct_conversation
+  description: An official announcement by DGCH in cooperation with BfArM and Charité
+    initiates a broadcast phase through society newsletters, hospital communications,
+    and professional media. Surgeons then discuss implications in small-group settings
+    (department meetings, MDT boards, OR briefings, WhatsApp/Signal groups, mentor–mentee
+    exchanges, and conferences), comparing institutional readiness, medico-legal aspects,
+    and workflow integration before deciding whether to adopt or pilot tools.
+spread:
+  share_probability: 0.45
+  share_modifiers:
+  - when: edge_type == 'colleague'
+    multiply: 1.5
+    add: 0.0
+  - when: edge_type == 'mentor_mentee'
+    multiply: 1.6
+    add: 0.0
+  - when: edge_type == 'conference'
+    multiply: 1.4
+    add: 0.0
+  - when: edge_type == 'regional'
+    multiply: 1.2
+    add: 0.0
+  - when: edge_type == 'weak_tie'
+    multiply: 0.8
+    add: 0.0
+  - when: openness > 0.7
+    multiply: 1.25
+    add: 0.0
+  - when: extraversion > 0.6
+    multiply: 1.15
+    add: 0.0
+  - when: evidence_orientation > 0.7
+    multiply: 1.2
+    add: 0.0
+  - when: trust_in_institutions > 0.6
+    multiply: 1.2
+    add: 0.02
+  - when: technology_self_efficacy > 0.7
+    multiply: 1.25
+    add: 0.0
+  - when: ai_training_hours_past_year > 5
+    multiply: 1.3
+    add: 0.0
+  - when: prior_ai_tool_experience == 'regular_user'
+    multiply: 1.35
+    add: 0.0
+  - when: prior_ai_tool_experience == 'pilot_exposure'
+    multiply: 1.2
+    add: 0.0
+  - when: prior_ai_tool_experience == 'none'
+    multiply: 0.9
+    add: 0.0
+  - when: access_to_ai_tool_at_facility == true
+    multiply: 1.3
+    add: 0.0
+  - when: it_support_capacity == 'high'
+    multiply: 1.2
+    add: 0.0
+  - when: workflow_integration_barriers == 'high'
+    multiply: 0.8
+    add: 0.0
+  - when: data_privacy_concern > 0.7
+    multiply: 0.85
+    add: 0.0
+  - when: perceived_medico_legal_risk_of_ai > 0.7
+    multiply: 0.8
+    add: 0.0
+  - when: guideline_adherence_orientation > 0.7
+    multiply: 1.15
+    add: 0.0
+  - when: research_activity_level == 'high'
+    multiply: 1.25
+    add: 0.0
+  - when: professional_rank in ['chief_surgeon','department_head']
+    multiply: 1.3
+    add: 0.0
+  - when: device_procurement_influence in ['high','medium']
+    multiply: 1.2
+    add: 0.0
+  - when: emr_adoption_level == 'advanced'
+    multiply: 1.15
+    add: 0.0
+  - when: participation_in_quality_registry == true
+    multiply: 1.1
+    add: 0.0
+  - when: mdt_meeting_frequency_per_month >= 4
+    multiply: 1.15
+    add: 0.0
+  - when: imaging_availability_level == 'high'
+    multiply: 1.1
+    add: 0.0
+  - when: weekly_work_hours > 60
+    multiply: 0.9
+    add: 0.0
+  - when: on_call_frequency_per_month > 8
+    multiply: 0.9
+    add: 0.0
+  - when: stress_resilience < 0.4
+    multiply: 0.9
+    add: 0.0
+  - when: years_experience < 5
+    multiply: 1.1
+    add: 0.0
+  - when: years_experience > 25
+    multiply: 0.95
+    add: 0.0
+  decay_per_hop: 0.08
+  max_hops: 5
+outcomes:
+  suggested_outcomes:
+  - name: application_intent
+    type: categorical
+    description: Stated intention of the department/surgeon to apply to the KI-OP-Plan
+      pilot within the application window
+    options:
+    - will_apply
+    - considering
+    - will_not_apply
+    - undecided
+    range: null
+    required: true
+  - name: sentiment
+    type: float
+    description: Overall sentiment toward the pilot program and AI-assisted preoperative
+      planning
+    options: null
+    range:
+    - -1.0
+    - 1.0
+    required: true
+  - name: trust_in_program
+    type: float
+    description: Degree of trust in the program’s safety, oversight, and certification
+      (MDR/CE, BfArM, governance)
+    options: null
+    range:
+    - 0.0
+    - 1.0
+    required: false
+  - name: perceived_clinical_benefit
+    type: categorical
+    description: Perceived potential clinical benefit of adopting the AI tools (diagnostic
+      accuracy, time-to-plan, outcomes)
+    options:
+    - high
+    - moderate
+    - low
+    - unclear
+    range: null
+    required: false
+  - name: information_seeking_behavior
+    type: boolean
+    description: Whether they plan to seek more information or initiate steps (e.g.,
+      contact DGCH/BfArM, visit website, designate leads)
+    options: null
+    range: null
+    required: false
+  - name: integration_readiness
+    type: categorical
+    description: Self-assessed readiness to integrate into PACS/RIS/KIS workflows
+      given current IT, DPO, and standards support
+    options:
+    - ready_now
+    - needs_it_support
+    - lacking_prerequisites
+    - not_applicable
+    range: null
+    required: false
+  - name: main_concern
+    type: open_ended
+    description: Primary barrier or concern (e.g., data protection, workload, cost,
+      liability, workflow fit) stated by the agent
+    options: null
+    range: null
+    required: false
+  capture_full_reasoning: true
+  extraction_instructions: '- application_intent (required): Look for explicit intent
+    words about applying by Jan 31, designating leads, or declining. Map: “we will
+    apply/submit” -> will_apply; “likely/interested/considering” -> considering; explicit
+    refusal or strong rejection -> will_not_apply; no clear stance -> undecided.
+
+    - sentiment (required): Overall tone toward the program/AI planning from -1 (very
+    negative) to +1 (very positive). Consider wording about benefits, risks, enthusiasm,
+    skepticism.
+
+    - trust_in_program: Extract confidence in MDR/CE status, BfArM oversight, GDPR
+    compliance, human-in-the-loop. Translate praise of safety/governance to higher
+    values; doubts about certification, surveillance, or rollback to lower values.
+
+    - perceived_clinical_benefit: If they expect improved accuracy, time-to-plan,
+    margins, or outcomes -> high/moderate based on strength; skepticism or no benefit
+    -> low; if they say they don’t know -> unclear.
+
+    - information_seeking_behavior: True if they mention visiting the site, emailing,
+    requesting demos, scheduling training, or convening an internal meeting; else
+    False.
+
+    - integration_readiness: Use statements about DICOM/HL7/FHIR, on-prem/cloud, DPO
+    in place, IT bandwidth. Ready_now if they state existing capabilities and few
+    barriers; Needs_it_support if feasible but requires IT work or integration grant;
+    Lacking_prerequisites if missing key elements (e.g., no PACS integration, no DPO);
+    Not_applicable if they state the dept doesn’t do surgical planning or is outside
+    scope.
+
+    - main_concern: Capture the most salient concern verbatim or briefly paraphrased
+    (e.g., data privacy/AVV/DPIA, costs after subsidy, workflow disruption, liability/final
+    responsibility, equity impact, vendor lock-in).'
+simulation:
+  max_timesteps: 100
+  timestep_unit: hour
+  stop_conditions:
+  - exposure_rate > 0.95 and no_state_changes_for > 10
+  seed: null
