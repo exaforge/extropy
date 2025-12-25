@@ -707,7 +707,7 @@ seed_exposure:
 
 **LLM Call:** `reasoning_call()` with `gpt-5`
 
-**Receives:** Network summary (edge types, node count) for context
+**Receives:** Network summary (edge types, node count) for context (injected into LLM prompt)
 
 **Generates:**
 

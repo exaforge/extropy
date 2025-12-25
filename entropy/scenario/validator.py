@@ -70,7 +70,7 @@ def _validate_expression_syntax(expression: str) -> str | None:
 def validate_scenario(
     spec: ScenarioSpec,
     population_spec: PopulationSpec | None = None,
-    agents: list[dict] | None = None,
+    agent_count: int | None = None,
     network: dict | None = None,
 ) -> ValidationResult:
     """
@@ -87,7 +87,7 @@ def validate_scenario(
     Args:
         spec: The scenario spec to validate
         population_spec: Optional population spec for attribute validation
-        agents: Optional list of agent dicts for consistency checks
+        agent_count: Optional count of agents for consistency checks
         network: Optional network dict for edge type validation
 
     Returns:
@@ -399,12 +399,12 @@ def validate_scenario(
     # Validate Agent Count Consistency
     # =========================================================================
 
-    if agents and population_spec:
-        if len(agents) != population_spec.meta.size:
+    if agent_count is not None and population_spec:
+        if agent_count != population_spec.meta.size:
             warnings.append(ValidationWarning(
                 category="consistency",
                 location="agents",
-                message=f"Agent count ({len(agents)}) differs from population spec size ({population_spec.meta.size})",
+                message=f"Agent count ({agent_count}) differs from population spec size ({population_spec.meta.size})",
             ))
 
     return ValidationResult(
@@ -412,6 +412,47 @@ def validate_scenario(
         errors=errors,
         warnings=warnings,
     )
+
+
+def get_agent_count(path: Path) -> int | None:
+    """
+    Safely get agent count from file using standard JSON parsing.
+
+    Prioritizes correctness over memory optimization by fully parsing the JSON.
+    This ensures we handle all valid JSON formats correctly.
+    """
+    if not path.exists():
+        return None
+
+    try:
+        with open(path) as f:
+            data = json.load(f)
+
+        # Case 1: Standard format {"meta": {"count": N}, "agents": [...]}
+        if isinstance(data, dict):
+            # Trust metadata count if present
+            if "meta" in data and isinstance(data["meta"], dict):
+                count = data["meta"].get("count")
+                if isinstance(count, int):
+                    return count
+            
+            # Fallback to counting agents list
+            agents = data.get("agents")
+            if isinstance(agents, list):
+                return len(agents)
+                
+            # Legacy/Alternative format: data is the dict, maybe agents is missing?
+            # If data is a dict but no agents key, it's not a valid agent file we recognize
+            return None
+
+        # Case 2: Simple list format [{"id": ...}, ...]
+        if isinstance(data, list):
+            return len(data)
+
+    except Exception:
+        return None
+    
+    return None
 
 
 def load_and_validate_scenario(
@@ -437,7 +478,7 @@ def load_and_validate_scenario(
 
     # Try to load referenced files for validation
     population_spec = None
-    agents = None
+    agent_count = None
     network = None
 
     pop_path = Path(spec.meta.population_spec)
@@ -449,12 +490,7 @@ def load_and_validate_scenario(
 
     agents_path = Path(spec.meta.agents_file)
     if agents_path.exists():
-        try:
-            with open(agents_path) as f:
-                data = json.load(f)
-                agents = data.get('agents', data)  # Handle both formats
-        except Exception:
-            pass
+        agent_count = get_agent_count(agents_path)
 
     network_path = Path(spec.meta.network_file)
     if network_path.exists():
@@ -465,6 +501,6 @@ def load_and_validate_scenario(
             pass
 
     # Validate
-    result = validate_scenario(spec, population_spec, agents, network)
+    result = validate_scenario(spec, population_spec, agent_count, network)
 
     return spec, result
