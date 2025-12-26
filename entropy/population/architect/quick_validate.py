@@ -21,6 +21,79 @@ ALLOWED_BUILTINS = {
     'and', 'or', 'not', 'in', 'is', 'if', 'else',
 }
 
+# Spec-level variable patterns that should use spec_expression, not expression
+SPEC_LEVEL_PATTERNS = {'weights', 'options'}
+
+
+def _is_spec_level_constraint(expression: str) -> bool:
+    """Check if a constraint expression references spec-level variables.
+
+    Spec-level constraints validate the YAML spec itself (e.g., weights sum to 1),
+    not individual sampled agents. These should use type='spec_expression'.
+    """
+    if 'sum(weights)' in expression:
+        return True
+    if 'len(options)' in expression:
+        return True
+    if 'weights[' in expression:
+        return True
+    if 'options[' in expression:
+        return True
+
+    # Check if expression references spec-level variable names directly
+    # Simple token extraction for the most common cases
+    tokens = set(re.findall(r'\b[a-zA-Z_][a-zA-Z0-9_]*\b', expression))
+    if tokens & SPEC_LEVEL_PATTERNS:
+        return True
+
+    return False
+
+
+def _extract_bound_from_constraint(
+    expression: str,
+    attr_name: str,
+) -> tuple[str | None, str | None, bool]:
+    """Extract bound expression from a constraint.
+
+    Parses simple inequality constraints to extract the bound expression.
+
+    Returns:
+        Tuple of (bound_type, bound_expr, is_strict) where:
+        - bound_type is "max" or "min" or None if not a simple bound
+        - bound_expr is the expression for the bound
+        - is_strict is True for < or > (strict inequality)
+    """
+    expr = expression.strip()
+    escaped_name = re.escape(attr_name)
+
+    # Upper bound patterns
+    upper_patterns = [
+        (rf'^{escaped_name}\s*<=\s*(.+)$', False),
+        (rf'^{escaped_name}\s*<\s*(.+)$', True),
+        (rf'^(.+)\s*>=\s*{escaped_name}$', False),
+        (rf'^(.+)\s*>\s*{escaped_name}$', True),
+    ]
+
+    # Lower bound patterns
+    lower_patterns = [
+        (rf'^{escaped_name}\s*>=\s*(.+)$', False),
+        (rf'^{escaped_name}\s*>\s*(.+)$', True),
+        (rf'^(.+)\s*<=\s*{escaped_name}$', False),
+        (rf'^(.+)\s*<\s*{escaped_name}$', True),
+    ]
+
+    for pattern, is_strict in upper_patterns:
+        match = re.match(pattern, expr)
+        if match:
+            return ("max", match.group(1).strip(), is_strict)
+
+    for pattern, is_strict in lower_patterns:
+        match = re.match(pattern, expr)
+        if match:
+            return ("min", match.group(1).strip(), is_strict)
+
+    return (None, None, False)
+
 
 class ValidationError:
     """A single validation error with context for LLM retry."""
@@ -437,21 +510,35 @@ def validate_independent_response(
 ) -> QuickValidationResult:
     """Validate LLM response for independent attribute hydration."""
     errors = []
-    
+
     attributes = data.get("attributes", [])
-    
+
     for attr_data in attributes:
         name = attr_data.get("name", "unknown")
         dist_data = attr_data.get("distribution", {})
-        
+
         # Skip if name not in expected (will be filtered out anyway)
         if name not in expected_attrs:
             continue
-        
+
         # Validate distribution
         dist_errors = validate_distribution_data(dist_data, name, "numeric")
         errors.extend(dist_errors)
-    
+
+        # Validate constraints for spec-level expressions with wrong type
+        constraints = attr_data.get("constraints", [])
+        for constraint in constraints:
+            c_type = constraint.get("type")
+            c_expr = constraint.get("expression")
+            if c_type == "expression" and c_expr:
+                if _is_spec_level_constraint(c_expr):
+                    errors.append(ValidationError(
+                        field=f"{name}.constraints",
+                        value=c_expr,
+                        error="constraint references spec-level variables (weights/options) but uses type='expression'",
+                        suggestion="Change to type='spec_expression' — this validates the YAML spec itself, not individual agents",
+                    ))
+
     return QuickValidationResult(errors)
 
 
@@ -493,19 +580,62 @@ def validate_conditional_base_response(
 ) -> QuickValidationResult:
     """Validate LLM response for conditional base distribution hydration."""
     errors = []
-    
+
     attributes = data.get("attributes", [])
-    
+
     for attr_data in attributes:
         name = attr_data.get("name", "unknown")
-        
+
         if name not in expected_attrs:
             continue
-        
+
         dist_data = attr_data.get("distribution", {})
         dist_errors = validate_distribution_data(dist_data, name, "numeric")
         errors.extend(dist_errors)
-    
+
+        # Check constraints for issues
+        constraints = attr_data.get("constraints", [])
+        dist_type = dist_data.get("type") if dist_data else None
+
+        for constraint in constraints:
+            c_type = constraint.get("type")
+            c_expr = constraint.get("expression")
+
+            if c_type == "expression" and c_expr:
+                # Check for spec-level constraints with wrong type
+                if _is_spec_level_constraint(c_expr):
+                    errors.append(ValidationError(
+                        field=f"{name}.constraints",
+                        value=c_expr,
+                        error="constraint references spec-level variables (weights/options) but uses type='expression'",
+                        suggestion="Change to type='spec_expression'",
+                    ))
+                    continue
+
+                # Check for missing formula bounds (only for numeric distributions)
+                if dist_type in ("normal", "lognormal", "beta"):
+                    bound_type, bound_expr, is_strict = _extract_bound_from_constraint(c_expr, name)
+
+                    if bound_type == "max" and bound_expr:
+                        has_max_formula = dist_data.get("max_formula") is not None
+                        if not has_max_formula:
+                            errors.append(ValidationError(
+                                field=f"{name}.distribution",
+                                value=f"constraint '{c_expr}'",
+                                error="constraint exists but distribution has no max_formula to enforce it during sampling",
+                                suggestion=f"Add to distribution: max_formula: '{bound_expr}'",
+                            ))
+                    elif bound_type == "min" and bound_expr:
+                        has_min_formula = dist_data.get("min_formula") is not None
+                        has_static_min = dist_data.get("min") is not None
+                        if not has_min_formula and not has_static_min:
+                            errors.append(ValidationError(
+                                field=f"{name}.distribution",
+                                value=f"constraint '{c_expr}'",
+                                error="constraint exists but distribution has no min_formula to enforce it during sampling",
+                                suggestion=f"Add to distribution: min_formula: '{bound_expr}'",
+                            ))
+
     return QuickValidationResult(errors)
 
 

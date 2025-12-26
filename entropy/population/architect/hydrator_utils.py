@@ -287,6 +287,16 @@ def validate_independent_hydration(attributes: list[HydratedAttribute]) -> list[
                 if dist.min >= dist.max:
                     errors.append(f"{attr.name}: min ({dist.min}) >= max ({dist.max})")
 
+        # Check constraints for spec-level expressions using wrong type
+        for constraint in attr.constraints:
+            if constraint.type == "expression" and constraint.expression:
+                if _is_spec_level_constraint(constraint.expression):
+                    errors.append(
+                        f"{attr.name}: constraint '{constraint.expression}' references spec-level variables "
+                        f"(weights/options) but uses type='expression'. "
+                        f"Change to type='spec_expression' — this validates the YAML spec itself, not individual agents."
+                    )
+
     return errors
 
 
@@ -340,6 +350,45 @@ def validate_conditional_base(attributes: list[HydratedAttribute]) -> list[str]:
         if isinstance(dist, (NormalDistribution, LognormalDistribution)):
             if dist.mean_formula and dist.std is None:
                 errors.append(f"{attr.name}: has mean_formula but no std — this makes it derived, not conditional")
+
+        # Check for expression constraints that need corresponding formula bounds
+        # Only for numeric distributions that support min/max formulas
+        if isinstance(dist, (NormalDistribution, LognormalDistribution, BetaDistribution)):
+            for constraint in attr.constraints:
+                if constraint.type == "expression" and constraint.expression:
+                    # Skip spec-level constraints
+                    if _is_spec_level_constraint(constraint.expression):
+                        errors.append(
+                            f"{attr.name}: constraint '{constraint.expression}' references spec-level variables "
+                            f"(weights/options) but uses type='expression'. "
+                            f"Change to type='spec_expression'."
+                        )
+                        continue
+
+                    # Try to extract bound from constraint
+                    bound_type, bound_expr, is_strict = _extract_bound_from_constraint(
+                        constraint.expression, attr.name
+                    )
+
+                    if bound_type == "max" and bound_expr:
+                        # Check if distribution has max_formula
+                        has_max_formula = getattr(dist, 'max_formula', None) is not None
+                        if not has_max_formula:
+                            errors.append(
+                                f"{attr.name}: constraint '{constraint.expression}' exists but distribution has no max_formula. "
+                                f"Add to distribution: max_formula: '{bound_expr}'"
+                            )
+                    elif bound_type == "min" and bound_expr:
+                        # Check if distribution has min_formula
+                        has_min_formula = getattr(dist, 'min_formula', None) is not None
+                        if not has_min_formula:
+                            # Only error if there's no static min either
+                            has_static_min = getattr(dist, 'min', None) is not None
+                            if not has_static_min:
+                                errors.append(
+                                    f"{attr.name}: constraint '{constraint.expression}' exists but distribution has no min_formula. "
+                                    f"Add to distribution: min_formula: '{bound_expr}'"
+                                )
 
     return errors
 
