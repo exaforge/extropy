@@ -176,6 +176,20 @@ Note: weights must sum to 1.0
 
 Hard limits for sampling. IMPORTANT: Set constraints WIDER than observed data to preserve valid outliers.
 
+**Constraint Types:**
+- `hard_min` / `hard_max`: Static bounds for clamping sampled values
+- `expression`: Agent-level constraints validated after sampling (e.g., `children_count <= household_size - 1`)
+- `spec_expression`: Spec-level constraints that validate the YAML definition itself (e.g., `sum(weights)==1` for categorical weights)
+
+**IMPORTANT:** Use `spec_expression` (NOT `expression`) for constraints like:
+- `sum(weights)==1` — validates that categorical weights sum to 1
+- `weights[0]+weights[1]==1` — validates weight array
+- `len(options) > 0` — validates options exist
+
+Use `expression` for constraints that involve agent attributes:
+- `children_count <= household_size - 1`
+- `years_experience <= age - 23`
+
 ### 3. Grounding Quality
 
 For EACH attribute, honestly assess:
@@ -541,9 +555,44 @@ Use static base distribution (modifiers will adjust in next step):
 }}
 ```
 
+### Dynamic Bounds with min_formula / max_formula
+
+When an attribute's valid range depends on another attribute, use formula-based bounds:
+
+```json
+{{
+  "name": "children_count",
+  "distribution": {{
+    "type": "normal",
+    "mean_formula": "max(0, household_size - 2)",
+    "std": 0.9,
+    "min": 0,
+    "max_formula": "max(0, household_size - 1)"
+  }}
+}}
+```
+
+This ensures `children_count` never exceeds `household_size - 1` regardless of the sampled value.
+
+**When to use formula bounds:**
+- When the valid range depends on a previously-sampled attribute
+- When you have an expression constraint like `attr <= other_attr - N`
+- To guarantee zero constraint violations
+
+**Formulas can reference:**
+- Any attribute in `depends_on`
+- Built-in functions: max(), min(), abs()
+
 ### Constraints
 
-Set hard constraints WIDER than observed data. Expression constraints can reference dependencies.
+Set hard constraints WIDER than observed data.
+
+**Constraint Types:**
+- `hard_min` / `hard_max`: Static bounds for clamping sampled values
+- `expression`: Agent-level constraints validated after sampling (e.g., `children_count <= household_size - 1`)
+- `spec_expression`: Spec-level constraints that validate the YAML definition itself (e.g., `sum(weights)==1`)
+
+**TIP:** If you use `max_formula` to enforce a bound dynamically, you may not need an `expression` constraint for the same rule.
 
 ### Grounding
 

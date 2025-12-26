@@ -406,6 +406,91 @@ After all sub-steps complete, this validates that each attribute has the correct
 
 ---
 
+### Constraint Types
+
+Constraints define rules for attribute values. There are two categories:
+
+#### Spec-Level Constraints (`spec_expression`)
+
+These validate the **YAML specification itself**, not individual agents. They are checked during spec validation, NOT during sampling.
+
+**Use for:**
+- `sum(weights)==1` - validates categorical weights sum to 1
+- `weights[0]+weights[1]==1` - validates weight arrays
+- `len(options) > 0` - validates options exist
+
+**Example:**
+```yaml
+constraints:
+  - type: spec_expression
+    expression: sum(weights)==1
+    reason: Category weights must sum to 1.
+```
+
+#### Agent-Level Constraints (`expression`)
+
+These are validated against **each sampled agent**. Violations are reported but don't block sampling.
+
+**Use for:**
+- `children_count <= household_size - 1` - validates logical relationships between agent attributes
+- `years_experience <= age - 23` - validates derived relationships
+
+**Example:**
+```yaml
+constraints:
+  - type: expression
+    expression: children_count <= max(0, household_size - 1)
+    reason: Children cannot exceed household size minus one adult.
+```
+
+#### Hard Constraints (`hard_min`, `hard_max`)
+
+These are enforced during sampling via clamping. Values outside bounds are automatically clipped.
+
+```yaml
+constraints:
+  - type: hard_min
+    value: 0
+    reason: Cannot be negative.
+  - type: hard_max
+    value: 100
+    reason: Maximum allowed value.
+```
+
+---
+
+### Dynamic Bounds with Formula
+
+For attributes where valid bounds depend on other attributes, use `min_formula` and `max_formula`:
+
+```yaml
+children_count:
+  sampling:
+    strategy: conditional
+    distribution:
+      type: normal
+      mean_formula: "max(0, household_size - 2)"
+      std: 0.9
+      min: 0
+      max_formula: "max(0, household_size - 1)"  # Dynamic upper bound
+    depends_on: [household_size]
+```
+
+**Supported distributions:** `normal`, `lognormal`, `beta`
+
+**Formula precedence:** When both static and formula bounds are provided, **formula takes precedence**.
+
+**Available in formulas:**
+- Any attribute in `depends_on`
+- Built-in functions: `max()`, `min()`, `abs()`, `round()`, `int()`, `float()`
+
+**Benefits:**
+- Guarantees zero constraint violations for the bounded attribute
+- More efficient than sampling + validation + rejection
+- Self-documenting specification
+
+---
+
 ### Step 3: Constraint Binding
 
 **File:** `entropy/population/architect/binder.py`

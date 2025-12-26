@@ -581,3 +581,308 @@ class TestEdgeCases:
         # Check ID padding
         assert result.agents[0]["_id"] == "agent_000"
         assert result.agents[999]["_id"] == "agent_999"
+
+
+class TestSpecExpressionConstraints:
+    """Tests for spec_expression constraint type (spec-level validation, not agent-level)."""
+
+    def test_spec_expression_not_evaluated_against_agents(self):
+        """Constraints with type='spec_expression' should not appear in violation reports."""
+        spec = PopulationSpec(
+            meta=SpecMeta(description="Test", size=100),
+            grounding=GroundingSummary(
+                overall="low", sources_count=0, strong_count=0, medium_count=0, low_count=1, sources=[]
+            ),
+            attributes=[
+                AttributeSpec(
+                    name="category",
+                    type="categorical",
+                    category="universal",
+                    description="A category",
+                    sampling=SamplingConfig(
+                        strategy="independent",
+                        distribution=CategoricalDistribution(
+                            options=["a", "b", "c"],
+                            weights=[0.5, 0.3, 0.2],
+                        ),
+                    ),
+                    grounding=GroundingInfo(level="low", method="estimated"),
+                    constraints=[
+                        # This is a spec-level constraint - validates YAML definition, not agents
+                        Constraint(
+                            type="spec_expression",
+                            expression="sum(weights)==1",
+                            reason="Weights must sum to 1",
+                        ),
+                    ],
+                ),
+            ],
+            sampling_order=["category"],
+        )
+
+        result = sample_population(spec, count=100, seed=42)
+
+        # spec_expression constraints should NOT appear in violation reports
+        # (they validate the spec definition, not individual agents)
+        assert "sum(weights)" not in str(result.stats.constraint_violations)
+        assert len(result.stats.constraint_violations) == 0
+
+    def test_agent_expression_still_checked(self):
+        """Constraints with type='expression' should still be validated against agents."""
+        spec = PopulationSpec(
+            meta=SpecMeta(description="Test", size=100),
+            grounding=GroundingSummary(
+                overall="low", sources_count=0, strong_count=0, medium_count=0, low_count=2, sources=[]
+            ),
+            attributes=[
+                AttributeSpec(
+                    name="value_a",
+                    type="int",
+                    category="universal",
+                    description="Value A",
+                    sampling=SamplingConfig(
+                        strategy="independent",
+                        distribution=NormalDistribution(mean=10.0, std=3.0),
+                    ),
+                    grounding=GroundingInfo(level="low", method="estimated"),
+                    constraints=[],
+                ),
+                AttributeSpec(
+                    name="value_b",
+                    type="int",
+                    category="universal",
+                    description="Value B (should be <= value_a)",
+                    sampling=SamplingConfig(
+                        strategy="independent",
+                        distribution=NormalDistribution(mean=15.0, std=3.0),  # Often exceeds value_a
+                    ),
+                    grounding=GroundingInfo(level="low", method="estimated"),
+                    constraints=[
+                        # This is an agent-level constraint - should be checked against each agent
+                        Constraint(
+                            type="expression",
+                            expression="value_b <= value_a",
+                            reason="B should not exceed A",
+                        ),
+                    ],
+                ),
+            ],
+            sampling_order=["value_a", "value_b"],
+        )
+
+        result = sample_population(spec, count=100, seed=42)
+
+        # expression constraints SHOULD appear in violation reports if violated
+        # Since value_b (mean=15) often exceeds value_a (mean=10), we expect violations
+        assert len(result.stats.constraint_violations) > 0
+        assert any("value_b <= value_a" in k for k in result.stats.constraint_violations)
+
+
+class TestDynamicBounds:
+    """Tests for formula-based min/max bounds (min_formula, max_formula)."""
+
+    def test_max_formula_enforced(self, rng):
+        """max_formula should clamp values to dynamic upper bound."""
+        dist = NormalDistribution(
+            mean_formula="household_size - 2",
+            std=0.9,
+            min=0,
+            max_formula="household_size - 1",
+        )
+        agent = {"household_size": 3}
+
+        # Sample many times - all should be clamped to max = 3-1 = 2
+        values = [sample_distribution(dist, rng, agent) for _ in range(100)]
+        assert all(v <= 2 for v in values), f"Found value > 2: {max(values)}"
+        assert all(v >= 0 for v in values), f"Found value < 0: {min(values)}"
+
+    def test_min_formula_enforced(self, rng):
+        """min_formula should clamp values to dynamic lower bound."""
+        dist = NormalDistribution(
+            mean=5.0,
+            std=3.0,
+            min_formula="baseline",  # Dynamic min
+            max=20,
+        )
+        agent = {"baseline": 3}
+
+        # Sample many times - all should be >= baseline (3)
+        values = [sample_distribution(dist, rng, agent) for _ in range(100)]
+        assert all(v >= 3 for v in values), f"Found value < 3: {min(values)}"
+
+    def test_both_formula_bounds(self, rng):
+        """Both min_formula and max_formula should work together."""
+        dist = NormalDistribution(
+            mean=50.0,
+            std=20.0,
+            min_formula="lower",
+            max_formula="upper",
+        )
+        agent = {"lower": 30, "upper": 70}
+
+        values = [sample_distribution(dist, rng, agent) for _ in range(100)]
+        assert all(30 <= v <= 70 for v in values), f"Values out of range: min={min(values)}, max={max(values)}"
+
+    def test_formula_takes_precedence_over_static(self, rng):
+        """Formula bounds should take precedence over static bounds."""
+        dist = NormalDistribution(
+            mean=50.0,
+            std=10.0,
+            min=0,  # Static min
+            max=100,  # Static max
+            min_formula="dynamic_min",  # Formula min - should take precedence
+            max_formula="dynamic_max",  # Formula max - should take precedence
+        )
+        agent = {"dynamic_min": 40, "dynamic_max": 60}
+
+        values = [sample_distribution(dist, rng, agent) for _ in range(100)]
+        # Formula bounds (40, 60) should be used, not static (0, 100)
+        assert all(40 <= v <= 60 for v in values), f"Values out of range: min={min(values)}, max={max(values)}"
+
+    def test_lognormal_with_max_formula(self, rng):
+        """max_formula should work with lognormal distribution."""
+        from entropy.core.models.population import LognormalDistribution
+
+        dist = LognormalDistribution(
+            mean=100.0,
+            std=30.0,
+            min=50,
+            max_formula="limit",
+        )
+        agent = {"limit": 150}
+
+        values = [sample_distribution(dist, rng, agent) for _ in range(100)]
+        assert all(v <= 150 for v in values), f"Found value > 150: {max(values)}"
+        assert all(v >= 50 for v in values), f"Found value < 50: {min(values)}"
+
+    def test_beta_with_formula_bounds(self, rng):
+        """Formula bounds should work with beta distribution scaling."""
+        from entropy.core.models.population import BetaDistribution
+
+        dist = BetaDistribution(
+            alpha=2.0,
+            beta=5.0,
+            min_formula="scale_min",
+            max_formula="scale_max",
+        )
+        agent = {"scale_min": 10, "scale_max": 20}
+
+        values = [sample_distribution(dist, rng, agent) for _ in range(100)]
+        # Beta should be scaled to [10, 20]
+        assert all(10 <= v <= 20 for v in values), f"Values out of range: min={min(values)}, max={max(values)}"
+
+    def test_integration_children_count_pattern(self):
+        """Integration test: children_count should never exceed household_size - 1."""
+        spec = PopulationSpec(
+            meta=SpecMeta(description="Test household", size=500),
+            grounding=GroundingSummary(
+                overall="low", sources_count=0, strong_count=0, medium_count=0, low_count=2, sources=[]
+            ),
+            attributes=[
+                AttributeSpec(
+                    name="household_size",
+                    type="int",
+                    category="universal",
+                    description="Household size",
+                    sampling=SamplingConfig(
+                        strategy="independent",
+                        distribution=NormalDistribution(mean=3.0, std=1.0, min=1, max=8),
+                    ),
+                    grounding=GroundingInfo(level="low", method="estimated"),
+                    constraints=[],
+                ),
+                AttributeSpec(
+                    name="children_count",
+                    type="int",
+                    category="universal",
+                    description="Number of children",
+                    sampling=SamplingConfig(
+                        strategy="conditional",
+                        distribution=NormalDistribution(
+                            mean_formula="max(0, household_size - 2)",
+                            std=0.9,
+                            min=0,
+                            max_formula="max(0, household_size - 1)",
+                        ),
+                        depends_on=["household_size"],
+                    ),
+                    grounding=GroundingInfo(level="low", method="estimated"),
+                    constraints=[
+                        Constraint(
+                            type="expression",
+                            expression="children_count <= max(0, household_size - 1)",
+                            reason="Children cannot exceed household size minus one adult",
+                        ),
+                    ],
+                ),
+            ],
+            sampling_order=["household_size", "children_count"],
+        )
+
+        result = sample_population(spec, count=500, seed=42)
+
+        # With max_formula, there should be ZERO violations
+        violations = result.stats.constraint_violations
+        children_violations = {k: v for k, v in violations.items() if "children_count" in k}
+        assert len(children_violations) == 0, f"Found violations: {children_violations}"
+
+        # Also verify by checking actual values
+        for agent in result.agents:
+            assert agent["children_count"] <= max(0, agent["household_size"] - 1), \
+                f"Agent {agent['_id']}: children={agent['children_count']}, household={agent['household_size']}"
+
+    def test_modifier_respects_formula_bounds(self):
+        """Modifiers should respect max_formula bounds after applying multiply/add."""
+        from entropy.core.models.population import Modifier
+        
+        spec = PopulationSpec(
+            meta=SpecMeta(description="Test modifier bounds", size=500),
+            grounding=GroundingSummary(
+                overall="low", sources_count=0, strong_count=0, medium_count=0, low_count=2, sources=[]
+            ),
+            attributes=[
+                AttributeSpec(
+                    name="household_size",
+                    type="int",
+                    category="universal",
+                    description="Household size",
+                    sampling=SamplingConfig(
+                        strategy="independent",
+                        distribution=NormalDistribution(mean=4.0, std=1.0, min=2, max=6),
+                    ),
+                    grounding=GroundingInfo(level="low", method="estimated"),
+                    constraints=[],
+                ),
+                AttributeSpec(
+                    name="children_count",
+                    type="int",
+                    category="universal",
+                    description="Number of children",
+                    sampling=SamplingConfig(
+                        strategy="conditional",
+                        distribution=NormalDistribution(
+                            mean_formula="max(0, household_size - 2)",
+                            std=0.9,
+                            min=0,
+                            max_formula="max(0, household_size - 1)",  # Dynamic max bound
+                        ),
+                        depends_on=["household_size"],
+                        modifiers=[
+                            # This modifier adds values - but result should still be clamped
+                            Modifier(when="household_size >= 4", multiply=1.2, add=0.5),
+                        ],
+                    ),
+                    grounding=GroundingInfo(level="low", method="estimated"),
+                    constraints=[],
+                ),
+            ],
+            sampling_order=["household_size", "children_count"],
+        )
+
+        result = sample_population(spec, count=500, seed=42)
+
+        # Even with modifier multiply/add, values should still respect max_formula
+        for agent in result.agents:
+            max_allowed = max(0, agent["household_size"] - 1)
+            assert agent["children_count"] <= max_allowed, \
+                f"Agent {agent['_id']}: children={agent['children_count']}, household={agent['household_size']}, max_allowed={max_allowed}"

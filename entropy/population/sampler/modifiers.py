@@ -28,6 +28,7 @@ from .distributions import (
     _sample_beta,
     _sample_categorical,
     _sample_boolean,
+    _resolve_optional_param,
 )
 
 logger = logging.getLogger(__name__)
@@ -117,10 +118,18 @@ def _apply_numeric_modifiers(
     modified_value = (base_value * total_multiply) + total_add
 
     # Re-apply min/max clamping after modification
-    if dist.min is not None:
-        modified_value = max(modified_value, dist.min)
-    if dist.max is not None:
-        modified_value = min(modified_value, dist.max)
+    # Use formula bounds if available (they take precedence over static bounds)
+    min_bound = _resolve_optional_param(
+        dist.min, getattr(dist, 'min_formula', None), agent
+    )
+    max_bound = _resolve_optional_param(
+        dist.max, getattr(dist, 'max_formula', None), agent
+    )
+    
+    if min_bound is not None:
+        modified_value = max(modified_value, min_bound)
+    if max_bound is not None:
+        modified_value = min(modified_value, max_bound)
 
     return modified_value
 

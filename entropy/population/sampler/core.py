@@ -291,11 +291,18 @@ def _check_expression_constraints(
     agents: list[dict[str, Any]],
     stats: SamplingStats,
 ) -> None:
-    """Check expression constraints and count violations."""
+    """Check expression constraints and count violations.
+    
+    Only checks constraints with type='expression' (agent-level constraints).
+    Constraints with type='spec_expression' are spec-level validations
+    (e.g., sum(weights)==1) and are NOT evaluated against individual agents.
+    """
     from .eval_safe import eval_condition
 
     for attr in spec.attributes:
         for constraint in attr.constraints:
+            # Only check agent-level expression constraints
+            # spec_expression constraints validate the YAML spec itself, not agents
             if constraint.type == "expression" and constraint.expression:
                 violation_count = 0
                 for agent in agents:

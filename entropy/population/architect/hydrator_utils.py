@@ -74,6 +74,111 @@ def extract_names_from_condition(condition: str) -> set[str]:
 
 
 # =============================================================================
+# Constraint Bound Extraction
+# =============================================================================
+
+# Spec-level variable patterns that should use spec_expression, not expression
+SPEC_LEVEL_PATTERNS = {'weights', 'options'}
+
+
+def _extract_bound_from_constraint(
+    expression: str,
+    attr_name: str,
+) -> tuple[str | None, str | None, bool]:
+    """Extract bound expression from a constraint.
+
+    Parses simple inequality constraints to extract the bound expression.
+    
+    Args:
+        expression: The constraint expression (e.g., "children_count <= household_size - 1")
+        attr_name: The attribute name to look for on one side of the inequality
+        
+    Returns:
+        Tuple of (bound_type, bound_expr, is_strict) where:
+        - bound_type is "max" or "min" or None if not a simple bound
+        - bound_expr is the expression for the bound (e.g., "household_size - 1")
+        - is_strict is True for < or > (strict inequality)
+        
+    Examples:
+        >>> _extract_bound_from_constraint("x <= y - 1", "x")
+        ("max", "y - 1", False)
+        >>> _extract_bound_from_constraint("x < y", "x")
+        ("max", "y", True)
+        >>> _extract_bound_from_constraint("x >= y + 5", "x")
+        ("min", "y + 5", False)
+        >>> _extract_bound_from_constraint("y - 1 >= x", "x")
+        ("max", "y - 1", False)
+    """
+    expr = expression.strip()
+    
+    # Escape attr_name for regex
+    escaped_name = re.escape(attr_name)
+    
+    # Upper bound patterns: attr <= expr, attr < expr, expr >= attr, expr > attr
+    upper_patterns = [
+        (rf'^{escaped_name}\s*<=\s*(.+)$', False),   # attr <= expr
+        (rf'^{escaped_name}\s*<\s*(.+)$', True),     # attr < expr (strict)
+        (rf'^(.+)\s*>=\s*{escaped_name}$', False),   # expr >= attr
+        (rf'^(.+)\s*>\s*{escaped_name}$', True),     # expr > attr (strict)
+    ]
+    
+    # Lower bound patterns: attr >= expr, attr > expr, expr <= attr, expr < attr
+    lower_patterns = [
+        (rf'^{escaped_name}\s*>=\s*(.+)$', False),   # attr >= expr
+        (rf'^{escaped_name}\s*>\s*(.+)$', True),     # attr > expr (strict)
+        (rf'^(.+)\s*<=\s*{escaped_name}$', False),   # expr <= attr
+        (rf'^(.+)\s*<\s*{escaped_name}$', True),     # expr < attr (strict)
+    ]
+    
+    for pattern, is_strict in upper_patterns:
+        match = re.match(pattern, expr)
+        if match:
+            bound_expr = match.group(1).strip()
+            return ("max", bound_expr, is_strict)
+    
+    for pattern, is_strict in lower_patterns:
+        match = re.match(pattern, expr)
+        if match:
+            bound_expr = match.group(1).strip()
+            return ("min", bound_expr, is_strict)
+    
+    return (None, None, False)
+
+
+def _is_spec_level_constraint(expression: str) -> bool:
+    """Check if a constraint expression references spec-level variables.
+    
+    Spec-level constraints validate the YAML spec itself (e.g., weights sum to 1),
+    not individual sampled agents. These should use type='spec_expression'.
+    
+    Args:
+        expression: The constraint expression
+        
+    Returns:
+        True if the expression references spec-level variables like 'weights' or 'options'
+    """
+    # Check for common spec-level patterns
+    if 'sum(weights)' in expression:
+        return True
+    if 'len(options)' in expression:
+        return True
+    if 'weights[' in expression:
+        return True
+    if 'options[' in expression:
+        return True
+    
+    # Check if expression references spec-level variable names
+    try:
+        refs = extract_names_from_formula(expression)
+        if refs & SPEC_LEVEL_PATTERNS:
+            return True
+    except Exception:
+        pass
+    
+    return False
+
+
+# =============================================================================
 # Formula Sanitization
 # =============================================================================
 
@@ -442,7 +547,7 @@ def build_independent_schema() -> dict:
                             "items": {
                                 "type": "object",
                                 "properties": {
-                                    "type": {"type": "string", "enum": ["hard_min", "hard_max", "expression"]},
+                                    "type": {"type": "string", "enum": ["hard_min", "hard_max", "expression", "spec_expression"]},
                                     "value": {"type": ["number", "null"]},
                                     "expression": {"type": ["string", "null"]},
                                     "reason": {"type": ["string", "null"]},
@@ -520,13 +625,15 @@ def build_conditional_base_schema() -> dict:
                                 "std_formula": {"type": ["string", "null"]},
                                 "min": {"type": ["number", "null"]},
                                 "max": {"type": ["number", "null"]},
+                                "min_formula": {"type": ["string", "null"]},
+                                "max_formula": {"type": ["string", "null"]},
                                 "alpha": {"type": ["number", "null"]},
                                 "beta": {"type": ["number", "null"]},
                                 "options": {"type": ["array", "null"], "items": {"type": "string"}},
                                 "weights": {"type": ["array", "null"], "items": {"type": "number"}},
                                 "probability_true": {"type": ["number", "null"]},
                             },
-                            "required": ["type", "mean", "std", "mean_formula", "std_formula", "min", "max", "alpha", "beta", "options", "weights", "probability_true"],
+                            "required": ["type", "mean", "std", "mean_formula", "std_formula", "min", "max", "min_formula", "max_formula", "alpha", "beta", "options", "weights", "probability_true"],
                             "additionalProperties": False,
                         },
                         "constraints": {
@@ -534,7 +641,7 @@ def build_conditional_base_schema() -> dict:
                             "items": {
                                 "type": "object",
                                 "properties": {
-                                    "type": {"type": "string", "enum": ["hard_min", "hard_max", "expression"]},
+                                    "type": {"type": "string", "enum": ["hard_min", "hard_max", "expression", "spec_expression"]},
                                     "value": {"type": ["number", "null"]},
                                     "expression": {"type": ["string", "null"]},
                                     "reason": {"type": ["string", "null"]},
@@ -632,6 +739,8 @@ def parse_distribution(dist_data: dict, attr_type: str):
             max=dist_data.get("max"),
             mean_formula=sanitize_formula(dist_data.get("mean_formula")),
             std_formula=sanitize_formula(dist_data.get("std_formula")),
+            min_formula=sanitize_formula(dist_data.get("min_formula")),
+            max_formula=sanitize_formula(dist_data.get("max_formula")),
         )
     elif dist_type == "lognormal":
         return LognormalDistribution(
@@ -641,6 +750,8 @@ def parse_distribution(dist_data: dict, attr_type: str):
             max=dist_data.get("max"),
             mean_formula=sanitize_formula(dist_data.get("mean_formula")),
             std_formula=sanitize_formula(dist_data.get("std_formula")),
+            min_formula=sanitize_formula(dist_data.get("min_formula")),
+            max_formula=sanitize_formula(dist_data.get("max_formula")),
         )
     elif dist_type == "uniform":
         return UniformDistribution(
@@ -660,6 +771,8 @@ def parse_distribution(dist_data: dict, attr_type: str):
             beta=beta_val,
             min=dist_data.get("min"),
             max=dist_data.get("max"),
+            min_formula=sanitize_formula(dist_data.get("min_formula")),
+            max_formula=sanitize_formula(dist_data.get("max_formula")),
         )
     elif dist_type == "categorical":
         # Handle explicit null from LLM response (get returns None, not default)

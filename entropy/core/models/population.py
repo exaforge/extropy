@@ -47,6 +47,9 @@ class NormalDistribution(BaseModel):
 
     For conditional attributes with continuous dependencies, use mean_formula
     instead of mean to express the relationship (e.g., "age - 28" for experience).
+    
+    For dynamic bounds that depend on other attributes, use min_formula/max_formula
+    (e.g., "max(0, household_size - 1)" for children_count).
     """
 
     type: Literal["normal"] = "normal"
@@ -64,10 +67,22 @@ class NormalDistribution(BaseModel):
         default=None,
         description="Formula for std (rare, but supported)"
     )
+    # Formula-based bounds (for dynamic clamping based on other attributes)
+    min_formula: str | None = Field(
+        default=None,
+        description="Formula for dynamic min bound, e.g., '0'. Evaluated with agent context."
+    )
+    max_formula: str | None = Field(
+        default=None,
+        description="Formula for dynamic max bound, e.g., 'household_size - 1'. Evaluated with agent context."
+    )
 
 
 class LognormalDistribution(BaseModel):
-    """Lognormal distribution parameters."""
+    """Lognormal distribution parameters.
+    
+    For dynamic bounds that depend on other attributes, use min_formula/max_formula.
+    """
 
     type: Literal["lognormal"] = "lognormal"
     mean: float | None = None
@@ -76,6 +91,15 @@ class LognormalDistribution(BaseModel):
     max: float | None = None
     mean_formula: str | None = None
     std_formula: str | None = None
+    # Formula-based bounds (for dynamic clamping based on other attributes)
+    min_formula: str | None = Field(
+        default=None,
+        description="Formula for dynamic min bound. Evaluated with agent context."
+    )
+    max_formula: str | None = Field(
+        default=None,
+        description="Formula for dynamic max bound. Evaluated with agent context."
+    )
 
 
 class UniformDistribution(BaseModel):
@@ -87,13 +111,25 @@ class UniformDistribution(BaseModel):
 
 
 class BetaDistribution(BaseModel):
-    """Beta distribution parameters (useful for probabilities and proportions)."""
+    """Beta distribution parameters (useful for probabilities and proportions).
+    
+    For dynamic bounds that depend on other attributes, use min_formula/max_formula.
+    """
 
     type: Literal["beta"] = "beta"
     alpha: float
     beta: float
     min: float | None = None  # For scaling
     max: float | None = None  # For scaling
+    # Formula-based bounds (for dynamic clamping based on other attributes)
+    min_formula: str | None = Field(
+        default=None,
+        description="Formula for dynamic min bound. Evaluated with agent context."
+    )
+    max_formula: str | None = Field(
+        default=None,
+        description="Formula for dynamic max bound. Evaluated with agent context."
+    )
 
 
 class CategoricalDistribution(BaseModel):
@@ -201,10 +237,17 @@ class Constraint(BaseModel):
 
     Constraints should be set WIDER than observed data to preserve valid outliers.
     E.g., if research shows surgeons are typically 28-65, set hard_min: 26, hard_max: 78.
+
+    Constraint types:
+    - hard_min/hard_max: Static bounds for clamping sampled values
+    - expression: Agent-level constraints validated after sampling (e.g., 'children_count <= household_size - 1')
+    - spec_expression: Spec-level constraints that validate the YAML definition itself (e.g., 'sum(weights)==1'),
+                       NOT evaluated against individual agents
+    - min/max: Legacy aliases for hard_min/hard_max
     """
 
-    type: Literal["hard_min", "hard_max", "expression", "min", "max"] = Field(
-        description="hard_min/hard_max for bounds, expression for complex constraints. 'min'/'max' are legacy aliases."
+    type: Literal["hard_min", "hard_max", "expression", "spec_expression", "min", "max"] = Field(
+        description="hard_min/hard_max for bounds, expression for agent-level constraints, spec_expression for spec-level validation. 'min'/'max' are legacy aliases."
     )
     value: float | None = Field(
         default=None, description="Value for hard_min/hard_max constraints"

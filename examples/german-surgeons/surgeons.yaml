@@ -149,7 +149,7 @@ attributes:
     note: Wikipedia compiles German specialty stats; cites ~24% women in surgery in
       2023. Exact ‘diverse’ share not published—set small placeholder (1%).
   constraints:
-  - type: expression
+  - type: spec_expression
     value: null
     expression: sum(weights)==1
     reason: Category weights must sum to 1.
@@ -206,7 +206,7 @@ attributes:
       in city-states but distribution anchored to resident population for residence
       attribute.
   constraints:
-  - type: expression
+  - type: spec_expression
     value: null
     expression: sum(weights)==1
     reason: Weights must total 1.
@@ -236,7 +236,7 @@ attributes:
     note: KBV shows highest physician density in city-states; surgeons likely overrepresented
       in urban settings. No direct residence split; weights reflect this bias.
   constraints:
-  - type: expression
+  - type: spec_expression
     value: null
     expression: sum(weights)==1
     reason: Must sum to 1.
@@ -270,7 +270,7 @@ attributes:
     note: No surgeon-specific marital data; estimate aligned with German professionals
       in 30–60 age band and higher marriage prevalence vs general urban population.
   constraints:
-  - type: expression
+  - type: spec_expression
     value: null
     expression: sum(weights)==1
     reason: Must sum to 1.
@@ -333,7 +333,7 @@ attributes:
       EU and non‑EU approximated using BÄK 2023 top origin countries (EU + Middle
       East).'
   constraints:
-  - type: expression
+  - type: spec_expression
     value: null
     expression: sum(weights)==1
     reason: Must sum to 1.
@@ -362,7 +362,7 @@ attributes:
       many sources and professional consensus indicate majority hold Dr. med.; 60%
       used as conservative estimate.
   constraints:
-  - type: expression
+  - type: spec_expression
     value: null
     expression: weights[0]+weights[1]==1
     reason: Two-category split.
@@ -448,7 +448,7 @@ attributes:
       mid: urology, gynecology; smaller: vascular, plastic; smallest: thoracic, pediatric,
       cardiac, neuro).'
   constraints:
-  - type: expression
+  - type: spec_expression
     value: null
     expression: sum(weights)==1
     reason: Weights normalized.
@@ -484,7 +484,7 @@ attributes:
       in public/non‑university than private; remaining surgeons in practices/MVZ (esp.
       ortho/trauma, urology).
   constraints:
-  - type: expression
+  - type: spec_expression
     value: null
     expression: sum(weights)==1
     reason: Must sum to 1.
@@ -736,10 +736,12 @@ attributes:
       type: normal
       mean: 0.0
       std: 0.9
-      min: null
+      min: 0
       max: null
       mean_formula: max(0, household_size - 2)
       std_formula: null
+      min_formula: null
+      max_formula: max(0, household_size - 1)
     formula: null
     depends_on:
     - household_size
@@ -790,10 +792,12 @@ attributes:
       type: normal
       mean: 0.0
       std: 3.0
-      min: null
+      min: 0
       max: null
       mean_formula: max(0, age - 27)
       std_formula: null
+      min_formula: null
+      max_formula: max(0, age - 23)
     formula: null
     depends_on:
     - age
@@ -917,7 +921,7 @@ attributes:
     note: Weights reflect broad base-heavy distribution with fewer chiefs and practice
       owners.
   constraints:
-  - type: expression
+  - type: spec_expression
     value: null
     expression: 'True'
     reason: Categorical base; dependencies applied later via modifiers.
@@ -957,7 +961,7 @@ attributes:
     note: Includes residents (non-certified) and attendings (certified); base set
       mid-60% before experience modifiers.
   constraints:
-  - type: expression
+  - type: spec_expression
     value: null
     expression: 'True'
     reason: Base probability; years_experience effects added later.
@@ -1028,7 +1032,7 @@ attributes:
     note: Reflects that most surgeons work in hospitals; sizable share in medium/large
       centers.
   constraints:
-  - type: expression
+  - type: spec_expression
     value: null
     expression: 'True'
     reason: Base mix across German care settings; employer-specific effects applied
@@ -1268,7 +1272,7 @@ attributes:
       patterns.
     note: Small tail at leading/PI reflects concentration at tertiary/university centers.
   constraints:
-  - type: expression
+  - type: spec_expression
     value: null
     expression: 'True'
     reason: Base distribution; university affiliation and specialty will modify later.
@@ -1312,7 +1316,7 @@ attributes:
       in Germany.
     note: Over half of surgeons have some formal teaching duties (students/trainees).
   constraints:
-  - type: expression
+  - type: spec_expression
     value: null
     expression: 'True'
     reason: Base rate across hospitals and practices; higher at university centers
@@ -1566,7 +1570,7 @@ attributes:
     note: Slight majority at or near full EMR in hospitals; partial common in mixed
       or practice settings.
   constraints:
-  - type: expression
+  - type: spec_expression
     value: null
     expression: 'True'
     reason: Base across settings; employer type will modify later.
@@ -1616,7 +1620,7 @@ attributes:
     source: DGCH/DGAV registry participation rates; hospital quality reporting norms.
     note: Roughly half engaged in at least one audit/registry.
   constraints:
-  - type: expression
+  - type: spec_expression
     value: null
     expression: 'True'
     reason: Baseline participation across specialties and employers; modified upward
@@ -1746,7 +1750,7 @@ attributes:
       surveys of capital equipment committees.
     note: Most surgeons have at least advisory input; a minority have purchasing authority.
   constraints:
-  - type: expression
+  - type: spec_expression
     value: null
     expression: 'True'
     reason: Baseline across roles; influence typically rises with seniority and varies
@@ -2115,7 +2119,7 @@ attributes:
     note: Base mix assumes early adoption pockets with limited routine use; modifiers
       will adjust by setting and role.
   constraints:
-  - type: expression
+  - type: spec_expression
     value: null
     expression: '''none'' in options and ''pilot_only'' in options and ''research_only''
       in options and ''routine_clinical_use'' in options'
@@ -2257,7 +2261,7 @@ attributes:
     note: Typical distribution across German facilities with fewer robust enterprise
       IT teams outside large centers.
   constraints:
-  - type: expression
+  - type: spec_expression
     value: null
     expression: '''inadequate'' in options and ''adequate'' in options and ''robust''
       in options'
@@ -2324,7 +2328,7 @@ attributes:
     note: Balanced base; integration is often moderate challenge due to documentation
       and interoperability steps.
   constraints:
-  - type: expression
+  - type: spec_expression
     value: null
     expression: '''low'' in options and ''medium'' in options and ''high'' in options'
     reason: Ensure category completeness
@@ -2628,7 +2632,7 @@ attributes:
     note: Most hospitals have standard imaging; advanced (e.g., 3D planning, high-end
       MRI/CT protocols) concentrated in larger centers.
   constraints:
-  - type: expression
+  - type: spec_expression
     value: null
     expression: '''limited'' in options and ''standard'' in options and ''advanced''
       in options'
