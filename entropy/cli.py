@@ -179,15 +179,14 @@ def _generate_and_review_persona_template(
 
     # Generate initial template
     template = None
-    explanation = None
     template_done = Event()
     template_error = None
     gen_start = time.time()
 
     def do_template_gen():
-        nonlocal template, explanation, template_error
+        nonlocal template, template_error
         try:
-            template, explanation = generate_persona_template(spec, log=True)
+            template = generate_persona_template(spec, log=True)
         except Exception as e:
             template_error = e
         finally:
@@ -300,7 +299,7 @@ def _generate_and_review_persona_template(
 
             with console.status("[cyan]Refining template...[/cyan]"):
                 try:
-                    template, explanation = refine_persona_template(
+                    template = refine_persona_template(
                         template, spec, feedback, log=True
                     )
                 except Exception as e:
