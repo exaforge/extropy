@@ -86,17 +86,21 @@ def simulate_command(
     simulation_thread.start()
 
     if not quiet:
+        spinner_chars = "⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏"
+        spinner_index = 0
         with Live(console=console, refresh_per_second=2, transient=True) as live:
             while not simulation_done.is_set():
                 elapsed = time.time() - start_time
                 timestep, max_ts, status = current_progress
+                spinner = spinner_chars[spinner_index % len(spinner_chars)]
                 if max_ts > 0:
                     pct = timestep / max_ts * 100
                     live.update(
-                        f"[cyan]⠋[/cyan] Timestep {timestep}/{max_ts} ({pct:.0f}%) | {status} | {format_elapsed(elapsed)}"
+                        f"[cyan]{spinner}[/cyan] Timestep {timestep}/{max_ts} ({pct:.0f}%) | {status} | {format_elapsed(elapsed)}"
                     )
                 else:
-                    live.update(f"[cyan]⠋[/cyan] {status} | {format_elapsed(elapsed)}")
+                    live.update(f"[cyan]{spinner}[/cyan] {status} | {format_elapsed(elapsed)}")
+                spinner_index += 1
                 time.sleep(0.1)
     else:
         simulation_done.wait()

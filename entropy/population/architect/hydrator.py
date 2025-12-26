@@ -1059,9 +1059,19 @@ def hydrate_attributes(
     )
     all_sources.extend(independent_sources)
     all_warnings.extend([f"[2a] {e}" for e in independent_errors])
-    report(
-        "2a", f"Hydrated {len(independent_attrs)} independent", len(independent_sources)
-    )
+    # Report validation status
+    if independent_errors:
+        report(
+            "2a",
+            f"✓ Hydrated {len(independent_attrs)} independent, ⚠ {len(independent_errors)} validation warning(s)",
+            len(independent_sources),
+        )
+    else:
+        report(
+            "2a",
+            f"✓ Hydrated {len(independent_attrs)} independent, ✓ Validation passed",
+            len(independent_sources),
+        )
 
     # Step 2b: Derived attributes
     report("2b", "Specifying derived formulas...")
@@ -1076,7 +1086,15 @@ def hydrate_attributes(
         on_retry=make_retry_callback("2b"),
     )
     all_warnings.extend([f"[2b] {e}" for e in derived_errors])
-    report("2b", f"Hydrated {len(derived_attrs)} derived", 0)
+    # Report validation status
+    if derived_errors:
+        report(
+            "2b",
+            f"✓ Hydrated {len(derived_attrs)} derived, ⚠ {len(derived_errors)} validation warning(s)",
+            0,
+        )
+    else:
+        report("2b", f"✓ Hydrated {len(derived_attrs)} derived, ✓ Validation passed", 0)
 
     # Step 2c: Conditional base distributions
     report("2c", "Researching conditional distributions...")
@@ -1095,11 +1113,19 @@ def hydrate_attributes(
     )
     all_sources.extend(conditional_sources)
     all_warnings.extend([f"[2c] {e}" for e in conditional_errors])
-    report(
-        "2c",
-        f"Hydrated {len(conditional_base_attrs)} conditional",
-        len(conditional_sources),
-    )
+    # Report validation status
+    if conditional_errors:
+        report(
+            "2c",
+            f"✓ Hydrated {len(conditional_base_attrs)} conditional, ⚠ {len(conditional_errors)} validation warning(s)",
+            len(conditional_sources),
+        )
+    else:
+        report(
+            "2c",
+            f"✓ Hydrated {len(conditional_base_attrs)} conditional, ✓ Validation passed",
+            len(conditional_sources),
+        )
 
     # Step 2d: Conditional modifiers
     report("2d", "Specifying conditional modifiers...")
@@ -1118,14 +1144,36 @@ def hydrate_attributes(
     )
     all_sources.extend(modifier_sources)
     all_warnings.extend([f"[2d] {e}" for e in modifier_errors])
-    report("2d", f"Added modifiers to {len(conditional_attrs)}", len(modifier_sources))
+    # Report validation status
+    if modifier_errors:
+        report(
+            "2d",
+            f"✓ Added modifiers to {len(conditional_attrs)}, ⚠ {len(modifier_errors)} validation warning(s)",
+            len(modifier_sources),
+        )
+    else:
+        report(
+            "2d",
+            f"✓ Added modifiers to {len(conditional_attrs)}, ✓ Validation passed",
+            len(modifier_sources),
+        )
 
     # Combine all hydrated attributes
     all_hydrated = independent_attrs + derived_attrs + conditional_attrs
     unique_sources = list(set(all_sources))
 
     # Validate strategy consistency across all attributes
+    report("strategy", "Validating strategy consistency...")
     strategy_errors = validate_strategy_consistency(all_hydrated)
     all_warnings.extend([f"[strategy] {e}" for e in strategy_errors])
+    # Report validation status
+    if strategy_errors:
+        report(
+            "strategy",
+            f"⚠ Strategy consistency check: {len(strategy_errors)} warning(s)",
+            None,
+        )
+    else:
+        report("strategy", "✓ Strategy consistency check passed", None)
 
     return all_hydrated, unique_sources, all_warnings

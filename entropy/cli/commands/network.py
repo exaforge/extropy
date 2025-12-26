@@ -102,17 +102,21 @@ def network_command(
     gen_thread = Thread(target=do_generation, daemon=True)
     gen_thread.start()
 
+    spinner_chars = "⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏"
+    spinner_index = 0
     with Live(console=console, refresh_per_second=4, transient=True) as live:
         while not generation_done.is_set():
             elapsed = time.time() - generation_start
             stage, current, total = current_stage
+            spinner = spinner_chars[spinner_index % len(spinner_chars)]
             if total > 0:
                 pct = current / total * 100
                 live.update(
-                    f"[cyan]⠋[/cyan] {stage}... {current}/{total} ({pct:.0f}%) {format_elapsed(elapsed)}"
+                    f"[cyan]{spinner}[/cyan] {stage}... {current}/{total} ({pct:.0f}%) {format_elapsed(elapsed)}"
                 )
             else:
-                live.update(f"[cyan]⠋[/cyan] {stage}... {format_elapsed(elapsed)}")
+                live.update(f"[cyan]{spinner}[/cyan] {stage}... {format_elapsed(elapsed)}")
+            spinner_index += 1
             time.sleep(0.1)
 
     generation_elapsed = time.time() - generation_start
