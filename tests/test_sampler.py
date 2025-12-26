@@ -1226,3 +1226,74 @@ class TestQuickValidation:
         formatted = result.format_for_retry()
         assert "max_formula" in formatted
         assert "max(0, household_size - 1)" in formatted
+
+    def test_quick_validate_accepts_static_max_for_constraint(self):
+        """Static max should satisfy max bound requirement (not just max_formula)."""
+        from entropy.population.architect.quick_validate import validate_conditional_base_response
+
+        data = {
+            "attributes": [
+                {
+                    "name": "score",
+                    "distribution": {
+                        "type": "normal",
+                        "mean": 50,
+                        "std": 20,
+                        "mean_formula": None,
+                        "std_formula": None,
+                        "min": 0,
+                        "max": 100,  # Static max enforces the constraint
+                        "min_formula": None,
+                        "max_formula": None,
+                    },
+                    "constraints": [
+                        {
+                            "type": "expression",
+                            "expression": "score <= 100",
+                        },
+                    ],
+                },
+            ],
+        }
+
+        result = validate_conditional_base_response(data, ["score"])
+        # Should NOT error - static max=100 satisfies the constraint
+        assert not any("max_formula" in str(e.suggestion) for e in result.errors)
+
+    def test_validate_conditional_base_accepts_static_max(self):
+        """validate_conditional_base should accept static max for max bound constraints."""
+        from entropy.population.architect.hydrator_utils import validate_conditional_base
+        from entropy.core.models.population import (
+            HydratedAttribute, SamplingConfig, NormalDistribution, Constraint, GroundingInfo
+        )
+
+        attrs = [
+            HydratedAttribute(
+                name="score",
+                type="int",
+                category="universal",
+                description="Score",
+                sampling=SamplingConfig(
+                    strategy="conditional",
+                    distribution=NormalDistribution(
+                        mean=50,
+                        std=20,
+                        min=0,
+                        max=100,  # Static max
+                        # No max_formula needed
+                    ),
+                    depends_on=[],
+                ),
+                grounding=GroundingInfo(level="low", method="estimated"),
+                constraints=[
+                    Constraint(
+                        type="expression",
+                        expression="score <= 100",
+                    ),
+                ],
+            ),
+        ]
+
+        errors = validate_conditional_base(attrs)
+        # Should NOT error about max_formula
+        assert not any("max_formula" in str(e) for e in errors)
