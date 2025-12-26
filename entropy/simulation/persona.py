@@ -2,14 +2,138 @@
 
 Converts agent attributes into natural language personas that can
 be used as context for LLM reasoning calls.
+
+Supports two modes:
+1. Template mode (preferred): Uses a Jinja2 template stored in the PopulationSpec
+2. Fallback mode: Uses hardcoded logic for backwards compatibility
 """
 
 from typing import Any
 
+from jinja2 import Environment, BaseLoader, TemplateSyntaxError, UndefinedError
+
 from ..core.models import PopulationSpec, AttributeSpec
 
 
-# Personality trait descriptors for Big Five
+# =============================================================================
+# Jinja2 Template Rendering
+# =============================================================================
+
+
+def _create_jinja_environment() -> Environment:
+    """Create a Jinja2 environment with custom filters for persona generation."""
+    env = Environment(loader=BaseLoader())
+
+    # Add custom filters for personality trait descriptions
+    def describe_trait(value: float, trait_name: str) -> str:
+        """Describe a 0-1 scaled personality trait in natural language."""
+        if value is None:
+            return ""
+
+        descriptors = {
+            "openness": {
+                (0.0, 0.3): "prefer routine and familiarity",
+                (0.3, 0.5): "am moderately open to new experiences",
+                (0.5, 0.7): "enjoy exploring new ideas",
+                (0.7, 1.0): "am highly curious and creative",
+            },
+            "conscientiousness": {
+                (0.0, 0.3): "am flexible and spontaneous",
+                (0.3, 0.5): "am moderately organized",
+                (0.5, 0.7): "am reliable and methodical",
+                (0.7, 1.0): "am highly disciplined and detail-oriented",
+            },
+            "extraversion": {
+                (0.0, 0.3): "prefer solitude and quiet reflection",
+                (0.3, 0.5): "am moderately social",
+                (0.5, 0.7): "enjoy social interaction",
+                (0.7, 1.0): "am highly outgoing and energized by others",
+            },
+            "agreeableness": {
+                (0.0, 0.3): "am skeptical and competitive",
+                (0.3, 0.5): "balance cooperation with assertiveness",
+                (0.5, 0.7): "am cooperative and trusting",
+                (0.7, 1.0): "am highly empathetic and accommodating",
+            },
+            "neuroticism": {
+                (0.0, 0.3): "am emotionally stable and calm",
+                (0.3, 0.5): "experience moderate emotional variability",
+                (0.5, 0.7): "can be sensitive to stress",
+                (0.7, 1.0): "experience emotions intensely",
+            },
+            "risk_tolerance": {
+                (0.0, 0.4): "prefer caution over risk",
+                (0.4, 0.6): "have moderate risk tolerance",
+                (0.6, 1.0): "am comfortable taking risks",
+            },
+        }
+
+        trait_descriptors = descriptors.get(trait_name.lower(), {})
+        for (low, high), desc in trait_descriptors.items():
+            if low <= value < high:
+                return desc
+        return ""
+
+    def format_age(age: int | float | None) -> str:
+        """Format age for display."""
+        if age is None:
+            return ""
+        return f"{int(age)}-year-old"
+
+    def format_gender(gender: str | None) -> str:
+        """Format gender for display."""
+        if not gender:
+            return "person"
+        gender_lower = gender.lower()
+        if gender_lower in ("male", "m", "man"):
+            return "man"
+        elif gender_lower in ("female", "f", "woman"):
+            return "woman"
+        return "person"
+
+    def humanize(name: str) -> str:
+        """Convert snake_case to human readable text."""
+        return name.replace("_", " ").replace("-", " ").lower()
+
+    env.filters["describe_trait"] = describe_trait
+    env.filters["format_age"] = format_age
+    env.filters["format_gender"] = format_gender
+    env.filters["humanize"] = humanize
+
+    return env
+
+
+def render_persona_from_template(
+    template: str,
+    agent: dict[str, Any],
+) -> str | None:
+    """Render a persona from a Jinja2 template.
+
+    Args:
+        template: Jinja2 template string
+        agent: Agent dictionary with attributes
+
+    Returns:
+        Rendered persona string, or None if rendering failed
+    """
+    try:
+        env = _create_jinja_environment()
+        tmpl = env.from_string(template)
+        result = tmpl.render(**agent)
+        # Clean up whitespace
+        lines = [line.strip() for line in result.split("\n")]
+        cleaned = " ".join(line for line in lines if line)
+        return cleaned.strip()
+    except (TemplateSyntaxError, UndefinedError, Exception):
+        return None
+
+
+# =============================================================================
+# Fallback: Hardcoded Logic (for backwards compatibility)
+# =============================================================================
+
+
+# Personality trait descriptors for Big Five (fallback mode)
 OPENNESS_DESCRIPTORS = {
     (0.0, 0.3): "prefer routine and familiarity",
     (0.3, 0.5): "are moderately open to new experiences",
@@ -76,7 +200,7 @@ def _format_role(agent: dict[str, Any]) -> str:
     parts = []
 
     # Check common role attributes
-    role = agent.get("role_seniority") or agent.get("role") or agent.get("job_title")
+    role = agent.get("role_seniority") or agent.get("role") or agent.get("job_title") or agent.get("professional_rank")
     if role:
         parts.append(role)
 
@@ -124,6 +248,7 @@ def _format_location(agent: dict[str, Any]) -> str:
         or agent.get("state")
         or agent.get("region")
         or agent.get("city")
+        or agent.get("location")
     )
     if location:
         return f"based in {location}"
@@ -138,7 +263,7 @@ def _format_household(agent: dict[str, Any]) -> str:
     if household_size and household_size > 1:
         parts.append(f"living in a household of {int(household_size)}")
 
-    has_children = agent.get("has_children") or agent.get("children")
+    has_children = agent.get("has_children") or agent.get("children") or (agent.get("children_count", 0) > 0)
     if has_children:
         parts.append("with children")
 
@@ -241,11 +366,11 @@ def _format_context_attributes(
     return " ".join(parts[:3])  # Limit context info
 
 
-def generate_persona(
+def _generate_persona_fallback(
     agent: dict[str, Any],
     population_spec: PopulationSpec | None = None,
 ) -> str:
-    """Generate a natural language persona from agent attributes.
+    """Generate a persona using hardcoded logic (fallback mode).
 
     Args:
         agent: Agent dictionary with attributes
@@ -293,7 +418,7 @@ def generate_persona(
 
     # Additional professional attributes
     additional_prof = []
-    if agent.get("participation_in_research"):
+    if agent.get("participation_in_research") or agent.get("research_activity_level") in ["regular", "leading/PI"]:
         additional_prof.append("actively involved in research")
     if agent.get("teaching_responsibility"):
         additional_prof.append("have teaching responsibilities")
@@ -335,6 +460,40 @@ def generate_persona(
                 parts.append(f"Your {key.replace('_', ' ')} is {value}.")
 
     return " ".join(parts)
+
+
+# =============================================================================
+# Main Public API
+# =============================================================================
+
+
+def generate_persona(
+    agent: dict[str, Any],
+    population_spec: PopulationSpec | None = None,
+) -> str:
+    """Generate a natural language persona from agent attributes.
+
+    Uses template-based rendering if a persona_template is available in the
+    population spec. Falls back to hardcoded logic otherwise.
+
+    Args:
+        agent: Agent dictionary with attributes
+        population_spec: Optional population spec for attribute categorization and template
+
+    Returns:
+        Natural language persona string
+    """
+    # Try template-based rendering first if available
+    if population_spec and population_spec.meta.persona_template:
+        rendered = render_persona_from_template(
+            population_spec.meta.persona_template,
+            agent,
+        )
+        if rendered:
+            return rendered
+
+    # Fall back to hardcoded logic
+    return _generate_persona_fallback(agent, population_spec)
 
 
 def generate_persona_for_reasoning(

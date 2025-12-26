@@ -251,6 +251,10 @@ class SpecMeta(BaseModel):
     geography: str | None = Field(default=None, description="Geographic scope")
     created_at: datetime = Field(default_factory=datetime.now)
     version: str = Field(default="1.0", description="Spec format version")
+    persona_template: str | None = Field(
+        default=None,
+        description="Jinja2 template for generating persona text from agent attributes"
+    )
 
 
 # =============================================================================

@@ -14,6 +14,9 @@ from .population.architect import (
     hydrate_attributes,
     bind_constraints,
     build_spec,
+    generate_persona_template,
+    validate_persona_template,
+    refine_persona_template,
 )
 from .population.architect.binder import CircularDependencyError
 from .core.models import DiscoveredAttribute, PopulationSpec
@@ -153,6 +156,224 @@ def _display_spec_summary(spec: PopulationSpec) -> None:
         order_preview += " → ..."
     console.print(f"  {order_preview}")
     console.print()
+
+
+def _generate_and_review_persona_template(
+    spec: PopulationSpec,
+    yes: bool = False,
+) -> str | None:
+    """Generate and interactively review a persona template.
+
+    Args:
+        spec: Population specification
+        yes: If True, skip confirmation prompts
+
+    Returns:
+        Approved template string, or None if skipped/cancelled
+    """
+    console.print()
+    console.print("┌" + "─" * 58 + "┐")
+    console.print("│" + " PERSONA TEMPLATE".center(58) + "│")
+    console.print("└" + "─" * 58 + "┘")
+    console.print()
+
+    # Generate initial template
+    template = None
+    explanation = None
+    template_done = Event()
+    template_error = None
+    gen_start = time.time()
+
+    def do_template_gen():
+        nonlocal template, explanation, template_error
+        try:
+            template, explanation = generate_persona_template(spec, log=True)
+        except Exception as e:
+            template_error = e
+        finally:
+            template_done.set()
+
+    template_thread = Thread(target=do_template_gen, daemon=True)
+    template_thread.start()
+
+    with Live(console=console, refresh_per_second=1, transient=True) as live:
+        while not template_done.is_set():
+            elapsed = time.time() - gen_start
+            live.update(
+                f"[cyan]⠋[/cyan] Generating persona template... {_format_elapsed(elapsed)}"
+            )
+            time.sleep(0.1)
+
+    gen_elapsed = time.time() - gen_start
+
+    if template_error:
+        console.print(f"[yellow]⚠[/yellow] Could not generate persona template: {template_error}")
+        console.print("[dim]Falling back to built-in persona generation[/dim]")
+        return None
+
+    if not template:
+        console.print("[yellow]⚠[/yellow] Empty template generated")
+        console.print("[dim]Falling back to built-in persona generation[/dim]")
+        return None
+
+    console.print(f"[green]✓[/green] Template generated ({_format_elapsed(gen_elapsed)})")
+    console.print()
+
+    # Display the template
+    console.print("[bold]Proposed Template:[/bold]")
+    console.print()
+    # Show template with syntax highlighting
+    for line in template.split("\n"):
+        if line.strip():
+            console.print(f"  [dim]{line}[/dim]")
+    console.print()
+
+    if explanation:
+        console.print(f"[bold]Explanation:[/bold] {explanation}")
+        console.print()
+
+    # Create a sample agent for preview
+    sample_agent = _create_sample_agent(spec)
+
+    # Validate and show preview
+    is_valid, result = validate_persona_template(template, sample_agent)
+    if is_valid:
+        console.print("[bold]Sample Preview:[/bold]")
+        console.print(f"  [green]{result}[/green]")
+        console.print()
+    else:
+        console.print(f"[yellow]⚠[/yellow] Template validation warning: {result}")
+        console.print()
+
+    if yes:
+        return template
+
+    # Interactive review loop
+    max_refinements = 3
+    refinement_count = 0
+
+    while True:
+        choice = (
+            typer.prompt(
+                "[Y] Use template  [s] Skip (use fallback)  [r] Regenerate  [f] Give feedback",
+                default="Y",
+                show_default=False,
+            )
+            .strip()
+            .lower()
+        )
+
+        if choice == "y":
+            return template
+        elif choice == "s":
+            console.print("[dim]Skipping persona template, will use built-in generation[/dim]")
+            return None
+        elif choice == "r":
+            console.print()
+            with console.status("[cyan]Regenerating template...[/cyan]"):
+                try:
+                    template, explanation = generate_persona_template(spec, log=True)
+                except Exception as e:
+                    console.print(f"[red]✗[/red] Regeneration failed: {e}")
+                    continue
+
+            console.print("[green]✓[/green] Template regenerated")
+            console.print()
+            for line in template.split("\n"):
+                if line.strip():
+                    console.print(f"  [dim]{line}[/dim]")
+            console.print()
+
+            is_valid, result = validate_persona_template(template, sample_agent)
+            if is_valid:
+                console.print("[bold]Sample Preview:[/bold]")
+                console.print(f"  [green]{result}[/green]")
+                console.print()
+
+        elif choice == "f":
+            if refinement_count >= max_refinements:
+                console.print("[yellow]Maximum refinements reached[/yellow]")
+                continue
+
+            feedback = typer.prompt("What would you like to change?")
+            console.print()
+
+            with console.status("[cyan]Refining template...[/cyan]"):
+                try:
+                    template, explanation = refine_persona_template(
+                        template, spec, feedback, log=True
+                    )
+                except Exception as e:
+                    console.print(f"[red]✗[/red] Refinement failed: {e}")
+                    continue
+
+            refinement_count += 1
+            console.print("[green]✓[/green] Template refined")
+            console.print()
+            for line in template.split("\n"):
+                if line.strip():
+                    console.print(f"  [dim]{line}[/dim]")
+            console.print()
+
+            is_valid, result = validate_persona_template(template, sample_agent)
+            if is_valid:
+                console.print("[bold]Sample Preview:[/bold]")
+                console.print(f"  [green]{result}[/green]")
+                console.print()
+
+
+def _create_sample_agent(spec: PopulationSpec) -> dict:
+    """Create a sample agent dict with representative values for preview."""
+    agent = {}
+
+    for attr in spec.attributes:
+        if attr.type == "int":
+            # Use mean if available, else reasonable default
+            if attr.sampling.distribution:
+                dist = attr.sampling.distribution
+                if hasattr(dist, "mean") and dist.mean is not None:
+                    agent[attr.name] = int(dist.mean)
+                elif hasattr(dist, "min") and hasattr(dist, "max"):
+                    if dist.min is not None and dist.max is not None:
+                        agent[attr.name] = int((dist.min + dist.max) / 2)
+                    else:
+                        agent[attr.name] = 35  # default
+                else:
+                    agent[attr.name] = 35
+            else:
+                agent[attr.name] = 35
+
+        elif attr.type == "float":
+            if attr.sampling.distribution:
+                dist = attr.sampling.distribution
+                if hasattr(dist, "mean") and dist.mean is not None:
+                    agent[attr.name] = dist.mean
+                elif hasattr(dist, "alpha") and hasattr(dist, "beta"):
+                    # Beta distribution - use alpha / (alpha + beta) as expected value
+                    agent[attr.name] = dist.alpha / (dist.alpha + dist.beta)
+                elif hasattr(dist, "min") and hasattr(dist, "max"):
+                    if dist.min is not None and dist.max is not None:
+                        agent[attr.name] = (dist.min + dist.max) / 2
+                    else:
+                        agent[attr.name] = 0.5
+                else:
+                    agent[attr.name] = 0.5
+            else:
+                agent[attr.name] = 0.5
+
+        elif attr.type == "categorical":
+            if attr.sampling.distribution and hasattr(attr.sampling.distribution, "options"):
+                options = attr.sampling.distribution.options
+                if options:
+                    agent[attr.name] = options[0]
+
+        elif attr.type == "boolean":
+            if attr.sampling.distribution and hasattr(attr.sampling.distribution, "probability_true"):
+                agent[attr.name] = attr.sampling.distribution.probability_true > 0.5
+            else:
+                agent[attr.name] = True
+
+    return agent
 
 
 def _display_overlay_attributes(
@@ -596,6 +817,21 @@ def overlay_command(
         raise typer.Exit(1)
 
     # =========================================================================
+    # Step 5: Persona Template Generation
+    # =========================================================================
+
+    # Only generate template if the base spec doesn't already have one
+    if not base.meta.persona_template:
+        persona_template = _generate_and_review_persona_template(merged_spec, yes)
+        if persona_template:
+            merged_spec.meta.persona_template = persona_template
+            console.print(f"[green]✓[/green] Persona template added to spec")
+    else:
+        # Preserve base spec's persona template
+        merged_spec.meta.persona_template = base.meta.persona_template
+        console.print(f"[dim]Using persona template from base spec[/dim]")
+
+    # =========================================================================
     # Human Checkpoint #2: Confirm and Save
     # =========================================================================
 
@@ -843,6 +1079,15 @@ def spec_command(
         console.print()
         console.print("[red]Spec validation failed. Please fix the errors above.[/red]")
         raise typer.Exit(1)
+
+    # =========================================================================
+    # Step 5: Persona Template Generation
+    # =========================================================================
+
+    persona_template = _generate_and_review_persona_template(population_spec, yes)
+    if persona_template:
+        population_spec.meta.persona_template = persona_template
+        console.print(f"[green]✓[/green] Persona template added to spec")
 
     # =========================================================================
     # Human Checkpoint #2: Confirm and Save

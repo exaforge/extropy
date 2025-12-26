@@ -42,6 +42,12 @@ from .quick_validate import (
     validate_distribution_data,
     validate_modifier_data,
 )
+from .persona_template import (
+    generate_persona_template,
+    validate_persona_template,
+    refine_persona_template,
+    DEFAULT_FALLBACK_TEMPLATE,
+)
 
 __all__ = [
     # Pipeline steps
@@ -61,4 +67,9 @@ __all__ = [
     "validate_condition_syntax",
     "validate_distribution_data",
     "validate_modifier_data",
+    # Persona template generation
+    "generate_persona_template",
+    "validate_persona_template",
+    "refine_persona_template",
+    "DEFAULT_FALLBACK_TEMPLATE",
 ]
