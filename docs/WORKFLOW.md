@@ -12,6 +12,7 @@ A comprehensive guide to how Entropy works: from population spec creation throug
    - [Step 1: Attribute Selection](#step-1-attribute-selection)
    - [Step 2: Distribution Hydration](#step-2-distribution-hydration-4-sub-steps)
    - [Step 3: Constraint Binding](#step-3-constraint-binding)
+   - [Step 4: Persona Template Generation](#step-4-persona-template-generation)
    - [Final Validation System](#final-validation-system)
    - [Sampling](#sampling)
    - [Network Generation](#network-generation)
@@ -433,6 +434,61 @@ After all sub-steps complete, this validates that each attribute has the correct
 
 ---
 
+### Step 4: Persona Template Generation
+
+**File:** `entropy/population/architect/persona_template.py`
+
+**Purpose:** Generate an LLM-authored template that converts agent attributes into natural language persona descriptions for simulation.
+
+**LLM Call:** `simple_call()` with `gpt-5-mini`
+
+**What it does:**
+
+- Analyzes the population spec's attributes
+- Generates a template with `{attribute}` placeholders
+- Template uses Python's `.format()` syntax (NOT Jinja2)
+- Produces natural, fluent persona descriptions
+
+**CLI Interactive Flow:**
+
+1. Generate initial template via LLM
+2. Display template and sample persona preview
+3. User can: (a)ccept, (r)evise with feedback, or (s)kip
+4. If revised, LLM regenerates with user feedback
+5. Final template stored in `spec.meta.persona_template`
+
+**Example Template:**
+
+```
+I am a {age}-year-old {gender} surgeon specializing in {surgical_specialty}.
+I have been practicing for {years_experience} years at a {employer_type}.
+My approach to new technology is generally {tech_adoption_tendency}, and I
+consider myself {risk_tolerance} when it comes to clinical decisions.
+```
+
+**Example Rendered Persona:**
+
+```
+I am a 47-year-old male surgeon specializing in Cardiac_surgery.
+I have been practicing for 19 years at a University_hospital.
+My approach to new technology is generally cautious, and I
+consider myself moderate when it comes to clinical decisions.
+```
+
+**Functions:**
+
+| Function                   | Purpose                                |
+| -------------------------- | -------------------------------------- |
+| `generate_persona_template()` | Initial template generation via LLM |
+| `validate_persona_template()` | Test template with sample agent data |
+| `refine_persona_template()` | Regenerate with user feedback        |
+
+**Fallback Behavior:**
+
+If template generation fails or user skips, simulation uses a basic hardcoded persona format that lists key attributes.
+
+---
+
 ### Final Validation System
 
 **File:** `entropy/population/validator/`
@@ -612,7 +668,12 @@ Found 4 fix(es):
 2. **Attribute Selection** - Pass base as context, discover NEW attributes
 3. **Hydration** - Research distributions, can reference base attrs (with intermediate validation per sub-step)
 4. **Binding** - Topological sort with cross-layer dependencies
-5. **Merge** - `base_spec.merge(overlay_spec)`
+5. **Merge** - `base_spec.merge(overlay_spec)` (sets `persona_template=None`)
+6. **Persona Template Regeneration** - Generate new template including ALL attributes (base + overlay)
+
+**Why Regenerate Template:**
+
+The base spec's persona template only references base attributes. After merge, the overlay adds new scenario-specific attributes (e.g., `ai_trust_level`, `tech_adoption_tendency`) that should be included in agent personas. The CLI always regenerates the template after merge to ensure all attributes are available.
 
 **New Attributes Example:**
 
@@ -817,8 +878,10 @@ simulation: ...
    - Tracks reasoning history
 
 3. **Generate Personas** (`entropy/simulation/persona.py`)
-   - Create natural language persona for each agent
-   - Used in reasoning prompts
+   - Render natural language persona for each agent using the spec's `persona_template`
+   - Uses Python's `.format()` to substitute `{attribute}` placeholders with agent values
+   - Falls back to basic hardcoded format if template is missing or fails
+   - Personas are used in reasoning prompts to give agents identity
 
 ### Simulation Loop
 
@@ -976,7 +1039,11 @@ entropy/
 │   │   │                           #   - validate_conditional_base()
 │   │   │                           #   - validate_modifiers()
 │   │   │                           #   - validate_strategy_consistency()
-│   │   └── binder.py               # Step 3: Dependency graph
+│   │   ├── binder.py               # Step 3: Dependency graph
+│   │   └── persona_template.py     # Step 4: Persona template generation
+│   │                               #   - generate_persona_template()
+│   │                               #   - validate_persona_template()
+│   │                               #   - refine_persona_template()
 │   │
 │   ├── sampler/
 │   │   ├── core.py                 # Main sampling loop
@@ -1009,7 +1076,9 @@ entropy/
 │   ├── engine.py                   # Main simulation loop
 │   │                               # NOTE: Loads agents.json here
 │   ├── state.py                    # SQLite state manager
-│   ├── persona.py                  # Persona generation
+│   ├── persona.py                  # Persona rendering
+│   │                               #   - render_persona(): template.format(**agent)
+│   │                               #   - generate_persona(): uses template or fallback
 │   ├── reasoning.py                # LLM reasoning calls
 │   ├── propagation.py              # Exposure propagation
 │   ├── stopping.py                 # Stopping conditions
@@ -1093,6 +1162,14 @@ entropy/
                                      │ (errors → FIX or FAIL)
          ┌───────────────────────────┘
          ▼
+  ┌──────────────────┐      ┌──────────────────┐
+  │ generate_persona │──────│ persona_template │  ◀── Step 4: Template generation
+  │ _template()      │      │ with {attr}      │
+  │ (gpt-5-mini)     │      │ placeholders     │
+  └──────────────────┘      └────────┬─────────┘
+                                     │
+         ┌───────────────────────────┘
+         ▼
   ┌──────────────────┐
   │ build_spec       │──────▶ surgeons_base.yaml
   └──────────────────┘
@@ -1115,8 +1192,18 @@ entropy/
                                      │
                                      ▼
                    ┌──────────────────┐
-                   │ base.merge(overlay)│──────▶ surgeons.yaml (43 attrs)
-                   └──────────────────┘
+                   │ base.merge(overlay)│  (persona_template set to None)
+                   └────────┬─────────┘
+                            │
+                            ▼
+                   ┌──────────────────┐
+                   │ generate_persona │  ◀── Regenerate with ALL attributes
+                   │ _template()      │      (base + overlay attrs)
+                   │ (gpt-5-mini)     │
+                   └────────┬─────────┘
+                            │
+                            ▼
+                   surgeons.yaml (43 attrs + new persona_template)
 
 
 ┌─────────────────────────────────────────────────────────────────────────┐
@@ -1196,7 +1283,8 @@ entropy/
            │  │  4. FOR EACH agent to reason:                      │
            │  │     │                                               │
            │  │     ├──▶ build_reasoning_context()                 │
-           │  │     │    └──▶ persona + exposures + peer opinions  │
+           │  │     │    └──▶ render_persona(agent, template)      │
+           │  │     │         + exposures + peer opinions          │
            │  │     │                                               │
            │  │     ├──▶ reason_agent() [LLM CALL]                 │
            │  │     │    └──▶ gpt-5-mini structured output         │
