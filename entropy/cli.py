@@ -227,10 +227,6 @@ def _generate_and_review_persona_template(
             console.print(f"  [dim]{line}[/dim]")
     console.print()
 
-    if explanation:
-        console.print(f"[bold]Explanation:[/bold] {explanation}")
-        console.print()
-
     # Create a sample agent for preview
     sample_agent = _create_sample_agent(spec)
 
@@ -271,7 +267,7 @@ def _generate_and_review_persona_template(
             console.print()
             with console.status("[cyan]Regenerating template...[/cyan]"):
                 try:
-                    template, explanation = generate_persona_template(spec, log=True)
+                    template = generate_persona_template(spec, log=True)
                 except Exception as e:
                     console.print(f"[red]✗[/red] Regeneration failed: {e}")
                     continue
