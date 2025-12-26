@@ -6,6 +6,7 @@ from threading import Event, Thread
 
 import typer
 from rich.live import Live
+from rich.spinner import Spinner
 
 from ..app import app, console
 from ..utils import format_elapsed
@@ -86,21 +87,18 @@ def simulate_command(
     simulation_thread.start()
 
     if not quiet:
-        spinner_chars = "⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏"
-        spinner_index = 0
-        with Live(console=console, refresh_per_second=2, transient=True) as live:
+        spinner = Spinner("dots", text="Starting...", style="cyan")
+        with Live(spinner, console=console, refresh_per_second=12.5, transient=True) as live:
             while not simulation_done.is_set():
                 elapsed = time.time() - start_time
                 timestep, max_ts, status = current_progress
-                spinner = spinner_chars[spinner_index % len(spinner_chars)]
                 if max_ts > 0:
                     pct = timestep / max_ts * 100
-                    live.update(
-                        f"[cyan]{spinner}[/cyan] Timestep {timestep}/{max_ts} ({pct:.0f}%) | {status} | {format_elapsed(elapsed)}"
+                    spinner.update(
+                        text=f"Timestep {timestep}/{max_ts} ({pct:.0f}%) | {status} | {format_elapsed(elapsed)}"
                     )
                 else:
-                    live.update(f"[cyan]{spinner}[/cyan] {status} | {format_elapsed(elapsed)}")
-                spinner_index += 1
+                    spinner.update(text=f"{status} | {format_elapsed(elapsed)}")
                 time.sleep(0.1)
     else:
         simulation_done.wait()

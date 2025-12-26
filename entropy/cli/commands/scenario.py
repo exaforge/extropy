@@ -6,6 +6,7 @@ from threading import Event, Thread
 
 import typer
 from rich.live import Live
+from rich.spinner import Spinner
 
 from ..app import app, console
 from ..utils import format_elapsed
@@ -91,17 +92,12 @@ def scenario_command(
     pipeline_thread = Thread(target=run_pipeline, daemon=True)
     pipeline_thread.start()
 
-    spinner_chars = "⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏"
-    spinner_index = 0
-    with Live(console=console, refresh_per_second=4, transient=True) as live:
+    spinner = Spinner("dots", text="Starting...", style="cyan")
+    with Live(spinner, console=console, refresh_per_second=12.5, transient=True) as live:
         while not pipeline_done.is_set():
             elapsed = time.time() - start_time
             step, status = current_step
-            spinner = spinner_chars[spinner_index % len(spinner_chars)]
-            live.update(
-                f"[cyan]{spinner}[/cyan] Step {step}: {status} {format_elapsed(elapsed)}"
-            )
-            spinner_index += 1
+            spinner.update(text=f"Step {step}: {status} {format_elapsed(elapsed)}")
             time.sleep(0.1)
 
     if pipeline_error:

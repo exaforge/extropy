@@ -111,16 +111,6 @@ def select_attributes(
     Returns:
         List of DiscoveredAttribute objects
 
-    Example:
-        >>> attrs = select_attributes("German surgeons", 500, "Germany")
-        >>> [a.name for a in attrs[:3]]
-        ['age', 'gender', 'specialty']
-
-        # Overlay mode
-        >>> overlay_attrs = select_attributes(
-        ...     "AI device adoption scenario", 500, "Germany",
-        ...     context=base_spec.attributes
-        ... )
     """
     geo_context = f" in {geography}" if geography else ""
     geo_label = geography or "the relevant region"

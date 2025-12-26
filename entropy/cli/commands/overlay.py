@@ -6,6 +6,7 @@ from threading import Event, Thread
 
 import typer
 from rich.live import Live
+from rich.spinner import Spinner
 
 from ...population.architect import (
     select_attributes,
@@ -87,16 +88,11 @@ def overlay_command(
     selection_thread = Thread(target=do_selection, daemon=True)
     selection_thread.start()
 
-    spinner_chars = "⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏"
-    spinner_index = 0
-    with Live(console=console, refresh_per_second=1, transient=True) as live:
+    spinner = Spinner("dots", text="Discovering scenario attributes...", style="cyan")
+    with Live(spinner, console=console, refresh_per_second=12.5, transient=True) as live:
         while not selection_done.is_set():
             elapsed = time.time() - selection_start
-            spinner = spinner_chars[spinner_index % len(spinner_chars)]
-            live.update(
-                f"[cyan]{spinner}[/cyan] Discovering scenario attributes... {format_elapsed(elapsed)}"
-            )
-            spinner_index += 1
+            spinner.update(text=f"Discovering scenario attributes... {format_elapsed(elapsed)}")
             time.sleep(0.1)
 
     selection_elapsed = time.time() - selection_start
@@ -156,17 +152,12 @@ def overlay_command(
     hydration_thread = Thread(target=do_hydration, daemon=True)
     hydration_thread.start()
 
-    spinner_chars = "⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏"
-    spinner_index = 0
-    with Live(console=console, refresh_per_second=4, transient=True) as live:
+    spinner = Spinner("dots", text="Starting...", style="cyan")
+    with Live(spinner, console=console, refresh_per_second=12.5, transient=True) as live:
         while not hydration_done.is_set():
             elapsed = time.time() - hydration_start
             step, status = current_step
-            spinner = spinner_chars[spinner_index % len(spinner_chars)]
-            live.update(
-                f"[cyan]{spinner}[/cyan] Step {step}: {status} {format_elapsed(elapsed)}"
-            )
-            spinner_index += 1
+            spinner.update(text=f"Step {step}: {status} {format_elapsed(elapsed)}")
             time.sleep(0.1)
 
     hydration_elapsed = time.time() - hydration_start
