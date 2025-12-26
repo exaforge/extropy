@@ -43,7 +43,7 @@ from .hydrator_utils import (
     # Sanitization
     sanitize_formula,
 )
-from .quick_validate import (
+from ..validator import (
     validate_independent_response,
     validate_derived_response,
     validate_conditional_base_response,

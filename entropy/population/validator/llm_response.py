@@ -1,4 +1,4 @@
-"""Quick validation for LLM outputs.
+"""LLM response validation for fail-fast error detection.
 
 This module provides immediate syntax validation after each LLM call,
 catching errors early so we can retry in-place instead of failing
@@ -8,6 +8,8 @@ The philosophy is FAIL FAST:
 - Validate immediately after each LLM response
 - Feed errors back to LLM for self-correction
 - Never proceed with invalid data
+
+Moved from population/architect/quick_validate.py during validation consolidation.
 """
 
 import ast
@@ -41,6 +43,7 @@ def _make_error(
         value=value,
     )
 
+
 # Allowed builtins in formulas and expressions
 ALLOWED_BUILTINS = {
     "True",
@@ -67,7 +70,7 @@ ALLOWED_BUILTINS = {
 SPEC_LEVEL_PATTERNS = {"weights", "options"}
 
 
-def _is_spec_level_constraint(expression: str) -> bool:
+def is_spec_level_constraint(expression: str) -> bool:
     """Check if a constraint expression references spec-level variables.
 
     Spec-level constraints validate the YAML spec itself (e.g., weights sum to 1),
@@ -91,7 +94,7 @@ def _is_spec_level_constraint(expression: str) -> bool:
     return False
 
 
-def _extract_bound_from_constraint(
+def extract_bound_from_constraint(
     expression: str,
     attr_name: str,
 ) -> tuple[str | None, str | None, bool]:
@@ -137,8 +140,6 @@ def _extract_bound_from_constraint(
     return (None, None, False)
 
 
-
-
 # =============================================================================
 # Formula Validation
 # =============================================================================
@@ -146,10 +147,10 @@ def _extract_bound_from_constraint(
 
 def validate_formula_syntax(
     formula: str | None, field_name: str = "formula"
-) -> ValidationError | None:
+) -> ValidationIssue | None:
     """Validate a Python expression/formula for syntax errors.
 
-    Returns None if valid, ValidationError if invalid.
+    Returns None if valid, ValidationIssue if invalid.
     """
     if not formula:
         return None
@@ -208,7 +209,7 @@ def validate_formula_syntax(
 
 def validate_condition_syntax(
     condition: str | None, field_name: str = "when"
-) -> ValidationError | None:
+) -> ValidationIssue | None:
     """Validate a 'when' condition for syntax errors.
 
     Conditions are Python boolean expressions like:
@@ -216,7 +217,7 @@ def validate_condition_syntax(
     - specialty == 'cardiology'
     - role in ['senior', 'chief']
 
-    Returns None if valid, ValidationError if invalid.
+    Returns None if valid, ValidationIssue if invalid.
     """
     return validate_formula_syntax(condition, field_name)
 
@@ -230,7 +231,7 @@ def validate_distribution_data(
     dist_data: dict[str, Any],
     attr_name: str,
     attr_type: str,
-) -> list[ValidationError]:
+) -> list[ValidationIssue]:
     """Validate distribution data from LLM response.
 
     Checks for:
@@ -419,7 +420,7 @@ def validate_modifier_data(
     attr_name: str,
     modifier_index: int,
     dist_type: str | None = None,
-) -> list[ValidationError]:
+) -> list[ValidationIssue]:
     """Validate a single modifier from LLM response.
 
     Checks for:
@@ -541,7 +542,7 @@ def validate_modifier_data(
 def validate_independent_response(
     data: dict[str, Any],
     expected_attrs: list[str],
-) -> QuickValidationResult:
+) -> ValidationResult:
     """Validate LLM response for independent attribute hydration."""
     errors = []
 
@@ -565,7 +566,7 @@ def validate_independent_response(
             c_type = constraint.get("type")
             c_expr = constraint.get("expression")
             if c_type == "expression" and c_expr:
-                if _is_spec_level_constraint(c_expr):
+                if is_spec_level_constraint(c_expr):
                     errors.append(
                         _make_error(
                             field=f"{name}.constraints",
@@ -581,7 +582,7 @@ def validate_independent_response(
 def validate_derived_response(
     data: dict[str, Any],
     expected_attrs: list[str],
-) -> QuickValidationResult:
+) -> ValidationResult:
     """Validate LLM response for derived attribute hydration."""
     errors = []
 
@@ -615,7 +616,7 @@ def validate_derived_response(
 def validate_conditional_base_response(
     data: dict[str, Any],
     expected_attrs: list[str],
-) -> QuickValidationResult:
+) -> ValidationResult:
     """Validate LLM response for conditional base distribution hydration."""
     errors = []
 
@@ -641,7 +642,7 @@ def validate_conditional_base_response(
 
             if c_type == "expression" and c_expr:
                 # Check for spec-level constraints with wrong type
-                if _is_spec_level_constraint(c_expr):
+                if is_spec_level_constraint(c_expr):
                     errors.append(
                         _make_error(
                             field=f"{name}.constraints",
@@ -654,7 +655,7 @@ def validate_conditional_base_response(
 
                 # Check for missing formula bounds (only for numeric distributions)
                 if dist_type in ("normal", "lognormal", "beta"):
-                    bound_type, bound_expr, is_strict = _extract_bound_from_constraint(
+                    bound_type, bound_expr, is_strict = extract_bound_from_constraint(
                         c_expr, name
                     )
 
@@ -689,7 +690,7 @@ def validate_conditional_base_response(
 def validate_modifiers_response(
     data: dict[str, Any],
     attr_dist_types: dict[str, str],
-) -> QuickValidationResult:
+) -> ValidationResult:
     """Validate LLM response for conditional modifiers hydration.
 
     Args:

@@ -1209,11 +1209,11 @@ class TestConstraintValidation:
 
 
 class TestQuickValidation:
-    """Tests for quick_validate.py validation functions."""
+    """Tests for LLM response validation functions (validator/llm_response.py)."""
 
     def test_quick_validate_catches_spec_level_constraint(self):
         """validate_independent_response should catch spec-level constraints with wrong type."""
-        from entropy.population.architect.quick_validate import (
+        from entropy.population.validator import (
             validate_independent_response,
         )
 
@@ -1243,7 +1243,7 @@ class TestQuickValidation:
 
     def test_quick_validate_conditional_catches_missing_max_formula(self):
         """validate_conditional_base_response should catch missing max_formula."""
-        from entropy.population.architect.quick_validate import (
+        from entropy.population.validator import (
             validate_conditional_base_response,
         )
 
@@ -1279,7 +1279,7 @@ class TestQuickValidation:
 
     def test_quick_validate_conditional_passes_with_max_formula(self):
         """validate_conditional_base_response should pass when max_formula is present."""
-        from entropy.population.architect.quick_validate import (
+        from entropy.population.validator import (
             validate_conditional_base_response,
         )
 
@@ -1314,7 +1314,7 @@ class TestQuickValidation:
 
     def test_quick_validate_error_message_is_prescriptive(self):
         """Error messages should tell LLM exactly what to fix."""
-        from entropy.population.architect.quick_validate import (
+        from entropy.population.validator import (
             validate_conditional_base_response,
         )
 
@@ -1352,7 +1352,7 @@ class TestQuickValidation:
 
     def test_quick_validate_accepts_static_max_for_constraint(self):
         """Static max should satisfy max bound requirement (not just max_formula)."""
-        from entropy.population.architect.quick_validate import (
+        from entropy.population.validator import (
             validate_conditional_base_response,
         )
 

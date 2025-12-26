@@ -21,7 +21,7 @@ Pipeline (Overlay Mode):
 
 FAIL-FAST VALIDATION:
     Each hydration step validates LLM output immediately and retries with
-    error feedback if syntax errors are detected. See quick_validate.py.
+    error feedback if syntax errors are detected. See validator/llm_response.py.
 """
 
 from .sufficiency import check_sufficiency
@@ -34,7 +34,7 @@ from .hydrator import (
     hydrate_conditional_modifiers,
 )
 from .binder import bind_constraints, build_spec
-from .quick_validate import (
+from ..validator import (
     QuickValidationResult,
     ValidationError as QuickValidationError,
     validate_formula_syntax,
