@@ -315,30 +315,7 @@ class ScenarioSpec(BaseModel):
 
 
 # =============================================================================
-# Validation Types
+# Validation Types (imported from validation.py for backwards compatibility)
 # =============================================================================
 
-
-class ValidationError(BaseModel):
-    """A validation error in the scenario spec."""
-
-    category: str = Field(description="Category of error (e.g., 'attribute_reference')")
-    location: str = Field(description="Where the error occurred")
-    message: str = Field(description="Error description")
-    suggestion: str | None = Field(default=None, description="How to fix it")
-
-
-class ValidationWarning(BaseModel):
-    """A validation warning in the scenario spec."""
-
-    category: str = Field(description="Category of warning")
-    location: str = Field(description="Where the warning applies")
-    message: str = Field(description="Warning description")
-
-
-class ValidationResult(BaseModel):
-    """Result of validating a scenario spec."""
-
-    valid: bool = Field(description="Whether the spec is valid (no errors)")
-    errors: list[ValidationError] = Field(default_factory=list)
-    warnings: list[ValidationWarning] = Field(default_factory=list)
+from .validation import ValidationError, ValidationWarning, ValidationResult
