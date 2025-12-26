@@ -583,6 +583,8 @@ This ensures `children_count` never exceeds `household_size - 1` regardless of t
 - Any attribute in `depends_on`
 - Built-in functions: max(), min(), abs()
 
+**IMPORTANT RULE:** If you create an expression constraint like `attr <= expr`, you MUST also add `max_formula: "expr"` to the distribution. Otherwise the constraint will be violated during sampling. The same applies for `attr >= expr` requiring `min_formula`.
+
 ### Constraints
 
 Set hard constraints WIDER than observed data.
@@ -592,7 +594,7 @@ Set hard constraints WIDER than observed data.
 - `expression`: Agent-level constraints validated after sampling (e.g., `children_count <= household_size - 1`)
 - `spec_expression`: Spec-level constraints that validate the YAML definition itself (e.g., `sum(weights)==1`)
 
-**TIP:** If you use `max_formula` to enforce a bound dynamically, you may not need an `expression` constraint for the same rule.
+**REQUIRED:** When adding an `expression` constraint with an inequality (<=, >=, <, >), you MUST add the corresponding `max_formula` or `min_formula` to enforce it during sampling.
 
 ### Grounding
 

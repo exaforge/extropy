@@ -491,6 +491,76 @@ children_count:
 
 ---
 
+### Constraint and Formula Bound Requirements
+
+**IMPORTANT:** When creating an `expression` constraint with an inequality, you MUST also add the corresponding formula bound to enforce it during sampling.
+
+| Constraint Pattern | Required Distribution Field |
+|-------------------|----------------------------|
+| `attr <= expr` | `max_formula: "expr"` |
+| `attr < expr` | `max_formula: "expr"` |
+| `attr >= expr` | `min_formula: "expr"` |
+| `attr > expr` | `min_formula: "expr"` |
+
+**Example - Correct:**
+```yaml
+children_count:
+  sampling:
+    distribution:
+      type: normal
+      mean_formula: "max(0, household_size - 2)"
+      std: 0.9
+      min: 0
+      max_formula: "max(0, household_size - 1)"  # Enforces the constraint
+    depends_on: [household_size]
+  constraints:
+    - type: expression
+      expression: "children_count <= max(0, household_size - 1)"
+      reason: Children cannot exceed household size minus one adult.
+```
+
+**Example - Incorrect (will trigger validation error):**
+```yaml
+children_count:
+  sampling:
+    distribution:
+      type: normal
+      mean_formula: "max(0, household_size - 2)"
+      std: 0.9
+      min: 0
+      # Missing max_formula!
+    depends_on: [household_size]
+  constraints:
+    - type: expression
+      expression: "children_count <= max(0, household_size - 1)"
+```
+
+### Validation and LLM Retry
+
+The hydration pipeline validates LLM outputs and triggers retry with prescriptive error messages:
+
+**Validation Rule 1: Spec-Level Constraint Type**
+```
+ERROR in gender.constraints:
+  Value: 'sum(weights)==1'
+  Problem: constraint references spec-level variables (weights/options) but uses type='expression'
+  Fix: Change to type='spec_expression' — this validates the YAML spec itself, not individual agents
+```
+
+**Validation Rule 2: Missing Formula Bounds**
+```
+ERROR in children_count.distribution:
+  Value: constraint 'children_count <= household_size - 1'
+  Problem: constraint exists but distribution has no max_formula to enforce it during sampling
+  Fix: Add to distribution: max_formula: 'household_size - 1'
+```
+
+These validations are implemented in:
+- `entropy/population/architect/hydrator_utils.py` - post-hydration validation
+- `entropy/population/architect/quick_validate.py` - immediate LLM response validation
+
+---
+
 ### Step 3: Constraint Binding
 
 **File:** `entropy/population/architect/binder.py`
