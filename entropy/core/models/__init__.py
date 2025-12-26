@@ -39,6 +39,15 @@ from .population import (
     SufficiencyResult,
 )
 
+# Validation models (shared across population and scenario)
+from .validation import (
+    Severity,
+    ValidationIssue,
+    ValidationResult,
+    ValidationError,
+    ValidationWarning,
+)
+
 # Scenario models (Phase 2)
 from .scenario import (
     # Event
@@ -63,10 +72,6 @@ from .scenario import (
     # Scenario
     ScenarioMeta,
     ScenarioSpec,
-    # Validation
-    ValidationError,
-    ValidationWarning,
-    ValidationResult,
 )
 
 # Simulation models (Phase 3)
@@ -143,10 +148,12 @@ __all__ = [
     # Scenario - Spec
     "ScenarioMeta",
     "ScenarioSpec",
-    # Scenario - Validation
+    # Validation (shared)
+    "Severity",
+    "ValidationIssue",
+    "ValidationResult",
     "ValidationError",
     "ValidationWarning",
-    "ValidationResult",
     # Simulation
     "SimulationEventType",
     "ExposureRecord",

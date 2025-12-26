@@ -9,63 +9,14 @@ Module structure:
 - probabilistic.py: Stub for post-sample analysis (Phase 2)
 """
 
-from enum import Enum
-from dataclasses import dataclass, field
-
 from ...core.models import PopulationSpec
+from ...core.models.validation import (
+    Severity,
+    ValidationIssue,
+    ValidationResult,
+)
 
 from .fixer import fix_modifier_conditions, fix_spec_file, ConditionFix, FixResult
-
-
-class Severity(Enum):
-    """Severity level for validation issues."""
-
-    ERROR = "error"  # Blocks sampling
-    WARNING = "warning"  # Sampling proceeds
-    INFO = "info"  # Informational notes
-
-
-@dataclass
-class ValidationIssue:
-    """A single validation issue found in a spec."""
-
-    severity: Severity
-    category: str
-    attribute: str
-    message: str
-    modifier_index: int | None = None
-    suggestion: str | None = None
-
-    def __str__(self) -> str:
-        loc = self.attribute
-        if self.modifier_index is not None:
-            loc = f"{self.attribute}[{self.modifier_index}]"
-        return f"{loc}: {self.message}"
-
-
-@dataclass
-class ValidationResult:
-    """Result of validating a spec."""
-
-    valid: bool  # True if no errors (warnings OK)
-    errors: list[ValidationIssue] = field(default_factory=list)
-    warnings: list[ValidationIssue] = field(default_factory=list)
-    info: list[ValidationIssue] = field(default_factory=list)
-
-    @property
-    def all_issues(self) -> list[ValidationIssue]:
-        """All issues sorted by severity."""
-        return self.errors + self.warnings + self.info
-
-    def __str__(self) -> str:
-        if self.valid and not self.warnings:
-            return "Spec is valid"
-        parts = []
-        if self.errors:
-            parts.append(f"{len(self.errors)} error(s)")
-        if self.warnings:
-            parts.append(f"{len(self.warnings)} warning(s)")
-        return ", ".join(parts)
 
 
 def validate_spec(spec: PopulationSpec) -> ValidationResult:
@@ -90,36 +41,17 @@ def validate_spec(spec: PopulationSpec) -> ValidationResult:
     from .syntactic import run_syntactic_checks
     from .semantic import run_semantic_checks
 
-    errors: list[ValidationIssue] = []
-    warnings: list[ValidationIssue] = []
-    info: list[ValidationIssue] = []
+    result = ValidationResult()
 
     # Run syntactic checks (ERROR level)
     syntactic_issues = run_syntactic_checks(spec)
-    for issue in syntactic_issues:
-        if issue.severity == Severity.ERROR:
-            errors.append(issue)
-        elif issue.severity == Severity.WARNING:
-            warnings.append(issue)
-        else:
-            info.append(issue)
+    result.issues.extend(syntactic_issues)
 
     # Run semantic checks (WARNING level)
     semantic_issues = run_semantic_checks(spec)
-    for issue in semantic_issues:
-        if issue.severity == Severity.ERROR:
-            errors.append(issue)
-        elif issue.severity == Severity.WARNING:
-            warnings.append(issue)
-        else:
-            info.append(issue)
+    result.issues.extend(semantic_issues)
 
-    return ValidationResult(
-        valid=len(errors) == 0,
-        errors=errors,
-        warnings=warnings,
-        info=info,
-    )
+    return result
 
 
 __all__ = [

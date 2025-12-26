@@ -7,7 +7,7 @@ All checks are structural - no sampling required.
 import ast
 import re
 
-from . import Severity, ValidationIssue
+from ...core.models.validation import Severity, ValidationIssue
 from ...core.models import (
     PopulationSpec,
     AttributeSpec,
@@ -176,7 +176,7 @@ def _check_type_modifier_compatibility(attr: AttributeSpec) -> list[ValidationIs
                     ValidationIssue(
                         severity=Severity.ERROR,
                         category="TYPE_MISMATCH",
-                        attribute=attr.name,
+                        location=attr.name,
                         modifier_index=i,
                         message="numeric distribution cannot use weight_overrides",
                         suggestion="Use multiply/add instead",
@@ -187,7 +187,7 @@ def _check_type_modifier_compatibility(attr: AttributeSpec) -> list[ValidationIs
                     ValidationIssue(
                         severity=Severity.ERROR,
                         category="TYPE_MISMATCH",
-                        attribute=attr.name,
+                        location=attr.name,
                         modifier_index=i,
                         message="numeric distribution cannot use probability_override",
                         suggestion="Use multiply/add instead",
@@ -200,7 +200,7 @@ def _check_type_modifier_compatibility(attr: AttributeSpec) -> list[ValidationIs
                     ValidationIssue(
                         severity=Severity.ERROR,
                         category="TYPE_MISMATCH",
-                        attribute=attr.name,
+                        location=attr.name,
                         modifier_index=i,
                         message="categorical distribution cannot use multiply",
                         suggestion="Use weight_overrides instead",
@@ -211,7 +211,7 @@ def _check_type_modifier_compatibility(attr: AttributeSpec) -> list[ValidationIs
                     ValidationIssue(
                         severity=Severity.ERROR,
                         category="TYPE_MISMATCH",
-                        attribute=attr.name,
+                        location=attr.name,
                         modifier_index=i,
                         message="categorical distribution cannot use add",
                         suggestion="Use weight_overrides instead",
@@ -222,7 +222,7 @@ def _check_type_modifier_compatibility(attr: AttributeSpec) -> list[ValidationIs
                     ValidationIssue(
                         severity=Severity.ERROR,
                         category="TYPE_MISMATCH",
-                        attribute=attr.name,
+                        location=attr.name,
                         modifier_index=i,
                         message="categorical distribution cannot use probability_override",
                         suggestion="Use weight_overrides instead",
@@ -235,7 +235,7 @@ def _check_type_modifier_compatibility(attr: AttributeSpec) -> list[ValidationIs
                     ValidationIssue(
                         severity=Severity.ERROR,
                         category="TYPE_MISMATCH",
-                        attribute=attr.name,
+                        location=attr.name,
                         modifier_index=i,
                         message="boolean distribution cannot use multiply",
                         suggestion="Use probability_override instead",
@@ -246,7 +246,7 @@ def _check_type_modifier_compatibility(attr: AttributeSpec) -> list[ValidationIs
                     ValidationIssue(
                         severity=Severity.ERROR,
                         category="TYPE_MISMATCH",
-                        attribute=attr.name,
+                        location=attr.name,
                         modifier_index=i,
                         message="boolean distribution cannot use add",
                         suggestion="Use probability_override instead",
@@ -257,7 +257,7 @@ def _check_type_modifier_compatibility(attr: AttributeSpec) -> list[ValidationIs
                     ValidationIssue(
                         severity=Severity.ERROR,
                         category="TYPE_MISMATCH",
-                        attribute=attr.name,
+                        location=attr.name,
                         modifier_index=i,
                         message="boolean distribution cannot use weight_overrides",
                         suggestion="Use probability_override instead",
@@ -288,7 +288,7 @@ def _check_range_violations(attr: AttributeSpec) -> list[ValidationIssue]:
                     ValidationIssue(
                         severity=Severity.ERROR,
                         category="RANGE_VIOLATION",
-                        attribute=attr.name,
+                        location=attr.name,
                         modifier_index=i,
                         message=f"beta distribution add={mod.add} is too large (outputs 0-1 scale)",
                         suggestion="Use small add values (±0.05 to ±0.15) for beta distributions",
@@ -303,7 +303,7 @@ def _check_range_violations(attr: AttributeSpec) -> list[ValidationIssue]:
                         ValidationIssue(
                             severity=Severity.ERROR,
                             category="RANGE_VIOLATION",
-                            attribute=attr.name,
+                            location=attr.name,
                             modifier_index=i,
                             message=f"probability_override={mod.probability_override} must be between 0 and 1",
                         )
@@ -331,7 +331,7 @@ def _check_weight_validity(attr: AttributeSpec) -> list[ValidationIssue]:
             ValidationIssue(
                 severity=Severity.ERROR,
                 category="WEIGHT_INVALID",
-                attribute=attr.name,
+                location=attr.name,
                 message="categorical distribution has no options",
             )
         )
@@ -341,7 +341,7 @@ def _check_weight_validity(attr: AttributeSpec) -> list[ValidationIssue]:
                 ValidationIssue(
                     severity=Severity.ERROR,
                     category="WEIGHT_INVALID",
-                    attribute=attr.name,
+                    location=attr.name,
                     message=f"options ({len(dist.options)}) and weights ({len(dist.weights)}) length mismatch",
                 )
             )
@@ -350,7 +350,7 @@ def _check_weight_validity(attr: AttributeSpec) -> list[ValidationIssue]:
                 ValidationIssue(
                     severity=Severity.ERROR,
                     category="WEIGHT_INVALID",
-                    attribute=attr.name,
+                    location=attr.name,
                     message=f"weights sum to {sum(dist.weights):.2f}, should be ~1.0",
                 )
             )
@@ -367,7 +367,7 @@ def _check_weight_validity(attr: AttributeSpec) -> list[ValidationIssue]:
                         ValidationIssue(
                             severity=Severity.ERROR,
                             category="WEIGHT_INVALID",
-                            attribute=attr.name,
+                            location=attr.name,
                             modifier_index=i,
                             message=f"weight_override key '{key}' not in distribution options",
                             suggestion=f"Valid options: {', '.join(sorted(valid_options))}",
@@ -381,7 +381,7 @@ def _check_weight_validity(attr: AttributeSpec) -> list[ValidationIssue]:
                     ValidationIssue(
                         severity=Severity.ERROR,
                         category="WEIGHT_INVALID",
-                        attribute=attr.name,
+                        location=attr.name,
                         modifier_index=i,
                         message=f"weight_overrides sum to {weight_sum:.2f}, should be ~1.0",
                     )
@@ -394,7 +394,7 @@ def _check_weight_validity(attr: AttributeSpec) -> list[ValidationIssue]:
                     ValidationIssue(
                         severity=Severity.WARNING,
                         category="WEIGHT_INCOMPLETE",
-                        attribute=attr.name,
+                        location=attr.name,
                         modifier_index=i,
                         message=f"weight_overrides missing options: {', '.join(sorted(missing))}",
                     )
@@ -422,7 +422,7 @@ def _check_distribution_params(attr: AttributeSpec) -> list[ValidationIssue]:
                 ValidationIssue(
                     severity=Severity.ERROR,
                     category="DIST_PARAM_INVALID",
-                    attribute=attr.name,
+                    location=attr.name,
                     message=f"std ({dist.std}) cannot be negative",
                 )
             )
@@ -431,7 +431,7 @@ def _check_distribution_params(attr: AttributeSpec) -> list[ValidationIssue]:
                 ValidationIssue(
                     severity=Severity.ERROR,
                     category="DIST_PARAM_INVALID",
-                    attribute=attr.name,
+                    location=attr.name,
                     message="std is 0 (no variance) - use derived strategy instead",
                 )
             )
@@ -440,7 +440,7 @@ def _check_distribution_params(attr: AttributeSpec) -> list[ValidationIssue]:
                 ValidationIssue(
                     severity=Severity.ERROR,
                     category="DIST_PARAM_INVALID",
-                    attribute=attr.name,
+                    location=attr.name,
                     message=f"min ({dist.min}) >= max ({dist.max})",
                 )
             )
@@ -451,7 +451,7 @@ def _check_distribution_params(attr: AttributeSpec) -> list[ValidationIssue]:
                 ValidationIssue(
                     severity=Severity.ERROR,
                     category="DIST_PARAM_INVALID",
-                    attribute=attr.name,
+                    location=attr.name,
                     message="beta distribution alpha must be positive",
                 )
             )
@@ -460,7 +460,7 @@ def _check_distribution_params(attr: AttributeSpec) -> list[ValidationIssue]:
                 ValidationIssue(
                     severity=Severity.ERROR,
                     category="DIST_PARAM_INVALID",
-                    attribute=attr.name,
+                    location=attr.name,
                     message="beta distribution beta must be positive",
                 )
             )
@@ -471,7 +471,7 @@ def _check_distribution_params(attr: AttributeSpec) -> list[ValidationIssue]:
                 ValidationIssue(
                     severity=Severity.ERROR,
                     category="DIST_PARAM_INVALID",
-                    attribute=attr.name,
+                    location=attr.name,
                     message=f"min ({dist.min}) >= max ({dist.max})",
                 )
             )
@@ -483,7 +483,7 @@ def _check_distribution_params(attr: AttributeSpec) -> list[ValidationIssue]:
                     ValidationIssue(
                         severity=Severity.ERROR,
                         category="DIST_PARAM_INVALID",
-                        attribute=attr.name,
+                        location=attr.name,
                         message=f"probability_true ({dist.probability_true}) must be between 0 and 1",
                     )
                 )
@@ -510,7 +510,7 @@ def _check_dependencies(
                 ValidationIssue(
                     severity=Severity.ERROR,
                     category="DEPENDENCY_INVALID",
-                    attribute=attr.name,
+                    location=attr.name,
                     message=f"depends_on references non-existent attribute '{dep}'",
                 )
             )
@@ -535,7 +535,7 @@ def _check_sampling_order(
             ValidationIssue(
                 severity=Severity.ERROR,
                 category="SAMPLING_ORDER_INVALID",
-                attribute=name,
+                location=name,
                 message="attribute missing from sampling_order",
             )
         )
@@ -553,7 +553,7 @@ def _check_sampling_order(
                     ValidationIssue(
                         severity=Severity.ERROR,
                         category="SAMPLING_ORDER_INVALID",
-                        attribute=attr.name,
+                        location=attr.name,
                         message=f"sampled before dependency '{dep}' (positions {attr_idx} vs {dep_idx})",
                     )
                 )
@@ -582,7 +582,7 @@ def _check_conditions(attr: AttributeSpec) -> list[ValidationIssue]:
                 ValidationIssue(
                     severity=Severity.ERROR,
                     category="CONDITION_SYNTAX",
-                    attribute=attr.name,
+                    location=attr.name,
                     modifier_index=i,
                     message=f"invalid condition syntax: {e}",
                 )
@@ -599,7 +599,7 @@ def _check_conditions(attr: AttributeSpec) -> list[ValidationIssue]:
                     ValidationIssue(
                         severity=Severity.ERROR,
                         category="CONDITION_REFERENCE",
-                        attribute=attr.name,
+                        location=attr.name,
                         modifier_index=i,
                         message=f"condition references '{name}' not in depends_on",
                         suggestion=f"Add '{name}' to depends_on or remove from condition",
@@ -628,7 +628,7 @@ def _check_formulas(attr: AttributeSpec) -> list[ValidationIssue]:
                 ValidationIssue(
                     severity=Severity.ERROR,
                     category="FORMULA_SYNTAX",
-                    attribute=attr.name,
+                    location=attr.name,
                     message=f"invalid formula syntax: {e}",
                 )
             )
@@ -640,7 +640,7 @@ def _check_formulas(attr: AttributeSpec) -> list[ValidationIssue]:
                         ValidationIssue(
                             severity=Severity.ERROR,
                             category="FORMULA_REFERENCE",
-                            attribute=attr.name,
+                            location=attr.name,
                             message=f"formula references '{name}' not in depends_on",
                         )
                     )
@@ -658,7 +658,7 @@ def _check_formulas(attr: AttributeSpec) -> list[ValidationIssue]:
                 ValidationIssue(
                     severity=Severity.ERROR,
                     category="FORMULA_SYNTAX",
-                    attribute=attr.name,
+                    location=attr.name,
                     message=f"invalid mean_formula syntax: {e}",
                 )
             )
@@ -670,7 +670,7 @@ def _check_formulas(attr: AttributeSpec) -> list[ValidationIssue]:
                         ValidationIssue(
                             severity=Severity.ERROR,
                             category="FORMULA_REFERENCE",
-                            attribute=attr.name,
+                            location=attr.name,
                             message=f"mean_formula references '{name}' not in depends_on",
                         )
                     )
@@ -694,7 +694,7 @@ def _check_duplicates(attributes: list[AttributeSpec]) -> list[ValidationIssue]:
                 ValidationIssue(
                     severity=Severity.ERROR,
                     category="DUPLICATE",
-                    attribute=attr.name,
+                    location=attr.name,
                     message="duplicate attribute name",
                 )
             )
@@ -723,7 +723,7 @@ def _check_strategy_consistency(attr: AttributeSpec) -> list[ValidationIssue]:
                 ValidationIssue(
                     severity=Severity.ERROR,
                     category="STRATEGY_INVALID",
-                    attribute=attr.name,
+                    location=attr.name,
                     message="independent strategy requires distribution",
                 )
             )
@@ -732,7 +732,7 @@ def _check_strategy_consistency(attr: AttributeSpec) -> list[ValidationIssue]:
                 ValidationIssue(
                     severity=Severity.WARNING,
                     category="STRATEGY_INCONSISTENT",
-                    attribute=attr.name,
+                    location=attr.name,
                     message="independent strategy has formula (will be ignored)",
                 )
             )
@@ -741,7 +741,7 @@ def _check_strategy_consistency(attr: AttributeSpec) -> list[ValidationIssue]:
                 ValidationIssue(
                     severity=Severity.ERROR,
                     category="STRATEGY_INVALID",
-                    attribute=attr.name,
+                    location=attr.name,
                     message="independent strategy cannot have modifiers",
                 )
             )
@@ -750,7 +750,7 @@ def _check_strategy_consistency(attr: AttributeSpec) -> list[ValidationIssue]:
                 ValidationIssue(
                     severity=Severity.ERROR,
                     category="STRATEGY_INVALID",
-                    attribute=attr.name,
+                    location=attr.name,
                     message="independent strategy cannot have depends_on",
                 )
             )
@@ -761,7 +761,7 @@ def _check_strategy_consistency(attr: AttributeSpec) -> list[ValidationIssue]:
                 ValidationIssue(
                     severity=Severity.ERROR,
                     category="STRATEGY_INVALID",
-                    attribute=attr.name,
+                    location=attr.name,
                     message="derived strategy requires formula",
                 )
             )
@@ -770,7 +770,7 @@ def _check_strategy_consistency(attr: AttributeSpec) -> list[ValidationIssue]:
                 ValidationIssue(
                     severity=Severity.ERROR,
                     category="STRATEGY_INVALID",
-                    attribute=attr.name,
+                    location=attr.name,
                     message="derived strategy requires depends_on",
                 )
             )
@@ -779,7 +779,7 @@ def _check_strategy_consistency(attr: AttributeSpec) -> list[ValidationIssue]:
                 ValidationIssue(
                     severity=Severity.WARNING,
                     category="STRATEGY_INCONSISTENT",
-                    attribute=attr.name,
+                    location=attr.name,
                     message="derived strategy has distribution (will be ignored)",
                 )
             )
@@ -788,7 +788,7 @@ def _check_strategy_consistency(attr: AttributeSpec) -> list[ValidationIssue]:
                 ValidationIssue(
                     severity=Severity.ERROR,
                     category="STRATEGY_INVALID",
-                    attribute=attr.name,
+                    location=attr.name,
                     message="derived strategy cannot have modifiers",
                 )
             )
@@ -799,7 +799,7 @@ def _check_strategy_consistency(attr: AttributeSpec) -> list[ValidationIssue]:
                 ValidationIssue(
                     severity=Severity.ERROR,
                     category="STRATEGY_INVALID",
-                    attribute=attr.name,
+                    location=attr.name,
                     message="conditional strategy requires distribution",
                 )
             )
@@ -808,7 +808,7 @@ def _check_strategy_consistency(attr: AttributeSpec) -> list[ValidationIssue]:
                 ValidationIssue(
                     severity=Severity.WARNING,
                     category="STRATEGY_INCONSISTENT",
-                    attribute=attr.name,
+                    location=attr.name,
                     message="conditional strategy has no depends_on (should be independent?)",
                 )
             )
@@ -817,7 +817,7 @@ def _check_strategy_consistency(attr: AttributeSpec) -> list[ValidationIssue]:
                 ValidationIssue(
                     severity=Severity.ERROR,
                     category="STRATEGY_INVALID",
-                    attribute=attr.name,
+                    location=attr.name,
                     message="conditional strategy cannot have formula",
                 )
             )

@@ -6,7 +6,7 @@ They help identify potential issues but don't indicate structural problems.
 
 import re
 
-from . import Severity, ValidationIssue
+from ...core.models.validation import Severity, ValidationIssue
 from ...core.models import (
     PopulationSpec,
     AttributeSpec,
@@ -76,7 +76,7 @@ def _check_noop_modifiers(attr: AttributeSpec) -> list[ValidationIssue]:
                 ValidationIssue(
                     severity=Severity.WARNING,
                     category="NO_OP",
-                    attribute=attr.name,
+                    location=attr.name,
                     modifier_index=i,
                     message="modifier has no effect (multiply=1.0, add=0, no overrides)",
                     suggestion="Remove this modifier or add meaningful values",
@@ -164,7 +164,7 @@ def _check_modifier_stacking(attr: AttributeSpec) -> list[ValidationIssue]:
             ValidationIssue(
                 severity=Severity.WARNING,
                 category="MODIFIER_STACKING",
-                attribute=attr.name,
+                location=attr.name,
                 message=f"stacked modifiers could push value to {worst_high:.1f} (hard_max={hard_max})",
                 suggestion="Review modifier values or add clamping logic",
             )
@@ -186,7 +186,7 @@ def _check_modifier_stacking(attr: AttributeSpec) -> list[ValidationIssue]:
             ValidationIssue(
                 severity=Severity.WARNING,
                 category="MODIFIER_STACKING",
-                attribute=attr.name,
+                location=attr.name,
                 message=f"stacked modifiers could push value to {worst_low:.1f} (hard_min={hard_min})",
                 suggestion="Review modifier values or add clamping logic",
             )
@@ -255,7 +255,7 @@ def _check_condition_values(
                                 ValidationIssue(
                                     severity=Severity.WARNING,
                                     category="CONDITION_VALUE",
-                                    attribute=attr.name,
+                                    location=attr.name,
                                     modifier_index=i,
                                     message=f"condition compares {compared_attr} to '{literal}' which is not in its options",
                                     suggestion=f"Valid options for {compared_attr}: {', '.join(sorted(valid_options))}",

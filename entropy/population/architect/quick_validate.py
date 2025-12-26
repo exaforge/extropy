@@ -14,6 +14,33 @@ import ast
 import re
 from typing import Any
 
+from ...core.models.validation import (
+    Severity,
+    ValidationIssue,
+    ValidationResult,
+)
+
+# Backwards compatibility aliases
+ValidationError = ValidationIssue
+QuickValidationResult = ValidationResult
+
+
+def _make_error(
+    field: str,
+    value: str,
+    error: str,
+    suggestion: str | None = None,
+) -> ValidationIssue:
+    """Create a ValidationIssue for LLM response validation."""
+    return ValidationIssue(
+        severity=Severity.ERROR,
+        category="LLM_RESPONSE",
+        location=field,
+        message=error,
+        suggestion=suggestion,
+        value=value,
+    )
+
 # Allowed builtins in formulas and expressions
 ALLOWED_BUILTINS = {
     "True",
@@ -110,66 +137,6 @@ def _extract_bound_from_constraint(
     return (None, None, False)
 
 
-class ValidationError:
-    """A single validation error with context for LLM retry."""
-
-    def __init__(
-        self,
-        field: str,
-        value: str,
-        error: str,
-        suggestion: str | None = None,
-    ):
-        self.field = field
-        self.value = value
-        self.error = error
-        self.suggestion = suggestion
-
-    def __str__(self) -> str:
-        msg = f"{self.field}: {self.error}"
-        if self.suggestion:
-            msg += f" → {self.suggestion}"
-        return msg
-
-    def for_llm_retry(self) -> str:
-        """Format error for LLM retry prompt."""
-        lines = [
-            f"ERROR in {self.field}:",
-            f"  Value: {repr(self.value)}",
-            f"  Problem: {self.error}",
-        ]
-        if self.suggestion:
-            lines.append(f"  Fix: {self.suggestion}")
-        return "\n".join(lines)
-
-
-class QuickValidationResult:
-    """Result of quick validation with errors for retry."""
-
-    def __init__(self, errors: list[ValidationError] | None = None):
-        self.errors = errors or []
-
-    @property
-    def valid(self) -> bool:
-        return len(self.errors) == 0
-
-    def format_for_retry(self) -> str:
-        """Format all errors as a retry prompt section."""
-        if not self.errors:
-            return ""
-
-        lines = [
-            "## PREVIOUS ATTEMPT FAILED - PLEASE FIX THESE ERRORS:",
-            "",
-        ]
-        for err in self.errors:
-            lines.append(err.for_llm_retry())
-            lines.append("")
-
-        lines.append("Please regenerate the output with these issues fixed.")
-        lines.append("")
-
-        return "\n".join(lines)
 
 
 # =============================================================================
@@ -189,7 +156,7 @@ def validate_formula_syntax(
 
     # Check for unterminated strings
     if formula.count('"') % 2 != 0:
-        return ValidationError(
+        return _make_error(
             field=field_name,
             value=formula,
             error="unterminated string literal (unmatched double quote)",
@@ -197,7 +164,7 @@ def validate_formula_syntax(
         )
 
     if formula.count("'") % 2 != 0:
-        return ValidationError(
+        return _make_error(
             field=field_name,
             value=formula,
             error="unterminated string literal (unmatched single quote)",
@@ -206,7 +173,7 @@ def validate_formula_syntax(
 
     # Check for unbalanced parentheses
     if formula.count("(") != formula.count(")"):
-        return ValidationError(
+        return _make_error(
             field=field_name,
             value=formula,
             error=f"unbalanced parentheses ({formula.count('(')} open, {formula.count(')')} close)",
@@ -215,7 +182,7 @@ def validate_formula_syntax(
 
     # Check for unbalanced brackets
     if formula.count("[") != formula.count("]"):
-        return ValidationError(
+        return _make_error(
             field=field_name,
             value=formula,
             error=f"unbalanced brackets ({formula.count('[')} open, {formula.count(']')} close)",
@@ -229,7 +196,7 @@ def validate_formula_syntax(
         # Extract useful error message
         error_msg = str(e.msg) if hasattr(e, "msg") else str(e)
 
-        return ValidationError(
+        return _make_error(
             field=field_name,
             value=formula,
             error=f"invalid Python syntax: {error_msg}",
@@ -276,7 +243,7 @@ def validate_distribution_data(
 
     if not dist_data:
         errors.append(
-            ValidationError(
+            _make_error(
                 field=f"{attr_name}.distribution",
                 value="null",
                 error="distribution is missing",
@@ -289,7 +256,7 @@ def validate_distribution_data(
 
     if dist_type is None:
         errors.append(
-            ValidationError(
+            _make_error(
                 field=f"{attr_name}.distribution.type",
                 value="null",
                 error="distribution type is missing",
@@ -301,7 +268,7 @@ def validate_distribution_data(
     valid_types = {"normal", "lognormal", "uniform", "beta", "categorical", "boolean"}
     if dist_type not in valid_types:
         errors.append(
-            ValidationError(
+            _make_error(
                 field=f"{attr_name}.distribution.type",
                 value=dist_type,
                 error="unknown distribution type",
@@ -334,7 +301,7 @@ def validate_distribution_data(
         std = dist_data.get("std")
         if std is not None and std < 0:
             errors.append(
-                ValidationError(
+                _make_error(
                     field=f"{attr_name}.distribution.std",
                     value=str(std),
                     error="standard deviation cannot be negative",
@@ -347,7 +314,7 @@ def validate_distribution_data(
         max_val = dist_data.get("max")
         if min_val is not None and max_val is not None and min_val >= max_val:
             errors.append(
-                ValidationError(
+                _make_error(
                     field=f"{attr_name}.distribution.min/max",
                     value=f"min={min_val}, max={max_val}",
                     error="min must be less than max",
@@ -361,7 +328,7 @@ def validate_distribution_data(
 
         if alpha is None or alpha <= 0:
             errors.append(
-                ValidationError(
+                _make_error(
                     field=f"{attr_name}.distribution.alpha",
                     value=str(alpha),
                     error="alpha must be positive",
@@ -371,7 +338,7 @@ def validate_distribution_data(
 
         if beta is None or beta <= 0:
             errors.append(
-                ValidationError(
+                _make_error(
                     field=f"{attr_name}.distribution.beta",
                     value=str(beta),
                     error="beta must be positive",
@@ -385,7 +352,7 @@ def validate_distribution_data(
 
         if min_val is not None and max_val is not None and min_val >= max_val:
             errors.append(
-                ValidationError(
+                _make_error(
                     field=f"{attr_name}.distribution.min/max",
                     value=f"min={min_val}, max={max_val}",
                     error="min must be less than max",
@@ -399,7 +366,7 @@ def validate_distribution_data(
 
         if not options:
             errors.append(
-                ValidationError(
+                _make_error(
                     field=f"{attr_name}.distribution.options",
                     value="null or empty",
                     error="categorical distribution requires options",
@@ -408,7 +375,7 @@ def validate_distribution_data(
             )
         elif weights and len(weights) != len(options):
             errors.append(
-                ValidationError(
+                _make_error(
                     field=f"{attr_name}.distribution.weights",
                     value=f"{len(weights)} weights, {len(options)} options",
                     error="weights and options arrays must have same length",
@@ -419,7 +386,7 @@ def validate_distribution_data(
             weight_sum = sum(weights)
             if abs(weight_sum - 1.0) > 0.02:
                 errors.append(
-                    ValidationError(
+                    _make_error(
                         field=f"{attr_name}.distribution.weights",
                         value=f"sum={weight_sum:.3f}",
                         error="weights must sum to 1.0",
@@ -431,7 +398,7 @@ def validate_distribution_data(
         prob = dist_data.get("probability_true")
         if prob is not None and (prob < 0 or prob > 1):
             errors.append(
-                ValidationError(
+                _make_error(
                     field=f"{attr_name}.distribution.probability_true",
                     value=str(prob),
                     error="probability must be between 0 and 1",
@@ -472,7 +439,7 @@ def validate_modifier_data(
             errors.append(err)
     else:
         errors.append(
-            ValidationError(
+            _make_error(
                 field=f"{attr_name}.modifiers[{modifier_index}].when",
                 value="null",
                 error="modifier missing 'when' condition",
@@ -488,7 +455,7 @@ def validate_modifier_data(
             # Numeric: should use multiply/add, not weight_overrides
             if modifier_data.get("weight_overrides"):
                 errors.append(
-                    ValidationError(
+                    _make_error(
                         field=f"{attr_name}.modifiers[{modifier_index}].weight_overrides",
                         value="present",
                         error=f"cannot use weight_overrides with {dist_type} distribution",
@@ -497,7 +464,7 @@ def validate_modifier_data(
                 )
             if modifier_data.get("probability_override") is not None:
                 errors.append(
-                    ValidationError(
+                    _make_error(
                         field=f"{attr_name}.modifiers[{modifier_index}].probability_override",
                         value="present",
                         error=f"cannot use probability_override with {dist_type} distribution",
@@ -513,7 +480,7 @@ def validate_modifier_data(
                 add is not None and add != 0
             ):
                 errors.append(
-                    ValidationError(
+                    _make_error(
                         field=f"{attr_name}.modifiers[{modifier_index}]",
                         value=f"multiply={multiply}, add={add}",
                         error="cannot use multiply/add with categorical distribution",
@@ -529,7 +496,7 @@ def validate_modifier_data(
                 add is not None and add != 0
             ):
                 errors.append(
-                    ValidationError(
+                    _make_error(
                         field=f"{attr_name}.modifiers[{modifier_index}]",
                         value=f"multiply={multiply}, add={add}",
                         error="cannot use multiply/add with boolean distribution",
@@ -541,7 +508,7 @@ def validate_modifier_data(
     prob_override = modifier_data.get("probability_override")
     if prob_override is not None and (prob_override < 0 or prob_override > 1):
         errors.append(
-            ValidationError(
+            _make_error(
                 field=f"{attr_name}.modifiers[{modifier_index}].probability_override",
                 value=str(prob_override),
                 error="probability_override must be between 0 and 1",
@@ -555,7 +522,7 @@ def validate_modifier_data(
         weight_sum = sum(weight_overrides.values())
         if abs(weight_sum - 1.0) > 0.02:
             errors.append(
-                ValidationError(
+                _make_error(
                     field=f"{attr_name}.modifiers[{modifier_index}].weight_overrides",
                     value=f"sum={weight_sum:.3f}",
                     error="weight_overrides must sum to 1.0",
@@ -600,7 +567,7 @@ def validate_independent_response(
             if c_type == "expression" and c_expr:
                 if _is_spec_level_constraint(c_expr):
                     errors.append(
-                        ValidationError(
+                        _make_error(
                             field=f"{name}.constraints",
                             value=c_expr,
                             error="constraint references spec-level variables (weights/options) but uses type='expression'",
@@ -608,7 +575,7 @@ def validate_independent_response(
                         )
                     )
 
-    return QuickValidationResult(errors)
+    return ValidationResult(issues=errors)
 
 
 def validate_derived_response(
@@ -630,7 +597,7 @@ def validate_derived_response(
 
         if not formula:
             errors.append(
-                ValidationError(
+                _make_error(
                     field=f"{name}.formula",
                     value="null",
                     error="derived attribute requires formula",
@@ -642,7 +609,7 @@ def validate_derived_response(
             if err:
                 errors.append(err)
 
-    return QuickValidationResult(errors)
+    return ValidationResult(issues=errors)
 
 
 def validate_conditional_base_response(
@@ -676,7 +643,7 @@ def validate_conditional_base_response(
                 # Check for spec-level constraints with wrong type
                 if _is_spec_level_constraint(c_expr):
                     errors.append(
-                        ValidationError(
+                        _make_error(
                             field=f"{name}.constraints",
                             value=c_expr,
                             error="constraint references spec-level variables (weights/options) but uses type='expression'",
@@ -696,7 +663,7 @@ def validate_conditional_base_response(
                         has_static_max = dist_data.get("max") is not None
                         if not has_max_formula and not has_static_max:
                             errors.append(
-                                ValidationError(
+                                _make_error(
                                     field=f"{name}.distribution",
                                     value=f"constraint '{c_expr}'",
                                     error="constraint exists but distribution has no max_formula to enforce it during sampling",
@@ -708,7 +675,7 @@ def validate_conditional_base_response(
                         has_static_min = dist_data.get("min") is not None
                         if not has_min_formula and not has_static_min:
                             errors.append(
-                                ValidationError(
+                                _make_error(
                                     field=f"{name}.distribution",
                                     value=f"constraint '{c_expr}'",
                                     error="constraint exists but distribution has no min_formula to enforce it during sampling",
@@ -716,7 +683,7 @@ def validate_conditional_base_response(
                                 )
                             )
 
-    return QuickValidationResult(errors)
+    return ValidationResult(issues=errors)
 
 
 def validate_modifiers_response(
@@ -743,4 +710,4 @@ def validate_modifiers_response(
             mod_errors = validate_modifier_data(mod_data, name, i, dist_type)
             errors.extend(mod_errors)
 
-    return QuickValidationResult(errors)
+    return ValidationResult(issues=errors)
