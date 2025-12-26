@@ -93,7 +93,7 @@ def scenario_command(
     pipeline_thread.start()
 
     spinner = Spinner("dots", text="Starting...", style="cyan")
-    with Live(spinner, console=console, refresh_per_second=12.5, transient=True) as live:
+    with Live(spinner, console=console, refresh_per_second=12.5, transient=True):
         while not pipeline_done.is_set():
             elapsed = time.time() - start_time
             step, status = current_step

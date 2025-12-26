@@ -88,7 +88,7 @@ def simulate_command(
 
     if not quiet:
         spinner = Spinner("dots", text="Starting...", style="cyan")
-        with Live(spinner, console=console, refresh_per_second=12.5, transient=True) as live:
+        with Live(spinner, console=console, refresh_per_second=12.5, transient=True):
             while not simulation_done.is_set():
                 elapsed = time.time() - start_time
                 timestep, max_ts, status = current_progress

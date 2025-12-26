@@ -104,7 +104,7 @@ def network_command(
     gen_thread.start()
 
     spinner = Spinner("dots", text="Initializing...", style="cyan")
-    with Live(spinner, console=console, refresh_per_second=12.5, transient=True) as live:
+    with Live(spinner, console=console, refresh_per_second=12.5, transient=True):
         while not generation_done.is_set():
             elapsed = time.time() - generation_start
             stage, current, total = current_stage

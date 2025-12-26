@@ -7,7 +7,6 @@ to proceed with attribute discovery and spec generation.
 from ...core.llm import simple_call
 from ...core.models import SufficiencyResult
 
-
 # JSON schema for sufficiency check response
 SUFFICIENCY_SCHEMA = {
     "type": "object",

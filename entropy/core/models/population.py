@@ -41,7 +41,6 @@ class GroundingInfo(BaseModel):
 # Distribution Configurations
 # =============================================================================
 
-
 class NormalDistribution(BaseModel):
     """Normal/Gaussian distribution parameters.
 
@@ -86,14 +85,13 @@ class LognormalDistribution(BaseModel):
     max: float | None = None
     mean_formula: str | None = None
     std_formula: str | None = None
-    # Formula-based bounds (for dynamic clamping based on other attributes)
     min_formula: str | None = Field(
         default=None,
-        description="Formula for dynamic min bound. Evaluated with agent context.",
+        description="Formula for dynamic min bound, e.g., '0'. Evaluated with agent context.",
     )
     max_formula: str | None = Field(
         default=None,
-        description="Formula for dynamic max bound. Evaluated with agent context.",
+        description="Formula for dynamic max bound, e.g., 'household_size - 1'. Evaluated with agent context.",
     )
 
 
@@ -513,6 +511,7 @@ class DiscoveredAttribute(BaseModel):
     )
     depends_on: list[str] = Field(default_factory=list)
 
+# hydrated attribute seems to be an extension of discovered attribute.
 
 class HydratedAttribute(BaseModel):
     """An attribute with distribution data from research (Step 2).

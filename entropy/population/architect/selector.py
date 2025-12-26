@@ -122,133 +122,137 @@ def select_attributes(
             f"- {attr.name} ({attr.type}): {attr.description}" for attr in context
         )
         context_section = f"""
-## EXISTING CONTEXT (DO NOT REDISCOVER)
+        ## EXISTING CONTEXT (DO NOT REDISCOVER)
 
-The following {len(context)} attributes ALREADY EXIST in the base population.
-**DO NOT include these in your output.** You may reference them in depends_on.
+        The following {len(context)} attributes ALREADY EXIST in the base population.
+        **DO NOT include these in your output.** You may reference them in depends_on.
 
-{context_items}
+        {context_items}
 
----
+        ---
 
-"""
+        """
         # In overlay mode, adjust constraints
         constraint_note = f"""## Constraints (OVERLAY MODE)
+        - **Only discover NEW attributes for this scenario** (5-15 attributes typical)
+        - You may reference existing attributes in depends_on
+        - Focus on behavioral/situational attributes relevant to: "{description}"
+        - Max 3 dependencies per attribute (can include base attributes)
+        - NO duplicates with existing attributes above"""
 
-- **Only discover NEW attributes for this scenario** (5-15 attributes typical)
-- You may reference existing attributes in depends_on
-- Focus on behavioral/situational attributes relevant to: "{description}"
-- Max 3 dependencies per attribute (can include base attributes)
-- NO duplicates with existing attributes above"""
     else:
         constraint_note = """## Constraints (STRICT)
 
-- **Total: 25-40 attributes maximum**
-- Universal demographics: 8-12 attributes
-- Population-specific: 10-18 attributes
-- Personality/behavioral: 5-8 attributes
-- Max 3 dependencies per attribute
-- NO duplicates
-- Only attributes where real statistical data likely exists"""
+        - **Total: 25-40 attributes maximum**
+        - Universal demographics: 8-12 attributes
+        - Population-specific: 10-18 attributes
+        - Personality/behavioral: 5-8 attributes
+        - Max 3 dependencies per attribute
+        - NO duplicates
+        - Only attributes where real statistical data likely exists"""
 
-    prompt = f"""{context_section}## Intent
+    prompt = f"""
+    
+    {context_section}
+    
+    ## Intent
 
-We are building a synthetic population for **agent-based simulation**. These agents will:
-- Have scenarios injected (events, information, decisions)
-- Respond based on their attributes
-- Interact with each other in a social network
+    We are building a synthetic population for agent-based simulation. These agents will:
+    - Have scenarios injected (events, information, decisions)
+    - Respond based on their attributes
+    - Interact with each other in a social network
 
-The goal is realistic variance, not exhaustive detail. We need attributes that:
-1. Create meaningful differences in how agents BEHAVE
-2. Can be grounded in real data (researchable distributions)
-3. Matter for simulation outcomes
+    The goal is realistic variance, not exhaustive detail. We need attributes that:
+    1. Create meaningful differences in how agents BEHAVE
+    2. Can be grounded in real data (researchable distributions)
+    3. Matter for simulation outcomes
 
-## Population
+    ## Population
 
-"{description}" ({size} agents{geo_context})
+    "{description}" ({size} agents{geo_context})
 
-{constraint_note}
+    {constraint_note}
 
-## Geography & Context
+    ## Geography & Context
 
-- Use {geo_label} administrative divisions (states/provinces/districts)
-- Use {geo_label} currency (EUR, USD, INR, etc.)
-- Use {geo_label} education/certification systems
-- Consider local context (don't assume Western structures like credit scores, formal employment, nuclear families)
+    - Use {geo_label} administrative divisions (states/provinces/districts)
+    - Use {geo_label} currency (EUR, USD, INR, etc.)
+    - Use {geo_label} education/certification systems
+    - Consider local context (don't assume Western structures like credit scores, formal employment, nuclear families)
 
-## Categories
+    ## Categories
 
-### 1. UNIVERSAL (8-12)
-Core demographics that everyone has:
-- age, gender, location, income, education, marital_status, household_size
-- Adapt to local context (e.g., region/state/province names appropriate for the geography)
+    ### 1. UNIVERSAL (8-12)
+    Core demographics that everyone has:
+    - age, gender, location, income, education, marital_status, household_size
+    - Adapt to local context (e.g., region/state/province names appropriate for the geography)
 
-### 2. POPULATION-SPECIFIC (10-18)
-What defines THIS population's identity and work/life:
-- For professionals: role, experience, employer type, workload
-- For farmers: land size, crop type, irrigation, market access
-- For consumers: usage patterns, preferences
-- Focus on attributes with REAL VARIANCE in this population
+    ### 2. POPULATION-SPECIFIC (10-18)
+    What defines THIS population's identity and work/life:
+    - For professionals: role, experience, employer type, workload
+    - For farmers: land size, crop type, irrigation, market access
+    - For consumers: usage patterns, preferences
+    - Focus on attributes with REAL VARIANCE in this population
 
-### 3. CONTEXT-SPECIFIC (0-5)
-Only if a product/service/brand is mentioned:
-- Relationship tenure, satisfaction, usage frequency
-- Skip if no context entity in description
+    ### 3. CONTEXT-SPECIFIC (0-5)
+    Only if a product/service/brand is mentioned:
+    - Relationship tenure, satisfaction, usage frequency
+    - Skip if no context entity in description
 
-### 4. PERSONALITY (5-8)
-Traits that affect behavior in simulations:
+    ### 4. PERSONALITY (5-8)
+    Traits that affect behavior in simulations:
 
-**Big Five (EXACTLY these 5 names, no variations):**
-- openness
-- conscientiousness
-- extraversion
-- agreeableness
-- neuroticism
+    **Big Five (EXACTLY these 5 names, no variations):**
+    - openness
+    - conscientiousness
+    - extraversion
+    - agreeableness
+    - neuroticism
 
-Do NOT use alternative names like big_five_openness, o_openness, trait_openness, etc.
-Do NOT include Big Five twice under different names.
+    Do NOT use alternative names like big_five_openness, o_openness, trait_openness, etc.
+    Do NOT include Big Five twice under different names.
 
-**Domain-specific traits (1-3):**
-- e.g., risk_tolerance, trust_in_institutions
-- These should be specific to the population context
+    **Domain-specific traits (1-3):**
+    - e.g., risk_tolerance, trust_in_institutions
+    - These should be specific to the population context
 
-## Sampling Strategy
+    ## Sampling Strategy
 
-For each attribute, determine the sampling strategy:
+    For each attribute, determine the sampling strategy:
 
-**independent**: Attribute stands alone, sampled directly from a distribution.
-- Most base attributes: age, gender, surgical_specialty, employer_type
-- Has NO dependencies (depends_on is empty)
+    **independent**: Attribute stands alone, sampled directly from a distribution.
+    - Most base attributes: age, gender, surgical_specialty, employer_type
+    - Has NO dependencies (depends_on is empty)
 
-**derived**: ONLY for ZERO-VARIANCE, definitional transformations:
-- age_bracket derived from age (categorical binning)
-- is_senior derived from years_experience (boolean flag)
-- bmi derived from height and weight (physics formula)
-- ⚠️ DERIVED IS RARE. If two people with the same inputs could have different outputs, use CONDITIONAL.
+    **derived**: ONLY for ZERO-VARIANCE, definitional transformations:
+    - age_bracket derived from age (categorical binning)
+    - is_senior derived from years_experience (boolean flag)
+    - bmi derived from height and weight (physics formula)
+    - DERIVED IS RARE. If two people with the same inputs could have different outputs, use CONDITIONAL.
 
-**conditional**: Any probabilistic relationship where variance exists:
-- years_experience depends on age (correlated, but two 50-year-olds can have different experience)
-- income depends on role (chiefs earn more on average, but there's variance)
-- research_activity depends on employer_type (university hospitals skew toward research)
+    **conditional**: Any probabilistic relationship where variance exists:
+    - years_experience depends on age (correlated, but two 50-year-olds can have different experience)
+    - income depends on role (chiefs earn more on average, but there's variance)
+    - research_activity depends on employer_type (university hospitals skew toward research)
 
-## Dependencies
+    ## Dependencies
 
-Only mark depends_on if there's a LOGICAL relationship:
-- depends_on must only reference attributes that will be sampled BEFORE this one
-- No circular dependencies (A→B→A)
-- Independent attributes MUST have empty depends_on
-- Derived and conditional MUST have non-empty depends_on
-- Max 3 dependencies per attribute
+    Only mark depends_on if there's a LOGICAL relationship:
+    - depends_on must only reference attributes that will be sampled BEFORE this one
+    - No circular dependencies (A→B→A)
+    - Independent attributes MUST have empty depends_on
+    - Derived and conditional MUST have non-empty depends_on
+    - Max 3 dependencies per attribute
 
-## Output Format
+    ## Output Format
 
-For each attribute:
-- name: snake_case
-- type: int, float, categorical, boolean
-- category: universal, population_specific, context_specific, personality
-- description: One clear sentence
-- strategy: independent, derived, or conditional
-- depends_on: List of attribute names (max 3, empty if independent)"""
+    For each attribute:
+    - name: snake_case
+    - type: int, float, categorical, boolean
+    - category: universal, population_specific, context_specific, personality
+    - description: One clear sentence
+    - strategy: independent, derived, or conditional
+    - depends_on: List of attribute names (max 3, empty if independent)"""
 
     data = reasoning_call(
         prompt=prompt,
@@ -260,16 +264,12 @@ For each attribute:
 
     attributes = []
     for attr_data in data.get("attributes", []):
-        # Determine strategy - default to independent if not specified
         strategy = attr_data.get("strategy", "independent")
         depends_on = attr_data.get("depends_on", [])
 
-        # Validate strategy/depends_on consistency
         if strategy == "independent" and depends_on:
-            # Independent can't have dependencies - likely LLM error, switch to conditional
             strategy = "conditional"
         elif strategy in ("derived", "conditional") and not depends_on:
-            # Derived/conditional need dependencies - default to independent
             strategy = "independent"
 
         attr = DiscoveredAttribute(

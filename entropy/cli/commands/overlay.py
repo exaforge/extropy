@@ -89,10 +89,12 @@ def overlay_command(
     selection_thread.start()
 
     spinner = Spinner("dots", text="Discovering scenario attributes...", style="cyan")
-    with Live(spinner, console=console, refresh_per_second=12.5, transient=True) as live:
+    with Live(spinner, console=console, refresh_per_second=12.5, transient=True):
         while not selection_done.is_set():
             elapsed = time.time() - selection_start
-            spinner.update(text=f"Discovering scenario attributes... {format_elapsed(elapsed)}")
+            spinner.update(
+                text=f"Discovering scenario attributes... {format_elapsed(elapsed)}"
+            )
             time.sleep(0.1)
 
     selection_elapsed = time.time() - selection_start
@@ -153,7 +155,7 @@ def overlay_command(
     hydration_thread.start()
 
     spinner = Spinner("dots", text="Starting...", style="cyan")
-    with Live(spinner, console=console, refresh_per_second=12.5, transient=True) as live:
+    with Live(spinner, console=console, refresh_per_second=12.5, transient=True):
         while not hydration_done.is_set():
             elapsed = time.time() - hydration_start
             step, status = current_step

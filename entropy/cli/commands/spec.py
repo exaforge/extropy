@@ -88,7 +88,7 @@ def spec_command(
     selection_thread.start()
 
     spinner = Spinner("dots", text="Discovering attributes...", style="cyan")
-    with Live(spinner, console=console, refresh_per_second=12.5, transient=True) as live:
+    with Live(spinner, console=console, refresh_per_second=12.5, transient=True):
         while not selection_done.is_set():
             elapsed = time.time() - selection_start
             spinner.update(text=f"Discovering attributes... {format_elapsed(elapsed)}")
@@ -146,7 +146,7 @@ def spec_command(
     hydration_thread.start()
 
     spinner = Spinner("dots", text="Starting...", style="cyan")
-    with Live(spinner, console=console, refresh_per_second=12.5, transient=True) as live:
+    with Live(spinner, console=console, refresh_per_second=12.5, transient=True):
         while not hydration_done.is_set():
             elapsed = time.time() - hydration_start
             step, status = current_step
