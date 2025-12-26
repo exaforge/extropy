@@ -129,7 +129,7 @@ Parse the following scenario description into a structured event definition.
 Choose the most appropriate event type:
 
 1. **announcement**: Official communication from an organization/authority
-   - Examples: company policy changes, official statements, product updates
+   - Examples: government mandates, public health guidance, platform-wide service changes
    - High credibility if from known entity
 
 2. **news**: Information reported by media/journalists
@@ -141,11 +141,11 @@ Choose the most appropriate event type:
    - Low credibility, high ambiguity
 
 4. **policy_change**: Changes to rules, regulations, or laws
-   - Examples: new government regulations, company policy updates
+   - Examples: legislation, regulatory shifts, professional board certification changes
    - High credibility if from authority
 
-5. **product_launch**: Introduction of new product/service/feature
-   - Examples: new app feature, new product line, service expansion
+5. **product_launch**: Market-wide innovation or introduction of transformative product/service
+   - Examples: med-tech firm launches AI diagnostic tool, autonomous vehicle rollout, breakthrough treatment approval
    - High credibility from official source
 
 6. **emergency**: Urgent, time-sensitive information

@@ -226,6 +226,8 @@ Consider how this event would realistically reach this population:
 3. **Rumors:**
    - Start with small group (low probability, t=0)
    - Spread organically (t=1+)
+   - Rumors thrive on **ambiguity**—target agents in "epistemic bubbles" who lack access to authoritative sources
+   - For rumors, consider how 'low trust' or 'high anxiety' groups might be exposed first (e.g., when: "institutional_trust < 0.4" or "anxiety > 0.6")
 
 4. **Policy Changes:**
    - Official channels (t=0)

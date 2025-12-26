@@ -164,6 +164,12 @@ Free-form text responses.
 | Technology adoption | adoption_willingness, trust_level, information_seeking |
 | Emergency/Crisis | urgency_perception, compliance, information_sharing |
 | Rumor/News | belief_level, verification_behavior, share_intent |
+| Professional Alignment | exit_intent, voice_intent, compliance_level, burnout_impact |
+| Information Warfare | belief_level, amplification_intent, source_skepticism, narrative_alignment |
+
+## Reasoning Capture
+
+**IMPORTANT:** Ensure outcomes capture the **reasoning** behind decisions, not just the decision itself. This enables post-hoc discovery of emergent behaviors. For example, agents might be "rotating subscriptions" rather than just "cancelling"—a nuance only visible when reasoning is captured.
 
 ## Guidelines
 

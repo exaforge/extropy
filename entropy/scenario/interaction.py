@@ -237,6 +237,7 @@ Examples:
 - {{"when": "extraversion > 0.7", "multiply": 1.3, "add": 0}}
 - {{"when": "age < 30", "multiply": 1.5, "add": 0}}
 - {{"when": "edge_type == 'colleague'", "multiply": 1.5, "add": 0}} (use actual edge types from network)
+- {{"when": "institutional_trust < 0.3", "multiply": 2.0, "add": 0}} (psychographic: low-trust agents amplify rumors)
 
 ### decay_per_hop (0-1)
 How much information fidelity is lost each time it's passed on.
