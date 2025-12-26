@@ -1,12 +1,30 @@
-"""CLI for Entropy - Architect Layer."""
+"""CLI for Entropy - Architect Layer.
+
+Supports dual-mode output:
+- Human mode (default): Rich formatting with colors, tables, progress bars
+- Machine mode (--json): Structured JSON output for AI coding tools
+
+Exit codes:
+    0 = Success
+    1 = Validation error
+    2 = File not found
+    3 = Sampling error
+    4 = Network error
+    5 = Simulation error
+    6 = Scenario error
+    10 = User cancelled
+"""
 
 import time
 from pathlib import Path
 from threading import Event, Thread
+from typing import Annotated
 
 import typer
 from rich.console import Console
 from rich.live import Live
+from rich.table import Table
+from rich.tree import Tree
 
 from .population.architect import (
     check_sufficiency,
@@ -18,6 +36,14 @@ from .population.architect import (
 from .population.architect.binder import CircularDependencyError
 from .core.models import DiscoveredAttribute, PopulationSpec
 from .population.validator import validate_spec, Severity, fix_modifier_conditions, fix_spec_file
+from .cli_utils import (
+    Output,
+    ExitCode,
+    format_elapsed,
+    grounding_indicator,
+    format_validation_for_json,
+    format_sampling_stats_for_json,
+)
 
 app = typer.Typer(
     name="entropy",
@@ -27,24 +53,37 @@ app = typer.Typer(
 
 console = Console()
 
+# Global state for JSON mode (set by callback)
+_json_mode = False
+
+
+@app.callback()
+def main_callback(
+    json_output: Annotated[
+        bool,
+        typer.Option(
+            "--json",
+            help="Output machine-readable JSON instead of human-friendly text",
+            is_eager=True,
+        ),
+    ] = False,
+):
+    """Entropy: Population simulation engine for agent-based modeling.
+
+    Use --json for machine-readable output suitable for scripting and AI tools.
+    """
+    global _json_mode
+    _json_mode = json_output
+
 
 def _grounding_indicator(level: str) -> str:
     """Get colored grounding indicator."""
-    indicators = {
-        "strong": "[green]🟢 Strong[/green]",
-        "medium": "[yellow]🟡 Medium[/yellow]",
-        "low": "[red]🔴 Low[/red]",
-    }
-    return indicators.get(level, "[dim]Unknown[/dim]")
+    return grounding_indicator(level)
 
 
 def _format_elapsed(seconds: float) -> str:
     """Format elapsed seconds as Xm Ys or Xs."""
-    if seconds >= 60:
-        mins = int(seconds // 60)
-        secs = int(seconds % 60)
-        return f"{mins}m {secs}s"
-    return f"{seconds:.0f}s"
+    return format_elapsed(seconds)
 
 
 def _display_discovered_attributes(
@@ -103,9 +142,9 @@ def _display_spec_summary(spec: PopulationSpec) -> None:
     )
     console.print()
 
-    # Show attributes with grounding
-    console.print("[bold]Attributes:[/bold]")
-    for attr in spec.attributes[:12]:
+    # Show attributes with grounding in a table
+    attr_rows = []
+    for attr in spec.attributes[:15]:
         level_icon = {"strong": "🟢", "medium": "🟡", "low": "🔴"}.get(
             attr.grounding.level, "⚪"
         )
@@ -138,20 +177,53 @@ def _display_spec_summary(spec: PopulationSpec) -> None:
                 if dist.probability_true is not None:
                     dist_info = f"P={dist.probability_true:.0%}"
 
-        method_str = f"[dim]— {attr.grounding.method}[/dim]"
-        console.print(
-            f"  {level_icon} {attr.name} [dim]({dist_info})[/dim] {method_str}"
-        )
+        attr_rows.append([
+            f"{level_icon} {attr.name}",
+            attr.type,
+            dist_info[:25] if dist_info else "-",
+            attr.grounding.method[:20] if attr.grounding.method else "-",
+        ])
 
-    if len(spec.attributes) > 12:
-        console.print(f"  [dim]... and {len(spec.attributes) - 12} more[/dim]")
+    table = Table(title="Attributes", show_header=True, header_style="bold")
+    table.add_column("Name", style="cyan")
+    table.add_column("Type", style="dim")
+    table.add_column("Distribution")
+    table.add_column("Grounding", style="dim")
+    for row in attr_rows:
+        table.add_row(*row)
+    console.print(table)
+
+    if len(spec.attributes) > 15:
+        console.print(f"  [dim]... and {len(spec.attributes) - 15} more[/dim]")
 
     console.print()
-    console.print(f"[bold]Sampling order:[/bold]")
-    order_preview = " → ".join(spec.sampling_order[:6])
-    if len(spec.sampling_order) > 6:
-        order_preview += " → ..."
-    console.print(f"  {order_preview}")
+
+    # Show sampling order as a dependency tree
+    console.print("[bold]Sampling Order (Dependencies):[/bold]")
+
+    # Build dependency info
+    attrs_with_deps = []
+    for attr_name in spec.sampling_order[:12]:
+        attr = spec.get_attribute(attr_name)
+        if attr and attr.sampling.depends_on:
+            attrs_with_deps.append((attr_name, attr.sampling.depends_on))
+        elif attr:
+            attrs_with_deps.append((attr_name, []))
+
+    # Create a Rich Tree for dependencies
+    tree = Tree("📋 [bold]Sampling Order[/bold]")
+    for name, deps in attrs_with_deps:
+        if deps:
+            branch = tree.add(f"[cyan]{name}[/cyan]")
+            for dep in deps:
+                branch.add(f"[dim]← {dep}[/dim]")
+        else:
+            tree.add(f"[green]{name}[/green]")
+
+    if len(spec.sampling_order) > 12:
+        tree.add(f"[dim]... and {len(spec.sampling_order) - 12} more[/dim]")
+
+    console.print(tree)
     console.print()
 
 
@@ -244,40 +316,140 @@ def validate_command(
     distribution parameters, dependencies, conditions, formulas, duplicates,
     and strategy consistency.
 
-    Example:
+    EXIT CODES:
+        0 = Success (valid spec)
+        1 = Validation error (invalid spec)
+        2 = File not found
+
+    EXAMPLES:
         entropy validate surgeons.yaml
         entropy validate surgeons.yaml --strict
+        entropy --json validate surgeons.yaml  # Machine-readable output
     """
-    console.print()
+    out = Output(console, json_mode=_json_mode)
+    out.blank()
 
+    # Check file exists
     if not spec_file.exists():
-        console.print(f"[red]✗[/red] Spec file not found: {spec_file}")
-        raise typer.Exit(1)
+        out.error(
+            f"Spec file not found: {spec_file}",
+            exit_code=ExitCode.FILE_NOT_FOUND,
+            suggestion=f"Check the file path: {spec_file.absolute()}",
+        )
+        raise typer.Exit(out.finish())
 
-    with console.status("[cyan]Loading spec...[/cyan]"):
+    # Load spec
+    if not _json_mode:
+        with console.status("[cyan]Loading spec...[/cyan]"):
+            try:
+                spec = PopulationSpec.from_yaml(spec_file)
+            except Exception as e:
+                out.error(f"Failed to load spec: {e}", exit_code=ExitCode.VALIDATION_ERROR)
+                raise typer.Exit(out.finish())
+    else:
         try:
             spec = PopulationSpec.from_yaml(spec_file)
         except Exception as e:
-            console.print(f"[red]✗[/red] Failed to load spec: {e}")
-            raise typer.Exit(1)
+            out.error(f"Failed to load spec: {e}", exit_code=ExitCode.VALIDATION_ERROR)
+            raise typer.Exit(out.finish())
 
-    console.print(f"[green]✓[/green] Loaded: [bold]{spec.meta.description}[/bold] ({len(spec.attributes)} attributes)")
-    console.print()
+    out.success(
+        f"Loaded: [bold]{spec.meta.description}[/bold] ({len(spec.attributes)} attributes)",
+        spec_file=str(spec_file),
+        description=spec.meta.description,
+        attribute_count=len(spec.attributes),
+    )
+    out.blank()
 
-    with console.status("[cyan]Validating spec...[/cyan]"):
+    # Validate spec
+    if not _json_mode:
+        with console.status("[cyan]Validating spec...[/cyan]"):
+            result = validate_spec(spec)
+    else:
         result = validate_spec(spec)
 
-    if not _display_validation_result(result, strict):
-        raise typer.Exit(1)
+    # Add validation result to JSON output
+    out.set_data("validation", format_validation_for_json(result))
+
+    # Handle errors
+    if result.errors:
+        out.error(f"Spec has {len(result.errors)} error(s)", exit_code=ExitCode.VALIDATION_ERROR)
+
+        if not _json_mode:
+            # Show error table for human mode
+            error_rows = []
+            for err in result.errors[:15]:
+                loc = err.attribute
+                if err.modifier_index is not None:
+                    loc = f"{err.attribute}[{err.modifier_index}]"
+                error_rows.append([loc, err.category, err.message[:60]])
+
+            if error_rows:
+                out.table(
+                    "Errors",
+                    ["Location", "Category", "Message"],
+                    error_rows,
+                    styles=["red", "dim", None],
+                )
+
+            if len(result.errors) > 15:
+                out.text(f"  [dim]... and {len(result.errors) - 15} more error(s)[/dim]")
+
+            # Show suggestions for first few errors
+            out.blank()
+            out.text("[bold]Suggestions:[/bold]")
+            for err in result.errors[:3]:
+                if err.suggestion:
+                    out.text(f"  [dim]→ {err.attribute}: {err.suggestion}[/dim]")
+
+        raise typer.Exit(out.finish())
+
+    # Handle warnings (with strict mode)
+    if result.warnings:
+        if strict:
+            out.error(
+                f"Spec has {len(result.warnings)} warning(s) (strict mode)",
+                exit_code=ExitCode.VALIDATION_ERROR,
+            )
+
+            if not _json_mode:
+                warning_rows = []
+                for warn in result.warnings[:10]:
+                    loc = warn.attribute
+                    if warn.modifier_index is not None:
+                        loc = f"{warn.attribute}[{warn.modifier_index}]"
+                    warning_rows.append([loc, warn.category, warn.message[:60]])
+
+                out.table(
+                    "Warnings",
+                    ["Location", "Category", "Message"],
+                    warning_rows,
+                    styles=["yellow", "dim", None],
+                )
+
+            raise typer.Exit(out.finish())
+        else:
+            out.success(f"Spec validated with {len(result.warnings)} warning(s)")
+
+            if not _json_mode:
+                for warn in result.warnings[:3]:
+                    loc = warn.attribute
+                    if warn.modifier_index is not None:
+                        loc = f"{warn.attribute}[{warn.modifier_index}]"
+                    out.warning(f"{loc}: {warn.message}")
+
+                if len(result.warnings) > 3:
+                    out.text(f"  [dim]... and {len(result.warnings) - 3} more warning(s)[/dim]")
+    else:
+        out.success("Spec validated")
 
     # Show summary
-    console.print()
-    if result.errors:
-        console.print(f"[red]Validation failed[/red]: {len(result.errors)} error(s)")
-    elif result.warnings and strict:
-        console.print(f"[red]Validation failed[/red]: {len(result.warnings)} warning(s) in strict mode")
-    else:
-        console.print("[green]Validation passed[/green]")
+    out.blank()
+    out.divider()
+    out.text("[green]Validation passed[/green]")
+    out.divider()
+
+    raise typer.Exit(out.finish())
 
 
 @app.command("fix")
@@ -893,86 +1065,122 @@ def sample_command(
     Samples from a PopulationSpec YAML file, producing a population of agents
     with attributes matching the spec's distributions and dependencies.
 
-    Example:
+    EXIT CODES:
+        0 = Success
+        1 = Validation error
+        2 = File not found
+        3 = Sampling error
+
+    EXAMPLES:
         entropy sample surgeons.yaml -o agents.json
         entropy sample surgeons.yaml -n 500 -o agents.json --seed 42
         entropy sample surgeons.yaml -n 1000 -o agents.db --format sqlite
         entropy sample surgeons.yaml -o agents.json --report
+        entropy --json sample surgeons.yaml -o agents.json --report
     """
     from .population.sampler import sample_population, save_json, save_sqlite, SamplingError
 
+    out = Output(console, json_mode=_json_mode)
     start_time = time.time()
-    console.print()
+    out.blank()
 
     # =========================================================================
     # Load Spec
     # =========================================================================
 
     if not spec_file.exists():
-        console.print(f"[red]✗[/red] Spec file not found: {spec_file}")
-        raise typer.Exit(1)
+        out.error(
+            f"Spec file not found: {spec_file}",
+            exit_code=ExitCode.FILE_NOT_FOUND,
+            suggestion=f"Check the file path: {spec_file.absolute()}",
+        )
+        raise typer.Exit(out.finish())
 
-    with console.status("[cyan]Loading spec...[/cyan]"):
+    if not _json_mode:
+        with console.status("[cyan]Loading spec...[/cyan]"):
+            try:
+                spec = PopulationSpec.from_yaml(spec_file)
+            except Exception as e:
+                out.error(f"Failed to load spec: {e}", exit_code=ExitCode.VALIDATION_ERROR)
+                raise typer.Exit(out.finish())
+    else:
         try:
             spec = PopulationSpec.from_yaml(spec_file)
         except Exception as e:
-            console.print(f"[red]✗[/red] Failed to load spec: {e}")
-            raise typer.Exit(1)
+            out.error(f"Failed to load spec: {e}", exit_code=ExitCode.VALIDATION_ERROR)
+            raise typer.Exit(out.finish())
 
     effective_count = count if count is not None else spec.meta.size
-    console.print(
-        f"[green]✓[/green] Loaded: [bold]{spec.meta.description}[/bold] "
-        f"({len(spec.attributes)} attributes, sampling {effective_count} agents)"
+    out.success(
+        f"Loaded: [bold]{spec.meta.description}[/bold] "
+        f"({len(spec.attributes)} attributes, sampling {effective_count} agents)",
+        spec_file=str(spec_file),
+        description=spec.meta.description,
+        attribute_count=len(spec.attributes),
+        agent_count=effective_count,
     )
 
     # =========================================================================
     # Validation Gate
     # =========================================================================
 
-    console.print()
-    with console.status("[cyan]Validating spec...[/cyan]"):
+    out.blank()
+    if not _json_mode:
+        with console.status("[cyan]Validating spec...[/cyan]"):
+            validation_result = validate_spec(spec)
+    else:
         validation_result = validate_spec(spec)
+
+    out.set_data("validation", format_validation_for_json(validation_result))
 
     if not validation_result.valid:
         if skip_validation:
-            console.print(
-                f"[yellow]⚠[/yellow] Spec has {len(validation_result.errors)} error(s) - "
-                f"skipping validation (--skip-validation)"
+            out.warning(
+                f"Spec has {len(validation_result.errors)} error(s) - skipping validation (--skip-validation)"
             )
-            for err in validation_result.errors[:5]:
-                console.print(f"  [red]✗[/red] {err.attribute}: {err.message}")
-            if len(validation_result.errors) > 5:
-                console.print(f"  [dim]... and {len(validation_result.errors) - 5} more[/dim]")
+            if not _json_mode:
+                for err in validation_result.errors[:5]:
+                    out.text(f"  [red]✗[/red] {err.attribute}: {err.message}")
+                if len(validation_result.errors) > 5:
+                    out.text(f"  [dim]... and {len(validation_result.errors) - 5} more[/dim]")
         else:
-            console.print(f"[red]✗[/red] Spec has {len(validation_result.errors)} error(s)")
-            for err in validation_result.errors[:10]:
-                console.print(f"  [red]✗[/red] {err.attribute}: {err.message}")
-                if err.suggestion:
-                    console.print(f"    [dim]→ {err.suggestion}[/dim]")
-            if len(validation_result.errors) > 10:
-                console.print(f"  [dim]... and {len(validation_result.errors) - 10} more[/dim]")
-            console.print()
-            console.print("[dim]Use --skip-validation to sample anyway[/dim]")
-            raise typer.Exit(1)
+            out.error(f"Spec has {len(validation_result.errors)} error(s)", exit_code=ExitCode.VALIDATION_ERROR)
+
+            if not _json_mode:
+                error_rows = []
+                for err in validation_result.errors[:10]:
+                    error_rows.append([err.attribute, err.message[:50]])
+
+                out.table(
+                    "Validation Errors",
+                    ["Attribute", "Message"],
+                    error_rows,
+                    styles=["red", None],
+                )
+
+                if len(validation_result.errors) > 10:
+                    out.text(f"  [dim]... and {len(validation_result.errors) - 10} more[/dim]")
+                out.blank()
+                out.text("[dim]Use --skip-validation to sample anyway[/dim]")
+
+            raise typer.Exit(out.finish())
     else:
         if validation_result.warnings:
-            console.print(
-                f"[green]✓[/green] Spec validated with {len(validation_result.warnings)} warning(s)"
-            )
+            out.success(f"Spec validated with {len(validation_result.warnings)} warning(s)")
         else:
-            console.print("[green]✓[/green] Spec validated")
+            out.success("Spec validated")
 
     # =========================================================================
     # Sampling
     # =========================================================================
 
-    console.print()
+    out.blank()
     sampling_start = time.time()
     result = None
     sampling_error = None
 
-    # Show progress for larger populations
-    show_progress = effective_count >= 100
+    # Show progress for larger populations (human mode only)
+    show_progress = effective_count >= 100 and not _json_mode
 
     if show_progress:
         from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn, TaskProgressColumn
@@ -1000,7 +1208,17 @@ def sample_command(
             except SamplingError as e:
                 sampling_error = e
     else:
-        with console.status("[cyan]Sampling agents...[/cyan]"):
+        if not _json_mode:
+            with console.status("[cyan]Sampling agents...[/cyan]"):
+                try:
+                    result = sample_population(
+                        spec,
+                        count=effective_count,
+                        seed=seed,
+                    )
+                except SamplingError as e:
+                    sampling_error = e
+        else:
             try:
                 result = sample_population(
                     spec,
@@ -1011,88 +1229,134 @@ def sample_command(
                 sampling_error = e
 
     if sampling_error:
-        console.print(f"[red]✗[/red] Sampling failed: {sampling_error}")
-        raise typer.Exit(1)
+        out.error(
+            f"Sampling failed: {sampling_error}",
+            exit_code=ExitCode.SAMPLING_ERROR,
+            suggestion="Check attribute dependencies and formula syntax",
+        )
+        raise typer.Exit(out.finish())
 
     sampling_elapsed = time.time() - sampling_start
-    console.print(
-        f"[green]✓[/green] Sampled {len(result.agents)} agents "
-        f"({_format_elapsed(sampling_elapsed)}, seed={result.meta['seed']})"
+    out.success(
+        f"Sampled {len(result.agents)} agents "
+        f"({_format_elapsed(sampling_elapsed)}, seed={result.meta['seed']})",
+        sampled_count=len(result.agents),
+        seed=result.meta['seed'],
+        sampling_time_seconds=sampling_elapsed,
     )
 
     # =========================================================================
-    # Report (optional)
+    # Report (optional or always for JSON mode)
     # =========================================================================
 
-    if report:
-        console.print()
-        console.print("┌" + "─" * 58 + "┐")
-        console.print("│" + " SAMPLING REPORT".center(58) + "│")
-        console.print("└" + "─" * 58 + "┘")
-        console.print()
+    # Always include stats in JSON mode
+    if _json_mode or report:
+        out.set_data("stats", format_sampling_stats_for_json(result.stats, spec))
 
-        # Numeric attribute stats
+    if report and not _json_mode:
+        out.header("SAMPLING REPORT")
+
+        # Numeric attribute stats with Rich table
         numeric_attrs = [a for a in spec.attributes if a.type in ("int", "float")]
         if numeric_attrs:
-            console.print("[bold]Numeric Attributes:[/bold]")
-            for attr in numeric_attrs[:15]:
+            numeric_rows = []
+            for attr in numeric_attrs[:20]:
                 mean = result.stats.attribute_means.get(attr.name, 0)
                 std = result.stats.attribute_stds.get(attr.name, 0)
-                console.print(f"  {attr.name}: μ={mean:.2f}, σ={std:.2f}")
-            if len(numeric_attrs) > 15:
-                console.print(f"  [dim]... and {len(numeric_attrs) - 15} more[/dim]")
-            console.print()
+                numeric_rows.append([attr.name, f"{mean:.2f}", f"{std:.2f}"])
 
-        # Categorical attribute stats
+            out.table(
+                "Numeric Attributes",
+                ["Attribute", "Mean (μ)", "Std (σ)"],
+                numeric_rows,
+                styles=["cyan", None, "dim"],
+            )
+
+            if len(numeric_attrs) > 20:
+                out.text(f"  [dim]... and {len(numeric_attrs) - 20} more[/dim]")
+            out.blank()
+
+        # Categorical attribute stats with Rich table
         cat_attrs = [a for a in spec.attributes if a.type == "categorical"]
         if cat_attrs:
-            console.print("[bold]Categorical Attributes:[/bold]")
-            for attr in cat_attrs[:10]:
+            cat_rows = []
+            for attr in cat_attrs[:15]:
                 counts = result.stats.categorical_counts.get(attr.name, {})
                 total = sum(counts.values()) or 1
                 top_3 = sorted(counts.items(), key=lambda x: -x[1])[:3]
-                dist_str = ", ".join(f"{k}:{v/total:.0%}" for k, v in top_3)
-                console.print(f"  {attr.name}: {dist_str}")
-            if len(cat_attrs) > 10:
-                console.print(f"  [dim]... and {len(cat_attrs) - 10} more[/dim]")
-            console.print()
+                dist_str = ", ".join(f"{k}: {v/total:.0%}" for k, v in top_3)
+                cat_rows.append([attr.name, dist_str])
 
-        # Boolean attribute stats
+            out.table(
+                "Categorical Attributes",
+                ["Attribute", "Top Values (%)"],
+                cat_rows,
+                styles=["cyan", None],
+            )
+
+            if len(cat_attrs) > 15:
+                out.text(f"  [dim]... and {len(cat_attrs) - 15} more[/dim]")
+            out.blank()
+
+        # Boolean attribute stats with Rich table
         bool_attrs = [a for a in spec.attributes if a.type == "boolean"]
         if bool_attrs:
-            console.print("[bold]Boolean Attributes:[/bold]")
-            for attr in bool_attrs:
+            bool_rows = []
+            for attr in bool_attrs[:15]:
                 counts = result.stats.boolean_counts.get(attr.name, {True: 0, False: 0})
                 total = sum(counts.values()) or 1
                 pct_true = counts.get(True, 0) / total
-                console.print(f"  {attr.name}: {pct_true:.1%} true")
-            console.print()
+                bool_rows.append([attr.name, f"{pct_true:.1%}"])
+
+            out.table(
+                "Boolean Attributes",
+                ["Attribute", "True %"],
+                bool_rows,
+                styles=["cyan", None],
+            )
+            out.blank()
 
         # Modifier triggers
         triggered_mods = {k: v for k, v in result.stats.modifier_triggers.items() if any(v.values())}
         if triggered_mods:
-            console.print("[bold]Modifier Triggers:[/bold]")
-            for attr_name, triggers in list(triggered_mods.items())[:10]:
+            mod_rows = []
+            for attr_name, triggers in list(triggered_mods.items())[:15]:
                 attr = spec.get_attribute(attr_name)
                 if attr:
                     for idx, count in triggers.items():
                         if count > 0 and idx < len(attr.sampling.modifiers):
                             mod = attr.sampling.modifiers[idx]
-                            console.print(f"  {attr_name}[{idx}] '{mod.when}': {count} times")
-            console.print()
+                            condition = mod.when[:40] if len(mod.when) > 40 else mod.when
+                            mod_rows.append([f"{attr_name}[{idx}]", condition, str(count)])
+
+            if mod_rows:
+                out.table(
+                    "Modifier Triggers",
+                    ["Location", "Condition", "Count"],
+                    mod_rows,
+                    styles=["cyan", "dim", None],
+                )
+                out.blank()
 
         # Constraint violations
         if result.stats.constraint_violations:
-            console.print("[bold]Expression Constraint Violations:[/bold]")
+            violation_rows = []
             for expr, count in list(result.stats.constraint_violations.items())[:10]:
-                console.print(f"  [yellow]⚠[/yellow] {expr}: {count} agents")
-            console.print()
+                violation_rows.append([expr[:50], str(count)])
+
+            out.table(
+                "Constraint Violations",
+                ["Expression", "Agents Affected"],
+                violation_rows,
+                styles=["yellow", None],
+            )
+            out.blank()
 
     # =========================================================================
     # Save Output
     # =========================================================================
 
-    console.print()
+    out.blank()
     output_format = format.lower()
 
     # Auto-detect format from extension if not explicitly set
@@ -1101,7 +1365,13 @@ def sample_command(
     elif output.suffix.lower() == ".json":
         output_format = "json"
 
-    with console.status(f"[cyan]Saving to {output_format}...[/cyan]"):
+    if not _json_mode:
+        with console.status(f"[cyan]Saving to {output_format}...[/cyan]"):
+            if output_format == "sqlite":
+                save_sqlite(result, output)
+            else:
+                save_json(result, output)
+    else:
         if output_format == "sqlite":
             save_sqlite(result, output)
         else:
@@ -1109,10 +1379,16 @@ def sample_command(
 
     elapsed = time.time() - start_time
 
-    console.print("═" * 60)
-    console.print(f"[green]✓[/green] Saved {len(result.agents)} agents to [bold]{output}[/bold]")
-    console.print(f"[dim]Total time: {_format_elapsed(elapsed)}[/dim]")
-    console.print("═" * 60)
+    out.set_data("output_file", str(output))
+    out.set_data("output_format", output_format)
+    out.set_data("total_time_seconds", elapsed)
+
+    out.divider()
+    out.success(f"Saved {len(result.agents)} agents to [bold]{output}[/bold]")
+    out.text(f"[dim]Total time: {_format_elapsed(elapsed)}[/dim]")
+    out.divider()
+
+    raise typer.Exit(out.finish())
 
 
 @app.command("network")
