@@ -618,7 +618,8 @@ def validate_conditional_base_response(
 
                     if bound_type == "max" and bound_expr:
                         has_max_formula = dist_data.get("max_formula") is not None
-                        if not has_max_formula:
+                        has_static_max = dist_data.get("max") is not None
+                        if not has_max_formula and not has_static_max:
                             errors.append(ValidationError(
                                 field=f"{name}.distribution",
                                 value=f"constraint '{c_expr}'",

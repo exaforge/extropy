@@ -371,9 +371,10 @@ def validate_conditional_base(attributes: list[HydratedAttribute]) -> list[str]:
                     )
 
                     if bound_type == "max" and bound_expr:
-                        # Check if distribution has max_formula
+                        # Check if distribution has max_formula or static max
                         has_max_formula = getattr(dist, 'max_formula', None) is not None
-                        if not has_max_formula:
+                        has_static_max = getattr(dist, 'max', None) is not None
+                        if not has_max_formula and not has_static_max:
                             errors.append(
                                 f"{attr.name}: constraint '{constraint.expression}' exists but distribution has no max_formula. "
                                 f"Add to distribution: max_formula: '{bound_expr}'"
