@@ -312,10 +312,3 @@ class ScenarioSpec(BaseModel):
             f"Simulation: {self.simulation.max_timesteps} {self.simulation.timestep_unit.value}s",
         ]
         return "\n".join(lines)
-
-
-# =============================================================================
-# Validation Types (imported from validation.py for backwards compatibility)
-# =============================================================================
-
-from .validation import ValidationError, ValidationWarning, ValidationResult

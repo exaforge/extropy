@@ -221,9 +221,3 @@ class ValidationResult(BaseModel):
         """In-place combine."""
         self.issues.extend(other.issues)
         return self
-
-
-# Backwards compatibility aliases for scenario.py
-# These map the old two-class pattern to the unified model
-ValidationError = ValidationIssue
-ValidationWarning = ValidationIssue
