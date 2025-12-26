@@ -1,4 +1,4 @@
-# Issue 1: Validation Consolidation
+# Issue 1: Validation Consolidation - COMPLETED
 
 ## Problem
 
@@ -7,17 +7,16 @@ Multiple validation pathways in `population/` each had their own validation patt
 1. **`validator/__init__.py`**: Used `@dataclass` for `Severity`, `ValidationIssue`, `ValidationResult`
 2. **`architect/quick_validate.py`**: Plain Python classes `ValidationError`, `QuickValidationResult`
 3. **`core/models/scenario.py`**: Pydantic models `ValidationError`, `ValidationWarning`, `ValidationResult`
+4. **`architect/hydrator_utils.py`**: Duplicated functions `_is_spec_level_constraint`, `_extract_bound_from_constraint`
 
 This inconsistency led to:
 - Code duplication
 - Type confusion when passing validation results between modules
 - Difficult maintenance
 
-## Solution
+## Solution Implemented
 
-Consolidated all validation types into a single unified module: `entropy/core/models/validation.py`
-
-### New Central Module: `core/models/validation.py`
+### 1. Created Unified Validation Models: `core/models/validation.py`
 
 ```python
 class Severity(str, Enum):
@@ -44,31 +43,57 @@ class ValidationResult(BaseModel):
     @property
     def warnings(self) -> list[ValidationIssue]: ...
 
-    def add_error(...): ...
-    def add_warning(...): ...
     def format_for_retry(self) -> str: ...
+
+# Backwards compatibility aliases
+ValidationError = ValidationIssue
+ValidationWarning = ValidationIssue
 ```
 
-### Files Modified
+### 2. Deleted `quick_validate.py`, Moved Logic to `validator/llm_response.py`
 
-1. **`core/models/validation.py`** - NEW: Unified Pydantic models
-2. **`core/models/__init__.py`** - Added validation imports
-3. **`core/models/scenario.py`** - Imports from validation.py (backwards compat)
-4. **`population/validator/__init__.py`** - Removed @dataclass, imports from core
-5. **`population/validator/syntactic.py`** - Uses core models, `location=` instead of `attribute=`
-6. **`population/validator/semantic.py`** - Uses core models, `location=` instead of `attribute=`
-7. **`population/architect/quick_validate.py`** - Uses core models with `_make_error()` helper
+All LLM response validation functions now live in one place:
 
-### Backwards Compatibility
+```
+entropy/population/validator/
+├── __init__.py          # Exports all validation functions
+├── llm_response.py      # LLM response validation (was quick_validate.py)
+├── syntactic.py         # Spec validation: ERROR level checks
+├── semantic.py          # Spec validation: WARNING level checks
+└── fixer.py             # Auto-fix utilities
+```
 
-Aliases maintained for existing code:
-- `ValidationError = ValidationIssue`
-- `ValidationWarning = ValidationIssue`
-- `QuickValidationResult = ValidationResult`
+### 3. Removed Duplicated Functions from `hydrator_utils.py`
 
-### Key Changes
+- `_is_spec_level_constraint` → now imported from `validator.llm_response`
+- `_extract_bound_from_constraint` → now imported from `validator.llm_response`
 
-1. **Field rename**: `attribute=` → `location=` (more generic, works for scenario validation too)
-2. **Single issues list**: `ValidationResult.issues` replaces separate `errors`, `warnings`, `info` lists
-3. **Computed properties**: `valid`, `errors`, `warnings` are now computed from `issues`
-4. **LLM retry support**: `format_for_retry()` and `for_llm_retry()` for fail-fast validation
+## Files Changed
+
+| File | Action |
+|------|--------|
+| `core/models/validation.py` | NEW - Unified Pydantic models |
+| `core/models/__init__.py` | MODIFIED - Export validation types |
+| `core/models/scenario.py` | MODIFIED - Import from validation.py |
+| `population/validator/__init__.py` | MODIFIED - Remove @dataclass, export LLM validation |
+| `population/validator/llm_response.py` | NEW - Moved from quick_validate.py |
+| `population/validator/syntactic.py` | MODIFIED - Use core models |
+| `population/validator/semantic.py` | MODIFIED - Use core models |
+| `population/architect/quick_validate.py` | DELETED |
+| `population/architect/__init__.py` | MODIFIED - Update imports |
+| `population/architect/hydrator.py` | MODIFIED - Update imports |
+| `population/architect/hydrator_utils.py` | MODIFIED - Remove duplicates, import from validator |
+| `tests/test_sampler.py` | MODIFIED - Update imports |
+
+## Key Principles Followed
+
+1. **Models centralized** - Single source of truth in `core/models/validation.py`
+2. **Logic in domain modules** - Validation logic stays in `population/validator/`
+3. **No duplication** - Shared functions imported, not copied
+4. **Backwards compatible** - Aliases maintained for existing code
+5. **Field rename** - `attribute=` → `location=` (more generic)
+
+## Commits
+
+1. `7dd52ae` - refactor: consolidate validation types into core/models/validation.py
+2. `b0a25c6` - refactor: delete quick_validate.py and merge into validator/
