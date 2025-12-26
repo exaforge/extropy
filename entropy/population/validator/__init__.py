@@ -19,6 +19,24 @@ from ...core.models.validation import (
 
 from .fixer import fix_modifier_conditions, fix_spec_file, ConditionFix, FixResult
 
+# Shared utilities
+from .common import (
+    BUILTIN_NAMES,
+    PYTHON_KEYWORDS,
+    extract_names_from_expression,
+    extract_names_from_formula,
+    extract_names_from_condition,
+)
+
+# Hydration validation (moved from architect/hydrator_utils.py)
+from .hydration import (
+    validate_independent_hydration,
+    validate_derived_hydration,
+    validate_conditional_base,
+    validate_modifiers,
+    validate_strategy_consistency,
+)
+
 # LLM response validation (moved from architect/quick_validate.py)
 from .llm_response import (
     # Backwards compat aliases
@@ -86,6 +104,18 @@ __all__ = [
     "QuickValidationResult",
     # Spec validation
     "validate_spec",
+    # Shared utilities
+    "BUILTIN_NAMES",
+    "PYTHON_KEYWORDS",
+    "extract_names_from_expression",
+    "extract_names_from_formula",
+    "extract_names_from_condition",
+    # Hydration validation
+    "validate_independent_hydration",
+    "validate_derived_hydration",
+    "validate_conditional_base",
+    "validate_modifiers",
+    "validate_strategy_consistency",
     # LLM response validation
     "validate_formula_syntax",
     "validate_condition_syntax",

@@ -25,12 +25,6 @@ from ...core.models import (
     GroundingInfo,
 )
 from .hydrator_utils import (
-    # Validation
-    validate_independent_hydration,
-    validate_derived_hydration,
-    validate_conditional_base,
-    validate_modifiers,
-    validate_strategy_consistency,
     # Schemas
     build_independent_schema,
     build_derived_schema,
@@ -44,10 +38,17 @@ from .hydrator_utils import (
     sanitize_formula,
 )
 from ..validator import (
+    # LLM response validation
     validate_independent_response,
     validate_derived_response,
     validate_conditional_base_response,
     validate_modifiers_response,
+    # Hydration validation
+    validate_independent_hydration,
+    validate_derived_hydration,
+    validate_conditional_base,
+    validate_modifiers,
+    validate_strategy_consistency,
 )
 
 

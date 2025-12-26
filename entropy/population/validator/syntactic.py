@@ -4,9 +4,6 @@ These checks produce ERROR severity issues that block sampling.
 All checks are structural - no sampling required.
 """
 
-import ast
-import re
-
 from ...core.models.validation import Severity, ValidationIssue
 from ...core.models import (
     PopulationSpec,
@@ -18,71 +15,7 @@ from ...core.models import (
     CategoricalDistribution,
     BooleanDistribution,
 )
-
-
-# =============================================================================
-# Constants
-# =============================================================================
-
-BUILTIN_NAMES = {
-    "True",
-    "False",
-    "true",
-    "false",
-    "None",
-    "abs",
-    "min",
-    "max",
-    "round",
-    "int",
-    "float",
-    "str",
-    "len",
-}
-PYTHON_KEYWORDS = {
-    "and",
-    "or",
-    "not",
-    "in",
-    "is",
-    "True",
-    "False",
-    "true",
-    "false",
-    "None",
-    "if",
-    "else",
-}
-
-
-# =============================================================================
-# Name Extraction Helpers
-# =============================================================================
-
-
-def extract_names_from_expression(expr: str) -> set[str]:
-    """Extract variable names from a Python expression.
-
-    Uses AST parsing to correctly identify variable references
-    while ignoring string literals and other constants.
-    """
-    try:
-        tree = ast.parse(expr, mode="eval")
-        names = set()
-        for node in ast.walk(tree):
-            if isinstance(node, ast.Name):
-                name = node.id
-                if name not in BUILTIN_NAMES:
-                    names.add(name)
-        return names
-    except SyntaxError:
-        # Fallback to regex for malformed expressions
-        cleaned = re.sub(r"'[^']*'", "", expr)
-        cleaned = re.sub(r'"[^"]*"', "", cleaned)
-        tokens = re.findall(r"\b([a-z_][a-z0-9_]*)\b", cleaned, re.IGNORECASE)
-        return {
-            t for t in tokens if t not in PYTHON_KEYWORDS and t not in BUILTIN_NAMES
-        }
+from .common import BUILTIN_NAMES, extract_names_from_expression
 
 
 # =============================================================================
