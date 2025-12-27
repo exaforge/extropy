@@ -30,6 +30,14 @@ Issues in order of fixing:
 
   Proposed fix: Save the spec with an .invalid.yaml suffix when validation fails. This allows the user to inspect and manually fix issues in the YAML rather than re-running the entire pipeline. The distinct suffix signals the file is not production-ready. NOTE that most plausible cases to cause failure are prevented by llm-fast-fail-checks leave edge cases.
 
+  sub-issue-c: Move condition value validation to LLM fail-fast, delete fixer.py
+
+  Currently, validate_modifiers_response() during Step 2d only checks syntax, not whether string literals in when conditions match valid categorical options. This semantic check only happens during final validate_spec() — too late for LLM retry.
+
+  Proposed fix:
+
+  Add condition value validation to validate_modifiers_response() pass the categorical options map and verify each string literal in when clauses matches a valid option. On mismatch, return an ERROR with suggestion listing valid options, triggering LLM retry. Delete fixer.py and the entropy fix CLI command — they become redundant once the LLM can fix typos via retry feedback.
+
 - issue 2 (schema inconsistency use and prompts):
   what is the difference between binder build spec vs build schema() functions in hydrator_utils(). also, selector, sufficiency.py and others have schema files.
 
