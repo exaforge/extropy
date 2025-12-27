@@ -200,33 +200,77 @@ def _check_modifier_stacking(attr: AttributeSpec) -> list[ValidationIssue]:
 # =============================================================================
 
 
+def _extract_comparisons_from_ast(expr: str) -> list[tuple[str, list[str]]]:
+    """Extract (attribute_name, [compared_values]) pairs from a condition expression.
+    
+    Uses AST parsing to correctly handle compound conditions like:
+    - employer_type == 'x' and job_title in ['y', 'z']
+    - (age > 50 or job_title == 'chief') and employer_type == 'university'
+    
+    Returns list of (attr_name, [values]) where values are string literals
+    being compared to that attribute.
+    """
+    import ast
+    
+    try:
+        tree = ast.parse(expr, mode='eval')
+    except SyntaxError:
+        return []
+    
+    comparisons: list[tuple[str, list[str]]] = []
+    
+    def extract_string_values(node) -> list[str]:
+        """Extract string values from a node (handles lists and single values)."""
+        values = []
+        if isinstance(node, ast.Constant) and isinstance(node.value, str):
+            values.append(node.value)
+        elif isinstance(node, ast.List):
+            for elt in node.elts:
+                if isinstance(elt, ast.Constant) and isinstance(elt.value, str):
+                    values.append(elt.value)
+        return values
+    
+    def visit(node):
+        """Recursively visit AST nodes to find comparisons."""
+        if isinstance(node, ast.Compare):
+            # Handle: attr == 'value' or attr in ['val1', 'val2']
+            left = node.left
+            if isinstance(left, ast.Name):
+                attr_name = left.id
+                values = []
+                for comparator in node.comparators:
+                    values.extend(extract_string_values(comparator))
+                if values:
+                    comparisons.append((attr_name, values))
+        
+        # Recurse into child nodes
+        for child in ast.iter_child_nodes(node):
+            visit(child)
+    
+    visit(tree)
+    return comparisons
+
+
 def _check_condition_values(
     attr: AttributeSpec,
     attr_lookup: dict[str, AttributeSpec],
 ) -> list[ValidationIssue]:
-    """Check that condition comparisons use valid categorical options."""
+    """Check that condition comparisons use valid categorical options.
+    
+    Uses AST parsing to correctly identify which values are compared to which
+    attributes, even in compound conditions like:
+        employer_type == 'university_hospital' and job_title in ['senior_Oberarzt']
+    """
     issues = []
 
     for i, mod in enumerate(attr.sampling.modifiers):
         if not mod.when:
             continue
 
-        # Extract string literals from condition
-        # Patterns: attr == 'value', attr in ['val1', 'val2']
-        string_literals = re.findall(r"'([^']*)'", mod.when)
-        string_literals.extend(re.findall(r'"([^"]*)"', mod.when))
-
-        if not string_literals:
-            continue
-
-        # Extract attribute names from condition
-        # Simple pattern: look for word before == or in
-        eq_matches = re.findall(r"(\w+)\s*==", mod.when)
-        in_matches = re.findall(r"(\w+)\s+in\s+\[", mod.when)
-        compared_attrs = set(eq_matches + in_matches)
-
-        # Check each compared attribute
-        for compared_attr in compared_attrs:
+        # Parse condition with AST to get (attr_name, values) pairs
+        comparisons = _extract_comparisons_from_ast(mod.when)
+        
+        for compared_attr, values in comparisons:
             if compared_attr not in attr_lookup:
                 continue
 
@@ -241,25 +285,19 @@ def _check_condition_values(
 
             valid_options = set(ref_dist.options)
 
-            # Check each string literal (this is approximate - could have false positives
-            # if the literal is used with a different attribute, but warnings are OK)
-            for literal in string_literals:
-                if literal not in valid_options:
-                    # Only warn if the literal looks like it could be for this attribute
-                    # (simple heuristic: check if it's in the condition near the attr name)
-                    if compared_attr in mod.when and f"'{literal}'" in mod.when:
-                        # Check if literal appears near this attribute name
-                        pattern = rf"{compared_attr}\s*(?:==|in)\s*.*?{re.escape(repr(literal))}"
-                        if re.search(pattern, mod.when):
-                            issues.append(
-                                ValidationIssue(
-                                    severity=Severity.WARNING,
-                                    category="CONDITION_VALUE",
-                                    location=attr.name,
-                                    modifier_index=i,
-                                    message=f"condition compares {compared_attr} to '{literal}' which is not in its options",
-                                    suggestion=f"Valid options for {compared_attr}: {', '.join(sorted(valid_options))}",
-                                )
-                            )
+            # Check each value compared to this specific attribute
+            for value in values:
+                if value not in valid_options:
+                    issues.append(
+                        ValidationIssue(
+                            severity=Severity.WARNING,
+                            category="CONDITION_VALUE",
+                            location=attr.name,
+                            modifier_index=i,
+                            message=f"condition compares {compared_attr} to '{value}' which is not in its options",
+                            suggestion=f"Valid options for {compared_attr}: {', '.join(sorted(valid_options))}",
+                        )
+                    )
 
     return issues
+
