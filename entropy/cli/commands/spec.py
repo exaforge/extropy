@@ -22,7 +22,6 @@ from ..display import (
     display_discovered_attributes,
     display_spec_summary,
     display_validation_result,
-    generate_and_review_persona_template,
 )
 from ..utils import format_elapsed
 
@@ -212,11 +211,8 @@ def spec_command(
         console.print("[red]Spec validation failed. Please fix the errors above.[/red]")
         raise typer.Exit(1)
 
-    # Step 5: Persona Template Generation
-    persona_template = generate_and_review_persona_template(population_spec, yes)
-    if persona_template:
-        population_spec.meta.persona_template = persona_template
-        console.print("[green]✓[/green] Persona template added to spec")
+    # Note: Persona template generation happens in overlay, not base spec
+    # This ensures the template includes scenario attributes
 
     # Human Checkpoint #2
     display_spec_summary(population_spec)
