@@ -41,6 +41,7 @@ class GroundingInfo(BaseModel):
 # Distribution Configurations
 # =============================================================================
 
+
 class NormalDistribution(BaseModel):
     """Normal/Gaussian distribution parameters.
 
@@ -511,7 +512,9 @@ class DiscoveredAttribute(BaseModel):
     )
     depends_on: list[str] = Field(default_factory=list)
 
+
 # hydrated attribute seems to be an extension of discovered attribute.
+
 
 class HydratedAttribute(BaseModel):
     """An attribute with distribution data from research (Step 2).

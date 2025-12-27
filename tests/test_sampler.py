@@ -993,9 +993,7 @@ class TestConstraintValidation:
         """Test that agent-level expressions are not flagged as spec-level."""
         from entropy.population.validator import is_spec_level_constraint
 
-        assert (
-            is_spec_level_constraint("children_count <= household_size - 1") is False
-        )
+        assert is_spec_level_constraint("children_count <= household_size - 1") is False
         assert is_spec_level_constraint("years_experience <= age - 23") is False
         assert is_spec_level_constraint("x > 0") is False
 

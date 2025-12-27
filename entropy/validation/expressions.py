@@ -15,46 +15,50 @@ import re
 # Constants
 # =============================================================================
 
-BUILTIN_NAMES = frozenset({
-    # Boolean literals
-    "True",
-    "False",
-    "true",
-    "false",
-    "None",
-    # Common functions
-    "abs",
-    "min",
-    "max",
-    "round",
-    "int",
-    "float",
-    "str",
-    "len",
-    # Logical operators (for AST walking)
-    "and",
-    "or",
-    "not",
-    "in",
-    "is",
-    "if",
-    "else",
-})
+BUILTIN_NAMES = frozenset(
+    {
+        # Boolean literals
+        "True",
+        "False",
+        "true",
+        "false",
+        "None",
+        # Common functions
+        "abs",
+        "min",
+        "max",
+        "round",
+        "int",
+        "float",
+        "str",
+        "len",
+        # Logical operators (for AST walking)
+        "and",
+        "or",
+        "not",
+        "in",
+        "is",
+        "if",
+        "else",
+    }
+)
 
-PYTHON_KEYWORDS = frozenset({
-    "and",
-    "or",
-    "not",
-    "in",
-    "is",
-    "True",
-    "False",
-    "true",
-    "false",
-    "None",
-    "if",
-    "else",
-})
+PYTHON_KEYWORDS = frozenset(
+    {
+        "and",
+        "or",
+        "not",
+        "in",
+        "is",
+        "True",
+        "False",
+        "true",
+        "false",
+        "None",
+        "if",
+        "else",
+    }
+)
 
 
 # =============================================================================
@@ -132,7 +136,9 @@ def validate_expression_syntax(expr: str | None) -> str | None:
 
     # Check for unbalanced parentheses
     if expr.count("(") != expr.count(")"):
-        return f"unbalanced parentheses ({expr.count('(')} open, {expr.count(')')} close)"
+        return (
+            f"unbalanced parentheses ({expr.count('(')} open, {expr.count(')')} close)"
+        )
 
     # Check for unbalanced brackets
     if expr.count("[") != expr.count("]"):
