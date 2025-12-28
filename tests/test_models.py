@@ -20,9 +20,6 @@ from entropy.core.models.population import (
     CategoricalDistribution,
     BooleanDistribution,
     Modifier,
-    NumericModifier,
-    CategoricalModifier,
-    BooleanModifier,
     Constraint,
     DiscoveredAttribute,
     HydratedAttribute,
@@ -138,8 +135,8 @@ class TestModifiers:
     """Tests for modifier model classes."""
 
     def test_numeric_modifier(self):
-        """Test numeric modifier with multiply and add."""
-        mod = NumericModifier(
+        """Test modifier with multiply and add (for numeric distributions)."""
+        mod = Modifier(
             when="age > 50",
             multiply=1.2,
             add=5000.0,
@@ -148,15 +145,9 @@ class TestModifiers:
         assert mod.multiply == 1.2
         assert mod.add == 5000.0
 
-    def test_numeric_modifier_defaults(self):
-        """Test numeric modifier default values."""
-        mod = NumericModifier(when="age > 50")
-        assert mod.multiply == 1.0
-        assert mod.add == 0.0
-
     def test_categorical_modifier(self):
-        """Test categorical modifier with weight overrides."""
-        mod = CategoricalModifier(
+        """Test modifier with weight overrides (for categorical distributions)."""
+        mod = Modifier(
             when="gender == 'female'",
             weight_overrides={"A": 0.6, "B": 0.3, "C": 0.1},
         )
@@ -164,24 +155,21 @@ class TestModifiers:
         assert mod.weight_overrides == {"A": 0.6, "B": 0.3, "C": 0.1}
 
     def test_boolean_modifier(self):
-        """Test boolean modifier with probability override."""
-        mod = BooleanModifier(
+        """Test modifier with probability override (for boolean distributions)."""
+        mod = Modifier(
             when="education == 'phd'",
             probability_override=0.9,
         )
         assert mod.when == "education == 'phd'"
         assert mod.probability_override == 0.9
 
-    def test_legacy_modifier(self):
-        """Test legacy Modifier class with mixed fields."""
-        mod = Modifier(
-            when="role == 'senior'",
-            multiply=1.5,
-            add=10000.0,
-        )
-        assert mod.when == "role == 'senior'"
-        assert mod.multiply == 1.5
-        assert mod.add == 10000.0
+    def test_modifier_defaults(self):
+        """Test modifier with only 'when' field."""
+        mod = Modifier(when="age > 50")
+        assert mod.multiply is None
+        assert mod.add is None
+        assert mod.weight_overrides is None
+        assert mod.probability_override is None
 
 
 class TestConstraints:
