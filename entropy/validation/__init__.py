@@ -1,15 +1,16 @@
 """Shared validation primitives for Entropy.
 
-This module provides low-level validation utilities used across
-population specs, scenario specs, and LLM response validation.
+This module re-exports utilities from entropy.utils for backwards compatibility.
+New code should import directly from entropy.utils instead.
 
-Modules:
+Modules (now in utils/):
     expressions: Expression/formula syntax validation and name extraction
     distributions: Distribution parameter validation (weights, ranges, etc.)
     graphs: Dependency graph analysis (topological sort, cycle detection)
 """
 
-from .expressions import (
+# Re-export from utils for backwards compatibility
+from ..utils.expressions import (
     BUILTIN_NAMES,
     PYTHON_KEYWORDS,
     extract_names_from_expression,
@@ -17,7 +18,7 @@ from .expressions import (
     validate_expression_syntax,
 )
 
-from .distributions import (
+from ..utils.distributions import (
     validate_weight_sum,
     validate_weights_options_match,
     validate_probability_range,
@@ -27,7 +28,7 @@ from .distributions import (
     validate_options_not_empty,
 )
 
-from .graphs import (
+from ..utils.graphs import (
     topological_sort,
     CircularDependencyError,
 )
@@ -51,3 +52,4 @@ __all__ = [
     "topological_sort",
     "CircularDependencyError",
 ]
+

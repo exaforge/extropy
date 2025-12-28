@@ -14,7 +14,7 @@ from ...core.models import (
     BetaDistribution,
     CategoricalDistribution,
 )
-from ...validation import extract_comparisons_from_expression
+from ...utils import extract_comparisons_from_expression
 
 
 # =============================================================================

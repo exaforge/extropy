@@ -18,7 +18,7 @@ from ...core.models.validation import (
     ValidationIssue,
     ValidationResult,
 )
-from ...validation.expressions import validate_expression_syntax
+from ...utils.expressions import validate_expression_syntax
 
 
 def _make_error(

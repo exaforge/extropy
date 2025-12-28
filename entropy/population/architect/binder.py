@@ -14,7 +14,7 @@ from ...core.models import (
     GroundingSummary,
     SamplingConfig,
 )
-from ...validation import topological_sort
+from ...utils import topological_sort
 
 
 def bind_constraints(

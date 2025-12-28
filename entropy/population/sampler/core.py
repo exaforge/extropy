@@ -16,7 +16,7 @@ from typing import Any, Callable
 from ...core.models import PopulationSpec, AttributeSpec
 from .distributions import sample_distribution, coerce_to_type
 from .modifiers import apply_modifiers_and_sample
-from .eval_safe import eval_formula, FormulaError
+from ...utils.eval_safe import eval_formula, FormulaError
 
 logger = logging.getLogger(__name__)
 
@@ -297,7 +297,7 @@ def _check_expression_constraints(
     Constraints with type='spec_expression' are spec-level validations
     (e.g., sum(weights)==1) and are NOT evaluated against individual agents.
     """
-    from .eval_safe import eval_condition
+    from ...utils.eval_safe import eval_condition
 
     for attr in spec.attributes:
         for constraint in attr.constraints:

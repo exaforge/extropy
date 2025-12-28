@@ -22,7 +22,7 @@ from ...core.models import (
     BooleanDistribution,
     Distribution,
 )
-from .eval_safe import eval_safe, FormulaError
+from ...utils.eval_safe import eval_safe, FormulaError
 
 
 def sample_distribution(

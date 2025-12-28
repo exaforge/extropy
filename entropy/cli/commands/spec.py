@@ -15,7 +15,7 @@ from ...population.architect import (
     bind_constraints,
     build_spec,
 )
-from ...validation import topological_sort, CircularDependencyError
+from ...utils import topological_sort, CircularDependencyError
 from ...population.validator import validate_spec
 from ..app import app, console
 from ..display import (

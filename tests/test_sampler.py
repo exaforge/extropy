@@ -30,7 +30,7 @@ from entropy.population.sampler.distributions import (
     sample_distribution,
     coerce_to_type,
 )
-from entropy.population.sampler.eval_safe import (
+from entropy.utils.eval_safe import (
     eval_safe,
     eval_formula,
     eval_condition,

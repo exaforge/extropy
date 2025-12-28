@@ -19,7 +19,7 @@ from entropy.population.validator import (
     ValidationIssue,
     Severity,
 )
-from entropy.validation.expressions import extract_names_from_expression
+from entropy.utils.expressions import extract_names_from_expression
 
 
 def make_spec(

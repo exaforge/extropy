@@ -26,7 +26,7 @@ from .core import (
     SamplingResult,
     SamplingStats,
 )
-from .eval_safe import (
+from ...utils.eval_safe import (
     eval_safe,
     eval_formula,
     eval_condition,

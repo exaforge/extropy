@@ -17,7 +17,7 @@ from ...core.models import (
     CategoricalDistribution,
     BooleanDistribution,
 )
-from ...validation.expressions import extract_names_from_expression
+from ...utils.expressions import extract_names_from_expression
 
 
 # =============================================================================

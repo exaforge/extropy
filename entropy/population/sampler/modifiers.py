@@ -20,7 +20,7 @@ from ...core.models import (
     CategoricalDistribution,
     BooleanDistribution,
 )
-from .eval_safe import eval_condition
+from ...utils.eval_safe import eval_condition
 from .distributions import (
     _sample_normal,
     _sample_lognormal,
