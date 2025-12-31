@@ -3,8 +3,6 @@
 Research base distributions and specify modifiers for conditional attributes.
 """
 
-from typing import Callable
-
 from ....core.llm import agentic_research, RetryCallback
 from ....core.models import (
     AttributeSpec,
@@ -24,43 +22,7 @@ from ...validator import (
     validate_conditional_base_response,
     validate_modifiers_response,
 )
-
-# Formula syntax guidelines shared across hydration steps
-FORMULA_SYNTAX_GUIDELINES = """
-## CRITICAL: Formula Syntax Rules
-
-All formulas and expressions must be valid Python. Common errors to AVOID:
-
-✓ CORRECT:
-- "max(0, 0.10 * age - 1.8)"
-- "'18-24' if age < 25 else '25-34' if age < 35 else '35+'"
-- "age > 50 and role == 'senior'"
-
-✗ WRONG (will cause pipeline failure):
-- "max(0, 0.10 * age - 1.8   (missing closing quote)
-- "age - 28 years"            (invalid Python - 'years' is not a variable)
-- "'senior' if age > 50       (missing else clause)
-- "specialty == cardiology"   (missing quotes around string)
-
-Before outputting, mentally verify:
-1. All quotes are paired (matching " or ')
-2. All parentheses are balanced
-3. The expression is valid Python syntax
-"""
-
-
-def _make_validator(
-    validator_fn: Callable, *args
-) -> Callable[[dict], tuple[bool, str]]:
-    """Create a validator closure for LLM response validation."""
-
-    def validate_response(data: dict) -> tuple[bool, str]:
-        result = validator_fn(data, *args)
-        if result.valid:
-            return True, ""
-        return False, result.format_for_retry()
-
-    return validate_response
+from .prompts import make_validator, FORMULA_SYNTAX_GUIDELINES
 
 
 def hydrate_conditional_base(
@@ -90,7 +52,7 @@ def hydrate_conditional_base(
         reasoning_effort: "low", "medium", or "high"
 
     Returns:
-        Tuple of (list of HydratedAttribute, list of source URLs, list of validation errors)
+        Tuple of (hydrated_attributes, source_urls, validation_errors)
     """
     if not attributes:
         return [], [], []
@@ -227,7 +189,7 @@ Return JSON with distribution, constraints, and grounding for each attribute."""
 
     # Build validator for fail-fast validation
     expected_names = [a.name for a in conditional_attrs]
-    validate_response = _make_validator(
+    validate_response = make_validator(
         validate_conditional_base_response, expected_names
     )
 
@@ -285,7 +247,6 @@ Return JSON with distribution, constraints, and grounding for each attribute."""
             )
         )
 
-    # Validation done by llm_response.validate_conditional_base_response() during hydration
     return hydrated, sources, []
 
 
@@ -316,7 +277,7 @@ def hydrate_conditional_modifiers(
         reasoning_effort: "low", "medium", or "high"
 
     Returns:
-        Tuple of (updated HydratedAttribute list, list of source URLs, list of validation errors)
+        Tuple of (hydrated_attributes, source_urls, validation_errors)
     """
     if not conditional_attrs:
         return [], [], []
@@ -405,11 +366,11 @@ Different attribute types require different modifier fields. Using the wrong typ
 | categorical | weight_overrides | multiply, add, probability_override |
 | boolean | probability_override | multiply, add, weight_overrides |
 
-⚠️ COMMON MISTAKE: Do NOT use multiply/add on categorical attributes.
-Instead of `multiply: 1.2, add: 0.3` → Use `weight_overrides: {{"option1": 0.4, "option2": 0.6}}`
+COMMON MISTAKE: Do NOT use multiply/add on categorical attributes.
+Instead of `multiply: 1.2, add: 0.3` -> Use `weight_overrides: {{"option1": 0.4, "option2": 0.6}}`
 
-⚠️ COMMON MISTAKE: Do NOT use multiply/add on boolean attributes.
-Instead of `multiply: 1.5` → Use `probability_override: 0.75`
+COMMON MISTAKE: Do NOT use multiply/add on boolean attributes.
+Instead of `multiply: 1.5` -> Use `probability_override: 0.75`
 
 ### Scale Warning for Beta Distributions
 
@@ -417,11 +378,11 @@ Beta distributions output values between 0 and 1.
 
 If an attribute uses beta distribution (common for proportions, shares, rates):
 - Base output is already 0-1 (e.g., 0.25 = 25%)
-- Use small `add` values: ±0.05 to ±0.15
+- Use small `add` values: +/-0.05 to +/-0.15
 - NEVER use add > 0.5 or add < -0.5
 
-❌ WRONG: add: 5.0 (thinking "add 5 percentage points")
-✓ RIGHT: add: 0.05 (actually adds 5 percentage points to 0-1 scale)
+WRONG: add: 5.0 (thinking "add 5 percentage points")
+RIGHT: add: 0.05 (actually adds 5 percentage points to 0-1 scale)
 
 Example for private_insurance_patient_share (beta, mean ~0.25):
 - To increase by ~5 percentage points: multiply: 1.0, add: 0.05
@@ -435,14 +396,14 @@ When using weight_overrides, you MUST:
 
 Example - if base distribution has options [urban, suburban, rural]:
 
-✓ CORRECT:
+CORRECT:
 weight_overrides:
   urban: 0.70
   suburban: 0.20
   rural: 0.10
   # Sum = 1.0, all options included
 
-❌ WRONG:
+WRONG:
 weight_overrides:
   urban: 0.70
   suburban: 0.30
@@ -453,10 +414,10 @@ weight_overrides:
 The `when` clause can ONLY reference attributes listed in that attribute's depends_on.
 
 If the attribute has `depends_on: [age, employer_type]`, then:
-✓ VALID: when: age > 50
-✓ VALID: when: employer_type == 'university_hospital'
-✓ VALID: when: age > 50 and employer_type == 'university_hospital'
-❌ INVALID: when: gender == 'female' (gender not in depends_on)
+VALID: when: age > 50
+VALID: when: employer_type == 'university_hospital'
+VALID: when: age > 50 and employer_type == 'university_hospital'
+INVALID: when: gender == 'female' (gender not in depends_on)
 
 ### Modifier Conditions Syntax
 
@@ -466,15 +427,15 @@ The `when` clause supports:
 - Membership: `specialty in ['cardiac', 'neuro']`
 - Compound: `role == 'chief' and employer_type == 'university'`
 
-### ⚠️ CRITICAL: Use EXACT Option Names in Conditions
+### CRITICAL: Use EXACT Option Names in Conditions
 
 When referencing categorical attributes in `when` conditions, you MUST use the EXACT option names as defined in the attribute's distribution. Copy-paste them exactly.
 
 Common naming mismatches that WILL FAIL:
-- ❌ 'University hospital' → ✓ 'University_hospital'
-- ❌ 'Senior/Oberarzt' → ✓ 'Senior_Oberarzt'
-- ❌ 'lead/PI' → ✓ 'lead_PI'
-- ❌ 'Private hospital' → ✓ 'Private_hospital'
+- 'University hospital' should be 'University_hospital'
+- 'Senior/Oberarzt' should be 'Senior_Oberarzt'
+- 'lead/PI' should be 'lead_PI'
+- 'Private hospital' should be 'Private_hospital'
 
 The valid option values are listed in the "Full Context" section above for each categorical attribute. Use those EXACT strings in your conditions.
 
@@ -508,7 +469,7 @@ Return JSON array with modifiers for each conditional attribute."""
             elif "boolean" in dist_class_name:
                 attr_dist_types[attr.name] = "boolean"
 
-    validate_response = _make_validator(validate_modifiers_response, attr_dist_types)
+    validate_response = make_validator(validate_modifiers_response, attr_dist_types)
 
     data, sources = agentic_research(
         prompt=prompt,
@@ -558,5 +519,4 @@ Return JSON array with modifiers for each conditional attribute."""
     for original in attr_lookup.values():
         updated.append(original)
 
-    # Validation done by llm_response.validate_modifiers_response() during hydration
     return updated, sources, []

@@ -3,8 +3,6 @@
 Research distributions for independent attributes using web search.
 """
 
-from typing import Callable
-
 from ....core.llm import agentic_research, RetryCallback
 from ....core.models import (
     AttributeSpec,
@@ -19,20 +17,7 @@ from ..hydrator_utils import (
     parse_constraints,
 )
 from ...validator import validate_independent_response
-
-
-def _make_validator(
-    validator_fn: Callable, *args
-) -> Callable[[dict], tuple[bool, str]]:
-    """Create a validator closure for LLM response validation."""
-
-    def validate_response(data: dict) -> tuple[bool, str]:
-        result = validator_fn(data, *args)
-        if result.valid:
-            return True, ""
-        return False, result.format_for_retry()
-
-    return validate_response
+from .prompts import make_validator
 
 
 def hydrate_independent(
@@ -58,7 +43,7 @@ def hydrate_independent(
         reasoning_effort: "low", "medium", or "high"
 
     Returns:
-        Tuple of (list of HydratedAttribute, list of source URLs, list of validation errors)
+        Tuple of (hydrated_attributes, source_urls, validation_errors)
     """
     if not attributes:
         return [], [], []
@@ -161,7 +146,7 @@ Return JSON with distribution, constraints, and grounding for each attribute."""
 
     # Build validator for fail-fast validation
     expected_names = [a.name for a in independent_attrs]
-    validate_response = _make_validator(validate_independent_response, expected_names)
+    validate_response = make_validator(validate_independent_response, expected_names)
 
     data, sources = agentic_research(
         prompt=prompt,
@@ -217,5 +202,4 @@ Return JSON with distribution, constraints, and grounding for each attribute."""
             )
         )
 
-    # Validation done by llm_response.validate_independent_response() during hydration
     return hydrated, sources, []

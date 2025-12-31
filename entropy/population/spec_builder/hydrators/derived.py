@@ -3,8 +3,6 @@
 Specify formulas for derived attributes (no web search needed).
 """
 
-from typing import Callable
-
 from ....core.llm import reasoning_call, RetryCallback
 from ....core.models import (
     AttributeSpec,
@@ -15,43 +13,7 @@ from ....core.models import (
 )
 from ..hydrator_utils import build_derived_schema, sanitize_formula
 from ...validator import validate_derived_response
-
-# Formula syntax guidelines shared across hydration steps
-FORMULA_SYNTAX_GUIDELINES = """
-## CRITICAL: Formula Syntax Rules
-
-All formulas and expressions must be valid Python. Common errors to AVOID:
-
-✓ CORRECT:
-- "max(0, 0.10 * age - 1.8)"
-- "'18-24' if age < 25 else '25-34' if age < 35 else '35+'"
-- "age > 50 and role == 'senior'"
-
-✗ WRONG (will cause pipeline failure):
-- "max(0, 0.10 * age - 1.8   (missing closing quote)
-- "age - 28 years"            (invalid Python - 'years' is not a variable)
-- "'senior' if age > 50       (missing else clause)
-- "specialty == cardiology"   (missing quotes around string)
-
-Before outputting, mentally verify:
-1. All quotes are paired (matching " or ')
-2. All parentheses are balanced
-3. The expression is valid Python syntax
-"""
-
-
-def _make_validator(
-    validator_fn: Callable, *args
-) -> Callable[[dict], tuple[bool, str]]:
-    """Create a validator closure for LLM response validation."""
-
-    def validate_response(data: dict) -> tuple[bool, str]:
-        result = validator_fn(data, *args)
-        if result.valid:
-            return True, ""
-        return False, result.format_for_retry()
-
-    return validate_response
+from .prompts import make_validator, FORMULA_SYNTAX_GUIDELINES
 
 
 def hydrate_derived(
@@ -63,7 +25,7 @@ def hydrate_derived(
     model: str = "gpt-5",
     reasoning_effort: str = "low",
     on_retry: RetryCallback | None = None,
-) -> tuple[list[HydratedAttribute], list[str]]:
+) -> tuple[list[HydratedAttribute], list[str], list[str]]:
     """
     Specify formulas for derived attributes (Step 2b).
 
@@ -79,14 +41,14 @@ def hydrate_derived(
         reasoning_effort: "low", "medium", or "high"
 
     Returns:
-        Tuple of (list of HydratedAttribute with formulas, list of validation errors)
+        Tuple of (hydrated_attributes, source_urls, validation_errors)
     """
     if not attributes:
-        return [], []
+        return [], [], []
 
     derived_attrs = [a for a in attributes if a.strategy == "derived"]
     if not derived_attrs:
-        return [], []
+        return [], [], []
 
     # Build context sections
     context_section = ""
@@ -158,7 +120,7 @@ Return JSON array with formula for each attribute."""
 
     # Build validator for fail-fast validation
     expected_names = [a.name for a in derived_attrs]
-    validate_response = _make_validator(validate_derived_response, expected_names)
+    validate_response = make_validator(validate_derived_response, expected_names)
 
     data = reasoning_call(
         prompt=prompt,
@@ -210,5 +172,5 @@ Return JSON array with formula for each attribute."""
             )
         )
 
-    # Validation done by llm_response.validate_derived_response() during hydration
-    return hydrated, []
+    # Derived attributes don't use web search, so no sources
+    return hydrated, [], []

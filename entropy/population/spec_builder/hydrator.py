@@ -134,7 +134,7 @@ def hydrate_attributes(
 
     # Step 2b: Derived attributes
     report("2b", "Specifying derived formulas...")
-    derived_attrs, derived_errors = hydrate_derived(
+    derived_attrs, derived_sources, derived_errors = hydrate_derived(
         attributes=attributes,
         population=population,
         geography=geography,
@@ -144,6 +144,7 @@ def hydrate_attributes(
         reasoning_effort=reasoning_effort,
         on_retry=make_retry_callback("2b"),
     )
+    all_sources.extend(derived_sources)
     all_warnings.extend([f"[2b] {e}" for e in derived_errors])
     # Report validation status
     if derived_errors:
