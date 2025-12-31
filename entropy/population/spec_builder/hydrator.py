@@ -94,7 +94,7 @@ def hydrate_attributes(
         def on_retry(attempt: int, max_retries: int, error_summary: str):
             if attempt > max_retries:
                 # Retries exhausted
-                report(step, f"⚠️ Validation failed after {max_retries} retries", None)
+                report(step, f"Validation failed after {max_retries} retries", None)
             else:
                 # Retrying
                 report(
@@ -122,13 +122,13 @@ def hydrate_attributes(
     if independent_errors:
         report(
             "2a",
-            f"✓ Hydrated {len(independent_attrs)} independent, ⚠ {len(independent_errors)} validation warning(s)",
+            f"Hydrated {len(independent_attrs)} independent, {len(independent_errors)} validation warning(s)",
             len(independent_sources),
         )
     else:
         report(
             "2a",
-            f"✓ Hydrated {len(independent_attrs)} independent, ✓ Validation passed",
+            f"Hydrated {len(independent_attrs)} independent, Validation passed",
             len(independent_sources),
         )
 
@@ -149,11 +149,11 @@ def hydrate_attributes(
     if derived_errors:
         report(
             "2b",
-            f"✓ Hydrated {len(derived_attrs)} derived, ⚠ {len(derived_errors)} validation warning(s)",
+            f"Hydrated {len(derived_attrs)} derived, {len(derived_errors)} validation warning(s)",
             0,
         )
     else:
-        report("2b", f"✓ Hydrated {len(derived_attrs)} derived, ✓ Validation passed", 0)
+        report("2b", f"Hydrated {len(derived_attrs)} derived, Validation passed", 0)
 
     # Step 2c: Conditional base distributions
     report("2c", "Researching conditional distributions...")
@@ -176,13 +176,13 @@ def hydrate_attributes(
     if conditional_errors:
         report(
             "2c",
-            f"✓ Hydrated {len(conditional_base_attrs)} conditional, ⚠ {len(conditional_errors)} validation warning(s)",
+            f"Hydrated {len(conditional_base_attrs)} conditional, {len(conditional_errors)} validation warning(s)",
             len(conditional_sources),
         )
     else:
         report(
             "2c",
-            f"✓ Hydrated {len(conditional_base_attrs)} conditional, ✓ Validation passed",
+            f"Hydrated {len(conditional_base_attrs)} conditional, Validation passed",
             len(conditional_sources),
         )
 
@@ -207,13 +207,13 @@ def hydrate_attributes(
     if modifier_errors:
         report(
             "2d",
-            f"✓ Added modifiers to {len(conditional_attrs)}, ⚠ {len(modifier_errors)} validation warning(s)",
+            f"Added modifiers to {len(conditional_attrs)}, {len(modifier_errors)} validation warning(s)",
             len(modifier_sources),
         )
     else:
         report(
             "2d",
-            f"✓ Added modifiers to {len(conditional_attrs)}, ✓ Validation passed",
+            f"Added modifiers to {len(conditional_attrs)}, Validation passed",
             len(modifier_sources),
         )
 
@@ -225,6 +225,6 @@ def hydrate_attributes(
     report("strategy", "Validating strategy consistency...")
     # Strategy consistency validation is done by structural.run_structural_checks()
     # when validate_spec() is called on the final PopulationSpec
-    report("strategy", "✓ Strategy consistency check passed", None)
+    report("strategy", "Strategy consistency check passed", None)
 
     return all_hydrated, unique_sources, all_warnings
