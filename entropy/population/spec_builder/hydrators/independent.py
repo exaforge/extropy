@@ -11,11 +11,8 @@ from ....core.models import (
     SamplingConfig,
     GroundingInfo,
 )
-from ..hydrator_utils import (
-    build_independent_schema,
-    parse_distribution,
-    parse_constraints,
-)
+from ..schemas import build_independent_schema
+from ..parsers import parse_distribution, parse_constraints
 from ...validator import validate_independent_response
 from .prompts import make_validator
 

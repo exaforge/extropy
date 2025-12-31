@@ -77,4 +77,3 @@ __all__ = [
     "ValidationResult",
     "validate_spec",
 ]
-

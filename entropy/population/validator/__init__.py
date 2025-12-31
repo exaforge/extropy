@@ -53,4 +53,3 @@ __all__ = [
     "is_spec_level_constraint",
     "extract_bound_from_constraint",
 ]
-

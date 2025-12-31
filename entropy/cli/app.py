@@ -53,4 +53,3 @@ from .commands import (  # noqa: E402, F401
     simulate,
     results,
 )
-

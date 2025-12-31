@@ -40,4 +40,3 @@ def validate_spec(spec: PopulationSpec) -> ValidationResult:
     result.issues.extend(semantic_issues)
 
     return result
-

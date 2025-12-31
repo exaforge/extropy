@@ -40,9 +40,7 @@ Before outputting, mentally verify:
 # =============================================================================
 
 
-def make_validator(
-    validator_fn: Callable, *args
-) -> Callable[[dict], tuple[bool, str]]:
+def make_validator(validator_fn: Callable, *args) -> Callable[[dict], tuple[bool, str]]:
     """Create a validator closure for LLM response validation.
 
     Args:
