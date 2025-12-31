@@ -26,8 +26,8 @@ FAIL-FAST VALIDATION:
 
 from .sufficiency import check_sufficiency
 from .selector import select_attributes
-from .hydrator import (
-    hydrate_attributes,
+from .hydrator import hydrate_attributes
+from .hydrators import (
     hydrate_independent,
     hydrate_derived,
     hydrate_conditional_base,
