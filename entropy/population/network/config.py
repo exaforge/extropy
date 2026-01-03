@@ -4,12 +4,12 @@ This module defines default attribute weights for similarity calculations
 and degree correction multipliers for network generation.
 """
 
-from dataclasses import dataclass, field
 from typing import Any
 
+from pydantic import BaseModel, Field
 
-@dataclass
-class AttributeWeightConfig:
+
+class AttributeWeightConfig(BaseModel):
     """Configuration for how an attribute contributes to similarity.
 
     Attributes:
@@ -66,8 +66,7 @@ SENIORITY_LEVELS: dict[str, int] = {
 }
 
 
-@dataclass
-class DegreeMultiplierConfig:
+class DegreeMultiplierConfig(BaseModel):
     """Configuration for degree correction multipliers.
 
     Certain agents are more connected based on their attributes.
@@ -121,8 +120,7 @@ DEFAULT_DEGREE_MULTIPLIERS: list[DegreeMultiplierConfig] = [
 ]
 
 
-@dataclass
-class NetworkConfig:
+class NetworkConfig(BaseModel):
     """Complete configuration for network generation.
 
     Attributes:
@@ -139,10 +137,10 @@ class NetworkConfig:
     rewire_prob: float = 0.05
     similarity_threshold: float = 0.3
     similarity_steepness: float = 10.0
-    attribute_weights: dict[str, AttributeWeightConfig] = field(
+    attribute_weights: dict[str, AttributeWeightConfig] = Field(
         default_factory=lambda: dict(DEFAULT_ATTRIBUTE_WEIGHTS)
     )
-    degree_multipliers: list[DegreeMultiplierConfig] = field(
+    degree_multipliers: list[DegreeMultiplierConfig] = Field(
         default_factory=lambda: list(DEFAULT_DEGREE_MULTIPLIERS)
     )
     seed: int | None = None
