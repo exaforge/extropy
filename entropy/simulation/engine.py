@@ -23,7 +23,7 @@ from ..core.models import (
     SimulationRunConfig,
     TimestepSummary,
 )
-from ..network import load_agents_json
+from ..population.network import load_agents_json
 from .state import StateManager
 from .persona import generate_persona
 from .reasoning import reason_agent, create_reasoning_context

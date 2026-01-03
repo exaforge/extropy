@@ -5,18 +5,18 @@ from pathlib import Path
 
 import pytest
 
-from entropy.network.config import (
+from entropy.population.network.config import (
     NetworkConfig,
     AttributeWeightConfig,
 )
-from entropy.network.similarity import (
+from entropy.population.network.similarity import (
     compute_match_score,
     compute_similarity,
     compute_degree_factor,
     compute_edge_probability,
     sigmoid,
 )
-from entropy.network.generator import (
+from entropy.population.network.generator import (
     generate_network,
     generate_network_with_metrics,
     load_agents_json,
@@ -550,7 +550,7 @@ class TestEdgeTypeInference:
     def test_colleague_same_employer_similar_experience(self):
         """Test colleague edge type inference."""
         # From generator module, we need to check the type
-        from entropy.network.generator import _infer_edge_type
+        from entropy.population.network.generator import _infer_edge_type
 
         agent_a = {
             "employer_type": "university_hospital",
@@ -572,7 +572,7 @@ class TestEdgeTypeInference:
 
     def test_mentor_mentee_same_employer_large_experience_gap(self):
         """Test mentor_mentee edge type inference."""
-        from entropy.network.generator import _infer_edge_type
+        from entropy.population.network.generator import _infer_edge_type
 
         agent_a = {
             "employer_type": "university_hospital",
@@ -592,7 +592,7 @@ class TestEdgeTypeInference:
 
     def test_society_same_specialty_different_employer_both_members(self):
         """Test society edge type inference."""
-        from entropy.network.generator import _infer_edge_type
+        from entropy.population.network.generator import _infer_edge_type
 
         agent_a = {
             "employer_type": "university_hospital",
@@ -614,7 +614,7 @@ class TestEdgeTypeInference:
 
     def test_conference_same_specialty_different_employer_not_both_members(self):
         """Test conference edge type inference."""
-        from entropy.network.generator import _infer_edge_type
+        from entropy.population.network.generator import _infer_edge_type
 
         agent_a = {
             "employer_type": "university_hospital",
@@ -636,7 +636,7 @@ class TestEdgeTypeInference:
 
     def test_regional_same_state_different_specialty_different_employer(self):
         """Test regional edge type inference."""
-        from entropy.network.generator import _infer_edge_type
+        from entropy.population.network.generator import _infer_edge_type
 
         agent_a = {
             "employer_type": "university_hospital",
@@ -656,7 +656,7 @@ class TestEdgeTypeInference:
 
     def test_weak_tie_rewired(self):
         """Test weak_tie for rewired edges."""
-        from entropy.network.generator import _infer_edge_type
+        from entropy.population.network.generator import _infer_edge_type
 
         agent_a = {"employer_type": "A"}
         agent_b = {"employer_type": "B"}
