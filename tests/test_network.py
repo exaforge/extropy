@@ -343,8 +343,8 @@ class TestNetworkResult:
     def test_network_result_creation(self):
         """Test creating a network result."""
         edges = [
-            Edge("a", "b", 0.5, "colleague"),
-            Edge("b", "c", 0.7, "colleague"),
+            Edge(source="a", target="b", weight=0.5, edge_type="colleague"),
+            Edge(source="b", target="c", weight=0.7, edge_type="colleague"),
         ]
         result = NetworkResult(
             meta={"agent_count": 3, "edge_count": 2},
@@ -356,7 +356,7 @@ class TestNetworkResult:
     def test_network_result_to_dict(self):
         """Test network result serialization."""
         edges = [
-            Edge("a", "b", 0.5, "colleague"),
+            Edge(source="a", target="b", weight=0.5, edge_type="colleague"),
         ]
         result = NetworkResult(
             meta={"agent_count": 2, "edge_count": 1},
@@ -370,7 +370,7 @@ class TestNetworkResult:
 
     def test_network_result_save_json(self):
         """Test saving network result to JSON."""
-        edges = [Edge("a", "b", 0.5, "colleague")]
+        edges = [Edge(source="a", target="b", weight=0.5, edge_type="colleague")]
         result = NetworkResult(
             meta={"agent_count": 2, "edge_count": 1},
             edges=edges,

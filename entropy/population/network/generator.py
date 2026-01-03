@@ -5,11 +5,11 @@ Implements the hybrid approach: attribute similarity + Watts-Strogatz rewiring.
 
 import json
 import random
-from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Callable
 
+from ...core.models import Edge, NetworkResult, NetworkMetrics, NodeMetrics
 from .config import NetworkConfig, SENIORITY_LEVELS
 from .similarity import (
     compute_similarity,
@@ -17,96 +17,9 @@ from .similarity import (
     compute_edge_probability,
 )
 from .metrics import (
-    NetworkMetrics,
-    NodeMetrics,
     compute_network_metrics,
     compute_node_metrics,
 )
-
-
-@dataclass
-class Edge:
-    """A single edge in the network.
-
-    Attributes:
-        source: Source agent ID
-        target: Target agent ID
-        weight: Edge weight (similarity-derived, 0-1)
-        edge_type: Type of connection (colleague, mentor_mentee, etc.)
-        bidirectional: Whether communication flows both ways (always True)
-        influence_weight: Asymmetric influence weights
-    """
-
-    source: str
-    target: str
-    weight: float
-    edge_type: str
-    bidirectional: bool = True
-    influence_weight: dict[str, float] = field(default_factory=dict)
-
-    def to_dict(self) -> dict[str, Any]:
-        """Convert to dictionary for JSON serialization."""
-        return {
-            "source": self.source,
-            "target": self.target,
-            "weight": round(self.weight, 4),
-            "type": self.edge_type,
-            "bidirectional": self.bidirectional,
-            "influence_weight": {
-                "source_to_target": round(
-                    self.influence_weight.get("source_to_target", self.weight), 4
-                ),
-                "target_to_source": round(
-                    self.influence_weight.get("target_to_source", self.weight), 4
-                ),
-            },
-        }
-
-
-@dataclass
-class NetworkResult:
-    """Result of network generation.
-
-    Attributes:
-        meta: Metadata about the generation
-        edges: List of edges
-        node_metrics: Per-agent metrics (if computed)
-        network_metrics: Network-level metrics (if computed)
-    """
-
-    meta: dict[str, Any]
-    edges: list[Edge]
-    node_metrics: dict[str, NodeMetrics] | None = None
-    network_metrics: NetworkMetrics | None = None
-
-    def to_dict(self) -> dict[str, Any]:
-        """Convert to dictionary for JSON serialization."""
-        result = {
-            "meta": self.meta,
-            "edges": [e.to_dict() for e in self.edges],
-        }
-
-        if self.node_metrics:
-            result["node_metrics"] = {
-                agent_id: {
-                    "degree": m.degree,
-                    "influence_score": round(m.influence_score, 6),
-                    "betweenness": round(m.betweenness, 6),
-                    "cluster_id": m.cluster_id,
-                    "echo_chamber_score": round(m.echo_chamber_score, 4),
-                }
-                for agent_id, m in self.node_metrics.items()
-            }
-
-        return result
-
-    def save_json(self, path: Path | str) -> None:
-        """Save network to JSON file."""
-        path = Path(path)
-        path.parent.mkdir(parents=True, exist_ok=True)
-
-        with open(path, "w") as f:
-            json.dump(self.to_dict(), f, indent=2)
 
 
 def _get_seniority_level(agent: dict[str, Any]) -> int:

@@ -98,6 +98,14 @@ from .sampling import (
     SamplingResult,
 )
 
+# Network models (runtime)
+from .network import (
+    Edge,
+    NetworkResult,
+    NetworkMetrics,
+    NodeMetrics,
+)
+
 __all__ = [
     # Population - Grounding
     "GroundingInfo",
@@ -172,4 +180,9 @@ __all__ = [
     # Sampling
     "SamplingStats",
     "SamplingResult",
+    # Network
+    "Edge",
+    "NetworkResult",
+    "NetworkMetrics",
+    "NodeMetrics",
 ]

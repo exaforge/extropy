@@ -67,7 +67,6 @@ def hydrate_derived(
         for attr in derived_attrs
     )
 
-
     prompt = f"""{context_section}{hydrated_section}Specify deterministic formulas for these DERIVED attributes of {population}:
 
 {attr_list}

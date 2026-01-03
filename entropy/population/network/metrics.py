@@ -6,8 +6,9 @@ Computes validation metrics and per-agent derived metrics including:
 """
 
 from collections import defaultdict
-from dataclasses import dataclass, field
 from typing import Any
+
+from ...core.models import NetworkMetrics, NodeMetrics
 
 try:
     import networkx as nx
@@ -15,103 +16,6 @@ try:
     HAS_NETWORKX = True
 except ImportError:
     HAS_NETWORKX = False
-
-
-@dataclass
-class NetworkMetrics:
-    """Validation metrics for the generated network.
-
-    Expected ranges from design doc:
-        - avg_degree: 15-25
-        - clustering_coefficient: 0.3-0.5
-        - avg_path_length: 3-5
-        - modularity: 0.4-0.7
-        - largest_component_ratio: >0.95
-        - degree_assortativity: 0.1-0.3
-    """
-
-    node_count: int
-    edge_count: int
-    avg_degree: float
-    clustering_coefficient: float
-    avg_path_length: float | None  # None if graph is disconnected
-    modularity: float
-    largest_component_ratio: float
-    degree_assortativity: float
-    degree_distribution: dict[int, int] = field(default_factory=dict)
-
-    def is_valid(self) -> tuple[bool, list[str]]:
-        """Check if metrics are within expected ranges.
-
-        Returns:
-            Tuple of (is_valid, list of warning messages)
-        """
-        warnings = []
-
-        if self.avg_degree < 15:
-            warnings.append(
-                f"avg_degree {self.avg_degree:.1f} below expected range (15-25)"
-            )
-        elif self.avg_degree > 25:
-            warnings.append(
-                f"avg_degree {self.avg_degree:.1f} above expected range (15-25)"
-            )
-
-        if self.clustering_coefficient < 0.3:
-            warnings.append(
-                f"clustering_coefficient {self.clustering_coefficient:.2f} below expected range (0.3-0.5)"
-            )
-        elif self.clustering_coefficient > 0.5:
-            warnings.append(
-                f"clustering_coefficient {self.clustering_coefficient:.2f} above expected range (0.3-0.5)"
-            )
-
-        if self.avg_path_length is not None:
-            if self.avg_path_length < 3:
-                warnings.append(
-                    f"avg_path_length {self.avg_path_length:.2f} below expected range (3-5)"
-                )
-            elif self.avg_path_length > 5:
-                warnings.append(
-                    f"avg_path_length {self.avg_path_length:.2f} above expected range (3-5)"
-                )
-
-        if self.modularity < 0.4:
-            warnings.append(
-                f"modularity {self.modularity:.2f} below expected range (0.4-0.7)"
-            )
-        elif self.modularity > 0.7:
-            warnings.append(
-                f"modularity {self.modularity:.2f} above expected range (0.4-0.7)"
-            )
-
-        if self.largest_component_ratio < 0.95:
-            warnings.append(
-                f"largest_component_ratio {self.largest_component_ratio:.2f} below expected (>0.95)"
-            )
-
-        return len(warnings) == 0, warnings
-
-
-@dataclass
-class NodeMetrics:
-    """Per-agent derived metrics for simulation.
-
-    Attributes:
-        degree: Number of connections
-        influence_score: PageRank score (whose opinions spread further)
-        betweenness: Betweenness centrality (brokers between communities)
-        cluster_id: Community/cluster ID from Louvain detection
-        echo_chamber_score: % of edges within same cluster
-        local_clustering: Node clustering coefficient
-    """
-
-    degree: int
-    influence_score: float
-    betweenness: float
-    cluster_id: int
-    echo_chamber_score: float
-    local_clustering: float
 
 
 def _build_networkx_graph(
