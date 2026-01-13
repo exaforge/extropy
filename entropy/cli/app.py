@@ -49,7 +49,6 @@ from .commands import (  # noqa: E402, F401
     sample,
     network,
     scenario,
-    validate_scenario,
     simulate,
     results,
 )

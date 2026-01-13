@@ -7,7 +7,6 @@ from . import (
     sample,
     network,
     scenario,
-    validate_scenario,
     simulate,
     results,
 )
@@ -19,7 +18,7 @@ __all__ = [
     "sample",
     "network",
     "scenario",
-    "validate_scenario",
     "simulate",
     "results",
 ]
+
