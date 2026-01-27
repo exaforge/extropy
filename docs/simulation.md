@@ -75,6 +75,7 @@ Entropy simulations are **emergent**, not prescriptive:
 Not everyone knows the same thing at the same time.
 
 **How it works:**
+
 - Exposure is gated by channels (media reaches some, not others)
 - Timing matters (early adopters vs. late majority)
 - Agent attributes determine exposure probability
@@ -87,6 +88,7 @@ Not everyone knows the same thing at the same time.
 When an agent receives information, they reason about it based on who they are.
 
 **How it works:**
+
 - Agent persona built from attributes (age, role, personality)
 - LLM generates response: position, sentiment, action intent
 - No hardcoded rules like "surgeons reject AI"
@@ -99,6 +101,7 @@ When an agent receives information, they reason about it based on who they are.
 Agents influence each other through the network.
 
 **How it works:**
+
 - Peer opinions included in reasoning context
 - "My department head adopted it" affects junior surgeon
 - Relationship type matters (mentor vs. acquaintance)
@@ -111,6 +114,7 @@ Agents influence each other through the network.
 Network topology shapes information flow.
 
 **How it works:**
+
 - Information flows along edges
 - Edge weights affect share probability
 - Clusters can form echo chambers
@@ -124,6 +128,7 @@ Network topology shapes information flow.
 Opinions evolve over time.
 
 **How it works:**
+
 - Agents can re-reason when receiving new information
 - `multi_touch_threshold` controls re-reasoning frequency
 - Early reactions differ from settled views
@@ -137,6 +142,7 @@ Opinions evolve over time.
 Final results are not prescribed.
 
 **How it works:**
+
 - No formula dictates adoption rates
 - Outcome emerges from individual decisions
 - Same scenario, different seed → different trajectory
@@ -151,6 +157,7 @@ Final results are not prescribed.
 **NOT every agent, every timestep.** That would be prohibitively expensive.
 
 Agents reason when:
+
 1. **First exposure** — First time hearing about the event
 2. **Multi-touch threshold** — After N new exposures since last reasoning
 3. **Significant update** — New info worth reconsidering
@@ -183,6 +190,7 @@ Output:
 ```
 
 **The LLM generates:**
+
 - Position (e.g., "supportive", "opposed", "undecided")
 - Sentiment (-1 to 1)
 - Whether they'll share with peers
@@ -193,15 +201,18 @@ Output:
 ## Reproducibility
 
 ### What IS reproducible (same seed → same result):
+
 - Agent attributes
 - Network structure
 - Exposure order
 - Random draws for probabilities
 
 ### What is NOT fully reproducible:
+
 - LLM response variance (temperature > 0, model updates)
 
 **Mitigations:**
+
 - Run multiple times, report confidence intervals
 - Use temperature=0 (reduces variance)
 - Cache LLM responses for exact replay (expensive)
@@ -261,13 +272,13 @@ entropy results results/ --format report
 
 ## Cost Estimation
 
-| Population | Typical LLM Calls | Approx Cost (GPT-4) |
-|------------|-------------------|---------------------|
-| 500 agents | 1,000–2,500 | $5–15 |
-| 2,000 agents | 4,000–10,000 | $20–60 |
-| 10,000 agents | 20,000–50,000 | $100–300 |
+| Population    | Typical LLM Calls | Approx Cost (GPT-4) |
+| ------------- | ----------------- | ------------------- |
+| 500 agents    | 1,000–2,500       | $5–15               |
+| 2,000 agents  | 4,000–10,000      | $20–60              |
+| 10,000 agents | 20,000–50,000     | $100–300            |
 
-*Costs depend on scenario complexity, spread dynamics, and reasoning frequency.*
+_Costs depend on scenario complexity, spread dynamics, and reasoning frequency._
 
 ---
 
@@ -280,6 +291,7 @@ Traditional ABM: `if (seniority > 3 and openness > 0.6) then adopt`
 Entropy: Ask the LLM what a 45-year-old skeptical chief surgeon would actually think.
 
 **Benefits:**
+
 - No need to hardcode decision rules
 - Handles nuance and edge cases
 - Generates believable reasoning
@@ -288,6 +300,7 @@ Entropy: Ask the LLM what a 45-year-old skeptical chief surgeon would actually t
 ### Why SQLite State?
 
 Agent states stored in SQLite, not memory:
+
 - Scales to large populations
 - Survives interruption
 - Queryable for analysis
@@ -296,6 +309,7 @@ Agent states stored in SQLite, not memory:
 ### Why Event-Driven Reasoning?
 
 Agents don't think every timestep:
+
 - Realistic (humans don't constantly reconsider)
 - Cost-efficient
 - Captures "stimulus → response" pattern

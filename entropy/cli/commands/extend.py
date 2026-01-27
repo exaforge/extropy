@@ -108,9 +108,7 @@ def extend_command(
     )
 
     # Human Checkpoint #1
-    display_extend_attributes(
-        len(base.attributes), new_attributes, base.meta.geography
-    )
+    display_extend_attributes(len(base.attributes), new_attributes, base.meta.geography)
 
     if not yes:
         choice = (

@@ -175,7 +175,9 @@ def _validate_scenario_spec(spec_file: Path, out: Output) -> int:
         if pop_path.exists():
             out.text(f"  [green]✓[/green] Population: {spec.meta.population_spec}")
         else:
-            out.text(f"  [red]✗[/red] Population: {spec.meta.population_spec} (not found)")
+            out.text(
+                f"  [red]✗[/red] Population: {spec.meta.population_spec} (not found)"
+            )
 
         agents_path = Path(spec.meta.agents_file)
         if agents_path.exists():
@@ -200,7 +202,9 @@ def _validate_scenario_spec(spec_file: Path, out: Output) -> int:
 
         if not get_json_mode():
             for err in result.errors[:10]:
-                out.text(f"  [red]✗[/red] [{err.category}] {err.location}: {err.message}")
+                out.text(
+                    f"  [red]✗[/red] [{err.category}] {err.location}: {err.message}"
+                )
                 if err.suggestion:
                     out.text(f"    [dim]→ {err.suggestion}[/dim]")
 
@@ -232,8 +236,12 @@ def _validate_scenario_spec(spec_file: Path, out: Output) -> int:
 
 @app.command("validate")
 def validate_command(
-    spec_file: Path = typer.Argument(..., help="Spec file to validate (.yaml or .scenario.yaml)"),
-    strict: bool = typer.Option(False, "--strict", help="Treat warnings as errors (population specs only)"),
+    spec_file: Path = typer.Argument(
+        ..., help="Spec file to validate (.yaml or .scenario.yaml)"
+    ),
+    strict: bool = typer.Option(
+        False, "--strict", help="Treat warnings as errors (population specs only)"
+    ),
 ):
     """
     Validate a population spec or scenario spec.

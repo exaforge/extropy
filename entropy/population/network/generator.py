@@ -9,7 +9,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Callable
 
-from ...core.models import Edge, NetworkResult, NetworkMetrics, NodeMetrics
+from ...core.models import Edge, NetworkResult
 from .config import NetworkConfig, SENIORITY_LEVELS
 from .similarity import (
     compute_similarity,

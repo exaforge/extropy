@@ -20,10 +20,16 @@ def scenario_command(
     agents: Path = typer.Option(..., "--agents", "-a", help="Sampled agents JSON file"),
     network: Path = typer.Option(..., "--network", "-n", help="Network JSON file"),
     description: str | None = typer.Option(
-        None, "--description", "-d", help="Scenario description (defaults to spec metadata)"
+        None,
+        "--description",
+        "-d",
+        help="Scenario description (defaults to spec metadata)",
     ),
     output: Path | None = typer.Option(
-        None, "--output", "-o", help="Output path (defaults to {population_stem}.scenario.yaml)"
+        None,
+        "--output",
+        "-o",
+        help="Output path (defaults to {population_stem}.scenario.yaml)",
     ),
     yes: bool = typer.Option(False, "--yes", "-y", help="Skip confirmation prompts"),
 ):
@@ -71,7 +77,9 @@ def scenario_command(
     scenario_desc = description or pop_spec.meta.scenario_description
     if not scenario_desc:
         console.print("[red]✗[/red] No scenario description found.")
-        console.print("  Either provide --description or use a spec created with 'entropy extend'.")
+        console.print(
+            "  Either provide --description or use a spec created with 'entropy extend'."
+        )
         raise typer.Exit(1)
 
     # Auto-name output if not provided

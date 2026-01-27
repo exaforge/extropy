@@ -29,15 +29,12 @@ Entropy is designed to simulate **Targeted Synthetic Populations**—statistical
 Unlike static census data, Entropy builds agents that have "interior lives" capable of reasoning. This is achieved through a two-step process in **Phase 1: Population Creation**:
 
 1.  **Statistical Grounding (The "Who"):**
-
     - **Implementation:** `hydrate_independent()` (Step 2a) fetches real-world distributions (e.g., "Age: Normal(47, 10)", "Income: LogNormal(...)").
     - **Value:** Ensures the population is demographically realistic and representative of the target group (e.g., "German Surgeons," "Kyoto Homeowners").
 
 2.  **Semantic Extrapolation (The "Why"):**
-
     - **Implementation:** `hydrate_derived()` and `hydrate_conditional_modifiers()` (Steps 2b-2d) use LLMs to infer unmeasured psychological/behavioral attributes based on the grounded data.
     - **Value:** It fills in the blanks. Census data tells you a person is "45, Rural, Unemployed." Entropy infers their likely "Risk Tolerance," "Trust in Authority," or "Economic Anxiety" based on those facts.
-
     * **Why this matters:** You cannot download a census of "Surgeons' Trust in AI." Entropy _synthesizes_ this layer, creating agents that are statistically plausible but possess the rich interior life needed for behavioral prediction.
 
 ### 2. Temporal & Emergent Flexibility
