@@ -48,7 +48,7 @@ def hydrate_conditional_base(
         geography: Geographic scope
         independent_attrs: Already hydrated independent attributes
         derived_attrs: Already hydrated derived attributes
-        context: Existing attributes from base population (for overlay mode)
+        context: Existing attributes from base population (for extend mode)
         model: Model to use
         reasoning_effort: "low", "medium", or "high"
 
@@ -69,7 +69,9 @@ def hydrate_conditional_base(
         context, instruction="You can reference them in mean_formula."
     )
     all_hydrated = (independent_attrs or []) + (derived_attrs or [])
-    hydrated_section = format_hydrated_section(all_hydrated, title="Context: Already Hydrated Attributes")
+    hydrated_section = format_hydrated_section(
+        all_hydrated, title="Context: Already Hydrated Attributes"
+    )
 
     attr_list = "\n".join(
         f"- {attr.name} ({attr.type}): {attr.description} [depends on: {', '.join(attr.depends_on)}]"
@@ -252,7 +254,7 @@ def hydrate_conditional_modifiers(
         geography: Geographic scope
         independent_attrs: Already hydrated independent attributes
         derived_attrs: Already hydrated derived attributes
-        context: Existing attributes from base population (for overlay mode)
+        context: Existing attributes from base population (for extend mode)
         model: Model to use
         reasoning_effort: "low", "medium", or "high"
 

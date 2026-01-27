@@ -56,14 +56,14 @@ def hydrate_attributes(
     - Step 2c: hydrate_conditional_base() - Research base distributions for conditional
     - Step 2d: hydrate_conditional_modifiers() - Specify modifiers for conditional
 
-    When context is provided (overlay mode), the model can reference
+    When context is provided (extend mode), the model can reference
     context attributes in formulas and modifiers.
 
     Args:
         attributes: List of DiscoveredAttribute from selector
         description: Original population description
         geography: Geographic scope for research
-        context: Existing attributes from base population (for overlay mode)
+        context: Existing attributes from base population (for extend mode)
         model: Model to use
         reasoning_effort: "low", "medium", or "high"
         on_progress: Optional callback for progress updates (step, status, count)

@@ -11,14 +11,47 @@ from pathlib import Path
 from ..core.models import (
     PopulationSpec,
     ScenarioSpec,
-    ValidationError,
-    ValidationWarning,
+    Severity,
+    ValidationIssue,
     ValidationResult,
 )
-from ..validation.expressions import (
+from ..utils.expressions import (
     extract_names_from_expression,
     validate_expression_syntax,
 )
+
+
+# Helper functions to create ValidationIssue with appropriate severity
+def ValidationError(
+    category: str,
+    location: str,
+    message: str,
+    suggestion: str | None = None,
+) -> ValidationIssue:
+    """Create an ERROR-level validation issue."""
+    return ValidationIssue(
+        severity=Severity.ERROR,
+        category=category,
+        location=location,
+        message=message,
+        suggestion=suggestion,
+    )
+
+
+def ValidationWarning(
+    category: str,
+    location: str,
+    message: str,
+    suggestion: str | None = None,
+) -> ValidationIssue:
+    """Create a WARNING-level validation issue."""
+    return ValidationIssue(
+        severity=Severity.WARNING,
+        category=category,
+        location=location,
+        message=message,
+        suggestion=suggestion,
+    )
 
 
 def validate_scenario(
@@ -47,8 +80,8 @@ def validate_scenario(
     Returns:
         ValidationResult with errors and warnings
     """
-    errors: list[ValidationError] = []
-    warnings: list[ValidationWarning] = []
+    errors: list[ValidationIssue] = []
+    warnings: list[ValidationIssue] = []
 
     # Build set of known attributes from population spec
     known_attributes: set[str] = set()

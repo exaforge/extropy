@@ -96,7 +96,7 @@ def select_attributes(
     - Geographic/cultural context
     - Dependencies between attributes
 
-    When context is provided (overlay mode), only discovers NEW attributes
+    When context is provided (extend mode), only discovers NEW attributes
     not already in the base population. Can reference context attributes
     in dependencies.
 
@@ -104,7 +104,7 @@ def select_attributes(
         description: Natural language population description
         size: Number of agents (for context)
         geography: Geographic scope if known
-        context: Existing attributes from base population (for overlay mode)
+        context: Existing attributes from base population (for extend mode)
         model: Model to use
         reasoning_effort: "low", "medium", or "high"
 
@@ -132,7 +132,7 @@ def select_attributes(
         ---
 
         """
-        # In overlay mode, adjust constraints
+        # In extend mode, adjust constraints
         constraint_note = f"""## Constraints (OVERLAY MODE)
         - **Only discover NEW attributes for this scenario** (5-15 attributes typical)
         - You may reference existing attributes in depends_on

@@ -30,12 +30,12 @@ def bind_constraints(
     3. Computes topological sort for sampling order
     4. Converts HydratedAttribute to final AttributeSpec
 
-    When context is provided (overlay mode), dependencies on context
+    When context is provided (extend mode), dependencies on context
     attributes are valid - they're treated as already-sampled.
 
     Args:
         attributes: List of HydratedAttribute from hydrator
-        context: Existing attributes from base population (for overlay mode)
+        context: Existing attributes from base population (for extend mode)
 
     Returns:
         Tuple of (list of AttributeSpec, sampling_order, warnings)
@@ -49,7 +49,7 @@ def bind_constraints(
         >>> specs, order, warnings = bind_constraints(hydrated_attrs)
 
         # Overlay mode - allows dependencies on context attrs
-        >>> specs, order, warnings = bind_constraints(overlay_attrs, context=base_spec.attributes)
+        >>> specs, order, warnings = bind_constraints(extend_attrs, context=base_spec.attributes)
     """
     attr_names = {a.name for a in attributes}
     context_names = {a.name for a in context} if context else set()

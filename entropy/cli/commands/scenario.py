@@ -14,16 +14,16 @@ from ..utils import format_elapsed
 
 @app.command("scenario")
 def scenario_command(
-    description: str = typer.Argument(
-        ..., help="Natural language scenario description"
-    ),
     population: Path = typer.Option(
         ..., "--population", "-p", help="Population spec YAML file"
     ),
     agents: Path = typer.Option(..., "--agents", "-a", help="Sampled agents JSON file"),
     network: Path = typer.Option(..., "--network", "-n", help="Network JSON file"),
-    output: Path = typer.Option(
-        ..., "--output", "-o", help="Output scenario YAML file"
+    description: str | None = typer.Option(
+        None, "--description", "-d", help="Scenario description (defaults to spec metadata)"
+    ),
+    output: Path | None = typer.Option(
+        None, "--output", "-o", help="Output path (defaults to {population_stem}.scenario.yaml)"
     ),
     yes: bool = typer.Option(False, "--yes", "-y", help="Skip confirmation prompts"),
 ):
@@ -38,9 +38,10 @@ def scenario_command(
     - Outcome definitions (what to measure)
 
     Example:
-        entropy scenario "Netflix announces $3 price increase" \\
-            -p population.yaml -a agents.json -n network.json -o scenario.yaml
+        entropy scenario -p population.yaml -a agents.json -n network.json
+        entropy scenario -p pop.yaml -a agents.json -n net.json -d "Custom description" -o custom.yaml
     """
+    from ...core.models import PopulationSpec
     from ...scenario import create_scenario
 
     start_time = time.time()
@@ -59,7 +60,24 @@ def scenario_command(
         console.print(f"[red]✗[/red] Network file not found: {network}")
         raise typer.Exit(1)
 
-    console.print(f"Creating scenario for: [bold]{description}[/bold]")
+    # Load population spec to get scenario description if not provided
+    try:
+        pop_spec = PopulationSpec.from_yaml(population)
+    except Exception as e:
+        console.print(f"[red]✗[/red] Failed to load population spec: {e}")
+        raise typer.Exit(1)
+
+    # Use description from CLI or fall back to spec metadata
+    scenario_desc = description or pop_spec.meta.scenario_description
+    if not scenario_desc:
+        console.print("[red]✗[/red] No scenario description found.")
+        console.print("  Either provide --description or use a spec created with 'entropy extend'.")
+        raise typer.Exit(1)
+
+    # Auto-name output if not provided
+    output_path = output or population.with_suffix(".scenario.yaml")
+
+    console.print(f"Creating scenario for: [bold]{scenario_desc}[/bold]")
     console.print()
 
     # Run Pipeline
@@ -77,7 +95,7 @@ def scenario_command(
         nonlocal result_spec, validation_result, pipeline_error
         try:
             result_spec, validation_result = create_scenario(
-                description=description,
+                description=scenario_desc,
                 population_spec_path=population,
                 agents_path=agents,
                 network_path=network,
@@ -213,12 +231,12 @@ def scenario_command(
             raise typer.Exit(0)
 
     # Save to YAML
-    result_spec.to_yaml(output)
+    result_spec.to_yaml(output_path)
 
     elapsed = time.time() - start_time
 
     console.print()
     console.print("═" * 60)
-    console.print(f"[green]✓[/green] Scenario saved to [bold]{output}[/bold]")
+    console.print(f"[green]✓[/green] Scenario saved to [bold]{output_path}[/bold]")
     console.print(f"[dim]Total time: {format_elapsed(elapsed)}[/dim]")
     console.print("═" * 60)

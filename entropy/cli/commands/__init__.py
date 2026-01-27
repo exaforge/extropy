@@ -2,24 +2,23 @@
 
 from . import (
     validate,
-    overlay,
+    extend,
     spec,
     sample,
     network,
     scenario,
-    validate_scenario,
     simulate,
     results,
 )
 
 __all__ = [
     "validate",
-    "overlay",
+    "extend",
     "spec",
     "sample",
     "network",
     "scenario",
-    "validate_scenario",
     "simulate",
     "results",
 ]
+

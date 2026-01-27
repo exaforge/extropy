@@ -35,7 +35,7 @@ def hydrate_independent(
         attributes: List of DiscoveredAttribute with strategy=independent
         population: Population description (e.g., "German surgeons")
         geography: Geographic scope (e.g., "Germany")
-        context: Existing attributes from base population (for overlay mode)
+        context: Existing attributes from base population (for extend mode)
         model: Model to use
         reasoning_effort: "low", "medium", or "high"
 
@@ -51,7 +51,7 @@ def hydrate_independent(
 
     geo_context = f" in {geography}" if geography else ""
 
-    # Build context section for overlay mode
+    # Build context section for extend mode
     context_section = format_context_section(context)
 
     attr_list = "\n".join(

@@ -42,7 +42,7 @@ def hydrate_derived(
         population: Population description
         geography: Geographic scope
         independent_attrs: Already hydrated independent attributes for reference
-        context: Existing attributes from base population (for overlay mode)
+        context: Existing attributes from base population (for extend mode)
         model: Model to use
         reasoning_effort: "low", "medium", or "high"
 
@@ -66,7 +66,6 @@ def hydrate_derived(
         f"- {attr.name} ({attr.type}): {attr.description} [depends on: {', '.join(attr.depends_on)}]"
         for attr in derived_attrs
     )
-
 
     prompt = f"""{context_section}{hydrated_section}Specify deterministic formulas for these DERIVED attributes of {population}:
 

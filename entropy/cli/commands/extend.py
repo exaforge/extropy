@@ -1,4 +1,4 @@
-"""Overlay command for layering scenario attributes on base population."""
+"""Extend command for layering scenario attributes on base population."""
 
 import time
 from pathlib import Path
@@ -19,7 +19,7 @@ from ...core.models import PopulationSpec
 from ...population.validator import validate_spec
 from ..app import app, console
 from ..display import (
-    display_overlay_attributes,
+    display_extend_attributes,
     display_spec_summary,
     display_validation_result,
     generate_and_review_persona_template,
@@ -27,8 +27,8 @@ from ..display import (
 from ..utils import format_elapsed
 
 
-@app.command("overlay")
-def overlay_command(
+@app.command("extend")
+def extend_command(
     base_spec: Path = typer.Argument(..., help="Base population spec YAML file"),
     scenario: str = typer.Option(..., "--scenario", "-s", help="Scenario description"),
     output: Path = typer.Option(..., "--output", "-o", help="Output merged spec YAML"),
@@ -42,8 +42,8 @@ def overlay_command(
     attributes (e.g., age, income) for realistic correlations.
 
     Example:
-        entropy overlay surgeons_base.yaml -s "AI diagnostic tool adoption" -o surgeons_ai.yaml
-        entropy overlay farmers.yaml -s "Drought response behavior" -o farmers_drought.yaml
+        entropy extend surgeons_base.yaml -s "AI diagnostic tool adoption" -o surgeons_ai.yaml
+        entropy extend farmers.yaml -s "Drought response behavior" -o farmers_drought.yaml
     """
     start_time = time.time()
     console.print()
@@ -64,7 +64,7 @@ def overlay_command(
         f"[green]✓[/green] Loaded base: [bold]{base.meta.description}[/bold] ({len(base.attributes)} attributes)"
     )
 
-    # Step 1: Attribute Selection (Overlay Mode)
+    # Step 1: Attribute Selection (Extend Mode)
     console.print()
     selection_start = time.time()
     new_attributes = None
@@ -108,7 +108,7 @@ def overlay_command(
     )
 
     # Human Checkpoint #1
-    display_overlay_attributes(
+    display_extend_attributes(
         len(base.attributes), new_attributes, base.meta.geography
     )
 
@@ -218,7 +218,7 @@ def overlay_command(
 
     # Step 4: Build and Merge
     with console.status("[cyan]Building and merging specs...[/cyan]"):
-        overlay_spec = build_spec(
+        extension_spec = build_spec(
             description=scenario,
             size=base.meta.size,
             geography=base.meta.geography,
@@ -226,10 +226,10 @@ def overlay_command(
             sampling_order=sampling_order,
             sources=sources,
         )
-        merged_spec = base.merge(overlay_spec)
+        merged_spec = base.merge(extension_spec)
 
     console.print(
-        f"[green]✓[/green] Merged: {len(base.attributes)} base + {len(bound_attrs)} overlay = {len(merged_spec.attributes)} total"
+        f"[green]✓[/green] Merged: {len(base.attributes)} base + {len(bound_attrs)} extension = {len(merged_spec.attributes)} total"
     )
 
     # Validation Gate
@@ -248,11 +248,14 @@ def overlay_command(
         raise typer.Exit(1)
 
     # Step 5: Persona Template Generation
-    # Generate template for merged spec (includes all base + overlay attributes)
+    # Generate template for merged spec (includes all base + extension attributes)
     persona_template = generate_and_review_persona_template(merged_spec, yes)
     if persona_template:
         merged_spec.meta.persona_template = persona_template
         console.print("[green]✓[/green] Persona template added to spec")
+
+    # Store scenario description for use by scenario command
+    merged_spec.meta.scenario_description = scenario
 
     # Human Checkpoint #2
     display_spec_summary(merged_spec)

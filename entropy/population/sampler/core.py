@@ -8,12 +8,16 @@ import json
 import logging
 import random
 import sqlite3
-from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Callable
 
-from ...core.models import PopulationSpec, AttributeSpec
+from ...core.models import (
+    PopulationSpec,
+    AttributeSpec,
+    SamplingStats,
+    SamplingResult,
+)
 from .distributions import sample_distribution, coerce_to_type
 from .modifiers import apply_modifiers_and_sample
 from ...utils.eval_safe import eval_formula, FormulaError
@@ -25,35 +29,6 @@ class SamplingError(Exception):
     """Raised when sampling fails for an agent."""
 
     pass
-
-
-@dataclass
-class SamplingStats:
-    """Statistics collected during sampling."""
-
-    # Attribute-level stats
-    attribute_means: dict[str, float] = field(default_factory=dict)
-    attribute_stds: dict[str, float] = field(default_factory=dict)
-    categorical_counts: dict[str, dict[str, int]] = field(default_factory=dict)
-    boolean_counts: dict[str, dict[bool, int]] = field(default_factory=dict)
-
-    # Modifier trigger counts: attr_name -> modifier_index -> count
-    modifier_triggers: dict[str, dict[int, int]] = field(default_factory=dict)
-
-    # Constraint violations (expression constraints)
-    constraint_violations: dict[str, int] = field(default_factory=dict)
-
-    # Condition evaluation warnings
-    condition_warnings: list[str] = field(default_factory=list)
-
-
-@dataclass
-class SamplingResult:
-    """Result of sampling a population."""
-
-    agents: list[dict[str, Any]]
-    meta: dict[str, Any]
-    stats: SamplingStats
 
 
 def sample_population(

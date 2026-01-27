@@ -139,7 +139,9 @@ def format_conditional_context(
                 dist = attr.sampling.distribution
                 if hasattr(dist, "options") and dist.options:
                     opt_info = f"\n    VALID OPTIONS: {dist.options}"
-            ctx_lines.append(f"- {attr.name} ({attr.type}): {attr.description}{opt_info}")
+            ctx_lines.append(
+                f"- {attr.name} ({attr.type}): {attr.description}{opt_info}"
+            )
         ctx_lines.extend(["", "---", ""])
         sections.append("\n".join(ctx_lines))
 
@@ -151,7 +153,9 @@ def format_conditional_context(
         sections.append("**Independent Attributes:**")
         for attr in independent_attrs:
             dist_info = _get_distribution_info(attr, show_options=show_options)
-            sections.append(f"- {attr.name} ({attr.type}): {attr.description}{dist_info}")
+            sections.append(
+                f"- {attr.name} ({attr.type}): {attr.description}{dist_info}"
+            )
         sections.append("")
 
     # Derived attributes
@@ -161,7 +165,9 @@ def format_conditional_context(
             formula_info = (
                 f" — formula: {attr.sampling.formula}" if attr.sampling.formula else ""
             )
-            sections.append(f"- {attr.name} ({attr.type}): {attr.description}{formula_info}")
+            sections.append(
+                f"- {attr.name} ({attr.type}): {attr.description}{formula_info}"
+            )
         sections.append("")
 
     # Conditional attributes (for step 2d)

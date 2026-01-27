@@ -92,6 +92,20 @@ from .results import (
     SimulationResults,
 )
 
+# Sampling models (runtime)
+from .sampling import (
+    SamplingStats,
+    SamplingResult,
+)
+
+# Network models (runtime)
+from .network import (
+    Edge,
+    NetworkResult,
+    NetworkMetrics,
+    NodeMetrics,
+)
+
 __all__ = [
     # Population - Grounding
     "GroundingInfo",
@@ -144,8 +158,6 @@ __all__ = [
     "Severity",
     "ValidationIssue",
     "ValidationResult",
-    "ValidationError",
-    "ValidationWarning",
     # Simulation
     "SimulationEventType",
     "ExposureRecord",
@@ -163,4 +175,12 @@ __all__ = [
     "TimelinePoint",
     "RunMeta",
     "SimulationResults",
+    # Sampling
+    "SamplingStats",
+    "SamplingResult",
+    # Network
+    "Edge",
+    "NetworkResult",
+    "NetworkMetrics",
+    "NodeMetrics",
 ]

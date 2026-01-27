@@ -226,7 +226,7 @@ def spec_command(
         console.print("[red]Spec validation failed. Please fix the errors above.[/red]")
         raise typer.Exit(1)
 
-    # Note: Persona template generation happens in overlay, not base spec
+    # Note: Persona template generation happens in extend, not base spec
     # This ensures the template includes scenario attributes
 
     # Human Checkpoint #2

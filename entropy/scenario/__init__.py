@@ -48,8 +48,8 @@ from ..core.models import (
     ScenarioMeta,
     ScenarioSpec,
     # Validation
-    ValidationError,
-    ValidationWarning,
+    Severity,
+    ValidationIssue,
     ValidationResult,
 )
 
@@ -85,8 +85,8 @@ __all__ = [
     "ScenarioMeta",
     "ScenarioSpec",
     # Models - Validation
-    "ValidationError",
-    "ValidationWarning",
+    "Severity",
+    "ValidationIssue",
     "ValidationResult",
     # Pipeline functions
     "parse_scenario",

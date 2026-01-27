@@ -58,16 +58,13 @@ from .generator import (
     generate_network,
     generate_network_with_metrics,
     load_agents_json,
-    Edge,
-    NetworkResult,
 )
 from .metrics import (
-    NetworkMetrics,
-    NodeMetrics,
     compute_network_metrics,
     compute_node_metrics,
     validate_network,
 )
+from ...core.models import Edge, NetworkResult, NetworkMetrics, NodeMetrics
 
 __all__ = [
     # Main functions

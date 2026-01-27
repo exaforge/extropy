@@ -115,7 +115,7 @@ def apply_seed_exposures(
                 channel=rule.channel,
                 source_agent_id=None,
                 content=scenario.event.content,
-                credibility=event_credibility * channel_credibility,
+                credibility=min(1.0, event_credibility * channel_credibility),
             )
 
             state_manager.record_exposure(agent_id, exposure)

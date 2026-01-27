@@ -1,0 +1,2818 @@
+meta:
+  description: German surgeons + AI diagnostic tool adoption for surgery planning
+  size: 1000
+  geography: Germany
+  created_at: '2026-01-03T21:42:01.815497'
+  version: '1.0'
+  persona_template: I am a {age}-year-old {gender} {role} surgeon specializing in
+    {surgical_specialty}, practicing in {state} at a {employer_type}. With {years_experience}
+    years of post-licensure experience I typically spend {weekly_operating_hours}
+    hours in the OR and perform about {caseload_per_month} procedures per month. My
+    {digital_health_literacy} digital health literacy, together with {training_hours_on_ai_last_12_months}
+    hours of AI training last year and {social_exposure_to_ai} exposure to peers using
+    AI, shapes how I evaluate new tools. I rate my trust in AI at {trust_in_ai_decision_support}
+    and its utility as {perceived_ai_utility}, but I remain cautious about medicolegal
+    risk ({medicolegal_risk_concern}) and pay close attention to local IT readiness
+    ({it_infrastructure_quality}, {ehr_integration_level}) and department support
+    ({management_support_for_ai}) before adopting AI for surgical planning.
+grounding:
+  overall: medium
+  sources_count: 107
+  strong_count: 1
+  medium_count: 32
+  low_count: 16
+  sources:
+  - https://www.bundesaerztekammer.de/baek/ueber-uns/aerztestatistik/2023
+  - https://www.bundesaerztekammer.de/baek/ueber-uns/aerztestatistik/2020/ergebnisse-der-aerztestatistik-zum-31122020/gesamtzahl-der-aerzte
+  - https://www.statistik.rlp.de/nachrichten/nachichtendetailseite/zahl-der-promovierenden-in-der-medizin-und-zahnmedizin-deutlich-gestiegen
+  - https://www.oecd.org/en/publications/oecd-survey-on-drivers-of-trust-in-public-institutions-2024-results-country-notes_a8004759-en/germany_9f727e4a-en.html
+  - https://www.welt.de/wirtschaft/plus249057340/Deutschland-verschleppt-was-in-Oesterreich-laengst-funktioniert-Schlusslicht-Europas.html
+  - https://link.springer.com/article/10.1007/s10935-024-00821-y
+  - https://pmc.ncbi.nlm.nih.gov/articles/PMC9580562/
+  - https://link.springer.com/article/10.1007/s00772-025-01279-w
+  - https://www.welt.de/article689c45ee0fb2e02f82074f4f
+  - https://de.statista.com/infografik/10670/weniger-krankenhaeuser-mehr-patienten/
+  - https://gesundheitsdaten.kbv.de/cms/html/17075.php
+  - https://schengenvisainfo.com/news/germanys-healthcare-staff-shortage-crisis-to-further-deepen-without-foreign-doctors/
+  - https://www.aekno.de/aerzte/weiterbildung/aktueller-jahresbericht
+  - https://arxiv.org/abs/2104.02338
+  - https://www.kbv.de/infothek/zahlen-und-fakten/gesundheitsdaten/aerzte-nach-taetigkeit-und-herkunft
+  - https://www.welt.de/article68b595eecf33b514cb80e286
+  - https://www.statistik.rlp.de/nachrichten/nachichtendetailseite/mehr-promovierende-medizinerinnen-und-mediziner
+  - https://www.destatis.de/DE/Themen/Gesellschaft-Umwelt/Gesundheit/Krankenhaeuser/Tabellen/eckzahlen-krankenhaeuser.html
+  - https://www.rebmann-research.de/niedergelassene-chirurgie-weiterhin-maennerdomaene
+  - https://www.cme-fortbildung.de/
+  - https://www.bmvz.de/praxisorganisation/2025-kw-19/
+  - https://www.mckinsey.com/de/publikationen/2025-12-18-e-health-monitor-2025
+  - https://www.mckinsey.de/news/presse/2025-12-18-e-health-monitor-2025
+  - https://www.mckinsey.com/de/news/presse/ehealth-monitor-2022
+  - https://www.bundesaerztekammer.de/themen/aerzte/aus-fort-und-weiterbildung/aerztliche-fortbildung/gesetzliche-und-berufsrechtliche-regelungen
+  - https://www.datenportal.bmftr.bund.de/portal/de/Tabelle-2.4.23-2023.html
+  - https://www.marburger-bund.de/bayern/meldungen/umfrage-zeigt-machtmissbrauch-diskriminierung-und-intransparenz-kliniken
+  - https://pubmed.ncbi.nlm.nih.gov/36276381/
+  - https://www.haufe.de/immobilien/entwicklung-vermarktung/marktanalysen/destatis-wohnungsbau-zahl-der-fertigstellungen-steigt-erneut_84324_361884.html
+  - https://gesundheitsdaten.kbv.de/cms/html/17044.php
+  - https://www.welt.de/article68bac76972019652f128b5de
+  - https://www.bundesaerztekammer.de/baek/ueber-uns/aerztestatistik/2024
+  - https://www.umweltbundesamt.de/daten/private-haushalte-konsum/strukturdaten-privater-haushalte/bevoelkerungsentwicklung-struktur-privater
+  - https://gesundheitsdaten.kbv.de/cms/html/17027.php
+  - https://de.statista.com/statistik/daten/studie/158869/umfrage/anzahl-der-aerzte-in-deutschland-seit-1990/
+  - https://mhealth.jmir.org/2020/10/e20099/
+  - https://www.iww.de/pfb/wirtschaftsberatung/berufsstatistik-kbv-arztzahlstatistik-2023-n165236
+  - https://pubmed.ncbi.nlm.nih.gov/38943163/
+  - https://pubmed.ncbi.nlm.nih.gov/40873690/
+  - https://www.ipsos.com/en-us/news-polls/global-trustworthiness-index-2022
+  - https://www.iamexpat.de/career/employment-news/record-number-non-german-doctors-now-working-germany
+  - https://www.fobimarkt.com/ratgeber/karriere/fortbildungspflicht-fuer-aerztinnen-und-aerzte
+  - https://www.baulinks.de/webplugin/2025/1321.php4
+  - https://www.bundesaerztekammer.de/presse/aktuelles/detail/arztzahlstatistik-zeigt-jede-r-zweite-berufstaetige-aerztin-arzt-ist-50-jahre-und-aelter
+  - https://www.kvno.de/praxis/recht-vertraege/fortbildungspflicht
+  - https://kommunen.nrw/aktuelles/archiv/mitteilungen/2024/juni/knapp-ein-drittel-der-aerztinnen-und-aerzte-ist-55-jahre-und-aelter/
+  - https://pmc.ncbi.nlm.nih.gov/articles/PMC10579134/
+  - https://pubmed.ncbi.nlm.nih.gov/22002734/
+  - https://www.commonwealthfund.org/publications/issue-briefs/2023/apr/primary-care-physicians-telehealth-2022-international-survey
+  - https://www.kbv.de/praxis/qualitaet/fortbildung
+  - https://www.welt.de/wirtschaft/vision-now/future-of-health/article245694950/Diskussionsrunde-ueber-digitales-Gesundheitswesen.html
+  - https://www.kbv.de/infothek/zahlen-und-fakten/gesundheitsdaten/alter-und-geschlecht
+  - https://www.kbv.de/praxis/tools-und-services/praxisnachrichten/2025/03-20/Arztzahlstatistik%202024%20%E2%80%93%20Anstellung%20und%20Teilzeit%20bleiben%20beliebt
+  - https://www.welt.de/article68b54f075d3e123a945b217a
+  - https://arxiv.org/abs/2506.08258
+  - https://e-health-com.de/thema-der-woche/wachstum-auf-niedrigem-niveau/
+  - https://www.marburger-bund.de/nrw-rlp/meldungen/who-startet-umfrage-unter-aerztinnen-und-aerzten
+  - https://www.bundesgesundheitsministerium.de/themen/krankenversicherung/ambulante-versorgung/aerztliche-versorgung
+  - https://www.der-niedergelassene-arzt.de/wirtschaft-und-praxis/details/wer-nicht-paukt-muss-zahlen-warum-die-vertragsaerztliche-fortbildungspflicht-nicht-vernachlaessigt-werden-sollte/1
+  - https://www.welt.de/article68a573127e2e0843ffaa4a6d
+  - https://www.bundesgesundheitsministerium.de/service/publikationen/details/digitalradar-zwischenbericht-2025.html
+  - https://link.springer.com/article/10.1007/s00423-025-03874-7
+  - https://www.destatis.de/DE/Themen/Gesellschaft-Umwelt/Gesundheit/Krankenhaeuser/Tabellen/personal-krankenhaeuser-bl.html
+  - https://arxiv.org/abs/2007.00548
+  - https://www.kbv.de/html/1150_74144.php
+  - https://www.welt.de/politik/deutschland/plus246521828/Elektronische-Patientenakte-Die-wichtigsten-Fragen-zu-Karl-Lauterbachs-Vorhaben.html
+  - https://www.mckinsey.com/industries/healthcare/our-insights/german-healthcare-in-the-postpandemic-era-physician-insights
+  - https://link.springer.com/article/10.1007/s00772-023-01016-1
+  - https://www.kbv.de/infothek/zahlen-und-fakten/gesundheitsdaten/krankenhaeuser-und-betten
+  - https://www.welt.de/article68b5476a8c33b226bcaeea93
+  - https://www.kbv.de/html/aerztemonitor.php
+  - https://www.mckinsey.com/de/news/presse/2024-01-24-e-health-monitor-2023-24
+  - https://gesundheitsdaten.kbv.de/cms/html/17078.php
+  - https://de.wikipedia.org/wiki/Frauen_in_der_Chirurgie
+  - https://www.destatis.de/DE/Themen/Gesellschaft-Umwelt/Wohnen/_inhalt.html
+  - https://www.kaden-verlag.de/ueber-uns/nachrichten/neues-detail/kbv-arztzahlstatistik-mehr-aerztinnen-und-aerzte-aber-kuerzere-arbeitszeiten
+  - https://www.destatis.de/DE/Themen/Gesellschaft-Umwelt/Gesundheit/Krankenhaeuser/Tabellen/krankenhaeuser-fa.html
+  - https://www.slaek.de/de/service/faq.php
+  - https://www.ipsos.com/en/global-trustworthiness-index-2022
+  - https://www.destatis.de/DE/Themen/Gesellschaft-Umwelt/Gesundheit/Vorsorgeeinrichtungen-Rehabilitationseinrichtungen/Tabellen/personal-reha-bl.html
+  - https://link.springer.com/article/10.1007/s00423-023-03134-6
+  - https://wohnglueck.de/artikel/wohneigentumsquote-deutschland-27738
+  - https://www.welt.de/article6912ec3a0580923d0998dc22
+  - https://www.marburger-bund.de/arbeitszeitenwende/umfrage-zur-arbeitszeiterfassung-den-unikliniken
+  - https://www.welt.de/article68a6e616229c582f684199a4
+  - https://pubmed.ncbi.nlm.nih.gov/37843584/
+  - https://www.dgaepc.de/aktuelles/dgaepc-statistik/dgaepc-statistik-2025/
+  - https://www.thieme-connect.com/products/ejournals/abstract/10.1055/s-0038-1660757
+  - https://www.welt.de/article68a5734e56d29713c923a550
+  - https://link.springer.com/chapter/10.1007/978-3-662-68792-5_21
+  - https://pubmed.ncbi.nlm.nih.gov/39907950/
+  - https://www.uniklinika.de/verband-deruniversitaetsklinika/
+  - https://www.bundesaerztekammer.de/baek/ueber-uns/aerztestatistik/2020
+  - https://link.springer.com/article/10.1186/s13741-024-00424-5
+  - https://www.marburger-bund.de/bundesverband/themen/marburger-bund-umfragen
+  - https://www.aekno.de/aerzte/weiterbildung/jahresbericht-der-weiterbildung-2024
+  - https://www.destatis.de/DE/Presse/Pressemitteilungen/2024/05/PD24_N022_12_21.html
+  - https://www.aekb.de/kammer/statistik-der-berliner-aerztinnen
+  - https://www.bundesaerztekammer.de/arzt2004/co120050/artikel.htm
+  - https://pubmed.ncbi.nlm.nih.gov/39966018/
+  - https://www.welt.de/article68a5a35af3a73f1f1bfe8965
+  - https://link.springer.com/chapter/10.1007/978-3-662-70947-4_26
+  - https://www.welt.de/article689b490af3b330071983f732
+  - https://www.welt.de/article68a5734e7b99884fce7026a1
+  - https://www.welt.de/250830286
+  - https://www.slaek.de/de/service/faq-einzeln/faq_fortbildung_Aerzte.php
+  - https://www.oeffentlichen-dienst.de/entgelttabelle/tv-aerzte-tdl.html
+attributes:
+- name: age
+  type: int
+  category: universal
+  description: Agent’s age in years.
+  sampling:
+    strategy: independent
+    distribution:
+      type: normal
+      mean: 44.0
+      std: 9.0
+      min: 26.0
+      max: 72.5
+      mean_formula: null
+      std_formula: null
+      min_formula: null
+      max_formula: null
+    formula: null
+    depends_on: []
+    modifiers: []
+  grounding:
+    level: medium
+    method: extrapolated
+    source: https://www.destatis.de/DE/Presse/Pressemitteilungen/2024/05/PD24_N022_12_21.html
+    note: 'Destatis 2023: 21% <35, 48% 35–54, 31% 55+. Surgeons tend to skew slightly
+      younger than ambulatory average; mean centered near mid‑40s. citeturn2search1'
+  constraints:
+  - type: hard_min
+    value: 24.0
+    expression: null
+    reason: Lower bound allows rare early specialists/foreign graduates.
+  - type: hard_max
+    value: 80.0
+    expression: null
+    reason: Upper bound allows late-career clinicians beyond typical retirement.
+- name: gender
+  type: categorical
+  category: universal
+  description: Self-identified gender (e.g., female, male, diverse).
+  sampling:
+    strategy: independent
+    distribution:
+      type: categorical
+      options:
+      - female
+      - male
+      - diverse
+      weights:
+      - 0.22
+      - 0.77
+      - 0.01
+    formula: null
+    depends_on: []
+    modifiers: []
+  grounding:
+    level: medium
+    method: researched
+    source: https://www.rebmann-research.de/niedergelassene-chirurgie-weiterhin-maennerdomaene
+    note: Ambulatory surgical female share ~17% (2022). Hospital share likely higher;
+      set overall surgeons ≈22% female, 1% diverse placeholder. citeturn2search2
+  constraints:
+  - type: spec_expression
+    value: null
+    expression: sum(weights)==1
+    reason: Weights must sum to 1.
+  - type: spec_expression
+    value: null
+    expression: len(options)>0
+    reason: Options must be non-empty.
+- name: state
+  type: categorical
+  category: universal
+  description: German federal state (Bundesland) of primary residence/work base.
+  sampling:
+    strategy: independent
+    distribution:
+      type: categorical
+      options:
+      - Baden-Württemberg
+      - Bavaria
+      - Berlin
+      - Brandenburg
+      - Bremen
+      - Hamburg
+      - Hesse
+      - Lower Saxony
+      - Mecklenburg-Vorpommern
+      - North Rhine-Westphalia
+      - Rhineland-Palatinate
+      - Saarland
+      - Saxony
+      - Saxony-Anhalt
+      - Schleswig-Holstein
+      - Thuringia
+      weights:
+      - 0.13
+      - 0.16
+      - 0.05
+      - 0.03
+      - 0.01
+      - 0.02
+      - 0.07
+      - 0.1
+      - 0.02
+      - 0.22
+      - 0.04
+      - 0.01
+      - 0.05
+      - 0.03
+      - 0.03
+      - 0.03
+    formula: null
+    depends_on: []
+    modifiers: []
+  grounding:
+    level: low
+    method: estimated
+    source: https://www.bundesaerztekammer.de/baek/ueber-uns/aerztestatistik/2023
+    note: Weights approximated to physician concentration/popu­lation; precise surgeon-by-state
+      splits not published centrally. Use as broad prior. citeturn6search2
+  constraints:
+  - type: spec_expression
+    value: null
+    expression: sum(weights)==1
+    reason: Weights sum to 1.
+  - type: spec_expression
+    value: null
+    expression: len(options)==16
+    reason: All Bundesländer included.
+- name: marital_status
+  type: categorical
+  category: universal
+  description: Current marital status (e.g., single, married, divorced, widowed).
+  sampling:
+    strategy: independent
+    distribution:
+      type: categorical
+      options:
+      - single
+      - married
+      - divorced
+      - widowed
+      weights:
+      - 0.26
+      - 0.62
+      - 0.1
+      - 0.02
+    formula: null
+    depends_on: []
+    modifiers: []
+  grounding:
+    level: low
+    method: estimated
+    source: https://www.destatis.de/DE/Presse/Pressemitteilungen/2024/05/PD24_N022_12_21.html
+    note: No surgeon-specific marital data; estimate informed by German physicians’
+      age structure (many 35–60). Treat as a demographic prior. citeturn2search1
+  constraints:
+  - type: spec_expression
+    value: null
+    expression: sum(weights)==1
+    reason: Weights must sum to 1.
+- name: household_size
+  type: int
+  category: universal
+  description: Number of people in the household.
+  sampling:
+    strategy: independent
+    distribution:
+      type: normal
+      mean: 2.4
+      std: 0.9
+      min: 1.0
+      max: 6.0
+      mean_formula: null
+      std_formula: null
+      min_formula: null
+      max_formula: null
+    formula: null
+    depends_on: []
+    modifiers: []
+  grounding:
+    level: low
+    method: estimated
+    source: https://www.umweltbundesamt.de/daten/private-haushalte-konsum/strukturdaten-privater-haushalte/bevoelkerungsentwicklung-struktur-privater
+    note: General DE mean ≈2.0 persons/household; physicians likely above average;
+      use 2.4±0.9 as prior. citeturn11search3
+  constraints:
+  - type: hard_min
+    value: 1.0
+    expression: null
+    reason: At least one person.
+  - type: hard_max
+    value: 8.0
+    expression: null
+    reason: Allows large households/outliers.
+- name: housing_tenure
+  type: categorical
+  category: universal
+  description: Housing tenure (e.g., renting, owning, employer-provided).
+  sampling:
+    strategy: independent
+    distribution:
+      type: categorical
+      options:
+      - renting
+      - owning
+      - employer_provided
+      weights:
+      - 0.5
+      - 0.47
+      - 0.03
+    formula: null
+    depends_on: []
+    modifiers: []
+  grounding:
+    level: medium
+    method: extrapolated
+    source: https://www.destatis.de/DE/Themen/Gesellschaft-Umwelt/Wohnen/_inhalt.html
+    note: National owner share ≈42–47%; surgeons may own slightly more; added small
+      employer-provided slice for hospital housing. citeturn11search0turn11search4
+  constraints:
+  - type: spec_expression
+    value: null
+    expression: sum(weights)==1
+    reason: Weights must sum to 1.
+- name: citizenship_status
+  type: categorical
+  category: universal
+  description: Citizenship category (e.g., German, EU non-German, non-EU).
+  sampling:
+    strategy: independent
+    distribution:
+      type: categorical
+      options:
+      - German
+      - EU_non_German
+      - non_EU
+      weights:
+      - 0.86
+      - 0.06
+      - 0.08
+    formula: null
+    depends_on: []
+    modifiers: []
+  grounding:
+    level: medium
+    method: researched
+    source: https://www.destatis.de/DE/Presse/Pressemitteilungen/2024/05/PD24_N022_12_21.html
+    note: '2023: ~12% of doctors without German citizenship; split EU vs non‑EU inferred
+      from BÄK top origins (EU and Middle East mix). citeturn2search1turn0search2'
+  constraints:
+  - type: spec_expression
+    value: null
+    expression: sum(weights)==1
+    reason: Weights sum to 1.
+- name: education_level
+  type: categorical
+  category: universal
+  description: Highest completed education level (e.g., university degree, doctorate).
+  sampling:
+    strategy: independent
+    distribution:
+      type: categorical
+      options:
+      - university_degree
+      - doctorate
+      - habilitation
+      weights:
+      - 0.38
+      - 0.6
+      - 0.02
+    formula: null
+    depends_on: []
+    modifiers: []
+  grounding:
+    level: low
+    method: estimated
+    source: —
+    note: All surgeons hold a university degree; doctorate prevalence among German
+      physicians commonly reported ~50–70% in literature but no single official 2023
+      share; set to 60% with small habilitation share.
+  constraints:
+  - type: spec_expression
+    value: null
+    expression: sum(weights)==1
+    reason: Weights sum to 1.
+  - type: spec_expression
+    value: null
+    expression: len(options)>0
+    reason: Options provided.
+- name: employer_type
+  type: categorical
+  category: population_specific
+  description: Primary employer type (e.g., university hospital, public non-university
+    hospital, private hospital, MVZ/private practice).
+  sampling:
+    strategy: independent
+    distribution:
+      type: categorical
+      options:
+      - university_hospital
+      - public_non_university_hospital
+      - nonprofit_hospital
+      - private_hospital
+      - MVZ_or_private_practice
+      - other_public_bodies
+      weights:
+      - 0.12
+      - 0.22
+      - 0.16
+      - 0.18
+      - 0.3
+      - 0.02
+    formula: null
+    depends_on: []
+    modifiers: []
+  grounding:
+    level: medium
+    method: extrapolated
+    source: https://www.bundesgesundheitsministerium.de/themen/krankenversicherung/ambulante-versorgung/aerztliche-versorgung
+    note: ~52% of physicians hospital‑based (2023). Of hospitals, ownership split
+      by beds ≈47% public, 32–33% nonprofit, 20–21% private; university hospitals
+      are large public subset (VUD lists 37). Remaining ≈48% ambulatory (MVZ/practices).
+      citeturn5search3turn8search0turn8search4
+  constraints:
+  - type: spec_expression
+    value: null
+    expression: sum(weights)==1
+    reason: Weights sum to 1.
+- name: surgical_specialty
+  type: categorical
+  category: population_specific
+  description: Primary surgical specialty (e.g., general, orthopedic/trauma, visceral,
+    cardiac, vascular, neurosurgery, pediatric, plastic, ENT, urology, etc.).
+  sampling:
+    strategy: independent
+    distribution:
+      type: categorical
+      options:
+      - general/visceral
+      - orthopedic/trauma
+      - cardiac
+      - vascular
+      - neurosurgery
+      - pediatric_surgery
+      - plastic
+      - ENT
+      - urology
+      - other_subspecialties
+      weights:
+      - 0.25
+      - 0.28
+      - 0.05
+      - 0.06
+      - 0.04
+      - 0.03
+      - 0.06
+      - 0.08
+      - 0.09
+      - 0.06
+    formula: null
+    depends_on: []
+    modifiers: []
+  grounding:
+    level: medium
+    method: extrapolated
+    source: https://www.destatis.de/DE/Themen/Gesellschaft-Umwelt/Gesundheit/Krankenhaeuser/Tabellen/krankenhaeuser-fa.html
+    note: Weights reflect relative department presence and typical workforce sizes;
+      aligns with BÄK specialty structure; exact national headcounts by surgical subspecialty
+      not centrally published. citeturn6search5turn6search2
+  constraints:
+  - type: spec_expression
+    value: null
+    expression: sum(weights)==1
+    reason: Weights sum to 1.
+  - type: spec_expression
+    value: null
+    expression: len(options)>0
+    reason: Options provided.
+- name: continuing_medical_education_hours_per_year
+  type: int
+  category: population_specific
+  description: Hours spent on CME/CPD in the last 12 months.
+  sampling:
+    strategy: independent
+    distribution:
+      type: normal
+      mean: 40.0
+      std: 20.0
+      min: 0.0
+      max: 200.0
+      mean_formula: null
+      std_formula: null
+      min_formula: null
+      max_formula: null
+    formula: null
+    depends_on: []
+    modifiers: []
+  grounding:
+    level: strong
+    method: researched
+    source: https://www.kbv.de/praxis/qualitaet/fortbildung
+    note: 'Legal requirement: 250 CME points/5 years (≈187.5 hours if 1 point=45 min).
+      Annualized target ≈50 points; hours distribution varies year‑to‑year. citeturn3search1turn3search3turn3search9'
+  constraints:
+  - type: hard_min
+    value: 0.0
+    expression: null
+    reason: Some years with few recorded hours.
+  - type: hard_max
+    value: 300.0
+    expression: null
+    reason: Allows heavy CME years/outliers.
+- name: openness
+  type: float
+  category: personality
+  description: Big Five trait measuring openness to experience (0–1 scaled).
+  sampling:
+    strategy: independent
+    distribution:
+      type: beta
+      alpha: 7.0
+      beta: 5.0
+      min: 0.0
+      max: 1.0
+      min_formula: null
+      max_formula: null
+    formula: null
+    depends_on: []
+    modifiers: []
+  grounding:
+    level: medium
+    method: extrapolated
+    source: https://pubmed.ncbi.nlm.nih.gov/39966018/
+    note: Recent cross‑sectional work shows surgeons score above general population
+      on openness; beta params chosen to center ≈0.56. Not Germany‑only. citeturn10search3
+  constraints:
+  - type: hard_min
+    value: 0.0
+    expression: null
+    reason: Trait scale 0–1.
+  - type: hard_max
+    value: 1.0
+    expression: null
+    reason: Trait scale 0–1.
+- name: conscientiousness
+  type: float
+  category: personality
+  description: Big Five trait measuring diligence and organization (0–1 scaled).
+  sampling:
+    strategy: independent
+    distribution:
+      type: beta
+      alpha: 11.0
+      beta: 5.0
+      min: 0.0
+      max: 1.0
+      min_formula: null
+      max_formula: null
+    formula: null
+    depends_on: []
+    modifiers: []
+  grounding:
+    level: medium
+    method: extrapolated
+    source: https://pubmed.ncbi.nlm.nih.gov/39966018/
+    note: Surgeons typically high conscientiousness; center ≈0.70. citeturn10search3
+  constraints:
+  - type: hard_min
+    value: 0.0
+    expression: null
+    reason: Trait scale.
+  - type: hard_max
+    value: 1.0
+    expression: null
+    reason: Trait scale.
+- name: extraversion
+  type: float
+  category: personality
+  description: Big Five trait measuring sociability and assertiveness (0–1 scaled).
+  sampling:
+    strategy: independent
+    distribution:
+      type: beta
+      alpha: 6.0
+      beta: 5.0
+      min: 0.0
+      max: 1.0
+      min_formula: null
+      max_formula: null
+    formula: null
+    depends_on: []
+    modifiers: []
+  grounding:
+    level: medium
+    method: extrapolated
+    source: https://pubmed.ncbi.nlm.nih.gov/39966018/
+    note: Surgeons tend to be slightly above average extraversion. citeturn10search3
+  constraints:
+  - type: hard_min
+    value: 0.0
+    expression: null
+    reason: Trait scale.
+  - type: hard_max
+    value: 1.0
+    expression: null
+    reason: Trait scale.
+- name: agreeableness
+  type: float
+  category: personality
+  description: Big Five trait measuring cooperativeness and compassion (0–1 scaled).
+  sampling:
+    strategy: independent
+    distribution:
+      type: beta
+      alpha: 8.0
+      beta: 5.0
+      min: 0.0
+      max: 1.0
+      min_formula: null
+      max_formula: null
+    formula: null
+    depends_on: []
+    modifiers: []
+  grounding:
+    level: medium
+    method: extrapolated
+    source: https://pubmed.ncbi.nlm.nih.gov/39966018/
+    note: Surgical cohorts show modestly higher agreeableness vs norms. citeturn10search3
+  constraints:
+  - type: hard_min
+    value: 0.0
+    expression: null
+    reason: Trait scale.
+  - type: hard_max
+    value: 1.0
+    expression: null
+    reason: Trait scale.
+- name: neuroticism
+  type: float
+  category: personality
+  description: Big Five trait measuring emotional stability vs. negative affect (0–1
+    scaled).
+  sampling:
+    strategy: independent
+    distribution:
+      type: beta
+      alpha: 5.0
+      beta: 7.0
+      min: 0.0
+      max: 1.0
+      min_formula: null
+      max_formula: null
+    formula: null
+    depends_on: []
+    modifiers: []
+  grounding:
+    level: medium
+    method: extrapolated
+    source: https://pubmed.ncbi.nlm.nih.gov/39966018/
+    note: Surgeons typically lower negative emotionality than general population.
+      citeturn10search3
+  constraints:
+  - type: hard_min
+    value: 0.0
+    expression: null
+    reason: Trait scale.
+  - type: hard_max
+    value: 1.0
+    expression: null
+    reason: Trait scale.
+- name: risk_tolerance
+  type: float
+  category: personality
+  description: Tolerance for clinical/surgical risk when outcomes are uncertain (0–1
+    scaled).
+  sampling:
+    strategy: independent
+    distribution:
+      type: beta
+      alpha: 4.0
+      beta: 5.0
+      min: 0.0
+      max: 1.0
+      min_formula: null
+      max_formula: null
+    formula: null
+    depends_on: []
+    modifiers: []
+  grounding:
+    level: low
+    method: estimated
+    source: —
+    note: No standardized German surgeon risk‑scale prevalence; set moderate mean
+      reflecting procedural risk‑management culture.
+  constraints:
+  - type: hard_min
+    value: 0.0
+    expression: null
+    reason: Scale 0–1.
+  - type: hard_max
+    value: 1.0
+    expression: null
+    reason: Scale 0–1.
+- name: adherence_to_guidelines
+  type: float
+  category: personality
+  description: Tendency to follow clinical guidelines and hospital protocols (0–1
+    scaled).
+  sampling:
+    strategy: independent
+    distribution:
+      type: beta
+      alpha: 7.0
+      beta: 3.0
+      min: 0.0
+      max: 1.0
+      min_formula: null
+      max_formula: null
+    formula: null
+    depends_on: []
+    modifiers: []
+  grounding:
+    level: medium
+    method: extrapolated
+    source: https://pubmed.ncbi.nlm.nih.gov/38943163/
+    note: German preop anesthesia/surgery settings show variable adherence; surgeons
+      in structured environments often high but not perfect; beta centered at 0.72.
+      citeturn10search1turn10search5turn10academia13
+  constraints:
+  - type: hard_min
+    value: 0.0
+    expression: null
+    reason: Scale 0–1.
+  - type: hard_max
+    value: 1.0
+    expression: null
+    reason: Scale 0–1.
+- name: years_experience
+  type: int
+  category: population_specific
+  description: Years since obtaining full medical license to practice (post-licensure).
+  sampling:
+    strategy: conditional
+    distribution:
+      type: normal
+      mean: 16.0
+      std: 4.0
+      min: 0.0
+      max: 40.0
+      mean_formula: max(0, age - 27)
+      std_formula: '4.0'
+      min_formula: '0'
+      max_formula: max(0, age - 23)
+    formula: null
+    depends_on:
+    - age
+    modifiers:
+    - when: age < 30
+      multiply: 1.0
+      add: -1.0
+      weight_overrides: null
+      probability_override: null
+    - when: age >= 55
+      multiply: 1.1
+      add: 0.0
+      weight_overrides: null
+      probability_override: null
+  grounding:
+    level: medium
+    method: estimated
+    source: German medical education timeline (Abitur ~18/19, 6-year study + practical
+      year, licensure ~24–26) and typical career spans.
+    note: Base mean uses age - 27 as central tendency; wide cap reflects variability.
+  constraints:
+  - type: hard_min
+    value: 0.0
+    expression: null
+    reason: Years since licensure cannot be negative.
+  - type: hard_max
+    value: 45.0
+    expression: null
+    reason: Practical upper bound given human career lengths.
+  - type: expression
+    value: null
+    expression: years_experience <= max(0, age - 23)
+    reason: Years post-licensure cannot exceed age minus the earliest plausible licensure
+      age (~23).
+- name: board_certified
+  type: boolean
+  category: population_specific
+  description: Whether the surgeon holds a Facharzt (board) certification in their
+    specialty.
+  sampling:
+    strategy: conditional
+    distribution:
+      type: boolean
+      probability_true: 0.75
+    formula: null
+    depends_on:
+    - years_experience
+    modifiers:
+    - when: years_experience < 4
+      multiply: null
+      add: null
+      weight_overrides: null
+      probability_override: 0.2
+    - when: years_experience >= 5 and years_experience < 10
+      multiply: null
+      add: null
+      weight_overrides: null
+      probability_override: 0.85
+    - when: years_experience >= 10
+      multiply: null
+      add: null
+      weight_overrides: null
+      probability_override: 0.97
+  grounding:
+    level: medium
+    method: extrapolated
+    source: Share of hospital surgeons with Facharzt status is high after residency
+      completion in Germany.
+    note: Probability will be increased by experience/role in modifiers.
+  constraints: []
+- name: role
+  type: categorical
+  category: population_specific
+  description: Professional role/seniority (e.g., resident/assistant, specialist/attending,
+    senior consultant, chief).
+  sampling:
+    strategy: conditional
+    distribution:
+      type: categorical
+      options:
+      - resident/assistant
+      - specialist/attending
+      - senior_consultant
+      - chief
+      weights:
+      - 0.25
+      - 0.45
+      - 0.25
+      - 0.05
+    formula: null
+    depends_on:
+    - years_experience
+    - board_certified
+    modifiers:
+    - when: years_experience < 5 and board_certified == False
+      multiply: null
+      add: null
+      weight_overrides:
+        resident/assistant: 0.8
+        specialist/attending: 0.18
+        senior_consultant: 0.02
+        chief: 0.0
+      probability_override: null
+    - when: years_experience >= 5 and years_experience < 10 and board_certified ==
+        True
+      multiply: null
+      add: null
+      weight_overrides:
+        resident/assistant: 0.1
+        specialist/attending: 0.7
+        senior_consultant: 0.18
+        chief: 0.02
+      probability_override: null
+    - when: years_experience >= 10 and board_certified == True
+      multiply: null
+      add: null
+      weight_overrides:
+        resident/assistant: 0.0
+        specialist/attending: 0.35
+        senior_consultant: 0.5
+        chief: 0.15
+      probability_override: null
+    - when: years_experience >= 18 and board_certified == True
+      multiply: null
+      add: null
+      weight_overrides:
+        resident/assistant: 0.0
+        specialist/attending: 0.2
+        senior_consultant: 0.45
+        chief: 0.35
+      probability_override: null
+  grounding:
+    level: low
+    method: estimated
+    source: Typical hospital surgical department pyramids in Germany (broad base of
+      residents and specialists, few chiefs).
+    note: Exact shares vary by hospital size and specialty.
+  constraints:
+  - type: spec_expression
+    value: null
+    expression: abs(sum([0.25,0.45,0.25,0.05]) - 1.0) < 1e-6
+    reason: Category weights must sum to 1.
+- name: contract_type
+  type: categorical
+  category: population_specific
+  description: Employment contract type (e.g., salaried employee, civil servant, self-employed).
+  sampling:
+    strategy: conditional
+    distribution:
+      type: categorical
+      options:
+      - salaried_employee
+      - civil_servant
+      - self_employed
+      weights:
+      - 0.8
+      - 0.05
+      - 0.15
+    formula: null
+    depends_on:
+    - employer_type
+    modifiers:
+    - when: employer_type in ['university_hospital','public_non_university_hospital','nonprofit_hospital','private_hospital']
+      multiply: null
+      add: null
+      weight_overrides:
+        salaried_employee: 0.9
+        civil_servant: 0.08
+        self_employed: 0.02
+      probability_override: null
+    - when: employer_type == 'other_public_bodies'
+      multiply: null
+      add: null
+      weight_overrides:
+        salaried_employee: 0.7
+        civil_servant: 0.25
+        self_employed: 0.05
+      probability_override: null
+    - when: employer_type == 'MVZ_or_private_practice'
+      multiply: null
+      add: null
+      weight_overrides:
+        salaried_employee: 0.35
+        civil_servant: 0.05
+        self_employed: 0.6
+      probability_override: null
+  grounding:
+    level: medium
+    method: estimated
+    source: Most surgeons in hospitals are salaried; civil servant status is uncommon;
+      self-employment mainly in MVZ/private practice.
+    note: Employer_type modifiers will shift these strongly.
+  constraints:
+  - type: spec_expression
+    value: null
+    expression: abs(sum([0.80,0.05,0.15]) - 1.0) < 1e-6
+    reason: Category weights must sum to 1.
+- name: teaching_responsibility
+  type: boolean
+  category: population_specific
+  description: Has formal teaching duties (e.g., medical students, residents).
+  sampling:
+    strategy: conditional
+    distribution:
+      type: boolean
+      probability_true: 0.4
+    formula: null
+    depends_on:
+    - employer_type
+    modifiers:
+    - when: employer_type == 'university_hospital'
+      multiply: null
+      add: null
+      weight_overrides: null
+      probability_override: 0.85
+    - when: employer_type == 'public_non_university_hospital'
+      multiply: null
+      add: null
+      weight_overrides: null
+      probability_override: 0.5
+    - when: employer_type == 'nonprofit_hospital'
+      multiply: null
+      add: null
+      weight_overrides: null
+      probability_override: 0.45
+    - when: employer_type == 'private_hospital'
+      multiply: null
+      add: null
+      weight_overrides: null
+      probability_override: 0.35
+    - when: employer_type == 'MVZ_or_private_practice'
+      multiply: null
+      add: null
+      weight_overrides: null
+      probability_override: 0.2
+    - when: employer_type == 'other_public_bodies'
+      multiply: null
+      add: null
+      weight_overrides: null
+      probability_override: 0.4
+  grounding:
+    level: low
+    method: estimated
+    source: Teaching duties concentrated in university and larger teaching hospitals;
+      some specialists supervise trainees.
+    note: Employer_type and role will modify upward in academic settings.
+  constraints: []
+- name: research_activity_level
+  type: categorical
+  category: population_specific
+  description: Involvement in research (e.g., none, low, medium, high).
+  sampling:
+    strategy: conditional
+    distribution:
+      type: categorical
+      options:
+      - none
+      - low
+      - medium
+      - high
+      weights:
+      - 0.3
+      - 0.35
+      - 0.25
+      - 0.1
+    formula: null
+    depends_on:
+    - employer_type
+    - role
+    modifiers:
+    - when: employer_type == 'university_hospital' and role in ['senior_consultant','chief']
+      multiply: null
+      add: null
+      weight_overrides:
+        none: 0.05
+        low: 0.15
+        medium: 0.45
+        high: 0.35
+      probability_override: null
+    - when: employer_type == 'university_hospital' and role in ['resident/assistant','specialist/attending']
+      multiply: null
+      add: null
+      weight_overrides:
+        none: 0.1
+        low: 0.35
+        medium: 0.4
+        high: 0.15
+      probability_override: null
+    - when: employer_type in ['public_non_university_hospital','nonprofit_hospital','private_hospital']
+      multiply: null
+      add: null
+      weight_overrides:
+        none: 0.35
+        low: 0.45
+        medium: 0.18
+        high: 0.02
+      probability_override: null
+    - when: employer_type == 'MVZ_or_private_practice'
+      multiply: null
+      add: null
+      weight_overrides:
+        none: 0.6
+        low: 0.3
+        medium: 0.09
+        high: 0.01
+      probability_override: null
+    - when: employer_type == 'other_public_bodies'
+      multiply: null
+      add: null
+      weight_overrides:
+        none: 0.3
+        low: 0.4
+        medium: 0.25
+        high: 0.05
+      probability_override: null
+  grounding:
+    level: low
+    method: estimated
+    source: Clinical surgeons often have limited research time; higher activity clustered
+      at university hospitals and in senior academic roles.
+    note: Role and employer_type will adjust substantially.
+  constraints:
+  - type: spec_expression
+    value: null
+    expression: abs(sum([0.30,0.35,0.25,0.10]) - 1.0) < 1e-6
+    reason: Category weights must sum to 1.
+- name: weekly_operating_hours
+  type: int
+  category: population_specific
+  description: Average weekly hours spent in the operating room.
+  sampling:
+    strategy: conditional
+    distribution:
+      type: normal
+      mean: 18.0
+      std: 6.0
+      min: 0.0
+      max: 40.0
+      mean_formula: null
+      std_formula: null
+      min_formula: '0'
+      max_formula: '40'
+    formula: null
+    depends_on:
+    - role
+    - employer_type
+    modifiers:
+    - when: role == 'resident/assistant'
+      multiply: 0.85
+      add: 0.0
+      weight_overrides: null
+      probability_override: null
+    - when: role == 'specialist/attending'
+      multiply: 1.05
+      add: 0.0
+      weight_overrides: null
+      probability_override: null
+    - when: role == 'chief'
+      multiply: 0.6
+      add: 0.0
+      weight_overrides: null
+      probability_override: null
+    - when: employer_type == 'university_hospital'
+      multiply: 1.0
+      add: 2.0
+      weight_overrides: null
+      probability_override: null
+    - when: employer_type == 'MVZ_or_private_practice'
+      multiply: 1.0
+      add: -3.0
+      weight_overrides: null
+      probability_override: null
+  grounding:
+    level: medium
+    method: estimated
+    source: Blend of OR time for residents (lower) and attendings/senior consultants
+      (higher) in German hospitals.
+    note: Role and employer_type will reallocate around this base.
+  constraints:
+  - type: hard_min
+    value: 0.0
+    expression: null
+    reason: Cannot be negative.
+  - type: hard_max
+    value: 60.0
+    expression: null
+    reason: Physical/operational cap per week.
+- name: weekly_total_work_hours
+  type: int
+  category: population_specific
+  description: Average total weekly work hours (clinical + admin + research + teaching).
+  sampling:
+    strategy: conditional
+    distribution:
+      type: normal
+      mean: 52.0
+      std: 8.0
+      min: 30.0
+      max: 80.0
+      mean_formula: null
+      std_formula: null
+      min_formula: '30'
+      max_formula: '80'
+    formula: null
+    depends_on:
+    - role
+    - employer_type
+    modifiers:
+    - when: role == 'resident/assistant'
+      multiply: 1.0
+      add: 4.0
+      weight_overrides: null
+      probability_override: null
+    - when: role == 'specialist/attending'
+      multiply: 1.0
+      add: 2.0
+      weight_overrides: null
+      probability_override: null
+    - when: role == 'senior_consultant'
+      multiply: 1.0
+      add: 6.0
+      weight_overrides: null
+      probability_override: null
+    - when: role == 'chief'
+      multiply: 1.0
+      add: 8.0
+      weight_overrides: null
+      probability_override: null
+    - when: employer_type == 'university_hospital'
+      multiply: 1.0
+      add: 2.0
+      weight_overrides: null
+      probability_override: null
+    - when: employer_type == 'MVZ_or_private_practice'
+      multiply: 1.0
+      add: -4.0
+      weight_overrides: null
+      probability_override: null
+  grounding:
+    level: medium
+    method: estimated
+    source: German hospital physician work-hours typically exceed 40 h/wk including
+      overtime/on-call.
+    note: Role and employer_type will vary this; on-call load contributes to variance.
+  constraints:
+  - type: hard_min
+    value: 30.0
+    expression: null
+    reason: Part-time exceptions aside, full-time surgeons typically exceed 30 h/wk.
+  - type: hard_max
+    value: 90.0
+    expression: null
+    reason: EU Working Time Directive and practical upper bounds.
+- name: on_call_frequency_per_month
+  type: int
+  category: population_specific
+  description: Number of on-call shifts per month.
+  sampling:
+    strategy: conditional
+    distribution:
+      type: normal
+      mean: 5.0
+      std: 2.0
+      min: 0.0
+      max: 12.0
+      mean_formula: null
+      std_formula: null
+      min_formula: '0'
+      max_formula: '12'
+    formula: null
+    depends_on:
+    - role
+    - employer_type
+    modifiers:
+    - when: role == 'resident/assistant'
+      multiply: 1.0
+      add: 2.0
+      weight_overrides: null
+      probability_override: null
+    - when: role == 'specialist/attending'
+      multiply: 1.0
+      add: 1.0
+      weight_overrides: null
+      probability_override: null
+    - when: role == 'senior_consultant'
+      multiply: 1.0
+      add: -1.0
+      weight_overrides: null
+      probability_override: null
+    - when: role == 'chief'
+      multiply: 1.0
+      add: -2.0
+      weight_overrides: null
+      probability_override: null
+    - when: employer_type == 'private_hospital'
+      multiply: 1.0
+      add: -0.5
+      weight_overrides: null
+      probability_override: null
+    - when: employer_type == 'MVZ_or_private_practice'
+      multiply: 1.0
+      add: -2.0
+      weight_overrides: null
+      probability_override: null
+  grounding:
+    level: low
+    method: estimated
+    source: Typical surgical departments schedule 3–8 on-call shifts per month depending
+      on rota and staffing.
+    note: Load usually higher for residents and in smaller hospitals.
+  constraints:
+  - type: hard_min
+    value: 0.0
+    expression: null
+    reason: Cannot be negative.
+  - type: hard_max
+    value: 15.0
+    expression: null
+    reason: Scheduling limits.
+- name: administrative_load_hours
+  type: int
+  category: population_specific
+  description: Average weekly hours spent on administrative/managerial tasks.
+  sampling:
+    strategy: conditional
+    distribution:
+      type: normal
+      mean: 8.0
+      std: 4.0
+      min: 0.0
+      max: 30.0
+      mean_formula: null
+      std_formula: null
+      min_formula: '0'
+      max_formula: '30'
+    formula: null
+    depends_on:
+    - role
+    modifiers:
+    - when: role == 'resident/assistant'
+      multiply: 1.0
+      add: -3.0
+      weight_overrides: null
+      probability_override: null
+    - when: role == 'specialist/attending'
+      multiply: 1.0
+      add: -1.0
+      weight_overrides: null
+      probability_override: null
+    - when: role == 'senior_consultant'
+      multiply: 1.0
+      add: 4.0
+      weight_overrides: null
+      probability_override: null
+    - when: role == 'chief'
+      multiply: 1.0
+      add: 10.0
+      weight_overrides: null
+      probability_override: null
+  grounding:
+    level: low
+    method: estimated
+    source: Paperwork, quality management, MDTs, coding, and managerial tasks vary
+      strongly by seniority.
+    note: Role modifiers will shift upward for senior consultants/chiefs.
+  constraints:
+  - type: hard_min
+    value: 0.0
+    expression: null
+    reason: Cannot be negative.
+  - type: hard_max
+    value: 40.0
+    expression: null
+    reason: Weekly cap; even chiefs seldom exceed this purely on admin.
+- name: caseload_per_month
+  type: int
+  category: population_specific
+  description: Number of surgical procedures performed per month.
+  sampling:
+    strategy: conditional
+    distribution:
+      type: normal
+      mean: 20.0
+      std: 8.0
+      min: 0.0
+      max: 60.0
+      mean_formula: null
+      std_formula: null
+      min_formula: '0'
+      max_formula: '60'
+    formula: null
+    depends_on:
+    - surgical_specialty
+    - employer_type
+    modifiers:
+    - when: surgical_specialty == 'general/visceral'
+      multiply: 1.1
+      add: 0.0
+      weight_overrides: null
+      probability_override: null
+    - when: surgical_specialty == 'orthopedic/trauma'
+      multiply: 1.05
+      add: 0.0
+      weight_overrides: null
+      probability_override: null
+    - when: surgical_specialty == 'cardiac'
+      multiply: 0.7
+      add: 0.0
+      weight_overrides: null
+      probability_override: null
+    - when: surgical_specialty == 'vascular'
+      multiply: 0.95
+      add: 0.0
+      weight_overrides: null
+      probability_override: null
+    - when: surgical_specialty == 'neurosurgery'
+      multiply: 0.75
+      add: 0.0
+      weight_overrides: null
+      probability_override: null
+    - when: surgical_specialty == 'pediatric_surgery'
+      multiply: 0.8
+      add: 0.0
+      weight_overrides: null
+      probability_override: null
+    - when: surgical_specialty == 'plastic'
+      multiply: 0.85
+      add: 0.0
+      weight_overrides: null
+      probability_override: null
+    - when: surgical_specialty == 'ENT'
+      multiply: 1.05
+      add: 0.0
+      weight_overrides: null
+      probability_override: null
+    - when: surgical_specialty == 'urology'
+      multiply: 1.1
+      add: 0.0
+      weight_overrides: null
+      probability_override: null
+    - when: employer_type == 'university_hospital'
+      multiply: 1.0
+      add: -2.0
+      weight_overrides: null
+      probability_override: null
+    - when: employer_type == 'public_non_university_hospital'
+      multiply: 1.0
+      add: 1.0
+      weight_overrides: null
+      probability_override: null
+    - when: employer_type == 'private_hospital'
+      multiply: 1.0
+      add: 1.0
+      weight_overrides: null
+      probability_override: null
+    - when: employer_type == 'MVZ_or_private_practice'
+      multiply: 1.0
+      add: 3.0
+      weight_overrides: null
+      probability_override: null
+  grounding:
+    level: low
+    method: estimated
+    source: Throughput varies by specialty (e.g., ENT/urology high-volume, cardiac/neurosurgery
+      lower) and care setting.
+    note: Specialty and employer_type will adjust mean and variance.
+  constraints:
+  - type: hard_min
+    value: 0.0
+    expression: null
+    reason: Cannot be negative.
+  - type: hard_max
+    value: 100.0
+    expression: null
+    reason: Operational upper bound.
+- name: complication_rate_percent
+  type: float
+  category: population_specific
+  description: Estimated percentage of cases with complications (risk-adjusted approximation).
+  sampling:
+    strategy: conditional
+    distribution:
+      type: normal
+      mean: 6.0
+      std: 2.0
+      min: 0.0
+      max: 30.0
+      mean_formula: null
+      std_formula: null
+      min_formula: '0.0'
+      max_formula: '30.0'
+    formula: null
+    depends_on:
+    - surgical_specialty
+    - years_experience
+    modifiers:
+    - when: years_experience < 3
+      multiply: 1.15
+      add: 0.0
+      weight_overrides: null
+      probability_override: null
+    - when: years_experience >= 10
+      multiply: 0.9
+      add: 0.0
+      weight_overrides: null
+      probability_override: null
+    - when: surgical_specialty == 'cardiac'
+      multiply: 1.0
+      add: 1.5
+      weight_overrides: null
+      probability_override: null
+    - when: surgical_specialty == 'neurosurgery'
+      multiply: 1.0
+      add: 1.0
+      weight_overrides: null
+      probability_override: null
+    - when: surgical_specialty == 'vascular'
+      multiply: 1.0
+      add: 0.8
+      weight_overrides: null
+      probability_override: null
+    - when: surgical_specialty == 'pediatric_surgery'
+      multiply: 1.0
+      add: 0.3
+      weight_overrides: null
+      probability_override: null
+    - when: surgical_specialty == 'plastic'
+      multiply: 1.0
+      add: -0.8
+      weight_overrides: null
+      probability_override: null
+    - when: surgical_specialty == 'ENT'
+      multiply: 1.0
+      add: -1.0
+      weight_overrides: null
+      probability_override: null
+    - when: surgical_specialty == 'urology'
+      multiply: 1.0
+      add: -0.7
+      weight_overrides: null
+      probability_override: null
+    - when: surgical_specialty == 'orthopedic/trauma'
+      multiply: 1.0
+      add: 0.2
+      weight_overrides: null
+      probability_override: null
+  grounding:
+    level: low
+    method: estimated
+    source: Aggregate risk-adjusted surgical complication rates across mixed procedures
+      often single-digit percentages.
+    note: Specialty risk profile and experience will shift this.
+  constraints:
+  - type: hard_min
+    value: 0.0
+    expression: null
+    reason: Percent cannot be negative.
+  - type: hard_max
+    value: 50.0
+    expression: null
+    reason: Broad cap to allow for high-risk contexts.
+- name: union_membership
+  type: boolean
+  category: population_specific
+  description: Membership in a physicians’ union/association (e.g., Marburger Bund).
+  sampling:
+    strategy: conditional
+    distribution:
+      type: boolean
+      probability_true: 0.65
+    formula: null
+    depends_on:
+    - employer_type
+    modifiers:
+    - when: employer_type == 'university_hospital'
+      multiply: null
+      add: null
+      weight_overrides: null
+      probability_override: 0.7
+    - when: employer_type == 'public_non_university_hospital'
+      multiply: null
+      add: null
+      weight_overrides: null
+      probability_override: 0.75
+    - when: employer_type == 'nonprofit_hospital'
+      multiply: null
+      add: null
+      weight_overrides: null
+      probability_override: 0.7
+    - when: employer_type == 'private_hospital'
+      multiply: null
+      add: null
+      weight_overrides: null
+      probability_override: 0.6
+    - when: employer_type == 'MVZ_or_private_practice'
+      multiply: null
+      add: null
+      weight_overrides: null
+      probability_override: 0.4
+    - when: employer_type == 'other_public_bodies'
+      multiply: null
+      add: null
+      weight_overrides: null
+      probability_override: 0.65
+  grounding:
+    level: medium
+    method: extrapolated
+    source: High representation of hospital physicians in Marburger Bund and similar
+      associations.
+    note: Private-practice surgeons less likely; employer_type will adjust.
+  constraints: []
+- name: district_type
+  type: categorical
+  category: universal
+  description: Local area type of workplace residence (urban, suburban, rural).
+  sampling:
+    strategy: conditional
+    distribution:
+      type: categorical
+      options:
+      - urban
+      - suburban
+      - rural
+      weights:
+      - 0.5
+      - 0.3
+      - 0.2
+    formula: null
+    depends_on:
+    - state
+    modifiers:
+    - when: state == 'Berlin'
+      multiply: null
+      add: null
+      weight_overrides:
+        urban: 0.95
+        suburban: 0.05
+        rural: 0.0
+      probability_override: null
+    - when: state == 'Hamburg'
+      multiply: null
+      add: null
+      weight_overrides:
+        urban: 0.92
+        suburban: 0.08
+        rural: 0.0
+      probability_override: null
+    - when: state == 'Bremen'
+      multiply: null
+      add: null
+      weight_overrides:
+        urban: 0.85
+        suburban: 0.15
+        rural: 0.0
+      probability_override: null
+    - when: state == 'Bavaria'
+      multiply: null
+      add: null
+      weight_overrides:
+        urban: 0.35
+        suburban: 0.4
+        rural: 0.25
+      probability_override: null
+    - when: state == 'North Rhine-Westphalia'
+      multiply: null
+      add: null
+      weight_overrides:
+        urban: 0.55
+        suburban: 0.35
+        rural: 0.1
+      probability_override: null
+    - when: state == 'Hesse'
+      multiply: null
+      add: null
+      weight_overrides:
+        urban: 0.5
+        suburban: 0.35
+        rural: 0.15
+      probability_override: null
+    - when: state == 'Lower Saxony'
+      multiply: null
+      add: null
+      weight_overrides:
+        urban: 0.3
+        suburban: 0.4
+        rural: 0.3
+      probability_override: null
+    - when: state == 'Schleswig-Holstein'
+      multiply: null
+      add: null
+      weight_overrides:
+        urban: 0.25
+        suburban: 0.35
+        rural: 0.4
+      probability_override: null
+    - when: state == 'Mecklenburg-Vorpommern'
+      multiply: null
+      add: null
+      weight_overrides:
+        urban: 0.2
+        suburban: 0.3
+        rural: 0.5
+      probability_override: null
+    - when: state == 'Saxony'
+      multiply: null
+      add: null
+      weight_overrides:
+        urban: 0.45
+        suburban: 0.35
+        rural: 0.2
+      probability_override: null
+    - when: state == 'Saxony-Anhalt'
+      multiply: null
+      add: null
+      weight_overrides:
+        urban: 0.3
+        suburban: 0.35
+        rural: 0.35
+      probability_override: null
+    - when: state == 'Thuringia'
+      multiply: null
+      add: null
+      weight_overrides:
+        urban: 0.3
+        suburban: 0.35
+        rural: 0.35
+      probability_override: null
+    - when: state == 'Rhineland-Palatinate'
+      multiply: null
+      add: null
+      weight_overrides:
+        urban: 0.35
+        suburban: 0.4
+        rural: 0.25
+      probability_override: null
+    - when: state == 'Saarland'
+      multiply: null
+      add: null
+      weight_overrides:
+        urban: 0.4
+        suburban: 0.45
+        rural: 0.15
+      probability_override: null
+    - when: state == 'Brandenburg'
+      multiply: null
+      add: null
+      weight_overrides:
+        urban: 0.25
+        suburban: 0.35
+        rural: 0.4
+      probability_override: null
+  grounding:
+    level: low
+    method: estimated
+    source: Surgical workplaces concentrated in urban/metro areas, with some suburban
+      and fewer rural placements.
+    note: State-level urbanization will modify distribution.
+  constraints:
+  - type: spec_expression
+    value: null
+    expression: abs(sum([0.50,0.30,0.20]) - 1.0) < 1e-6
+    reason: Category weights must sum to 1.
+- name: commute_time_minutes
+  type: int
+  category: universal
+  description: Usual one-way commute time in minutes.
+  sampling:
+    strategy: conditional
+    distribution:
+      type: normal
+      mean: 28.0
+      std: 12.0
+      min: 0.0
+      max: 120.0
+      mean_formula: null
+      std_formula: null
+      min_formula: '0'
+      max_formula: '120'
+    formula: null
+    depends_on:
+    - state
+    - district_type
+    modifiers:
+    - when: district_type == 'urban'
+      multiply: 1.0
+      add: 2.0
+      weight_overrides: null
+      probability_override: null
+    - when: district_type == 'suburban'
+      multiply: 1.0
+      add: 5.0
+      weight_overrides: null
+      probability_override: null
+    - when: district_type == 'rural'
+      multiply: 1.0
+      add: 8.0
+      weight_overrides: null
+      probability_override: null
+    - when: state == 'Berlin'
+      multiply: 1.0
+      add: 3.0
+      weight_overrides: null
+      probability_override: null
+    - when: state == 'Bavaria'
+      multiply: 1.0
+      add: 4.0
+      weight_overrides: null
+      probability_override: null
+    - when: state == 'Mecklenburg-Vorpommern'
+      multiply: 1.0
+      add: 6.0
+      weight_overrides: null
+      probability_override: null
+  grounding:
+    level: medium
+    method: estimated
+    source: German physician commutes typically 20–40 minutes with longer times in
+      large metros.
+    note: State and district_type will shift mean (e.g., urban shorter, metro-region
+      congestion longer).
+  constraints:
+  - type: hard_min
+    value: 0.0
+    expression: null
+    reason: Cannot be negative.
+  - type: hard_max
+    value: 180.0
+    expression: null
+    reason: Practical upper bound for daily commuting.
+- name: personal_gross_income_eur
+  type: float
+  category: universal
+  description: Estimated annual personal gross income in EUR.
+  sampling:
+    strategy: conditional
+    distribution:
+      type: normal
+      mean: 130000.0
+      std: 40000.0
+      min: 60000.0
+      max: 400000.0
+      mean_formula: null
+      std_formula: null
+      min_formula: '60000.0'
+      max_formula: '400000.0'
+    formula: null
+    depends_on:
+    - role
+    - employer_type
+    - years_experience
+    modifiers:
+    - when: role == 'resident/assistant'
+      multiply: 1.0
+      add: -50000.0
+      weight_overrides: null
+      probability_override: null
+    - when: role == 'specialist/attending'
+      multiply: 1.0
+      add: -15000.0
+      weight_overrides: null
+      probability_override: null
+    - when: role == 'senior_consultant'
+      multiply: 1.0
+      add: 30000.0
+      weight_overrides: null
+      probability_override: null
+    - when: role == 'chief'
+      multiply: 1.0
+      add: 90000.0
+      weight_overrides: null
+      probability_override: null
+    - when: employer_type == 'private_hospital'
+      multiply: 1.0
+      add: 10000.0
+      weight_overrides: null
+      probability_override: null
+    - when: employer_type == 'MVZ_or_private_practice'
+      multiply: 1.0
+      add: 15000.0
+      weight_overrides: null
+      probability_override: null
+    - when: employer_type == 'university_hospital'
+      multiply: 1.0
+      add: -5000.0
+      weight_overrides: null
+      probability_override: null
+    - when: employer_type == 'nonprofit_hospital'
+      multiply: 1.0
+      add: -5000.0
+      weight_overrides: null
+      probability_override: null
+    - when: employer_type == 'other_public_bodies'
+      multiply: 1.0
+      add: -2000.0
+      weight_overrides: null
+      probability_override: null
+    - when: years_experience >= 15
+      multiply: 1.0
+      add: 15000.0
+      weight_overrides: null
+      probability_override: null
+    - when: years_experience < 5
+      multiply: 1.0
+      add: -10000.0
+      weight_overrides: null
+      probability_override: null
+  grounding:
+    level: medium
+    method: extrapolated
+    source: 'Tariff agreements (TV-Ärzte/VKA) and market data: Assistants ~65–85k,
+      specialists ~90–120k, senior ~120–160k, chiefs often >200k.'
+    note: Role, employer_type, experience will drive substantial variation.
+  constraints:
+  - type: hard_min
+    value: 50000.0
+    expression: null
+    reason: Below typical full-time surgeon earnings in Germany.
+  - type: hard_max
+    value: 600000.0
+    expression: null
+    reason: Upper cap reflecting high-earning chiefs with bonuses/private billing.
+- name: digital_health_literacy
+  type: float
+  category: population_specific
+  description: Self-assessed ability to find, understand, and use digital health information
+    and tools (0–1).
+  sampling:
+    strategy: independent
+    distribution:
+      type: beta
+      alpha: 3.78
+      beta: 2.74
+      min: 0.0
+      max: 1.0
+      min_formula: null
+      max_formula: null
+    formula: null
+    depends_on: []
+    modifiers: []
+  grounding:
+    level: medium
+    method: researched
+    source: '- Survey of German surgeons: majority self-rated AI knowledge as average
+      (41.6%) or rudimentary (37.3%), indicating moderate digital/AI literacy. (PMC
+      open access version). https://pmc.ncbi.nlm.nih.gov/articles/PMC9580562/ - German
+      physicians’ eHealth literacy study: >80% report insufficient knowledge on legal/data
+      security for digital tools. https://mhealth.jmir.org/2020/10/e20099/ - E‑Health
+      Monitor (Germany) 2024/2025 shows high TI connectivity but persistent technical
+      problems and slow ePA uptake—consistent with moderate provider digital readiness
+      rather than high. https://www.mckinsey.com/de/news/presse/2024-01-24-e-health-monitor-2023-24
+      ; https://www.mckinsey.de/news/presse/2025-12-18-e-health-monitor-2025'
+    note: Attribute targets surgeons specifically; surgeon-focused surveys show modest
+      self-assessed AI knowledge; broader physician data indicate gaps in eHealth
+      literacy and infrastructure friction. Combined, these support a beta distribution
+      centered modestly above mid-scale with meaningful variance. Figures are not
+      nationally representative of all surgeons.
+  constraints:
+  - type: hard_min
+    value: 0.0
+    expression: null
+    reason: Scale definition (0–1).
+  - type: hard_max
+    value: 1.0
+    expression: null
+    reason: Scale definition (0–1).
+- name: trust_in_institutions
+  type: float
+  category: personality
+  description: General trust in healthcare institutions, regulators, and professional
+    bodies (0–1).
+  sampling:
+    strategy: independent
+    distribution:
+      type: beta
+      alpha: 2.85
+      beta: 2.33
+      min: 0.0
+      max: 1.0
+      min_formula: null
+      max_formula: null
+    formula: null
+    depends_on: []
+    modifiers: []
+  grounding:
+    level: medium
+    method: extrapolated
+    source: '- OECD 2024 Drivers of Trust: in 2023, 36% of Germans reported high/moderately
+      high trust in the federal government; higher trust in police (64%) and courts
+      (58%). https://www.oecd.org/en/publications/oecd-survey-on-drivers-of-trust-in-public-institutions-2024-results-country-notes_a8004759-en/germany_9f727e4a-en.html
+      - German surgeons’ 2025 survey on AI in clinical decision-making highlights
+      trust/safety concerns (evidence, usability, transparency prioritized), indicating
+      cautious but not low institutional trust toward healthcare/tech governance.
+      https://pubmed.ncbi.nlm.nih.gov/39907950/'
+    note: No direct, recent nationally representative measure of surgeons’ general
+      institutional trust was found. We infer a moderate mean, above government trust
+      but tempered by documented concerns about safety/transparency, aligning more
+      with trust in professional/clinical institutions than in politics.
+  constraints:
+  - type: hard_min
+    value: 0.0
+    expression: null
+    reason: Scale definition (0–1).
+  - type: hard_max
+    value: 1.0
+    expression: null
+    reason: Scale definition (0–1).
+- name: it_infrastructure_quality
+  type: categorical
+  category: population_specific
+  description: Overall quality of hospital/practice IT infrastructure relevant to
+    AI deployment (e.g., low, medium, high).
+  sampling:
+    strategy: conditional
+    distribution:
+      type: categorical
+      options:
+      - low
+      - medium
+      - high
+      weights:
+      - 0.25
+      - 0.55
+      - 0.2
+    formula: null
+    depends_on:
+    - employer_type
+    - district_type
+    modifiers:
+    - when: employer_type == 'university_hospital'
+      multiply: null
+      add: null
+      weight_overrides:
+        low: 0.1
+        medium: 0.35
+        high: 0.55
+      probability_override: null
+    - when: employer_type == 'public_non_university_hospital'
+      multiply: null
+      add: null
+      weight_overrides:
+        low: 0.25
+        medium: 0.55
+        high: 0.2
+      probability_override: null
+    - when: employer_type == 'private_hospital'
+      multiply: null
+      add: null
+      weight_overrides:
+        low: 0.15
+        medium: 0.55
+        high: 0.3
+      probability_override: null
+    - when: employer_type == 'MVZ_or_private_practice'
+      multiply: null
+      add: null
+      weight_overrides:
+        low: 0.3
+        medium: 0.55
+        high: 0.15
+      probability_override: null
+    - when: district_type == 'urban'
+      multiply: null
+      add: null
+      weight_overrides:
+        low: 0.18
+        medium: 0.47
+        high: 0.35
+      probability_override: null
+    - when: district_type == 'rural'
+      multiply: null
+      add: null
+      weight_overrides:
+        low: 0.35
+        medium: 0.5
+        high: 0.15
+      probability_override: null
+  grounding:
+    level: medium
+    method: estimated
+    source: null
+    note: Reflects mixed public/private hospital IT maturity in Germany; skewed toward
+      medium readiness.
+  constraints:
+  - type: spec_expression
+    value: null
+    expression: abs(sum([0.25,0.55,0.20]) - 1.0) < 1e-6
+    reason: categorical weights must sum to 1
+- name: ehr_integration_level
+  type: categorical
+  category: population_specific
+  description: Degree to which core clinical systems (EHR/RIS/PACS/OR planning) are
+    integrated (none, partial, full).
+  sampling:
+    strategy: conditional
+    distribution:
+      type: categorical
+      options:
+      - none
+      - partial
+      - full
+      weights:
+      - 0.15
+      - 0.55
+      - 0.3
+    formula: null
+    depends_on:
+    - it_infrastructure_quality
+    - employer_type
+    modifiers:
+    - when: it_infrastructure_quality == 'high'
+      multiply: null
+      add: null
+      weight_overrides:
+        none: 0.1
+        partial: 0.35
+        full: 0.55
+      probability_override: null
+    - when: it_infrastructure_quality == 'medium'
+      multiply: null
+      add: null
+      weight_overrides:
+        none: 0.2
+        partial: 0.6
+        full: 0.2
+      probability_override: null
+    - when: it_infrastructure_quality == 'low'
+      multiply: null
+      add: null
+      weight_overrides:
+        none: 0.45
+        partial: 0.45
+        full: 0.1
+      probability_override: null
+    - when: employer_type == 'university_hospital'
+      multiply: null
+      add: null
+      weight_overrides:
+        none: 0.15
+        partial: 0.45
+        full: 0.4
+      probability_override: null
+  grounding:
+    level: medium
+    method: estimated
+    source: null
+    note: Many sites have partial interfacing among EHR/RIS/PACS; fewer have seamless
+      full integration.
+  constraints:
+  - type: spec_expression
+    value: null
+    expression: abs(sum([0.15,0.55,0.30]) - 1.0) < 1e-6
+    reason: categorical weights must sum to 1
+- name: local_it_support_capacity
+  type: categorical
+  category: population_specific
+  description: Availability of on-site IT/clinical engineering support for new tools
+    (e.g., limited, standard, extended 24/7).
+  sampling:
+    strategy: conditional
+    distribution:
+      type: categorical
+      options:
+      - limited
+      - standard
+      - extended 24/7
+      weights:
+      - 0.35
+      - 0.5
+      - 0.15
+    formula: null
+    depends_on:
+    - it_infrastructure_quality
+    - employer_type
+    modifiers:
+    - when: it_infrastructure_quality == 'high'
+      multiply: null
+      add: null
+      weight_overrides:
+        limited: 0.1
+        standard: 0.55
+        extended 24/7: 0.35
+      probability_override: null
+    - when: it_infrastructure_quality == 'medium'
+      multiply: null
+      add: null
+      weight_overrides:
+        limited: 0.25
+        standard: 0.65
+        extended 24/7: 0.1
+      probability_override: null
+    - when: it_infrastructure_quality == 'low'
+      multiply: null
+      add: null
+      weight_overrides:
+        limited: 0.6
+        standard: 0.35
+        extended 24/7: 0.05
+      probability_override: null
+    - when: employer_type == 'university_hospital'
+      multiply: null
+      add: null
+      weight_overrides:
+        limited: 0.1
+        standard: 0.5
+        extended 24/7: 0.4
+      probability_override: null
+  grounding:
+    level: medium
+    method: estimated
+    source: null
+    note: 24/7 on-site coverage is less common outside university/large centers; most
+      have business-hours support.
+  constraints:
+  - type: spec_expression
+    value: null
+    expression: abs(sum([0.35,0.50,0.15]) - 1.0) < 1e-6
+    reason: categorical weights must sum to 1
+- name: training_hours_on_ai_last_12_months
+  type: int
+  category: population_specific
+  description: Hours spent in the past year on AI/ML or digital diagnostics training
+    (formal or CME).
+  sampling:
+    strategy: conditional
+    distribution:
+      type: normal
+      mean: 8.0
+      std: 10.0
+      min: 0.0
+      max: 100.0
+      mean_formula: null
+      std_formula: null
+      min_formula: null
+      max_formula: null
+    formula: null
+    depends_on:
+    - research_activity_level
+    - teaching_responsibility
+    - employer_type
+    modifiers:
+    - when: research_activity_level == 'high'
+      multiply: 1.3
+      add: 4.0
+      weight_overrides: null
+      probability_override: null
+    - when: research_activity_level == 'medium'
+      multiply: 1.15
+      add: 2.0
+      weight_overrides: null
+      probability_override: null
+    - when: teaching_responsibility == True
+      multiply: 1.1
+      add: 2.0
+      weight_overrides: null
+      probability_override: null
+    - when: employer_type == 'university_hospital'
+      multiply: 1.1
+      add: 1.5
+      weight_overrides: null
+      probability_override: null
+  grounding:
+    level: low
+    method: estimated
+    source: null
+    note: Base prior assumes modest recent AI-specific CME exposure; long tail possible
+      but uncommon.
+  constraints:
+  - type: hard_min
+    value: 0.0
+    expression: null
+    reason: hours cannot be negative
+  - type: hard_max
+    value: 200.0
+    expression: null
+    reason: upper clamp well above typical CME volumes
+- name: management_support_for_ai
+  type: float
+  category: population_specific
+  description: Perceived support from department/hospital leadership for adopting
+    AI in surgical planning (0–1).
+  sampling:
+    strategy: conditional
+    distribution:
+      type: normal
+      mean: 0.45
+      std: 0.2
+      min: 0.0
+      max: 1.0
+      mean_formula: null
+      std_formula: null
+      min_formula: null
+      max_formula: null
+    formula: null
+    depends_on:
+    - employer_type
+    - role
+    - research_activity_level
+    modifiers:
+    - when: employer_type == 'university_hospital'
+      multiply: 1.0
+      add: 0.12
+      weight_overrides: null
+      probability_override: null
+    - when: employer_type == 'private_hospital'
+      multiply: 1.0
+      add: 0.06
+      weight_overrides: null
+      probability_override: null
+    - when: role in ['senior_consultant','chief']
+      multiply: 1.0
+      add: 0.08
+      weight_overrides: null
+      probability_override: null
+    - when: research_activity_level == 'high'
+      multiply: 1.0
+      add: 0.1
+      weight_overrides: null
+      probability_override: null
+    - when: research_activity_level == 'none'
+      multiply: 1.0
+      add: -0.06
+      weight_overrides: null
+      probability_override: null
+  grounding:
+    level: medium
+    method: estimated
+    source: null
+    note: Perceived leadership backing is mixed; slight lean positive but far from
+      universal.
+  constraints:
+  - type: hard_min
+    value: 0.0
+    expression: null
+    reason: bounded attitude score
+  - type: hard_max
+    value: 1.0
+    expression: null
+    reason: bounded attitude score
+- name: social_exposure_to_ai
+  type: float
+  category: population_specific
+  description: Exposure to peers/mentors using or advocating AI (conferences, collaborations,
+    departmental champions) (0–1).
+  sampling:
+    strategy: conditional
+    distribution:
+      type: normal
+      mean: 0.4
+      std: 0.22
+      min: 0.0
+      max: 1.0
+      mean_formula: null
+      std_formula: null
+      min_formula: null
+      max_formula: null
+    formula: null
+    depends_on:
+    - research_activity_level
+    - teaching_responsibility
+    - role
+    modifiers:
+    - when: research_activity_level == 'high'
+      multiply: 1.0
+      add: 0.12
+      weight_overrides: null
+      probability_override: null
+    - when: research_activity_level == 'medium'
+      multiply: 1.0
+      add: 0.06
+      weight_overrides: null
+      probability_override: null
+    - when: teaching_responsibility == True
+      multiply: 1.0
+      add: 0.05
+      weight_overrides: null
+      probability_override: null
+    - when: role in ['senior_consultant','chief']
+      multiply: 1.0
+      add: 0.05
+      weight_overrides: null
+      probability_override: null
+  grounding:
+    level: medium
+    method: estimated
+    source: null
+    note: Conference/departmental exposure varies; many have some exposure but not
+      high saturation.
+  constraints:
+  - type: hard_min
+    value: 0.0
+    expression: null
+    reason: bounded exposure index
+  - type: hard_max
+    value: 1.0
+    expression: null
+    reason: bounded exposure index
+- name: trust_in_ai_decision_support
+  type: float
+  category: personality
+  description: Baseline trust that AI diagnostic recommendations are reliable and
+    clinically useful (0–1).
+  sampling:
+    strategy: conditional
+    distribution:
+      type: normal
+      mean: null
+      std: 0.15
+      min: 0.0
+      max: 1.0
+      mean_formula: min(1, max(0, 0.2 + 0.4 * openness + 0.3 * trust_in_institutions
+        - 0.002 * max(0, years_experience - 20)))
+      std_formula: null
+      min_formula: null
+      max_formula: null
+    formula: null
+    depends_on:
+    - openness
+    - years_experience
+    - trust_in_institutions
+    modifiers:
+    - when: openness >= 0.7
+      multiply: 1.0
+      add: 0.1
+      weight_overrides: null
+      probability_override: null
+    - when: trust_in_institutions >= 0.7
+      multiply: 1.0
+      add: 0.1
+      weight_overrides: null
+      probability_override: null
+    - when: trust_in_institutions < 0.3
+      multiply: 1.0
+      add: -0.1
+      weight_overrides: null
+      probability_override: null
+    - when: years_experience > 25
+      multiply: 1.0
+      add: -0.08
+      weight_overrides: null
+      probability_override: null
+    - when: years_experience <= 10
+      multiply: 1.0
+      add: 0.05
+      weight_overrides: null
+      probability_override: null
+  grounding:
+    level: medium
+    method: extrapolated
+    source: null
+    note: Higher openness and institutional trust lift baseline; very long tenure
+      can modestly temper initial trust.
+  constraints:
+  - type: hard_min
+    value: 0.0
+    expression: null
+    reason: probabilistic trust index 0-1
+  - type: hard_max
+    value: 1.0
+    expression: null
+    reason: probabilistic trust index 0-1
+- name: medicolegal_risk_concern
+  type: float
+  category: personality
+  description: Concern about liability, compliance, and documentation risks when using
+    AI (0–1).
+  sampling:
+    strategy: conditional
+    distribution:
+      type: normal
+      mean: null
+      std: 0.18
+      min: 0.0
+      max: 1.0
+      mean_formula: min(1, max(0, 0.5 + 0.4 * neuroticism + 0.05 * (years_experience
+        / 30.0) - (0.05 if board_certified else 0.0)))
+      std_formula: null
+      min_formula: null
+      max_formula: null
+    formula: null
+    depends_on:
+    - neuroticism
+    - years_experience
+    - board_certified
+    modifiers:
+    - when: neuroticism >= 0.7
+      multiply: 1.0
+      add: 0.1
+      weight_overrides: null
+      probability_override: null
+    - when: years_experience > 25
+      multiply: 1.0
+      add: 0.03
+      weight_overrides: null
+      probability_override: null
+    - when: board_certified == True
+      multiply: 1.0
+      add: -0.05
+      weight_overrides: null
+      probability_override: null
+    - when: neuroticism <= 0.3
+      multiply: 1.0
+      add: -0.06
+      weight_overrides: null
+      probability_override: null
+  grounding:
+    level: medium
+    method: extrapolated
+    source: null
+    note: Trait anxiety and seniority tend to heighten perceived liability exposure;
+      board certification slightly reassures.
+  constraints:
+  - type: hard_min
+    value: 0.0
+    expression: null
+    reason: risk concern index 0-1
+  - type: hard_max
+    value: 1.0
+    expression: null
+    reason: risk concern index 0-1
+- name: perceived_ai_utility
+  type: float
+  category: population_specific
+  description: Perceived usefulness of AI for improving surgical planning accuracy/efficiency
+    in one’s practice (0–1).
+  sampling:
+    strategy: conditional
+    distribution:
+      type: normal
+      mean: 0.5
+      std: 0.2
+      min: 0.0
+      max: 1.0
+      mean_formula: null
+      std_formula: null
+      min_formula: null
+      max_formula: null
+    formula: null
+    depends_on:
+    - surgical_specialty
+    - caseload_per_month
+    - complication_rate_percent
+    modifiers:
+    - when: surgical_specialty in ['neurosurgery','vascular','urology','ENT','cardiac']
+      multiply: 1.0
+      add: 0.08
+      weight_overrides: null
+      probability_override: null
+    - when: surgical_specialty in ['orthopedic/trauma','general/visceral']
+      multiply: 1.0
+      add: 0.03
+      weight_overrides: null
+      probability_override: null
+    - when: caseload_per_month >= 45
+      multiply: 1.0
+      add: 0.05
+      weight_overrides: null
+      probability_override: null
+    - when: complication_rate_percent >= 10.0
+      multiply: 1.0
+      add: 0.05
+      weight_overrides: null
+      probability_override: null
+  grounding:
+    level: low
+    method: estimated
+    source: null
+    note: Neutral-leaning baseline before specialty/caseload adjustments.
+  constraints:
+  - type: hard_min
+    value: 0.0
+    expression: null
+    reason: utility perception bounded 0-1
+  - type: hard_max
+    value: 1.0
+    expression: null
+    reason: utility perception bounded 0-1
+- name: imaging_dependency_of_practice
+  type: float
+  category: population_specific
+  description: Share of planning decisions that heavily rely on imaging or complex
+    diagnostics (0–1).
+  sampling:
+    strategy: conditional
+    distribution:
+      type: normal
+      mean: 0.6
+      std: 0.2
+      min: 0.0
+      max: 1.0
+      mean_formula: null
+      std_formula: null
+      min_formula: null
+      max_formula: null
+    formula: null
+    depends_on:
+    - surgical_specialty
+    modifiers:
+    - when: surgical_specialty in ['neurosurgery','vascular','urology','ENT','cardiac']
+      multiply: 1.0
+      add: 0.12
+      weight_overrides: null
+      probability_override: null
+    - when: surgical_specialty in ['orthopedic/trauma','general/visceral']
+      multiply: 1.0
+      add: 0.05
+      weight_overrides: null
+      probability_override: null
+    - when: surgical_specialty in ['plastic','pediatric_surgery','other_subspecialties']
+      multiply: 1.0
+      add: 0.03
+      weight_overrides: null
+      probability_override: null
+  grounding:
+    level: medium
+    method: estimated
+    source: null
+    note: Many surgical specialties rely substantially on imaging for planning; degree
+      varies by specialty.
+  constraints:
+  - type: hard_min
+    value: 0.0
+    expression: null
+    reason: share bounded 0-1
+  - type: hard_max
+    value: 1.0
+    expression: null
+    reason: share bounded 0-1
+- name: time_available_per_case_minutes
+  type: int
+  category: population_specific
+  description: Typical prep/planning time available per surgical case in minutes.
+  sampling:
+    strategy: conditional
+    distribution:
+      type: normal
+      mean: null
+      std: 8.0
+      min: 5.0
+      max: 120.0
+      mean_formula: max(5, 50 - 0.15 * weekly_total_work_hours - 0.25 * caseload_per_month)
+      std_formula: null
+      min_formula: null
+      max_formula: null
+    formula: null
+    depends_on:
+    - weekly_total_work_hours
+    - caseload_per_month
+    modifiers:
+    - when: weekly_total_work_hours >= 60 and caseload_per_month >= 40
+      multiply: 1.0
+      add: -6.0
+      weight_overrides: null
+      probability_override: null
+    - when: weekly_total_work_hours <= 45 and caseload_per_month <= 25
+      multiply: 1.0
+      add: 5.0
+      weight_overrides: null
+      probability_override: null
+    - when: caseload_per_month >= 60
+      multiply: 0.9
+      add: -4.0
+      weight_overrides: null
+      probability_override: null
+  grounding:
+    level: medium
+    method: extrapolated
+    source: null
+    note: Workload pressure reduces available planning minutes per case; baseline
+      around ~30–40 mins at moderate loads.
+  constraints:
+  - type: hard_min
+    value: 5.0
+    expression: null
+    reason: practical lower bound for case prep in busy settings
+  - type: hard_max
+    value: 180.0
+    expression: null
+    reason: upper clamp to avoid extreme tails
+- name: patient_consent_workflow_effort
+  type: float
+  category: population_specific
+  description: Perceived extra administrative effort to obtain and document consent/data-use
+    for AI tools (0–1).
+  sampling:
+    strategy: conditional
+    distribution:
+      type: normal
+      mean: null
+      std: 0.15
+      min: 0.0
+      max: 1.0
+      mean_formula: min(1, max(0, 0.20 + 0.005 * administrative_load_hours))
+      std_formula: null
+      min_formula: null
+      max_formula: null
+    formula: null
+    depends_on:
+    - administrative_load_hours
+    - it_infrastructure_quality
+    modifiers:
+    - when: administrative_load_hours >= 12
+      multiply: 1.0
+      add: 0.08
+      weight_overrides: null
+      probability_override: null
+    - when: administrative_load_hours <= 6
+      multiply: 1.0
+      add: -0.04
+      weight_overrides: null
+      probability_override: null
+    - when: it_infrastructure_quality == 'high'
+      multiply: 1.0
+      add: -0.08
+      weight_overrides: null
+      probability_override: null
+    - when: it_infrastructure_quality == 'low'
+      multiply: 1.0
+      add: 0.06
+      weight_overrides: null
+      probability_override: null
+  grounding:
+    level: medium
+    method: extrapolated
+    source: null
+    note: More admin time correlates with perceived consent/documentation overhead;
+      IT quality adjustments will come later.
+  constraints:
+  - type: hard_min
+    value: 0.0
+    expression: null
+    reason: effort index bounded 0-1
+  - type: hard_max
+    value: 1.0
+    expression: null
+    reason: effort index bounded 0-1
+- name: reimbursement_awareness_for_ai
+  type: boolean
+  category: population_specific
+  description: Awareness of current reimbursement/coding pathways relevant to AI-assisted
+    diagnostics in Germany.
+  sampling:
+    strategy: conditional
+    distribution:
+      type: boolean
+      probability_true: 0.35
+    formula: null
+    depends_on:
+    - employer_type
+    - role
+    - management_support_for_ai
+    modifiers:
+    - when: role in ['senior_consultant','chief'] and employer_type == 'university_hospital'
+      multiply: null
+      add: null
+      weight_overrides: null
+      probability_override: 0.85
+    - when: role in ['senior_consultant','chief'] and employer_type == 'public_non_university_hospital'
+      multiply: null
+      add: null
+      weight_overrides: null
+      probability_override: 0.7
+    - when: role == 'specialist/attending' and employer_type in ['university_hospital','private_hospital']
+      multiply: null
+      add: null
+      weight_overrides: null
+      probability_override: 0.55
+    - when: management_support_for_ai >= 0.7
+      multiply: null
+      add: null
+      weight_overrides: null
+      probability_override: 0.65
+    - when: role == 'resident/assistant'
+      multiply: null
+      add: null
+      weight_overrides: null
+      probability_override: 0.3
+  grounding:
+    level: low
+    method: estimated
+    source: null
+    note: Base prior that roughly one-third are aware of specific German reimbursement/coding
+      options for AI diagnostics.
+  constraints: []
+sampling_order:
+- adherence_to_guidelines
+- age
+- agreeableness
+- citizenship_status
+- conscientiousness
+- continuing_medical_education_hours_per_year
+- digital_health_literacy
+- education_level
+- employer_type
+- contract_type
+- extraversion
+- gender
+- household_size
+- housing_tenure
+- marital_status
+- neuroticism
+- openness
+- risk_tolerance
+- state
+- district_type
+- commute_time_minutes
+- it_infrastructure_quality
+- ehr_integration_level
+- local_it_support_capacity
+- surgical_specialty
+- caseload_per_month
+- imaging_dependency_of_practice
+- teaching_responsibility
+- trust_in_institutions
+- union_membership
+- years_experience
+- board_certified
+- complication_rate_percent
+- medicolegal_risk_concern
+- perceived_ai_utility
+- role
+- administrative_load_hours
+- on_call_frequency_per_month
+- patient_consent_workflow_effort
+- personal_gross_income_eur
+- research_activity_level
+- management_support_for_ai
+- reimbursement_awareness_for_ai
+- social_exposure_to_ai
+- training_hours_on_ai_last_12_months
+- trust_in_ai_decision_support
+- weekly_operating_hours
+- weekly_total_work_hours
+- time_available_per_case_minutes

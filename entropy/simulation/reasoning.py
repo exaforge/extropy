@@ -152,8 +152,7 @@ def build_response_schema(outcomes: OutcomeConfig) -> dict[str, Any]:
 
         properties[outcome.name] = outcome_prop
 
-        if outcome.required:
-            required.append(outcome.name)
+        required.append(outcome.name)
 
     return {
         "type": "object",

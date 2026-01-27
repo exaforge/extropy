@@ -46,7 +46,7 @@ def network_command(
         entropy network agents.json -o network.json --avg-degree 25 --validate
         entropy network agents.json -o network.json --seed 42
     """
-    from ...network import (
+    from ...population.network import (
         generate_network,
         generate_network_with_metrics,
         load_agents_json,
