@@ -22,9 +22,7 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from rich.console import Console
-from rich.panel import Panel
 from rich.table import Table
-from rich.tree import Tree
 
 
 class ExitCode:
@@ -91,13 +89,6 @@ class Output:
             self._data.update(data)
         else:
             self.console.print(f"[green]✓[/green] {message}")
-
-    def info(self, message: str, **data: Any) -> None:
-        """Output an info message."""
-        if self.json_mode:
-            self._data.update(data)
-        else:
-            self.console.print(f"[blue]ℹ[/blue] {message}")
 
     def warning(
         self,
@@ -168,13 +159,6 @@ class Output:
             self.console.print("└" + "─" * 58 + "┘")
             self.console.print()
 
-    def panel(
-        self, content: str, *, title: str | None = None, style: str = "blue"
-    ) -> None:
-        """Output a Rich panel (human mode only)."""
-        if not self.json_mode:
-            self.console.print(Panel(content, title=title, border_style=style))
-
     def table(
         self,
         title: str,
@@ -206,42 +190,6 @@ class Output:
             for row in rows:
                 table.add_row(*row)
             self.console.print(table)
-
-    def tree(
-        self,
-        title: str,
-        items: list[tuple[str, list[str]]],
-        *,
-        data_key: str | None = None,
-    ) -> None:
-        """Output a tree structure showing dependencies.
-
-        Args:
-            title: Tree root label
-            items: List of (name, dependencies) tuples
-            data_key: Key for JSON output
-        """
-        key = data_key or "dependencies"
-
-        if self.json_mode:
-            self._data[key] = [
-                {"name": name, "depends_on": deps} for name, deps in items
-            ]
-        else:
-            tree = Tree(title)
-            for name, deps in items:
-                if deps:
-                    branch = tree.add(f"[cyan]{name}[/cyan]")
-                    for dep in deps:
-                        branch.add(f"[dim]← {dep}[/dim]")
-                else:
-                    tree.add(f"[green]{name}[/green]")
-            self.console.print(tree)
-
-    def progress_summary(self, items: dict[str, Any]) -> None:
-        """Add progress/summary data (JSON mode stores it, human mode ignores)."""
-        if self.json_mode:
-            self._data.update(items)
 
     def set_data(self, key: str, value: Any) -> None:
         """Set arbitrary data in JSON output."""

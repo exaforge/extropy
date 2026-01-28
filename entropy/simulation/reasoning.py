@@ -165,7 +165,11 @@ def build_response_schema(outcomes: OutcomeConfig) -> dict[str, Any]:
 def _get_primary_position_outcome(scenario: ScenarioSpec) -> str | None:
     """Get the name of the primary position outcome.
 
-    Looks for outcomes with 'position', 'stance', 'intent', or 'decision' in the name.
+    The "position" is the main categorical decision/stance an agent takes.
+    Uses the first required categorical outcome, or first categorical if none required.
+
+    Only considers categorical outcomes since position must be a string
+    for display (e.g., "A colleague is {position}") and aggregation.
 
     Args:
         scenario: Scenario specification
@@ -173,19 +177,16 @@ def _get_primary_position_outcome(scenario: ScenarioSpec) -> str | None:
     Returns:
         Name of the primary position outcome, or None
     """
-    position_keywords = ["position", "stance", "intent", "decision", "response"]
+    categorical_outcomes = [
+        o for o in scenario.outcomes.suggested_outcomes if o.type.value == "categorical"
+    ]
 
-    for outcome in scenario.outcomes.suggested_outcomes:
-        name_lower = outcome.name.lower()
-        if any(keyword in name_lower for keyword in position_keywords):
-            return outcome.name
+    if not categorical_outcomes:
+        return None
 
-    # Fallback: return first categorical outcome
-    for outcome in scenario.outcomes.suggested_outcomes:
-        if outcome.type.value == "categorical":
-            return outcome.name
-
-    return None
+    # First required categorical, or first categorical if none required
+    required = [o for o in categorical_outcomes if o.required]
+    return required[0].name if required else categorical_outcomes[0].name
 
 
 def reason_agent(
@@ -224,7 +225,7 @@ def reason_agent(
                 )
                 continue
 
-            # Extract position from the primary position outcome
+            # Extract position from the primary position outcome (always categorical)
             position = None
             if position_outcome and position_outcome in response:
                 position = response[position_outcome]

@@ -46,6 +46,7 @@ from .persona_template import (
     generate_persona_template,
     validate_persona_template,
     refine_persona_template,
+    PersonaTemplateError,
 )
 
 __all__ = [
@@ -70,4 +71,5 @@ __all__ = [
     "generate_persona_template",
     "validate_persona_template",
     "refine_persona_template",
+    "PersonaTemplateError",
 ]

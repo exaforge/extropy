@@ -123,7 +123,7 @@ def sample_command(
             )
             if not get_json_mode():
                 for err in validation_result.errors[:5]:
-                    out.text(f"  [red]✗[/red] {err.attribute}: {err.message}")
+                    out.text(f"  [red]✗[/red] {err.location}: {err.message}")
                 if len(validation_result.errors) > 5:
                     out.text(
                         f"  [dim]... and {len(validation_result.errors) - 5} more[/dim]"
@@ -137,7 +137,7 @@ def sample_command(
             if not get_json_mode():
                 error_rows = []
                 for err in validation_result.errors[:10]:
-                    error_rows.append([err.attribute, err.message[:50]])
+                    error_rows.append([err.location, err.message[:50]])
 
                 out.table(
                     "Validation Errors",

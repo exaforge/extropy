@@ -2,10 +2,14 @@
 
 Generates templates for converting agent attributes into natural language
 personas. Templates use Python's {attribute} format placeholders.
+
+The template is used for the narrative intro only - all remaining attributes
+are automatically appended as a structured list by persona.py.
 """
 
 from ...core.llm import simple_call
 from ...core.models import PopulationSpec, AttributeSpec
+from ...simulation.persona import is_narrative_safe
 
 
 # JSON Schema for persona template generation response
@@ -14,12 +18,20 @@ PERSONA_TEMPLATE_SCHEMA = {
     "properties": {
         "template": {
             "type": "string",
-            "description": "A first-person persona template using {attribute_name} placeholders",
+            "description": "A second-person narrative intro using {attribute_name} placeholders",
         },
     },
     "required": ["template"],
     "additionalProperties": False,
 }
+
+
+def _get_narrative_safe_attrs(attributes: list[AttributeSpec]) -> list[AttributeSpec]:
+    """Filter to only narrative-safe attributes.
+
+    Excludes booleans and 0-1 floats which read awkwardly in prose.
+    """
+    return [attr for attr in attributes if is_narrative_safe(attr)]
 
 
 def _build_attribute_summary(attributes: list[AttributeSpec]) -> str:
@@ -39,78 +51,113 @@ def _build_attribute_summary(attributes: list[AttributeSpec]) -> str:
     return "\n".join(lines)
 
 
+class PersonaTemplateError(Exception):
+    """Raised when persona template generation fails after retries."""
+
+    pass
+
+
 def generate_persona_template(
     spec: PopulationSpec,
     log: bool = True,
+    max_retries: int = 3,
 ) -> str:
     """Generate a persona template for a population spec.
 
     Uses LLM to create a natural, population-appropriate template that
-    converts agent attributes into first-person persona narratives.
+    serves as the narrative INTRO for persona generation. All remaining
+    attributes are automatically appended as a structured list.
+
+    Only narrative-safe attributes (no booleans, no 0-1 floats) are
+    included - these work better in prose form.
 
     Args:
         spec: Population specification with attributes
         log: Whether to log the LLM call
+        max_retries: Maximum retry attempts on failure
 
     Returns:
         Template string with {attribute} placeholders
-    """
-    attribute_summary = _build_attribute_summary(spec.attributes)
 
-    prompt = f"""Generate a persona template for agents in this population:
+    Raises:
+        PersonaTemplateError: If generation fails after all retries
+    """
+    # Only include narrative-safe attributes
+    safe_attrs = _get_narrative_safe_attrs(spec.attributes)
+    safe_attr_names = {a.name for a in safe_attrs}
+    attribute_summary = _build_attribute_summary(safe_attrs)
+
+    base_prompt = f"""Generate a narrative intro template for agents in this population.
 
 Population: {spec.meta.description}
 Geography: {spec.meta.geography or "Not specified"}
 
-Available attributes:
+Available attributes for narrative (values will be pre-formatted as readable strings):
 {attribute_summary}
 
-Write a 3-5 sentence first-person description using {{attribute_name}} placeholders.
+IMPORTANT: This template is ONLY for the narrative intro. All other attributes
+(booleans, scores, etc.) will be automatically appended as a structured list.
+Don't try to include everything - focus on core identity.
+
+Write 2-3 natural sentences using {{attribute_name}} placeholders.
 
 Rules:
-- Use ONLY attributes from the list above
-- Focus on: identity, role, professional context, relevant behavioral traits
-- Don't include EVERY attribute, just the most important ones for this population
-- Write naturally, not like a form
+- Use ONLY attributes from the list above (they are pre-filtered for narrative use)
+- Focus on: age, gender, role, specialty, location, experience
+- Values are pre-formatted: "University Hospital" not "university_hospital"
+- Start with "You are a..."
+- Write naturally, like introducing someone
 - Use {{attribute_name}} syntax for placeholders (curly braces)
 
 Example output:
-"You are a {{age}}-year-old {{gender}} surgeon specializing in {{surgical_specialty}}. You work at a {{employer_type}} in {{federal_state}} with {{years_experience}} years of experience. You consider yourself {{ai_trust_level}} when it comes to AI tools in clinical practice."
+"You are a {{age}}-year-old {{gender}} surgeon specializing in {{surgical_specialty}}, working as a {{role_rank}} at a {{employer_type}} in {{location_state}} with {{years_experience}} years of experience."
 
 Output only the template string, no explanation."""
 
-    try:
-        response = simple_call(
-            prompt=prompt,
-            response_schema=PERSONA_TEMPLATE_SCHEMA,
-            schema_name="persona_template",
-            log=log,
-        )
-        template = response.get("template", "")
-        if template:
+    last_error = None
+
+    for attempt in range(max_retries):
+        prompt = base_prompt
+
+        # Add error feedback for retries
+        if last_error:
+            prompt += f"\n\nPREVIOUS ATTEMPT FAILED: {last_error}\nPlease fix and try again."
+
+        try:
+            response = simple_call(
+                prompt=prompt,
+                response_schema=PERSONA_TEMPLATE_SCHEMA,
+                schema_name="persona_template",
+                log=log,
+            )
+            template = response.get("template", "")
+
+            if not template:
+                last_error = "Empty template returned"
+                continue
+
+            # Validate: check all placeholders exist in safe attrs
+            import re
+
+            used_attrs = set(re.findall(r"\{(\w+)\}", template))
+            invalid_attrs = used_attrs - safe_attr_names
+
+            if invalid_attrs:
+                last_error = f"Invalid attributes used: {invalid_attrs}. Only use: {', '.join(sorted(safe_attr_names))}"
+                continue
+
+            # Success
             return template
-    except Exception:
-        pass
 
-    # Fallback if LLM fails
-    return _fallback_template(spec.attributes)
+        except Exception as e:
+            last_error = str(e)
+            continue
+
+    raise PersonaTemplateError(
+        f"Failed to generate persona template after {max_retries} attempts. Last error: {last_error}"
+    )
 
 
-def _fallback_template(attributes: list[AttributeSpec]) -> str:
-    """Generic fallback if LLM fails."""
-    # Pick key attributes
-    key_attrs = []
-    for a in attributes:
-        if a.name in ("age", "gender"):
-            key_attrs.insert(0, a.name)
-        elif a.category in ("universal", "population_specific") and len(key_attrs) < 8:
-            key_attrs.append(a.name)
-
-    if not key_attrs:
-        key_attrs = [a.name for a in attributes[:5]]
-
-    placeholders = ", ".join(f"{{{a}}}" for a in key_attrs)
-    return f"You are an agent with these characteristics: {placeholders}."
 
 
 def validate_persona_template(template: str, sample_agent: dict) -> tuple[bool, str]:
@@ -137,6 +184,7 @@ def refine_persona_template(
     spec: PopulationSpec,
     feedback: str,
     log: bool = True,
+    max_retries: int = 3,
 ) -> str:
     """Refine a persona template based on user feedback.
 
@@ -145,17 +193,26 @@ def refine_persona_template(
         spec: Population specification
         feedback: User feedback on what to change
         log: Whether to log the LLM call
+        max_retries: Maximum retry attempts on failure
 
     Returns:
         Refined template string
-    """
-    attribute_summary = _build_attribute_summary(spec.attributes)
 
-    prompt = f"""Refine this persona template based on user feedback.
+    Raises:
+        PersonaTemplateError: If refinement fails after all retries
+    """
+    import re
+
+    # Only include narrative-safe attributes
+    safe_attrs = _get_narrative_safe_attrs(spec.attributes)
+    safe_attr_names = {a.name for a in safe_attrs}
+    attribute_summary = _build_attribute_summary(safe_attrs)
+
+    base_prompt = f"""Refine this narrative intro template based on user feedback.
 
 Population: {spec.meta.description}
 
-Available attributes:
+Available attributes (narrative-safe only, values will be pre-formatted):
 {attribute_summary}
 
 Current template:
@@ -166,22 +223,47 @@ User feedback: {feedback}
 Rules:
 - Use ONLY attributes from the list above
 - Use {{attribute_name}} syntax for placeholders
-- Keep it 3-5 sentences
-- Write naturally in first person
+- Keep it 2-3 sentences focused on core identity
+- Start with "You are a..."
+- This is just the intro - other attributes are appended as a list
 
 Output only the refined template string, no explanation."""
 
-    try:
-        response = simple_call(
-            prompt=prompt,
-            response_schema=PERSONA_TEMPLATE_SCHEMA,
-            schema_name="persona_template",
-            log=log,
-        )
-        template = response.get("template", "")
-        if template:
-            return template
-    except Exception:
-        pass
+    last_error = None
 
-    return current_template  # Return original if refinement fails
+    for _ in range(max_retries):
+        prompt = base_prompt
+
+        if last_error:
+            prompt += f"\n\nPREVIOUS ATTEMPT FAILED: {last_error}\nPlease fix and try again."
+
+        try:
+            response = simple_call(
+                prompt=prompt,
+                response_schema=PERSONA_TEMPLATE_SCHEMA,
+                schema_name="persona_template",
+                log=log,
+            )
+            template = response.get("template", "")
+
+            if not template:
+                last_error = "Empty template returned"
+                continue
+
+            # Validate placeholders
+            used_attrs = set(re.findall(r"\{(\w+)\}", template))
+            invalid_attrs = used_attrs - safe_attr_names
+
+            if invalid_attrs:
+                last_error = f"Invalid attributes used: {invalid_attrs}. Only use: {', '.join(sorted(safe_attr_names))}"
+                continue
+
+            return template
+
+        except Exception as e:
+            last_error = str(e)
+            continue
+
+    raise PersonaTemplateError(
+        f"Failed to refine persona template after {max_retries} attempts. Last error: {last_error}"
+    )

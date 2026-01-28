@@ -291,6 +291,34 @@ def create_sample_agent(spec: PopulationSpec) -> dict:
     return agent
 
 
+def _preview_full_persona(spec: PopulationSpec, sample_agent: dict, template: str) -> str:
+    """Generate full persona preview with template + characteristics list."""
+    from ..simulation.persona import (
+        format_agent,
+        render_persona,
+        extract_template_attrs,
+        build_characteristics_list,
+    )
+
+    # Format agent values
+    formatted = format_agent(sample_agent, spec)
+
+    # Render template
+    narrative = render_persona(formatted, template)
+
+    # Get used attrs and build characteristics
+    used_attrs = extract_template_attrs(template)
+    characteristics = build_characteristics_list(spec, formatted, used_attrs)
+
+    return f"""## Who You Are
+
+{narrative}
+
+## Your Characteristics
+
+{characteristics}"""
+
+
 def generate_and_review_persona_template(
     spec: PopulationSpec,
     yes: bool = False,
@@ -365,7 +393,7 @@ def generate_and_review_persona_template(
     console.print()
 
     # Display the template
-    console.print("[bold]Proposed Template:[/bold]")
+    console.print("[bold]Narrative Intro Template:[/bold]")
     console.print()
     # Show template with syntax highlighting
     for line in template.split("\n"):
@@ -376,14 +404,18 @@ def generate_and_review_persona_template(
     # Create a sample agent for preview
     sample_agent = create_sample_agent(spec)
 
-    # Validate and show preview
+    # Validate template first
     is_valid, result = validate_persona_template(template, sample_agent)
-    if is_valid:
-        console.print("[bold]Sample Preview:[/bold]")
-        console.print(f"  [green]{result}[/green]")
+    if not is_valid:
+        console.print(f"[yellow]⚠[/yellow] Template validation warning: {result}")
         console.print()
     else:
-        console.print(f"[yellow]⚠[/yellow] Template validation warning: {result}")
+        # Show full persona preview (template + characteristics list)
+        console.print("[bold]Full Persona Preview:[/bold]")
+        console.print()
+        full_preview = _preview_full_persona(spec, sample_agent, template)
+        for line in full_preview.split("\n"):
+            console.print(f"  [green]{line}[/green]")
         console.print()
 
     if yes:
@@ -429,8 +461,11 @@ def generate_and_review_persona_template(
 
             is_valid, result = validate_persona_template(template, sample_agent)
             if is_valid:
-                console.print("[bold]Sample Preview:[/bold]")
-                console.print(f"  [green]{result}[/green]")
+                console.print("[bold]Full Persona Preview:[/bold]")
+                console.print()
+                full_preview = _preview_full_persona(spec, sample_agent, template)
+                for line in full_preview.split("\n"):
+                    console.print(f"  [green]{line}[/green]")
                 console.print()
 
         elif choice == "f":
@@ -460,6 +495,9 @@ def generate_and_review_persona_template(
 
             is_valid, result = validate_persona_template(template, sample_agent)
             if is_valid:
-                console.print("[bold]Sample Preview:[/bold]")
-                console.print(f"  [green]{result}[/green]")
+                console.print("[bold]Full Persona Preview:[/bold]")
+                console.print()
+                full_preview = _preview_full_persona(spec, sample_agent, template)
+                for line in full_preview.split("\n"):
+                    console.print(f"  [green]{line}[/green]")
                 console.print()
