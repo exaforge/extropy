@@ -9,6 +9,7 @@ import re
 from pathlib import Path
 
 from ..core.models import (
+    OutcomeType,
     PopulationSpec,
     ScenarioSpec,
     Severity,
@@ -335,7 +336,7 @@ def validate_scenario(
             )
 
         # Validate categorical outcomes have options
-        if outcome.type.value == "categorical":
+        if outcome.type == OutcomeType.CATEGORICAL:
             if not outcome.options or len(outcome.options) < 2:
                 errors.append(
                     ValidationError(
@@ -347,7 +348,7 @@ def validate_scenario(
                 )
 
         # Validate float outcomes have valid range
-        if outcome.type.value == "float":
+        if outcome.type == OutcomeType.FLOAT:
             if outcome.range:
                 min_val, max_val = outcome.range
                 if min_val >= max_val:

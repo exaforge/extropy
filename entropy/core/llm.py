@@ -82,6 +82,7 @@ def simple_call(
     schema_name: str = "response",
     model: str = "gpt-5-mini",
     log: bool = True,
+    max_tokens: int | None = None,
 ) -> dict:
     """
     Simple LLM call with structured output, no reasoning, no web search.
@@ -97,10 +98,16 @@ def simple_call(
         schema_name: Name for the schema
         model: Model to use (gpt-5-mini recommended)
         log: Whether to log request/response to file
+        max_tokens: Maximum output tokens (None = unlimited, use schema to guide length)
 
     Returns:
         Structured data matching the schema
     """
+    import time
+    import logging
+
+    logger = logging.getLogger(__name__)
+
     client = get_openai_client()
 
     request_params = {
@@ -116,7 +123,19 @@ def simple_call(
         },
     }
 
+    if max_tokens is not None:
+        request_params["max_output_tokens"] = max_tokens
+
+    # Heavy logging - before API call
+    logger.info(f"[LLM] simple_call starting - model={model}, schema={schema_name}, max_tokens={max_tokens}")
+    logger.info(f"[LLM] prompt length: {len(prompt)} chars")
+    logger.debug(f"[LLM] FULL REQUEST PARAMS: {json.dumps(request_params, indent=2, default=str)}")
+
+    api_start = time.time()
     response = client.responses.create(**request_params)
+    api_elapsed = time.time() - api_start
+
+    logger.info(f"[LLM] API response received in {api_elapsed:.2f}s")
 
     # Extract structured data
     structured_data = None
@@ -127,12 +146,80 @@ def simple_call(
                     if hasattr(content_item, "text"):
                         structured_data = json.loads(content_item.text)
 
+    logger.info(f"[LLM] Extracted data: {json.dumps(structured_data) if structured_data else 'None'}")
+
+    # Log usage stats if available
+    if hasattr(response, "usage") and response.usage:
+        usage = response.usage
+        logger.info(
+            f"[LLM] Token usage - input: {getattr(usage, 'input_tokens', 'N/A')}, "
+            f"output: {getattr(usage, 'output_tokens', 'N/A')}, "
+            f"total: {getattr(usage, 'total_tokens', 'N/A')}"
+        )
+
     if log:
         _log_request_response(
             function_name="simple_call",
             request=request_params,
             response=response,
         )
+
+    return structured_data or {}
+
+
+async def simple_call_async(
+    prompt: str,
+    response_schema: dict,
+    schema_name: str = "response",
+    model: str = "gpt-5-mini",
+    max_tokens: int | None = None,
+) -> dict:
+    """
+    Async version of simple_call for concurrent API requests.
+
+    Args:
+        prompt: The prompt
+        response_schema: JSON schema for the response
+        schema_name: Name for the schema
+        model: Model to use
+        max_tokens: Maximum output tokens (None = unlimited)
+
+    Returns:
+        Structured data matching the schema
+    """
+    import logging
+    from openai import AsyncOpenAI
+
+    logger = logging.getLogger(__name__)
+    settings = get_settings()
+    client = AsyncOpenAI(api_key=settings.openai_api_key)
+
+    request_params = {
+        "model": model,
+        "input": prompt,
+        "text": {
+            "format": {
+                "type": "json_schema",
+                "name": schema_name,
+                "strict": True,
+                "schema": response_schema,
+            }
+        },
+    }
+
+    if max_tokens is not None:
+        request_params["max_output_tokens"] = max_tokens
+
+    response = await client.responses.create(**request_params)
+
+    # Extract structured data
+    structured_data = None
+    for item in response.output:
+        if hasattr(item, "type") and item.type == "message":
+            for content_item in item.content:
+                if hasattr(content_item, "type") and content_item.type == "output_text":
+                    if hasattr(content_item, "text"):
+                        structured_data = json.loads(content_item.text)
 
     return structured_data or {}
 

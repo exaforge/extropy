@@ -85,7 +85,7 @@ def _load_network_summary(network_path: Path) -> dict | None:
             "node_count": node_count,
             "edge_types": list(edge_types),
         }
-    except Exception:
+    except (json.JSONDecodeError, KeyError, TypeError):
         return None
 
 
@@ -250,7 +250,7 @@ def create_scenario(
         try:
             with open(network_path) as f:
                 network = json.load(f)
-        except Exception:
+        except (json.JSONDecodeError, OSError):
             pass
 
     validation_result = validate_scenario(spec, population_spec, agent_count, network)

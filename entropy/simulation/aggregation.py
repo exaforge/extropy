@@ -8,8 +8,9 @@ from collections import defaultdict
 from typing import Any
 
 from ..core.models import (
-    PopulationSpec,
     OutcomeDefinition,
+    OutcomeType,
+    PopulationSpec,
     TimestepSummary,
 )
 from .state import StateManager
@@ -128,8 +129,8 @@ def compute_segment_aggregates(
 
     # Group agents by segment value
     segments: dict[str, list[str]] = defaultdict(list)
-    for agent in agents:
-        agent_id = agent.get("_id", str(agents.index(agent)))
+    for i, agent in enumerate(agents):
+        agent_id = agent.get("_id", str(i))
         value = agent.get(segment_attribute, "unknown")
         segments[str(value)].append(agent_id)
 
@@ -200,7 +201,7 @@ def compute_outcome_distributions(
     distributions: dict[str, dict[str, float]] = {}
 
     for outcome in outcomes:
-        if outcome.type.value == "categorical":
+        if outcome.type == OutcomeType.CATEGORICAL:
             counts: dict[str, int] = defaultdict(int)
             for state in final_states:
                 value = state["outcomes"].get(outcome.name)
@@ -210,7 +211,7 @@ def compute_outcome_distributions(
             if counts:
                 distributions[outcome.name] = {k: v / total for k, v in counts.items()}
 
-        elif outcome.type.value == "boolean":
+        elif outcome.type == OutcomeType.BOOLEAN:
             true_count = 0
             false_count = 0
             for state in final_states:
@@ -227,7 +228,7 @@ def compute_outcome_distributions(
                     "false": false_count / total_bool,
                 }
 
-        elif outcome.type.value == "float":
+        elif outcome.type == OutcomeType.FLOAT:
             values = []
             for state in final_states:
                 value = state["outcomes"].get(outcome.name)
@@ -291,81 +292,3 @@ def compute_timeline_aggregates(
     return timeline
 
 
-def compute_cross_segment_analysis(
-    state_manager: StateManager,
-    agents: list[dict[str, Any]],
-    segment_attributes: list[str],
-) -> dict[str, list[dict[str, Any]]]:
-    """Compute aggregates across multiple segment attributes.
-
-    Args:
-        state_manager: State manager with final state
-        agents: List of agent dictionaries
-        segment_attributes: List of attributes to analyze
-
-    Returns:
-        Dict mapping attribute name to segment breakdowns
-    """
-    result = {}
-
-    for attr in segment_attributes:
-        result[attr] = compute_segment_aggregates(state_manager, agents, attr)
-
-    return result
-
-
-def identify_influencers(
-    state_manager: StateManager,
-    agents: list[dict[str, Any]],
-    network: dict[str, Any],
-    top_n: int = 10,
-) -> list[dict[str, Any]]:
-    """Identify top influencers based on sharing and reach.
-
-    Args:
-        state_manager: State manager
-        agents: List of agents
-        network: Network data
-        top_n: Number of top influencers to return
-
-    Returns:
-        List of influencer info dictionaries
-    """
-    agent_map = {a.get("_id", str(i)): a for i, a in enumerate(agents)}
-    final_states = state_manager.export_final_states()
-
-    # Build adjacency list for degree calculation
-    degree: dict[str, int] = defaultdict(int)
-    edges = network.get("edges", [])
-    for edge in edges:
-        degree[edge.get("source", "")] += 1
-        degree[edge.get("target", "")] += 1
-
-    influencers = []
-    for state in final_states:
-        agent_id = state["agent_id"]
-        if not state["will_share"]:
-            continue
-
-        agent_degree = degree.get(agent_id, 0)
-        agent = agent_map.get(agent_id, {})
-
-        influencers.append(
-            {
-                "agent_id": agent_id,
-                "degree": agent_degree,
-                "position": state["position"],
-                "sentiment": state["sentiment"],
-                "exposure_count": state["exposure_count"],
-                "attributes": {
-                    k: v
-                    for k, v in agent.items()
-                    if not k.startswith("_") and k != "id"
-                },
-            }
-        )
-
-    # Sort by degree (influence reach)
-    influencers.sort(key=lambda x: x["degree"], reverse=True)
-
-    return influencers[:top_n]

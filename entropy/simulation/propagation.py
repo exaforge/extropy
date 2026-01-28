@@ -100,8 +100,8 @@ def apply_seed_exposures(
         channel_credibility = get_channel_credibility(scenario, rule.channel)
         event_credibility = scenario.event.credibility
 
-        for agent in agents:
-            agent_id = agent.get("_id", str(agents.index(agent)))
+        for i, agent in enumerate(agents):
+            agent_id = agent.get("_id", str(i))
 
             if not evaluate_exposure_rule(rule, agent, timestep):
                 continue
@@ -276,45 +276,3 @@ def propagate_through_network(
     return new_exposures
 
 
-def count_seed_exposures_for_timestep(
-    timestep: int,
-    scenario: ScenarioSpec,
-) -> int:
-    """Estimate number of seed exposure rules for a timestep.
-
-    Useful for progress reporting.
-
-    Args:
-        timestep: Timestep to check
-        scenario: Scenario specification
-
-    Returns:
-        Count of rules for this timestep
-    """
-    count = 0
-    for rule in scenario.seed_exposure.rules:
-        if rule.timestep == timestep:
-            count += 1
-    return count
-
-
-def get_exposure_timeline(
-    scenario: ScenarioSpec,
-) -> dict[int, list[str]]:
-    """Get mapping of timesteps to exposure channels.
-
-    Args:
-        scenario: Scenario specification
-
-    Returns:
-        Dict mapping timestep to list of channel names
-    """
-    timeline: dict[int, list[str]] = {}
-
-    for rule in scenario.seed_exposure.rules:
-        if rule.timestep not in timeline:
-            timeline[rule.timestep] = []
-        if rule.channel not in timeline[rule.timestep]:
-            timeline[rule.timestep].append(rule.channel)
-
-    return timeline

@@ -230,34 +230,25 @@ class StateManager:
             updated_at=row["updated_at"],
         )
 
-    def get_agents_by_condition(self, condition: str) -> list[str]:
-        """Get agent IDs matching a SQL condition.
-
-        Args:
-            condition: SQL WHERE clause (e.g., "aware = 1 AND will_share = 1")
-
-        Returns:
-            List of matching agent IDs
-        """
-        cursor = self.conn.cursor()
-        cursor.execute(
-            f"""
-            SELECT agent_id FROM agent_states WHERE {condition}
-        """
-        )
-        return [row["agent_id"] for row in cursor.fetchall()]
-
     def get_unaware_agents(self) -> list[str]:
         """Get IDs of agents who haven't been exposed yet."""
-        return self.get_agents_by_condition("aware = 0")
+        cursor = self.conn.cursor()
+        cursor.execute("SELECT agent_id FROM agent_states WHERE aware = 0")
+        return [row["agent_id"] for row in cursor.fetchall()]
 
     def get_aware_agents(self) -> list[str]:
         """Get IDs of agents who are aware of the event."""
-        return self.get_agents_by_condition("aware = 1")
+        cursor = self.conn.cursor()
+        cursor.execute("SELECT agent_id FROM agent_states WHERE aware = 1")
+        return [row["agent_id"] for row in cursor.fetchall()]
 
     def get_sharers(self) -> list[str]:
         """Get IDs of agents who will share."""
-        return self.get_agents_by_condition("aware = 1 AND will_share = 1")
+        cursor = self.conn.cursor()
+        cursor.execute(
+            "SELECT agent_id FROM agent_states WHERE aware = 1 AND will_share = 1"
+        )
+        return [row["agent_id"] for row in cursor.fetchall()]
 
     def get_all_agent_ids(self) -> list[str]:
         """Get all agent IDs in the database."""

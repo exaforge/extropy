@@ -1,15 +1,39 @@
 """Simulate command for running simulations from scenario specs."""
 
+import logging
 import time
 from pathlib import Path
 from threading import Event, Thread
 
 import typer
 from rich.live import Live
+from rich.logging import RichHandler
 from rich.spinner import Spinner
 
 from ..app import app, console
 from ..utils import format_elapsed
+
+
+def setup_logging(verbose: bool = False, debug: bool = False):
+    """Configure logging for simulation."""
+    level = logging.WARNING
+    if verbose:
+        level = logging.INFO
+    if debug:
+        level = logging.DEBUG
+
+    # Configure root logger
+    logging.basicConfig(
+        level=level,
+        format="%(message)s",
+        datefmt="[%X]",
+        handlers=[RichHandler(console=console, show_path=False, markup=True)],
+        force=True,
+    )
+
+    # Also set specific loggers
+    for name in ["entropy.simulation", "entropy.core.llm"]:
+        logging.getLogger(name).setLevel(level)
 
 
 @app.command("simulate")
@@ -26,6 +50,8 @@ def simulate_command(
         None, "--seed", help="Random seed for reproducibility"
     ),
     quiet: bool = typer.Option(False, "--quiet", "-q", help="Suppress progress output"),
+    verbose: bool = typer.Option(False, "--verbose", "-v", help="Show detailed logs"),
+    debug: bool = typer.Option(False, "--debug", help="Show debug-level logs (very verbose)"),
 ):
     """
     Run a simulation from a scenario spec.
@@ -38,6 +64,9 @@ def simulate_command(
         entropy simulate scenario.yaml -o results/ --model gpt-5-nano --seed 42
     """
     from ...simulation import run_simulation
+
+    # Setup logging based on verbosity
+    setup_logging(verbose=verbose, debug=debug)
 
     start_time = time.time()
     console.print()
@@ -52,6 +81,8 @@ def simulate_command(
     console.print(f"Model: {model} | Threshold: {threshold}")
     if seed:
         console.print(f"Seed: {seed}")
+    if verbose or debug:
+        console.print(f"Logging: {'DEBUG' if debug else 'VERBOSE'}")
     console.print()
 
     # Progress tracking
@@ -62,13 +93,10 @@ def simulate_command(
         current_progress[1] = max_timesteps
         current_progress[2] = status
 
-    # Run simulation
-    simulation_done = Event()
-    simulation_error = None
-    result = None
-
-    def do_simulation():
-        nonlocal result, simulation_error
+    # When verbose/debug, run synchronously to see all logs clearly
+    if verbose or debug:
+        console.print("[dim]Running with verbose logging (no spinner)...[/dim]")
+        console.print()
         try:
             result = run_simulation(
                 scenario_path=scenario_file,
@@ -76,32 +104,53 @@ def simulate_command(
                 model=model,
                 multi_touch_threshold=threshold,
                 random_seed=seed,
-                on_progress=on_progress if not quiet else None,
+                on_progress=on_progress,
             )
+            simulation_error = None
         except Exception as e:
             simulation_error = e
-        finally:
-            simulation_done.set()
-
-    simulation_thread = Thread(target=do_simulation, daemon=True)
-    simulation_thread.start()
-
-    if not quiet:
-        spinner = Spinner("dots", text="Starting...", style="cyan")
-        with Live(spinner, console=console, refresh_per_second=12.5, transient=True):
-            while not simulation_done.is_set():
-                elapsed = time.time() - start_time
-                timestep, max_ts, status = current_progress
-                if max_ts > 0:
-                    pct = timestep / max_ts * 100
-                    spinner.update(
-                        text=f"Timestep {timestep}/{max_ts} ({pct:.0f}%) | {status} | {format_elapsed(elapsed)}"
-                    )
-                else:
-                    spinner.update(text=f"{status} | {format_elapsed(elapsed)}")
-                time.sleep(0.1)
+            result = None
     else:
-        simulation_done.wait()
+        # Run simulation in thread with spinner
+        simulation_done = Event()
+        simulation_error = None
+        result = None
+
+        def do_simulation():
+            nonlocal result, simulation_error
+            try:
+                result = run_simulation(
+                    scenario_path=scenario_file,
+                    output_dir=output,
+                    model=model,
+                    multi_touch_threshold=threshold,
+                    random_seed=seed,
+                    on_progress=on_progress if not quiet else None,
+                )
+            except Exception as e:
+                simulation_error = e
+            finally:
+                simulation_done.set()
+
+        simulation_thread = Thread(target=do_simulation, daemon=True)
+        simulation_thread.start()
+
+        if not quiet:
+            spinner = Spinner("dots", text="Starting...", style="cyan")
+            with Live(spinner, console=console, refresh_per_second=12.5, transient=True):
+                while not simulation_done.is_set():
+                    elapsed = time.time() - start_time
+                    timestep, max_ts, status = current_progress
+                    if max_ts > 0:
+                        pct = timestep / max_ts * 100
+                        spinner.update(
+                            text=f"Timestep {timestep}/{max_ts} ({pct:.0f}%) | {status} | {format_elapsed(elapsed)}"
+                        )
+                    else:
+                        spinner.update(text=f"{status} | {format_elapsed(elapsed)}")
+                    time.sleep(0.1)
+        else:
+            simulation_done.wait()
 
     if simulation_error:
         console.print(f"[red]✗[/red] Simulation failed: {simulation_error}")

@@ -26,7 +26,7 @@ from ..core.models import (
 from ..population.network import load_agents_json
 from .state import StateManager
 from .persona import generate_persona
-from .reasoning import reason_agent, create_reasoning_context
+from .reasoning import batch_reason_agents, create_reasoning_context
 from .propagation import apply_seed_exposures, propagate_through_network, get_neighbors
 from .stopping import evaluate_stopping_conditions
 from .timeline import TimelineManager
@@ -141,8 +141,8 @@ class SimulationEngine:
 
         # Pre-generate personas for all agents
         self._personas: dict[str, str] = {}
-        for agent in agents:
-            agent_id = agent.get("_id", str(agents.index(agent)))
+        for i, agent in enumerate(agents):
+            agent_id = agent.get("_id", str(i))
             self._personas[agent_id] = generate_persona(agent, population_spec)
 
         # Tracking variables
@@ -229,6 +229,9 @@ class SimulationEngine:
         Returns:
             TimestepSummary for this timestep
         """
+        timestep_start = time.time()
+        logger.info(f"[TIMESTEP {timestep}] ========== STARTING ==========")
+
         # 1. Apply seed exposures
         new_seed_exposures = apply_seed_exposures(
             timestep,
@@ -237,6 +240,7 @@ class SimulationEngine:
             self.state_manager,
             self.rng,
         )
+        logger.info(f"[TIMESTEP {timestep}] Seed exposures: {new_seed_exposures}")
 
         # 2. Network propagation from previous sharers
         new_network_exposures = propagate_through_network(
@@ -247,6 +251,7 @@ class SimulationEngine:
             self.state_manager,
             self.rng,
         )
+        logger.info(f"[TIMESTEP {timestep}] Network exposures: {new_network_exposures}")
 
         total_new_exposures = new_seed_exposures + new_network_exposures
         self.total_exposures += total_new_exposures
@@ -256,24 +261,39 @@ class SimulationEngine:
             timestep,
             self.config.multi_touch_threshold,
         )
+        logger.info(f"[TIMESTEP {timestep}] Agents to reason: {len(agents_to_reason)}")
 
-        # 4. Run reasoning for each agent
+        # 4. Build reasoning contexts (snapshot of current state)
+        contexts = []
+        old_states: dict[str, AgentState] = {}
+        for agent_id in agents_to_reason:
+            old_state = self.state_manager.get_agent_state(agent_id)
+            old_states[agent_id] = old_state
+            context = self._build_reasoning_context(agent_id, old_state)
+            contexts.append(context)
+
+        # 5. Run reasoning sequentially with heavy logging
+        reasoning_start = time.time()
+        results = batch_reason_agents(contexts, self.scenario, self.config)
+        reasoning_elapsed = time.time() - reasoning_start
+        self.total_reasoning_calls += len(results)
+
+        logger.info(
+            f"[TIMESTEP {timestep}] Reasoning complete: {len(results)} agents in {reasoning_elapsed:.2f}s "
+            f"({reasoning_elapsed/len(results):.2f}s/agent avg)" if results else
+            f"[TIMESTEP {timestep}] No agents reasoned"
+        )
+
+        # 6. Process results and update states
         agents_reasoned = 0
         state_changes = 0
         shares_occurred = 0
 
-        for agent_id in agents_to_reason:
-            old_state = self.state_manager.get_agent_state(agent_id)
-
-            # Build reasoning context
-            context = self._build_reasoning_context(agent_id, old_state)
-
-            # Call LLM for reasoning
-            response = reason_agent(context, self.scenario, self.config)
-            self.total_reasoning_calls += 1
-
+        for agent_id, response in results:
             if response is None:
                 continue
+
+            old_state = old_states[agent_id]
 
             # Create new state from response
             new_state = AgentState(

@@ -150,17 +150,18 @@ def build_characteristics_list(
 ) -> str:
     """Build grouped list of all attributes not in the narrative.
 
-    Groups by attribute category for readability.
+    Groups by attribute category - puts personality/attitudes FIRST since
+    they most strongly influence decision-making.
     """
-    # Group attributes by category
-    category_labels = {
-        "universal": "Demographics",
-        "population_specific": "Professional",
-        "context_specific": "Attitudes & Behaviors",
-        "personality": "Personality",
-    }
+    # Order: personality first (most decision-relevant), then attitudes, then demographics, then professional
+    category_order = [
+        ("personality", "Your Mindset & Values"),
+        ("context_specific", "Your Attitudes & Concerns"),
+        ("universal", "Your Background"),
+        ("population_specific", "Your Professional Context"),
+    ]
 
-    groups: dict[str, list[str]] = {cat: [] for cat in category_labels}
+    groups: dict[str, list[str]] = {cat: [] for cat, _ in category_order}
 
     for attr in spec.attributes:
         if attr.name in exclude:
@@ -170,9 +171,9 @@ def build_characteristics_list(
         label = attr.name.replace("_", " ").title()
         groups[attr.category].append(f"- {label}: {value}")
 
-    # Build output
+    # Build output with personality/attitudes first
     sections = []
-    for category, category_label in category_labels.items():
+    for category, category_label in category_order:
         items = groups.get(category, [])
         if items:
             sections.append(f"**{category_label}**\n" + "\n".join(items))
