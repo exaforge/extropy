@@ -149,4 +149,4 @@ ruff format .             # Format
 
 ## License
 
-MIT
+[MIT](LICENSE)
