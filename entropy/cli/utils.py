@@ -246,6 +246,7 @@ def format_validation_for_json(result) -> dict[str, Any]:
                 "message": e.message,
                 "modifier_index": e.modifier_index,
                 "suggestion": e.suggestion,
+                "value": e.value,
             }
             for e in (result.errors or [])
         ],
@@ -256,6 +257,7 @@ def format_validation_for_json(result) -> dict[str, Any]:
                 "message": w.message,
                 "modifier_index": w.modifier_index,
                 "suggestion": w.suggestion,
+                "value": w.value,
             }
             for w in (result.warnings or [])
         ],

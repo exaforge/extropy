@@ -520,6 +520,8 @@ def _check_conditions(attr: AttributeSpec) -> list[ValidationIssue]:
                     location=attr.name,
                     modifier_index=i,
                     message=f"invalid condition syntax: {e}",
+                    value=mod.when,
+                    suggestion="Fix the Python expression syntax in the 'when' condition",
                 )
             )
             continue
