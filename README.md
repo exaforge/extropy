@@ -62,20 +62,66 @@ entropy results austin/results/ --segment income
 
 ### What Comes Out
 
-```
-Outcome Distributions:
-  commute_response:
-    drive_and_pay          44%  ████████████████░░░░
-    switch_to_transit      21%  ████████░░░░░░░░░░░░
-    shift_schedule         21%  ████████░░░░░░░░░░░░
-    undecided               7%  ██░░░░░░░░░░░░░░░░░░
-    telework_more           3%  █░░░░░░░░░░░░░░░░░░░
+Outcomes are defined per-scenario — categorical, float, boolean, or open-ended. You choose what to measure.
 
-  sentiment: mean -0.12 (std 0.37)
-  conviction: mean 0.61
+```
+═══════════════════════════════════════════════════════════
+SIMULATION RESULTS: austin_congestion_tax
+═══════════════════════════════════════════════════════════
+
+Population: 500 agents | Duration: 47 timesteps | Model: gpt-5
+Stopped: exposure_rate > 0.95 and no_state_changes_for > 5
+
+EXPOSURE
+────────────────────────────────────────
+Final exposure rate: 96.8%
+Reasoning calls: 1,847
+Average conviction: 0.64 (moderate-to-firm)
+
+OUTCOMES
+────────────────────────────────────────
+commute_response (categorical):
+  drive_and_pay          38%  ███████████████░░░░░
+  switch_to_transit      24%  █████████░░░░░░░░░░░
+  shift_schedule         19%  ███████░░░░░░░░░░░░░
+  telework_more          12%  ████░░░░░░░░░░░░░░░░
+  undecided               7%  ██░░░░░░░░░░░░░░░░░░
+
+sentiment (float, -1 to 1):
+  mean: -0.18  std: 0.41  min: -0.9  max: 0.7
+
+willingness_to_pay (boolean):
+  yes: 42%  no: 58%
+
+protest_likelihood (float, 0 to 1):
+  mean: 0.31  std: 0.28
+
+SEGMENT: income
+────────────────────────────────────────
+< $50k:   drive_and_pay 22% | switch_to_transit 14% | protest 41%
+$50-100k: drive_and_pay 40% | switch_to_transit 28% | shift_schedule 21%
+> $100k:  drive_and_pay 51% | switch_to_transit 31% | telework_more 14%
 ```
 
 Each agent reasoned individually. A low-income commuter with no transit access reacts differently than a tech worker near a rail stop — not because we scripted it, but because their attributes, persona, and social context led them there.
+
+The scenario YAML controls what gets tracked:
+
+```yaml
+outcomes:
+  suggested_outcomes:
+  - name: commute_response
+    type: categorical
+    options: [drive_and_pay, switch_to_transit, shift_schedule, telework_more, undecided]
+  - name: sentiment
+    type: float
+    range: [-1.0, 1.0]
+  - name: willingness_to_pay
+    type: boolean
+  - name: protest_likelihood
+    type: float
+    range: [0.0, 1.0]
+```
 
 ## How It Works
 
