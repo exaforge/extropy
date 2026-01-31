@@ -36,6 +36,9 @@ def persona_command(
         0, "--agent", help="Which agent to use for preview (default: first)"
     ),
     yes: bool = typer.Option(False, "--yes", "-y", help="Skip confirmation prompts"),
+    show: bool = typer.Option(
+        False, "--show", "-s", help="Preview existing persona config without regenerating"
+    ),
 ):
     """
     Generate persona rendering configuration for a population.
@@ -51,6 +54,8 @@ def persona_command(
         Step 4: Generate relative phrasings
         Step 5: Generate concrete phrasings
 
+    Use --show to preview an existing persona config without regenerating.
+
     EXIT CODES:
         0 = Success
         1 = Validation error
@@ -61,6 +66,7 @@ def persona_command(
         entropy persona population.yaml --agents agents.json
         entropy persona population.yaml -a agents.json -o persona_config.yaml
         entropy persona population.yaml -a agents.json --agent 42 -y
+        entropy persona population.yaml -a agents.json --show  # preview existing
     """
     from ...population.persona import (
         generate_persona_config,
@@ -115,6 +121,54 @@ def persona_command(
         console.print(
             "[yellow]⚠[/yellow] No agents file - population stats will use defaults"
         )
+
+    # Handle --show mode: preview existing config without regenerating
+    if show:
+        from ...population.persona import PersonaConfig
+        
+        # Find existing config
+        if output and output.exists():
+            config_path = output
+        else:
+            config_path = spec_file.with_suffix(".persona.yaml")
+        
+        if not config_path.exists():
+            console.print(f"[red]✗[/red] No persona config found at {config_path}")
+            console.print("[dim]Run without --show to generate one.[/dim]")
+            raise typer.Exit(2)
+        
+        try:
+            config = PersonaConfig.from_file(str(config_path))
+        except Exception as e:
+            console.print(f"[red]✗[/red] Failed to load persona config: {e}")
+            raise typer.Exit(1)
+        
+        console.print(f"[green]✓[/green] Loaded persona config from {config_path}")
+        console.print()
+        
+        if not agents:
+            console.print("[red]✗[/red] Need --agents to preview personas")
+            raise typer.Exit(1)
+        
+        if agent_index >= len(agents):
+            agent_index = 0
+        sample_agent = agents[agent_index]
+        agent_id = sample_agent.get("_id", str(agent_index))
+        
+        console.print(f"[bold]Persona for Agent {agent_id}:[/bold]")
+        console.print()
+        
+        persona_text = preview_persona(sample_agent, config, max_width=78)
+        
+        for line in persona_text.split("\n"):
+            if line.startswith("##"):
+                console.print(f"[bold cyan]{line}[/bold cyan]")
+            elif line.strip():
+                console.print(line)
+            else:
+                console.print()
+        
+        raise typer.Exit(0)
 
     # Generate Config with spinner
     console.print()
