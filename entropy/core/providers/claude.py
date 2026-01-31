@@ -1,119 +1,72 @@
-"""Claude (Anthropic) LLM Provider implementation."""
+"""Claude (Anthropic) LLM Provider implementation.
 
-import json
+Uses the tool use pattern for reliable structured output:
+instead of asking Claude to output JSON in text, we define a tool
+with the response schema. Claude "calls" the tool, returning structured
+data guaranteed to match the schema.
+"""
+
 import logging
-from datetime import datetime
-from pathlib import Path
-from typing import Any
 
 import anthropic
 
 from .base import LLMProvider, ValidatorCallback, RetryCallback
+from .logging import log_request_response, extract_error_summary
 
 
 logger = logging.getLogger(__name__)
 
 
-def _get_logs_dir() -> Path:
-    """Get logs directory, create if needed."""
-    logs_dir = Path("./logs")
-    logs_dir.mkdir(parents=True, exist_ok=True)
-    return logs_dir
+def _clean_schema_for_tool(schema: dict) -> dict:
+    """Clean a JSON schema for use as a tool input_schema.
+
+    Removes fields that aren't valid in tool input schemas
+    (like 'additionalProperties' in nested objects that Claude
+    doesn't support in tool definitions).
+    """
+    cleaned = {}
+    for key, value in schema.items():
+        if key == "additionalProperties":
+            continue
+        if isinstance(value, dict):
+            cleaned[key] = _clean_schema_for_tool(value)
+        elif isinstance(value, list):
+            cleaned[key] = [
+                _clean_schema_for_tool(item) if isinstance(item, dict) else item
+                for item in value
+            ]
+        else:
+            cleaned[key] = value
+    return cleaned
 
 
-def _log_request_response(
-    function_name: str,
-    request: dict,
-    response: Any,
-    sources: list[str] | None = None,
-) -> None:
-    """Log full request and response to a JSON file."""
-    logs_dir = _get_logs_dir()
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    log_file = logs_dir / f"{timestamp}_claude_{function_name}.json"
-
-    # Convert response to dict if possible
-    response_dict = None
-    if hasattr(response, "model_dump"):
-        try:
-            response_dict = response.model_dump(mode="json", warnings=False)
-        except Exception:
-            response_dict = str(response)
-    elif hasattr(response, "__dict__"):
-        response_dict = str(response)
-    else:
-        response_dict = str(response)
-
-    log_data = {
-        "timestamp": datetime.now().isoformat(),
-        "function": function_name,
-        "provider": "claude",
-        "request": request,
-        "response": response_dict,
-        "sources_extracted": sources or [],
+def _make_structured_tool(schema_name: str, response_schema: dict) -> dict:
+    """Create a tool definition that forces structured output."""
+    return {
+        "name": schema_name,
+        "description": (
+            "Return your response as structured data. "
+            "You MUST call this tool with your complete response."
+        ),
+        "input_schema": _clean_schema_for_tool(response_schema),
     }
 
-    with open(log_file, "w") as f:
-        json.dump(log_data, f, indent=2, default=str)
 
-
-def _extract_error_summary(error_msg: str) -> str:
-    """Extract a concise error summary from validation error message."""
-    if not error_msg:
-        return "validation error"
-
-    lines = error_msg.strip().split("\n")
-    for line in lines:
-        line = line.strip()
-        if line and not line.startswith("#") and not line.startswith("---"):
-            if "ERROR in" in line:
-                return line[:60]
-            elif "Problem:" in line:
-                return line.replace("Problem:", "").strip()[:60]
-            elif line:
-                return line[:60]
-
-    return "validation error"
-
-
-def _extract_json_from_text(text: str) -> dict | None:
-    """Try to extract JSON from text, handling code blocks."""
-    # Try direct parse first
-    try:
-        return json.loads(text)
-    except json.JSONDecodeError:
-        pass
-
-    # Try to find JSON in code block
-    if "```json" in text:
-        start = text.find("```json") + 7
-        end = text.find("```", start)
-        if end > start:
-            try:
-                return json.loads(text[start:end].strip())
-            except json.JSONDecodeError:
-                pass
-
-    if "```" in text:
-        start = text.find("```") + 3
-        # Skip language identifier if present
-        newline = text.find("\n", start)
-        if newline > start:
-            start = newline + 1
-        end = text.find("```", start)
-        if end > start:
-            try:
-                return json.loads(text[start:end].strip())
-            except json.JSONDecodeError:
-                pass
-
+def _extract_tool_input(response) -> dict | None:
+    """Extract tool_use input from a Claude response."""
+    for block in response.content:
+        if block.type == "tool_use":
+            return block.input
     return None
 
 
 class ClaudeProvider(LLMProvider):
     """Claude (Anthropic) LLM provider.
 
-    Supports both API key (sk-ant-...) and OAuth access token authentication.
+    Uses the tool use pattern for structured output — Claude "calls" a tool
+    with the response data, guaranteeing valid JSON matching the schema.
+
+    Supports both API key (sk-ant-api...) and OAuth access token authentication.
     """
 
     def __init__(self, api_key: str = "") -> None:
@@ -142,33 +95,19 @@ class ClaudeProvider(LLMProvider):
         """Check if the credential is an OAuth access token (not an API key).
 
         OAuth tokens start with 'sk-ant-oat' while regular API keys start
-        with 'sk-ant-api' or similar. If it came from ANTHROPIC_ACCESS_TOKEN
-        or contains 'oat' after the prefix, treat it as OAuth.
+        with 'sk-ant-api' or similar.
         """
         return "oat" in self._api_key[:15]
 
     def _get_client(self) -> anthropic.Anthropic:
         if self._is_oauth_token():
-            return anthropic.Anthropic(
-                auth_token=self._api_key,
-            )
+            return anthropic.Anthropic(auth_token=self._api_key)
         return anthropic.Anthropic(api_key=self._api_key)
 
     def _get_async_client(self) -> anthropic.AsyncAnthropic:
         if self._is_oauth_token():
-            return anthropic.AsyncAnthropic(
-                auth_token=self._api_key,
-            )
+            return anthropic.AsyncAnthropic(auth_token=self._api_key)
         return anthropic.AsyncAnthropic(api_key=self._api_key)
-
-    def _build_json_prompt(self, prompt: str, response_schema: dict) -> str:
-        """Add JSON schema instruction to prompt."""
-        return (
-            f"{prompt}\n\n"
-            f"Respond with valid JSON matching this schema:\n"
-            f"```json\n{json.dumps(response_schema, indent=2)}\n```\n"
-            f"Return ONLY the JSON object, no other text."
-        )
 
     def simple_call(
         self,
@@ -181,8 +120,7 @@ class ClaudeProvider(LLMProvider):
     ) -> dict:
         model = model or self.default_simple_model
         client = self._get_client()
-
-        full_prompt = self._build_json_prompt(prompt, response_schema)
+        tool = _make_structured_tool(schema_name, response_schema)
 
         logger.info(
             f"[Claude] simple_call starting - model={model}, schema={schema_name}"
@@ -191,22 +129,19 @@ class ClaudeProvider(LLMProvider):
         response = client.messages.create(
             model=model,
             max_tokens=max_tokens or 4096,
-            messages=[{"role": "user", "content": full_prompt}],
+            tools=[tool],
+            tool_choice={"type": "tool", "name": schema_name},
+            messages=[{"role": "user", "content": prompt}],
         )
 
-        # Extract structured data from text response
-        structured_data = None
-        for block in response.content:
-            if block.type == "text":
-                structured_data = _extract_json_from_text(block.text)
-                if structured_data:
-                    break
+        structured_data = _extract_tool_input(response)
 
         if log:
-            _log_request_response(
+            log_request_response(
                 function_name="simple_call",
-                request={"model": model, "prompt_length": len(full_prompt)},
+                request={"model": model, "prompt_length": len(prompt)},
                 response=response,
+                provider="claude",
             )
 
         return structured_data or {}
@@ -221,24 +156,17 @@ class ClaudeProvider(LLMProvider):
     ) -> dict:
         model = model or self.default_simple_model
         client = self._get_async_client()
-
-        full_prompt = self._build_json_prompt(prompt, response_schema)
+        tool = _make_structured_tool(schema_name, response_schema)
 
         response = await client.messages.create(
             model=model,
             max_tokens=max_tokens or 4096,
-            messages=[{"role": "user", "content": full_prompt}],
+            tools=[tool],
+            tool_choice={"type": "tool", "name": schema_name},
+            messages=[{"role": "user", "content": prompt}],
         )
 
-        # Extract structured data from text response
-        structured_data = None
-        for block in response.content:
-            if block.type == "text":
-                structured_data = _extract_json_from_text(block.text)
-                if structured_data:
-                    break
-
-        return structured_data or {}
+        return _extract_tool_input(response) or {}
 
     def reasoning_call(
         self,
@@ -246,17 +174,18 @@ class ClaudeProvider(LLMProvider):
         response_schema: dict,
         schema_name: str = "response",
         model: str | None = None,
+        reasoning_effort: str = "low",
         log: bool = True,
         previous_errors: str | None = None,
         validator: ValidatorCallback | None = None,
         max_retries: int = 2,
         on_retry: RetryCallback | None = None,
     ) -> dict:
-        """Claude reasoning call - uses the same model but with more detailed prompting."""
+        """Claude reasoning call with tool-based structured output."""
         model = model or self.default_reasoning_model
         client = self._get_client()
+        tool = _make_structured_tool(schema_name, response_schema)
 
-        # Prepend previous errors if provided
         effective_prompt = prompt
         if previous_errors:
             effective_prompt = f"{previous_errors}\n\n---\n\n{prompt}"
@@ -265,27 +194,22 @@ class ClaudeProvider(LLMProvider):
         last_error_summary = ""
 
         while attempts <= max_retries:
-            full_prompt = self._build_json_prompt(effective_prompt, response_schema)
-
             response = client.messages.create(
                 model=model,
-                max_tokens=8192,
-                messages=[{"role": "user", "content": full_prompt}],
+                max_tokens=16384,
+                tools=[tool],
+                tool_choice={"type": "tool", "name": schema_name},
+                messages=[{"role": "user", "content": effective_prompt}],
             )
 
-            # Extract structured data
-            structured_data = None
-            for block in response.content:
-                if block.type == "text":
-                    structured_data = _extract_json_from_text(block.text)
-                    if structured_data:
-                        break
+            structured_data = _extract_tool_input(response)
 
             if log:
-                _log_request_response(
+                log_request_response(
                     function_name="reasoning_call",
-                    request={"model": model, "prompt_length": len(full_prompt)},
+                    request={"model": model, "prompt_length": len(effective_prompt)},
                     response=response,
+                    provider="claude",
                 )
 
             result = structured_data or {}
@@ -298,7 +222,7 @@ class ClaudeProvider(LLMProvider):
                 return result
 
             attempts += 1
-            last_error_summary = _extract_error_summary(error_msg)
+            last_error_summary = extract_error_summary(error_msg)
 
             if attempts <= max_retries:
                 if on_retry:
@@ -315,15 +239,21 @@ class ClaudeProvider(LLMProvider):
         response_schema: dict,
         schema_name: str = "research_data",
         model: str | None = None,
+        reasoning_effort: str = "low",
         log: bool = True,
         previous_errors: str | None = None,
         validator: ValidatorCallback | None = None,
         max_retries: int = 2,
         on_retry: RetryCallback | None = None,
     ) -> tuple[dict, list[str]]:
-        """Claude agentic research with web search."""
+        """Claude agentic research with web search + tool-based structured output.
+
+        Uses web_search tool for research and a structured output tool for the response.
+        Claude first searches, then calls the output tool with results.
+        """
         model = model or self.default_research_model
         client = self._get_client()
+        output_tool = _make_structured_tool(schema_name, response_schema)
 
         effective_prompt = prompt
         if previous_errors:
@@ -334,49 +264,42 @@ class ClaudeProvider(LLMProvider):
         all_sources: list[str] = []
 
         while attempts <= max_retries:
-            # Add JSON schema instruction
-            full_prompt = (
+            research_prompt = (
                 f"{effective_prompt}\n\n"
-                f"Respond with valid JSON matching this schema:\n"
-                f"```json\n{json.dumps(response_schema, indent=2)}\n```"
+                f"After researching, call the '{schema_name}' tool with your structured findings."
             )
 
             logger.info(f"[Claude] agentic_research - model={model}")
 
             response = client.messages.create(
                 model=model,
-                max_tokens=8192,
+                max_tokens=16384,
                 tools=[
                     {
                         "type": "web_search_20250305",
                         "name": "web_search",
                         "max_uses": 5,
-                    }
+                    },
+                    output_tool,
                 ],
-                messages=[{"role": "user", "content": full_prompt}],
+                messages=[{"role": "user", "content": research_prompt}],
             )
 
-            # Extract structured data and sources from response
+            # Extract structured data and sources
             structured_data = None
             sources: list[str] = []
 
             for block in response.content:
-                # Check for web search results
                 if block.type == "web_search_tool_result":
                     if hasattr(block, "content") and block.content:
                         for result in block.content:
                             if hasattr(result, "url"):
                                 sources.append(result.url)
 
-                # Check for text with possible citations
+                if block.type == "tool_use" and block.name == schema_name:
+                    structured_data = block.input
+
                 if block.type == "text":
-                    text = block.text
-
-                    # Try to extract JSON if we haven't yet
-                    if structured_data is None:
-                        structured_data = _extract_json_from_text(text)
-
-                    # Extract citation URLs if present
                     if hasattr(block, "citations") and block.citations:
                         for citation in block.citations:
                             if hasattr(citation, "url"):
@@ -387,10 +310,11 @@ class ClaudeProvider(LLMProvider):
             logger.info(f"[Claude] Web search completed, found {len(sources)} sources")
 
             if log:
-                _log_request_response(
+                log_request_response(
                     function_name="agentic_research",
-                    request={"model": model, "prompt_length": len(full_prompt)},
+                    request={"model": model, "prompt_length": len(research_prompt)},
                     response=response,
+                    provider="claude",
                     sources=list(set(sources)),
                 )
 
@@ -404,7 +328,7 @@ class ClaudeProvider(LLMProvider):
                 return result, list(set(all_sources))
 
             attempts += 1
-            last_error_summary = _extract_error_summary(error_msg)
+            last_error_summary = extract_error_summary(error_msg)
 
             if attempts <= max_retries:
                 if on_retry:

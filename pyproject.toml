@@ -18,7 +18,6 @@ dependencies = [
     "scipy>=1.14.0",
     "networkx>=3.4.0",
     "pydantic>=2.9.0",
-    "pydantic-settings>=2.6.0",
     "python-dotenv>=1.0.0",
     "pyyaml>=6.0.0",
     "anthropic>=0.77.0",

@@ -4,38 +4,37 @@ Two-zone config system:
 - pipeline: provider + models for phases 1-2 (spec, extend, sample, network, persona, scenario)
 - simulation: provider + model for phase 3 (agent reasoning)
 
-Config resolution order:
+Config resolution order (highest priority first):
 1. Programmatic (EntropyConfig constructed in code)
-2. Config file (~/.config/entropy/config.json, managed by `entropy config`)
-3. Environment variables (OPENAI_API_KEY, ANTHROPIC_API_KEY, etc.)
+2. Environment variables (PIPELINE_PROVIDER, SIMULATION_MODEL, etc.)
+3. Config file (~/.config/entropy/config.json, managed by `entropy config`)
 4. Hardcoded defaults
 
 API keys are ALWAYS from env vars — never stored in config file.
 """
 
-from __future__ import annotations
-
 import json
+import logging
 import os
 from dataclasses import dataclass, field, asdict
-from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
-from pydantic_settings import BaseSettings, SettingsConfigDict
+
+logger = logging.getLogger(__name__)
 
 
-# ---------------------------------------------------------------------------
+# =============================================================================
 # Config file location
-# ---------------------------------------------------------------------------
+# =============================================================================
 
 CONFIG_DIR = Path.home() / ".config" / "entropy"
 CONFIG_FILE = CONFIG_DIR / "config.json"
 
 
-# ---------------------------------------------------------------------------
+# =============================================================================
 # Two-zone config dataclasses
-# ---------------------------------------------------------------------------
+# =============================================================================
 
 
 @dataclass
@@ -49,7 +48,7 @@ class PipelineConfig:
 
 
 @dataclass
-class SimulationConfig:
+class SimZoneConfig:
     """Config for phase 3: agent reasoning during simulation."""
 
     provider: str = "openai"
@@ -67,7 +66,7 @@ class EntropyConfig:
         # Package use — no files needed
         config = EntropyConfig(
             pipeline=PipelineConfig(provider="claude"),
-            simulation=SimulationConfig(provider="openai", model="gpt-5-mini"),
+            simulation=SimZoneConfig(provider="openai", model="gpt-5-mini"),
         )
 
         # CLI use — loads from ~/.config/entropy/config.json
@@ -79,17 +78,17 @@ class EntropyConfig:
     """
 
     pipeline: PipelineConfig = field(default_factory=PipelineConfig)
-    simulation: SimulationConfig = field(default_factory=SimulationConfig)
+    simulation: SimZoneConfig = field(default_factory=SimZoneConfig)
 
     # Non-zone settings
     db_path: str = "./storage/entropy.db"
     default_population_size: int = 1000
 
     @classmethod
-    def load(cls) -> EntropyConfig:
+    def load(cls) -> "EntropyConfig":
         """Load config from file + env vars.
 
-        Priority: config.json values > env var values > defaults.
+        Priority: env var values > config.json values > defaults.
         """
         config = cls()
 
@@ -99,10 +98,10 @@ class EntropyConfig:
                 with open(CONFIG_FILE) as f:
                     data = json.load(f)
                 _apply_dict(config, data)
-            except (json.JSONDecodeError, OSError):
-                pass  # Silently fall back to defaults on corrupt file
+            except (json.JSONDecodeError, OSError) as exc:
+                logger.warning("Failed to load config from %s: %s", CONFIG_FILE, exc)
 
-        # Layer 2: Env var overrides (backwards compat with old .env setup)
+        # Layer 2: Env var overrides
         if provider := os.environ.get("LLM_PROVIDER"):
             # Legacy: single provider applied to both zones
             config.pipeline.provider = provider
@@ -171,9 +170,9 @@ def _apply_dict(config: EntropyConfig, data: dict) -> None:
         config.default_population_size = int(data["default_population_size"])
 
 
-# ---------------------------------------------------------------------------
+# =============================================================================
 # API key resolution (env vars + .env file)
-# ---------------------------------------------------------------------------
+# =============================================================================
 
 _dotenv_loaded = False
 
@@ -211,9 +210,9 @@ def get_api_key(provider: str) -> str:
     return ""
 
 
-# ---------------------------------------------------------------------------
-# Global config singleton (for backwards compat and convenience)
-# ---------------------------------------------------------------------------
+# =============================================================================
+# Global config singleton
+# =============================================================================
 
 _config: EntropyConfig | None = None
 
@@ -245,50 +244,3 @@ def reset_config() -> None:
     """Reset the global config (forces reload on next get_config())."""
     global _config
     _config = None
-
-
-# ---------------------------------------------------------------------------
-# Backwards compatibility — old Settings / get_settings interface
-# ---------------------------------------------------------------------------
-
-
-class Settings(BaseSettings):
-    """DEPRECATED: Use EntropyConfig instead.
-
-    Kept for backwards compatibility. Loads from .env file.
-    """
-
-    model_config = SettingsConfigDict(
-        env_file=".env",
-        env_file_encoding="utf-8",
-        extra="ignore",
-    )
-
-    llm_provider: str = "openai"
-    openai_api_key: str = ""
-    anthropic_api_key: str = ""
-    model_simple: str = ""
-    model_reasoning: str = ""
-    model_research: str = ""
-    lmstudio_base_url: str = "http://localhost:1234/v1"
-    lmstudio_model: str = "llama-3.2-3b"
-    db_path: str = "./storage/entropy.db"
-    default_population_size: int = 1000
-
-    @property
-    def db_path_resolved(self) -> Path:
-        path = Path(self.db_path)
-        path.parent.mkdir(parents=True, exist_ok=True)
-        return path
-
-    @property
-    def cache_dir(self) -> Path:
-        path = Path("./data/cache")
-        path.mkdir(parents=True, exist_ok=True)
-        return path
-
-
-@lru_cache
-def get_settings() -> Settings:
-    """DEPRECATED: Use get_config() instead. Kept for backwards compatibility."""
-    return Settings()

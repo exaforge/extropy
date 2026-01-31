@@ -39,15 +39,9 @@ def get_simulation_provider() -> LLMProvider:
     return _create_provider(config.simulation.provider)
 
 
-# Backwards compat — routes to pipeline provider
-def get_provider() -> LLMProvider:
-    """DEPRECATED: Use get_pipeline_provider() or get_simulation_provider()."""
-    return get_pipeline_provider()
-
 
 __all__ = [
     "LLMProvider",
     "get_pipeline_provider",
     "get_simulation_provider",
-    "get_provider",
 ]

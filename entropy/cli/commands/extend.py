@@ -22,7 +22,6 @@ from ..display import (
     display_extend_attributes,
     display_spec_summary,
     display_validation_result,
-    generate_and_review_persona_template,
 )
 from ..utils import format_elapsed
 
@@ -244,13 +243,6 @@ def extend_command(
         )
         console.print("[red]Spec validation failed. Please fix the errors above.[/red]")
         raise typer.Exit(1)
-
-    # Step 5: Persona Template Generation
-    # Generate template for merged spec (includes all base + extension attributes)
-    persona_template = generate_and_review_persona_template(merged_spec, yes)
-    if persona_template:
-        merged_spec.meta.persona_template = persona_template
-        console.print("[green]✓[/green] Persona template added to spec")
 
     # Store scenario description for use by scenario command
     merged_spec.meta.scenario_description = scenario

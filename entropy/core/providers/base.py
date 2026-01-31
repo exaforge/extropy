@@ -1,7 +1,5 @@
 """Abstract base class for LLM providers."""
 
-from __future__ import annotations
-
 from abc import ABC, abstractmethod
 from typing import Callable
 
@@ -76,6 +74,7 @@ class LLMProvider(ABC):
         response_schema: dict,
         schema_name: str = "response",
         model: str | None = None,
+        reasoning_effort: str = "low",
         log: bool = True,
         previous_errors: str | None = None,
         validator: ValidatorCallback | None = None,
@@ -92,6 +91,7 @@ class LLMProvider(ABC):
         response_schema: dict,
         schema_name: str = "research_data",
         model: str | None = None,
+        reasoning_effort: str = "low",
         log: bool = True,
         previous_errors: str | None = None,
         validator: ValidatorCallback | None = None,

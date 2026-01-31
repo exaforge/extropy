@@ -3,77 +3,14 @@
 import json
 import logging
 import time
-from datetime import datetime
-from pathlib import Path
-from typing import Any
 
 from openai import OpenAI, AsyncOpenAI
 
 from .base import LLMProvider, ValidatorCallback, RetryCallback
+from .logging import log_request_response, extract_error_summary
 
 
 logger = logging.getLogger(__name__)
-
-
-def _get_logs_dir() -> Path:
-    """Get logs directory, create if needed."""
-    logs_dir = Path("./logs")
-    logs_dir.mkdir(parents=True, exist_ok=True)
-    return logs_dir
-
-
-def _log_request_response(
-    function_name: str,
-    request: dict,
-    response: Any,
-    sources: list[str] | None = None,
-) -> None:
-    """Log full request and response to a JSON file."""
-    logs_dir = _get_logs_dir()
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    log_file = logs_dir / f"{timestamp}_{function_name}.json"
-
-    # Convert response to dict if possible
-    response_dict = None
-    if hasattr(response, "model_dump"):
-        try:
-            response_dict = response.model_dump(mode="json", warnings=False)
-        except Exception:
-            response_dict = str(response)
-    elif hasattr(response, "__dict__"):
-        response_dict = str(response)
-    else:
-        response_dict = str(response)
-
-    log_data = {
-        "timestamp": datetime.now().isoformat(),
-        "function": function_name,
-        "request": request,
-        "response": response_dict,
-        "sources_extracted": sources or [],
-    }
-
-    with open(log_file, "w") as f:
-        json.dump(log_data, f, indent=2, default=str)
-
-
-def _extract_error_summary(error_msg: str) -> str:
-    """Extract a concise error summary from validation error message."""
-    if not error_msg:
-        return "validation error"
-
-    lines = error_msg.strip().split("\n")
-    for line in lines:
-        line = line.strip()
-        if line and not line.startswith("#") and not line.startswith("---"):
-            if "ERROR in" in line:
-                return line[:60]
-            elif "Problem:" in line:
-                return line.replace("Problem:", "").strip()[:60]
-            elif line:
-                return line[:60]
-
-    return "validation error"
 
 
 class OpenAIProvider(LLMProvider):
@@ -155,10 +92,11 @@ class OpenAIProvider(LLMProvider):
                             structured_data = json.loads(content_item.text)
 
         if log:
-            _log_request_response(
+            log_request_response(
                 function_name="simple_call",
                 request=request_params,
                 response=response,
+                provider="openai",
             )
 
         return structured_data or {}
@@ -212,6 +150,7 @@ class OpenAIProvider(LLMProvider):
         response_schema: dict,
         schema_name: str = "response",
         model: str | None = None,
+        reasoning_effort: str = "low",
         log: bool = True,
         previous_errors: str | None = None,
         validator: ValidatorCallback | None = None,
@@ -232,7 +171,7 @@ class OpenAIProvider(LLMProvider):
         while attempts <= max_retries:
             request_params = {
                 "model": model,
-                "reasoning": {"effort": "low"},
+                "reasoning": {"effort": reasoning_effort},
                 "input": [{"role": "user", "content": effective_prompt}],
                 "text": {
                     "format": {
@@ -259,10 +198,11 @@ class OpenAIProvider(LLMProvider):
                                 structured_data = json.loads(content_item.text)
 
             if log:
-                _log_request_response(
+                log_request_response(
                     function_name="reasoning_call",
                     request=request_params,
                     response=response,
+                    provider="openai",
                 )
 
             result = structured_data or {}
@@ -275,7 +215,7 @@ class OpenAIProvider(LLMProvider):
                 return result
 
             attempts += 1
-            last_error_summary = _extract_error_summary(error_msg)
+            last_error_summary = extract_error_summary(error_msg)
 
             if attempts <= max_retries:
                 if on_retry:
@@ -292,6 +232,7 @@ class OpenAIProvider(LLMProvider):
         response_schema: dict,
         schema_name: str = "research_data",
         model: str | None = None,
+        reasoning_effort: str = "low",
         log: bool = True,
         previous_errors: str | None = None,
         validator: ValidatorCallback | None = None,
@@ -314,7 +255,7 @@ class OpenAIProvider(LLMProvider):
                 "model": model,
                 "input": effective_prompt,
                 "tools": [{"type": "web_search"}],
-                "reasoning": {"effort": "low"},
+                "reasoning": {"effort": reasoning_effort},
                 "text": {
                     "format": {
                         "type": "json_schema",
@@ -366,10 +307,11 @@ class OpenAIProvider(LLMProvider):
             all_sources.extend(sources)
 
             if log:
-                _log_request_response(
+                log_request_response(
                     function_name="agentic_research",
                     request=request_params,
                     response=response,
+                    provider="openai",
                     sources=list(set(sources)),
                 )
 
@@ -383,7 +325,7 @@ class OpenAIProvider(LLMProvider):
                 return result, list(set(all_sources))
 
             attempts += 1
-            last_error_summary = _extract_error_summary(error_msg)
+            last_error_summary = extract_error_summary(error_msg)
 
             if attempts <= max_retries:
                 if on_retry:

@@ -2,27 +2,24 @@
 """Quick test to verify the LLM provider abstraction works.
 
 Usage:
-    # Test with OpenAI (default)
+    # Test with default config
     uv run python scripts/test_provider.py
 
-    # Test with Claude
-    LLM_PROVIDER=claude uv run python scripts/test_provider.py
+    # Test with Claude pipeline
+    uv run python scripts/test_provider.py --provider claude
 """
 
-import os
 import sys
 
-# Add project root to path
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
-from entropy.config import get_settings
+from entropy.config import get_config
 from entropy.core.llm import simple_call, agentic_research
 
 
-def main():
-    settings = get_settings()
+def main() -> int:
+    config = get_config()
+    provider = config.pipeline.provider
     print("=" * 60)
-    print(f"Testing LLM Provider: {settings.llm_provider.upper()}")
+    print(f"Testing pipeline provider: {provider.upper()}")
     print("=" * 60)
 
     # Test 1: Simple call
@@ -67,7 +64,6 @@ def main():
         print(f"  Sources found: {len(sources)}")
 
         pop = result.get("population_millions", 0)
-        # Germany's population is around 83-84 million
         assert 70 < pop < 100, f"Expected ~83, got {pop}"
         print("  PASSED")
     except Exception as e:

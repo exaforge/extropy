@@ -108,7 +108,7 @@ All LLM calls go through this file — never call providers directly elsewhere. 
 
 **Provider abstraction** (`entropy/core/providers/`): `LLMProvider` base class with `OpenAIProvider` and `ClaudeProvider` implementations. Factory functions `get_pipeline_provider()` and `get_simulation_provider()` read from `EntropyConfig`.
 
-**Config** (`entropy/config.py`): `EntropyConfig` with `PipelineConfig` and `SimulationConfig` zones. Loaded from `~/.config/entropy/config.json` (managed by `entropy config`), with env var fallback. API keys always from env vars (`OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `ANTHROPIC_ACCESS_TOKEN`). For package use: `from entropy.config import configure, EntropyConfig`.
+**Config** (`entropy/config.py`): `EntropyConfig` with `PipelineConfig` and `SimZoneConfig` zones. Resolution order: env vars > config file (`~/.config/entropy/config.json`) > defaults. API keys always from env vars (`OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `ANTHROPIC_ACCESS_TOKEN`). For package use: `from entropy.config import configure, EntropyConfig`.
 
 All calls use structured output (`response_format: json_schema`). Failed validations are fed back as "PREVIOUS ATTEMPT FAILED" prompts for self-correction.
 
