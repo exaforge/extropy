@@ -49,6 +49,9 @@ def simulate_command(
     seed: int | None = typer.Option(
         None, "--seed", help="Random seed for reproducibility"
     ),
+    persona_config: Path | None = typer.Option(
+        None, "--persona", "-p", help="PersonaConfig YAML for embodied personas (auto-detected if not specified)"
+    ),
     quiet: bool = typer.Option(False, "--quiet", "-q", help="Suppress progress output"),
     verbose: bool = typer.Option(False, "--verbose", "-v", help="Show detailed logs"),
     debug: bool = typer.Option(False, "--debug", help="Show debug-level logs (very verbose)"),
@@ -59,9 +62,13 @@ def simulate_command(
     Executes the scenario against its population, simulating opinion
     dynamics with agent reasoning, network propagation, and state evolution.
 
+    If a persona config exists at <population>.persona.yaml, it will be
+    used automatically for embodied first-person personas.
+
     Example:
         entropy simulate scenario.yaml -o results/
         entropy simulate scenario.yaml -o results/ --model gpt-5-nano --seed 42
+        entropy simulate scenario.yaml -o results/ --persona population.persona.yaml
     """
     from ...simulation import run_simulation
 
@@ -105,6 +112,7 @@ def simulate_command(
                 multi_touch_threshold=threshold,
                 random_seed=seed,
                 on_progress=on_progress,
+                persona_config_path=persona_config,
             )
             simulation_error = None
         except Exception as e:
@@ -126,6 +134,7 @@ def simulate_command(
                     multi_touch_threshold=threshold,
                     random_seed=seed,
                     on_progress=on_progress if not quiet else None,
+                    persona_config_path=persona_config,
                 )
             except Exception as e:
                 simulation_error = e

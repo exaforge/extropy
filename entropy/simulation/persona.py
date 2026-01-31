@@ -198,15 +198,31 @@ def render_persona(agent: dict[str, Any], template: str) -> str:
 def generate_persona(
     agent: dict[str, Any],
     population_spec: PopulationSpec | None = None,
+    persona_config: Any | None = None,
 ) -> str:
     """Generate a natural language persona from agent attributes.
 
-    Uses hybrid approach:
+    If persona_config is provided, uses the new first-person embodied rendering.
+    Otherwise, uses the legacy hybrid approach:
     1. If persona_template exists: render narrative intro from template
     2. Append ALL remaining attributes as structured list
 
     This ensures nothing is filtered out while maintaining readability.
+    
+    Args:
+        agent: Agent attribute dictionary
+        population_spec: Population specification (for legacy rendering)
+        persona_config: PersonaConfig for new embodied rendering (optional)
+    
+    Returns:
+        Complete persona as string
     """
+    # Use new PersonaConfig rendering if available
+    if persona_config is not None:
+        from ..population.persona import render_persona as render_new_persona
+        return render_new_persona(agent, persona_config)
+    
+    # Legacy rendering below
     if not population_spec:
         return _fallback_persona(agent)
 

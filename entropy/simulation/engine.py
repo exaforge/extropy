@@ -24,6 +24,7 @@ from ..core.models import (
     TimestepSummary,
 )
 from ..population.network import load_agents_json
+from ..population.persona import PersonaConfig
 from .state import StateManager
 from .persona import generate_persona
 from .reasoning import batch_reason_agents, create_reasoning_context
@@ -100,6 +101,7 @@ class SimulationEngine:
         agents: list[dict[str, Any]],
         network: dict[str, Any],
         config: SimulationRunConfig,
+        persona_config: PersonaConfig | None = None,
     ):
         """Initialize simulation engine.
 
@@ -109,12 +111,14 @@ class SimulationEngine:
             agents: List of agent dictionaries
             network: Network data
             config: Simulation run configuration
+            persona_config: Optional PersonaConfig for embodied persona rendering
         """
         self.scenario = scenario
         self.population_spec = population_spec
         self.agents = agents
         self.network = network
         self.config = config
+        self.persona_config = persona_config
 
         # Build agent map for quick lookup
         self.agent_map = {a.get("_id", str(i)): a for i, a in enumerate(agents)}
@@ -143,7 +147,11 @@ class SimulationEngine:
         self._personas: dict[str, str] = {}
         for i, agent in enumerate(agents):
             agent_id = agent.get("_id", str(i))
-            self._personas[agent_id] = generate_persona(agent, population_spec)
+            self._personas[agent_id] = generate_persona(
+                agent, 
+                population_spec, 
+                persona_config=persona_config
+            )
 
         # Tracking variables
         self.recent_summaries: list[TimestepSummary] = []
@@ -542,6 +550,7 @@ def run_simulation(
     multi_touch_threshold: int = 3,
     random_seed: int | None = None,
     on_progress: Callable[[int, int, str], None] | None = None,
+    persona_config_path: str | Path | None = None,
 ) -> SimulationSummary:
     """Run a simulation from a scenario file.
 
@@ -554,6 +563,7 @@ def run_simulation(
         multi_touch_threshold: Re-reason after N new exposures
         random_seed: Random seed for reproducibility
         on_progress: Progress callback(timestep, max, status)
+        persona_config_path: Optional path to PersonaConfig YAML for embodied personas
 
     Returns:
         SimulationSummary with results
@@ -583,6 +593,21 @@ def run_simulation(
     with open(network_path) as f:
         network = json.load(f)
 
+    # Load persona config if provided
+    persona_config = None
+    if persona_config_path:
+        persona_config_path = Path(persona_config_path)
+        if not persona_config_path.is_absolute():
+            persona_config_path = scenario_path.parent / persona_config_path
+        if persona_config_path.exists():
+            persona_config = PersonaConfig.from_file(str(persona_config_path))
+    else:
+        # Try to find persona config automatically
+        # Look for <population>.persona.yaml next to population spec
+        auto_config_path = pop_path.with_suffix(".persona.yaml")
+        if auto_config_path.exists():
+            persona_config = PersonaConfig.from_file(str(auto_config_path))
+
     # Create config
     config = SimulationRunConfig(
         scenario_path=str(scenario_path),
@@ -599,6 +624,7 @@ def run_simulation(
         agents=agents,
         network=network,
         config=config,
+        persona_config=persona_config,
     )
 
     if on_progress:
