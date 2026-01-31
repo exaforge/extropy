@@ -21,6 +21,8 @@ export OPENAI_API_KEY=sk-...
 entropy config set pipeline.provider claude        # Use Claude for population/scenario building
 entropy config set simulation.provider openai      # Use OpenAI for agent reasoning
 entropy config set simulation.model gpt-5-mini     # Override simulation model
+entropy config set simulation.routine_model gpt-5-mini  # Cheap model for Pass 2 classification
+entropy config set simulation.rate_tier 2          # Rate limit tier (1-4)
 entropy config show                                # View current config
 
 pytest                       # Run all tests
@@ -80,13 +82,23 @@ Three phases, each mapping to a package under `entropy/`:
 
 **Engine** (`engine.py`) runs per-timestep loop:
 1. Apply seed exposures from scenario rules (`propagation.py`)
-2. Propagate through network — agents with `will_share=True` spread to neighbors
+2. Propagate through network — conviction-gated sharing (very_uncertain agents don't share)
 3. Select agents to reason — first exposure OR multi-touch threshold exceeded (default: 3 new exposures since last reasoning)
-4. **Batch async LLM reasoning** (`reasoning.py`) — Semaphore-controlled (50 concurrent), each agent gets a first-person prompt with their persona + event + exposure history + peer opinions. Response schema is dynamically built from outcome definitions.
-5. Update state (`state.py`) — SQLite-backed with indexed tables for agent_states, exposures, timeline
-6. Check stopping conditions (`stopping.py`) — Compound conditions like `"exposure_rate > 0.95 and no_state_changes_for > 10"`, convergence detection via position distribution variance
+4. **Two-pass async LLM reasoning** (`reasoning.py`) — Rate-limiter-controlled (token bucket per provider/model):
+   - **Pass 1 (role-play)**: Agent reasons in first person with no categorical enums. Produces reasoning, public_statement, sentiment, conviction level, will_share. Memory trace (last 3 reasoning summaries) is fed back for re-reasoning agents.
+   - **Pass 2 (classification)**: A cheap model classifies the free-text reasoning into scenario-defined categorical/boolean/float outcomes. Position is extracted here — it is output-only, never used in peer influence.
+5. **Conviction-based flip resistance**: Firm+ conviction agents reject position flips unless new conviction is moderate+
+6. **Semantic peer influence**: Agents see peers' public_statement + sentiment tone, NOT position labels
+7. Update state (`state.py`) — SQLite-backed with indexed tables for agent_states, exposures, memory_traces, timeline
+8. Check stopping conditions (`stopping.py`) — Compound conditions like `"exposure_rate > 0.95 and no_state_changes_for > 10"`, convergence detection via sentiment variance
 
-**Persona system** (`population/persona/` + `simulation/persona.py`): The `entropy persona` command generates a `PersonaConfig` via 5-step LLM pipeline (structure → boolean → categorical → relative → concrete phrasings). At simulation time, agents are rendered computationally using this config — no per-agent LLM calls. Relative attributes (personality, attitudes) are positioned against population stats via z-scores ("I'm much more price-sensitive than most people"). Concrete attributes use format specs for proper number/time rendering.
+**Two-pass reasoning rationale**: Single-pass reasoning caused 83% of agents to pick safe middle options (central tendency bias). Splitting role-play from classification fixes this — agents reason naturally in Pass 1, then a cheap model maps to categories in Pass 2.
+
+**Conviction system**: Agents pick from categorical levels (`very_uncertain` / `leaning` / `moderate` / `firm` / `absolute`), mapped to floats (0.1/0.3/0.5/0.7/0.9) only for storage and threshold math. Agents never see numeric values.
+
+**Rate limiter** (`core/rate_limiter.py`): Token bucket with dual RPM + TPM buckets. Provider-aware defaults from `core/rate_limits.py` (Anthropic/OpenAI, tiers 1-4). Replaces the old hardcoded `Semaphore(50)`. CLI flags: `--rate-tier`, config: `simulation.rate_tier`, `simulation.rpm_override`, `simulation.tpm_override`.
+
+**Persona system** (`population/persona/` + `simulation/persona.py`): The `entropy persona` command generates a `PersonaConfig` via 5-step LLM pipeline (structure → boolean → categorical → relative → concrete phrasings). At simulation time, agents are rendered computationally using this config — no per-agent LLM calls. Relative attributes (personality, attitudes) are positioned against population stats via z-scores ("I'm much more price-sensitive than most people"). Concrete attributes use format specs for proper number/time rendering. **Trait salience**: If `decision_relevant_attributes` is set on `OutcomeConfig`, those attributes are grouped first under "Most Relevant to This Decision" in the persona.
 
 ## LLM Integration (`entropy/core/llm.py`)
 
@@ -104,11 +116,15 @@ All LLM calls go through this file — never call providers directly elsewhere. 
 
 | Function | Default Model | Tools | Use |
 |----------|--------------|-------|-----|
-| `simple_call_async()` | provider default | none | Batch simulation reasoning (async) |
+| `simple_call_async()` | provider default | none | Pass 1 role-play reasoning + Pass 2 classification (async) |
+
+Two-pass model routing: Pass 1 uses `simulation.model` (pivotal reasoning). Pass 2 uses `simulation.routine_model` (cheap classification). Both default to provider default if not set. CLI: `--model`, `--pivotal-model`, `--routine-model`. Standard inference only — no thinking/extended models (no o1, o3, extended thinking).
 
 **Provider abstraction** (`entropy/core/providers/`): `LLMProvider` base class with `OpenAIProvider` and `ClaudeProvider` implementations. Factory functions `get_pipeline_provider()` and `get_simulation_provider()` read from `EntropyConfig`.
 
 **Config** (`entropy/config.py`): `EntropyConfig` with `PipelineConfig` and `SimZoneConfig` zones. Resolution order: env vars > config file (`~/.config/entropy/config.json`) > defaults. API keys always from env vars (`OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `ANTHROPIC_ACCESS_TOKEN`). For package use: `from entropy.config import configure, EntropyConfig`.
+
+**Default zones**: Pipeline = Claude (population/scenario building). Simulation = OpenAI (agent reasoning). `SimZoneConfig` fields: `provider`, `model`, `pivotal_model`, `routine_model`, `max_concurrent`, `rate_tier`, `rpm_override`, `tpm_override`.
 
 All calls use structured output (`response_format: json_schema`). Failed validations are fed back as "PREVIOUS ATTEMPT FAILED" prompts for self-correction.
 
@@ -118,7 +134,7 @@ All Pydantic v2. Key hierarchy:
 
 - `population.py`: `PopulationSpec` → `AttributeSpec` → `SamplingConfig` → `Distribution` / `Modifier` / `Constraint`
 - `scenario.py`: `ScenarioSpec` → `Event`, `SeedExposure` (channels + rules), `InteractionConfig`, `SpreadConfig`, `OutcomeConfig`
-- `simulation.py`: `AgentState`, `ReasoningContext`, `ReasoningResponse`, `SimulationRunConfig`, `TimestepSummary`
+- `simulation.py`: `ConvictionLevel`, `MemoryEntry`, `AgentState` (conviction, public_statement), `PeerOpinion` (public_statement, credibility), `ReasoningContext` (memory_trace), `ReasoningResponse` (conviction, public_statement, reasoning_summary), `SimulationRunConfig` (pivotal_model, routine_model), `TimestepSummary` (average_conviction, sentiment_variance)
 - `network.py`: `Edge`, `NodeMetrics`, `NetworkMetrics`
 - `validation.py`: `ValidationIssue`, `ValidationResult`
 
@@ -138,7 +154,10 @@ Scenario validation (`entropy/scenario/validator.py`): attribute reference valid
 - Agent IDs use the `_id` field from agent JSON, falling back to string index
 - Network edges are bidirectional (stored as source/target, traversed both ways)
 - Exposure credibility: `event_credibility * channel_credibility` for seed, fixed 0.85 for peer
-- "Position" = first required categorical outcome (used for aggregation and peer influence display)
+- "Position" = first required categorical outcome (extracted in Pass 2, used for aggregation/output only — never used in peer influence)
+- Peer influence is semantic: agents see neighbors' `public_statement` + sentiment tone, not position labels
+- Conviction is categorical for agents (`very_uncertain`/`leaning`/`moderate`/`firm`/`absolute`), mapped to floats (0.1–0.9) only for storage/thresholds
+- Memory traces: 3-entry sliding window per agent, fed back into reasoning prompts for re-reasoning
 - The `persona` command generates detailed persona configs; `extend` still generates a simpler `persona_template` for backwards compatibility
 - Simulation auto-detects `{population_stem}.persona.yaml` and uses the new rendering if present
 - Network config defaults in `network/config.py` are currently hardcoded for the German surgeons example and need generalization
@@ -152,6 +171,6 @@ pytest + pytest-asyncio. Fixtures in `tests/conftest.py` include seeded RNG (`Ra
 - Population/scenario specs: YAML
 - Agents: JSON (array of objects with `_id`)
 - Network: JSON (`{meta, nodes, edges}`)
-- Simulation state: SQLite
+- Simulation state: SQLite (tables: agent_states, exposures, memory_traces, timeline, timestep_summaries)
 - Timeline: JSONL (streaming, crash-safe)
-- Results: JSON files in output directory
+- Results: JSON files in output directory (agent_states.json, by_timestep.json, outcome_distributions.json, meta.json)
