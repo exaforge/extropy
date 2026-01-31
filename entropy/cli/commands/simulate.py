@@ -46,8 +46,21 @@ def simulate_command(
         "-m",
         help="LLM model for agent reasoning (empty = use config default)",
     ),
+    pivotal_model: str = typer.Option(
+        "",
+        "--pivotal-model",
+        help="Model for pivotal/first-pass reasoning (default: same as --model)",
+    ),
+    routine_model: str = typer.Option(
+        "",
+        "--routine-model",
+        help="Cheap model for classification pass (default: provider cheap tier)",
+    ),
     threshold: int = typer.Option(
         3, "--threshold", "-t", help="Multi-touch threshold for re-reasoning"
+    ),
+    rate_tier: int | None = typer.Option(
+        None, "--rate-tier", help="Rate limit tier (1-4, higher = more generous limits)"
     ),
     seed: int | None = typer.Option(
         None, "--seed", help="Random seed for reproducibility"
@@ -94,9 +107,16 @@ def simulate_command(
     from ...config import get_config
 
     config = get_config()
-    display_model = (
-        model or config.simulation.model or f"({config.simulation.provider} default)"
-    )
+
+    # Resolve models from CLI args > config > defaults
+    effective_model = model or config.simulation.model
+    effective_pivotal = pivotal_model or config.simulation.pivotal_model
+    effective_routine = routine_model or config.simulation.routine_model
+    effective_tier = rate_tier or config.simulation.rate_tier
+    effective_rpm = config.simulation.rpm_override
+    effective_tpm = config.simulation.tpm_override
+
+    display_model = effective_model or f"({config.simulation.provider} default)"
     display_provider = config.simulation.provider
 
     console.print(f"Simulating: [bold]{scenario_file}[/bold]")
@@ -104,6 +124,15 @@ def simulate_command(
     console.print(
         f"Provider: {display_provider} | Model: {display_model} | Threshold: {threshold}"
     )
+    if effective_pivotal or effective_routine:
+        parts = []
+        if effective_pivotal:
+            parts.append(f"Pivotal: {effective_pivotal}")
+        if effective_routine:
+            parts.append(f"Routine: {effective_routine}")
+        console.print(" | ".join(parts))
+    if effective_tier:
+        console.print(f"Rate tier: {effective_tier}")
     if seed:
         console.print(f"Seed: {seed}")
     if verbose or debug:
@@ -126,11 +155,16 @@ def simulate_command(
             result = run_simulation(
                 scenario_path=scenario_file,
                 output_dir=output,
-                model=model,
+                model=effective_model,
+                pivotal_model=effective_pivotal,
+                routine_model=effective_routine,
                 multi_touch_threshold=threshold,
                 random_seed=seed,
                 on_progress=on_progress,
                 persona_config_path=persona_config,
+                rate_tier=effective_tier,
+                rpm_override=effective_rpm,
+                tpm_override=effective_tpm,
             )
             simulation_error = None
         except Exception as e:
@@ -148,11 +182,16 @@ def simulate_command(
                 result = run_simulation(
                     scenario_path=scenario_file,
                     output_dir=output,
-                    model=model,
+                    model=effective_model,
+                    pivotal_model=effective_pivotal,
+                    routine_model=effective_routine,
                     multi_touch_threshold=threshold,
                     random_seed=seed,
                     on_progress=on_progress if not quiet else None,
                     persona_config_path=persona_config,
+                    rate_tier=effective_tier,
+                    rpm_override=effective_rpm,
+                    tpm_override=effective_tpm,
                 )
             except Exception as e:
                 simulation_error = e

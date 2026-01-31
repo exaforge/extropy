@@ -53,7 +53,14 @@ class SimZoneConfig:
 
     provider: str = "openai"
     model: str = ""  # empty = provider default
+    pivotal_model: str = ""  # model for pivotal reasoning (default: same as model)
+    routine_model: str = (
+        ""  # cheap model for classification (default: provider cheap tier)
+    )
     max_concurrent: int = 50
+    rate_tier: int | None = None  # rate limit tier (1-4, None = Tier 1)
+    rpm_override: int | None = None  # override RPM limit
+    tpm_override: int | None = None  # override TPM limit
 
 
 @dataclass
@@ -118,6 +125,16 @@ class EntropyConfig:
             config.pipeline.model_research = val
         if val := os.environ.get("SIMULATION_MODEL"):
             config.simulation.model = val
+        if val := os.environ.get("SIMULATION_PIVOTAL_MODEL"):
+            config.simulation.pivotal_model = val
+        if val := os.environ.get("SIMULATION_ROUTINE_MODEL"):
+            config.simulation.routine_model = val
+        if val := os.environ.get("SIMULATION_RATE_TIER"):
+            config.simulation.rate_tier = int(val)
+        if val := os.environ.get("SIMULATION_RPM_OVERRIDE"):
+            config.simulation.rpm_override = int(val)
+        if val := os.environ.get("SIMULATION_TPM_OVERRIDE"):
+            config.simulation.tpm_override = int(val)
         if val := os.environ.get("DB_PATH"):
             config.db_path = val
         if val := os.environ.get("DEFAULT_POPULATION_SIZE"):

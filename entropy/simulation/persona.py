@@ -147,8 +147,14 @@ def build_characteristics_list(
     spec: PopulationSpec,
     formatted_agent: dict[str, str],
     exclude: set[str],
+    decision_relevant_attributes: list[str] | None = None,
 ) -> str:
     """Build grouped list of all attributes not in the narrative.
+
+    If decision_relevant_attributes is provided, those attributes are listed
+    first under a dedicated "Most Relevant to This Decision" section,
+    regardless of their original category. This ensures the LLM attends
+    to the attributes that matter most for the scenario outcome.
 
     Groups by attribute category - puts personality/attitudes FIRST since
     they most strongly influence decision-making.
@@ -161,6 +167,8 @@ def build_characteristics_list(
         ("population_specific", "Your Professional Context"),
     ]
 
+    decision_set = set(decision_relevant_attributes or [])
+    decision_items: list[str] = []
     groups: dict[str, list[str]] = {cat: [] for cat, _ in category_order}
 
     for attr in spec.attributes:
@@ -169,10 +177,20 @@ def build_characteristics_list(
 
         value = formatted_agent.get(attr.name, "Unknown")
         label = attr.name.replace("_", " ").title()
-        groups[attr.category].append(f"- {label}: {value}")
+        line = f"- {label}: {value}"
 
-    # Build output with personality/attitudes first
+        if attr.name in decision_set:
+            decision_items.append(line)
+        else:
+            groups[attr.category].append(line)
+
+    # Build output — decision-relevant first, then standard categories
     sections = []
+    if decision_items:
+        sections.append(
+            "**Most Relevant to This Decision**\n" + "\n".join(decision_items)
+        )
+
     for category, category_label in category_order:
         items = groups.get(category, [])
         if items:
@@ -199,6 +217,7 @@ def generate_persona(
     agent: dict[str, Any],
     population_spec: PopulationSpec | None = None,
     persona_config: Any | None = None,
+    decision_relevant_attributes: list[str] | None = None,
 ) -> str:
     """Generate a natural language persona from agent attributes.
 
@@ -207,12 +226,14 @@ def generate_persona(
     1. If persona_template exists: render narrative intro from template
     2. Append ALL remaining attributes as structured list
 
-    This ensures nothing is filtered out while maintaining readability.
+    If decision_relevant_attributes is provided, those attributes are grouped
+    first under a dedicated section so the LLM attends to them for outcome reasoning.
 
     Args:
         agent: Agent attribute dictionary
         population_spec: Population specification (for legacy rendering)
         persona_config: PersonaConfig for new embodied rendering (optional)
+        decision_relevant_attributes: Attributes most relevant to scenario outcome
 
     Returns:
         Complete persona as string
@@ -253,7 +274,9 @@ def generate_persona(
     parts.append("## Your Characteristics")
     parts.append("")
 
-    characteristics = build_characteristics_list(population_spec, formatted, used_attrs)
+    characteristics = build_characteristics_list(
+        population_spec, formatted, used_attrs, decision_relevant_attributes
+    )
     parts.append(characteristics)
 
     return "\n".join(parts)

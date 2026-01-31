@@ -45,6 +45,13 @@ from ..core.models import (
     ReasoningResponse,
     SimulationRunConfig,
     TimestepSummary,
+    # New Phase 0 models
+    ConvictionLevel,
+    CONVICTION_MAP,
+    CONVICTION_REVERSE_MAP,
+    conviction_to_float,
+    float_to_conviction,
+    MemoryEntry,
 )
 
 from .engine import (
@@ -55,7 +62,17 @@ from .engine import (
 
 from .state import StateManager
 from .persona import generate_persona, render_persona
-from .reasoning import reason_agent, build_reasoning_prompt, build_response_schema
+from .reasoning import (
+    reason_agent,
+    build_reasoning_prompt,
+    build_response_schema,
+    build_pass1_prompt,
+    build_pass1_schema,
+    build_pass2_prompt,
+    build_pass2_schema,
+    batch_reason_agents,
+    create_reasoning_context,
+)
 from .propagation import (
     apply_seed_exposures,
     propagate_through_network,
@@ -86,15 +103,29 @@ __all__ = [
     "ReasoningResponse",
     "SimulationRunConfig",
     "TimestepSummary",
+    # Conviction
+    "ConvictionLevel",
+    "CONVICTION_MAP",
+    "CONVICTION_REVERSE_MAP",
+    "conviction_to_float",
+    "float_to_conviction",
+    # Memory
+    "MemoryEntry",
     # State management
     "StateManager",
     # Persona generation
     "generate_persona",
     "render_persona",
-    # Reasoning
+    # Reasoning (two-pass)
     "reason_agent",
     "build_reasoning_prompt",
     "build_response_schema",
+    "build_pass1_prompt",
+    "build_pass1_schema",
+    "build_pass2_prompt",
+    "build_pass2_schema",
+    "batch_reason_agents",
+    "create_reasoning_context",
     # Exposure
     "apply_seed_exposures",
     "propagate_through_network",

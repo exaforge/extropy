@@ -2,6 +2,14 @@
 
 Coordinates the simulation loop: exposure, reasoning, propagation,
 and aggregation across timesteps until stopping conditions are met.
+
+Implements Phase 0 redesign:
+- Two-pass reasoning (Pass 1: role-play, Pass 2: classification)
+- Conviction-gated sharing (very_uncertain agents don't share)
+- Conviction-based flip resistance
+- Memory traces (sliding window of 3 per agent)
+- Semantic peer influence (public_statement + sentiment, not position labels)
+- Rate limiter integration (replaces hardcoded semaphore)
 """
 
 import json
@@ -16,13 +24,16 @@ from ..core.models import (
     PopulationSpec,
     ScenarioSpec,
     AgentState,
+    MemoryEntry,
     PeerOpinion,
     ReasoningContext,
     SimulationEvent,
     SimulationEventType,
     SimulationRunConfig,
     TimestepSummary,
+    float_to_conviction,
 )
+from ..core.rate_limiter import RateLimiter
 from ..population.network import load_agents_json
 from ..population.persona import PersonaConfig
 from .state import StateManager
@@ -39,6 +50,13 @@ from .aggregation import (
 )
 
 logger = logging.getLogger(__name__)
+
+# Conviction threshold for flip resistance:
+# If old conviction >= FIRM and new position differs, reject unless new conviction >= MODERATE
+_FIRM_CONVICTION = 0.7  # ConvictionLevel.FIRM
+_MODERATE_CONVICTION = 0.5  # ConvictionLevel.MODERATE
+# Agents with conviction <= this don't share
+_SHARING_CONVICTION_THRESHOLD = 0.1  # ConvictionLevel.VERY_UNCERTAIN
 
 
 class SimulationSummary:
@@ -102,6 +120,7 @@ class SimulationEngine:
         network: dict[str, Any],
         config: SimulationRunConfig,
         persona_config: PersonaConfig | None = None,
+        rate_limiter: RateLimiter | None = None,
     ):
         """Initialize simulation engine.
 
@@ -112,6 +131,7 @@ class SimulationEngine:
             network: Network data
             config: Simulation run configuration
             persona_config: Optional PersonaConfig for embodied persona rendering
+            rate_limiter: Optional rate limiter for API pacing
         """
         self.scenario = scenario
         self.population_spec = population_spec
@@ -119,6 +139,7 @@ class SimulationEngine:
         self.network = network
         self.config = config
         self.persona_config = persona_config
+        self.rate_limiter = rate_limiter
 
         # Build agent map for quick lookup
         self.agent_map = {a.get("_id", str(i)): a for i, a in enumerate(agents)}
@@ -144,11 +165,20 @@ class SimulationEngine:
         self.timeline = TimelineManager(self.output_dir / "timeline.jsonl")
 
         # Pre-generate personas for all agents
+        # Extract decision-relevant attributes from outcome config (trait salience)
+        decision_attrs = (
+            scenario.outcomes.decision_relevant_attributes
+            if hasattr(scenario.outcomes, "decision_relevant_attributes")
+            else None
+        )
         self._personas: dict[str, str] = {}
         for i, agent in enumerate(agents):
             agent_id = agent.get("_id", str(i))
             self._personas[agent_id] = generate_persona(
-                agent, population_spec, persona_config=persona_config
+                agent,
+                population_spec,
+                persona_config=persona_config,
+                decision_relevant_attributes=decision_attrs or None,
             )
 
         # Tracking variables
@@ -235,7 +265,6 @@ class SimulationEngine:
         Returns:
             TimestepSummary for this timestep
         """
-        time.time()
         logger.info(f"[TIMESTEP {timestep}] ========== STARTING ==========")
 
         # 1. Apply seed exposures
@@ -278,9 +307,14 @@ class SimulationEngine:
             context = self._build_reasoning_context(agent_id, old_state)
             contexts.append(context)
 
-        # 5. Run reasoning sequentially with heavy logging
+        # 5. Run two-pass reasoning
         reasoning_start = time.time()
-        results = batch_reason_agents(contexts, self.scenario, self.config)
+        results = batch_reason_agents(
+            contexts,
+            self.scenario,
+            self.config,
+            rate_limiter=self.rate_limiter,
+        )
         reasoning_elapsed = time.time() - reasoning_start
         self.total_reasoning_calls += len(results)
 
@@ -302,6 +336,37 @@ class SimulationEngine:
 
             old_state = old_states[agent_id]
 
+            # Apply conviction-based flip resistance
+            effective_will_share = response.will_share
+            effective_position = response.position
+
+            if (
+                old_state.conviction is not None
+                and old_state.conviction >= _FIRM_CONVICTION
+            ):
+                # High-conviction agent: resist position flip
+                if (
+                    old_state.position is not None
+                    and response.position is not None
+                    and old_state.position != response.position
+                ):
+                    new_conviction = response.conviction or 0.0
+                    if new_conviction < _MODERATE_CONVICTION:
+                        # Reject the flip — keep old position
+                        logger.info(
+                            f"[CONVICTION] Agent {agent_id}: flip from {old_state.position} "
+                            f"to {response.position} rejected (old conviction={float_to_conviction(old_state.conviction)}, "
+                            f"new conviction={float_to_conviction(response.conviction)})"
+                        )
+                        effective_position = old_state.position
+
+            # Apply conviction-gated sharing
+            if (
+                response.conviction is not None
+                and response.conviction <= _SHARING_CONVICTION_THRESHOLD
+            ):
+                effective_will_share = False
+
             # Create new state from response
             new_state = AgentState(
                 agent_id=agent_id,
@@ -309,10 +374,12 @@ class SimulationEngine:
                 exposure_count=old_state.exposure_count,
                 exposures=old_state.exposures,
                 last_reasoning_timestep=timestep,
-                position=response.position,
+                position=effective_position,
                 sentiment=response.sentiment,
+                conviction=response.conviction,
+                public_statement=response.public_statement,
                 action_intent=response.action_intent,
-                will_share=response.will_share,
+                will_share=effective_will_share,
                 outcomes=response.outcomes,
                 raw_reasoning=response.reasoning,
                 updated_at=timestep,
@@ -330,6 +397,16 @@ class SimulationEngine:
             self.state_manager.update_agent_state(agent_id, new_state, timestep)
             agents_reasoned += 1
 
+            # Save memory entry
+            if response.reasoning_summary:
+                memory_entry = MemoryEntry(
+                    timestep=timestep,
+                    sentiment=response.sentiment,
+                    conviction=response.conviction,
+                    summary=response.reasoning_summary,
+                )
+                self.state_manager.save_memory_entry(agent_id, memory_entry)
+
             # Log event
             self.timeline.log_event(
                 SimulationEvent(
@@ -339,12 +416,13 @@ class SimulationEngine:
                     details={
                         "position": new_state.position,
                         "sentiment": new_state.sentiment,
+                        "conviction": new_state.conviction,
                         "will_share": new_state.will_share,
                     },
                 )
             )
 
-        # 5. Compute and save timestep summary
+        # 7. Compute and save timestep summary
         summary = compute_timestep_summary(
             timestep,
             self.state_manager,
@@ -378,8 +456,11 @@ class SimulationEngine:
         agent = self.agent_map.get(agent_id, {})
         persona = self._personas.get(agent_id, "")
 
-        # Get peer opinions from neighbors
+        # Get peer opinions from neighbors (with public statements, not position labels)
         peer_opinions = self._get_peer_opinions(agent_id)
+
+        # Get memory trace
+        memory_trace = self.state_manager.get_memory_traces(agent_id)
 
         return create_reasoning_context(
             agent_id=agent_id,
@@ -389,10 +470,14 @@ class SimulationEngine:
             scenario=self.scenario,
             peer_opinions=peer_opinions,
             current_state=state if state.last_reasoning_timestep >= 0 else None,
+            memory_trace=memory_trace,
         )
 
     def _get_peer_opinions(self, agent_id: str) -> list[PeerOpinion]:
         """Get opinions of connected peers.
+
+        In the redesigned simulation, peers share public_statement + sentiment,
+        NOT position labels. Position is output-only (Pass 2).
 
         Args:
             agent_id: Agent ID
@@ -406,13 +491,16 @@ class SimulationEngine:
         for neighbor_id, edge_data in neighbors[:5]:  # Limit to 5 peers
             neighbor_state = self.state_manager.get_agent_state(neighbor_id)
 
-            if neighbor_state.position:  # Only include if they have an opinion
+            # Include peer if they have formed any opinion (sentiment or statement)
+            if neighbor_state.sentiment is not None or neighbor_state.public_statement:
                 opinions.append(
                     PeerOpinion(
                         agent_id=neighbor_id,
                         relationship=edge_data.get("type", "contact"),
-                        position=neighbor_state.position,
+                        position=neighbor_state.position,  # kept for backwards compat
                         sentiment=neighbor_state.sentiment,
+                        public_statement=neighbor_state.public_statement,
+                        credibility=0.85,  # Phase 2 will make this dynamic
                     )
                 )
 
@@ -421,6 +509,9 @@ class SimulationEngine:
     def _state_changed(self, old: AgentState, new: AgentState) -> bool:
         """Check if agent state changed meaningfully.
 
+        Uses sentiment + conviction changes as primary signals,
+        not position (which is output-only from Pass 2).
+
         Args:
             old: Previous state
             new: New state
@@ -428,13 +519,24 @@ class SimulationEngine:
         Returns:
             True if state changed
         """
-        if old.position != new.position:
-            return True
-        if old.will_share != new.will_share:
-            return True
+        # Sentiment shift
         if old.sentiment is not None and new.sentiment is not None:
             if abs(old.sentiment - new.sentiment) > 0.1:
                 return True
+
+        # Conviction shift
+        if old.conviction is not None and new.conviction is not None:
+            if abs(old.conviction - new.conviction) > 0.15:
+                return True
+
+        # Position change (still tracked for output purposes)
+        if old.position != new.position:
+            return True
+
+        # Sharing intent change
+        if old.will_share != new.will_share:
+            return True
+
         return False
 
     def _finalize(
@@ -533,10 +635,15 @@ class SimulationEngine:
             "scenario_path": self.config.scenario_path,
             "population_size": len(self.agents),
             "model": self.config.model,
+            "pivotal_model": self.config.pivotal_model,
+            "routine_model": self.config.routine_model,
             "seed": self.seed,
             "multi_touch_threshold": self.config.multi_touch_threshold,
             "completed_at": datetime.now().isoformat(),
         }
+
+        if self.rate_limiter:
+            meta["rate_limiter_stats"] = self.rate_limiter.stats()
 
         with open(self.output_dir / "meta.json", "w") as f:
             json.dump(meta, f, indent=2)
@@ -546,10 +653,15 @@ def run_simulation(
     scenario_path: str | Path,
     output_dir: str | Path,
     model: str = "",
+    pivotal_model: str = "",
+    routine_model: str = "",
     multi_touch_threshold: int = 3,
     random_seed: int | None = None,
     on_progress: Callable[[int, int, str], None] | None = None,
     persona_config_path: str | Path | None = None,
+    rate_tier: int | None = None,
+    rpm_override: int | None = None,
+    tpm_override: int | None = None,
 ) -> SimulationSummary:
     """Run a simulation from a scenario file.
 
@@ -559,10 +671,15 @@ def run_simulation(
         scenario_path: Path to scenario YAML file
         output_dir: Directory for results output
         model: LLM model for agent reasoning
+        pivotal_model: Model for pivotal reasoning (default: same as model)
+        routine_model: Cheap model for routine + classification
         multi_touch_threshold: Re-reason after N new exposures
         random_seed: Random seed for reproducibility
         on_progress: Progress callback(timestep, max, status)
         persona_config_path: Optional path to PersonaConfig YAML for embodied personas
+        rate_tier: Rate limit tier (1-4, None = Tier 1)
+        rpm_override: Override RPM limit
+        tpm_override: Override TPM limit
 
     Returns:
         SimulationSummary with results
@@ -602,7 +719,6 @@ def run_simulation(
             persona_config = PersonaConfig.from_file(str(persona_config_path))
     else:
         # Try to find persona config automatically
-        # Look for <population>.persona.yaml next to population spec
         auto_config_path = pop_path.with_suffix(".persona.yaml")
         if auto_config_path.exists():
             persona_config = PersonaConfig.from_file(str(auto_config_path))
@@ -612,8 +728,25 @@ def run_simulation(
         scenario_path=str(scenario_path),
         output_dir=str(output_dir),
         model=model,
+        pivotal_model=pivotal_model,
+        routine_model=routine_model,
         multi_touch_threshold=multi_touch_threshold,
         random_seed=random_seed,
+    )
+
+    # Create rate limiter
+    from ..config import get_config
+
+    entropy_config = get_config()
+    provider = entropy_config.simulation.provider
+    effective_model = model or entropy_config.simulation.model or ""
+
+    rate_limiter = RateLimiter.for_provider(
+        provider=provider,
+        model=effective_model,
+        tier=rate_tier,
+        rpm_override=rpm_override,
+        tpm_override=tpm_override,
     )
 
     # Create and run engine
@@ -624,6 +757,7 @@ def run_simulation(
         network=network,
         config=config,
         persona_config=persona_config,
+        rate_limiter=rate_limiter,
     )
 
     if on_progress:

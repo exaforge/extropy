@@ -34,6 +34,8 @@ def compute_timestep_summary(
     exposure_rate = state_manager.get_exposure_rate()
     position_distribution = state_manager.get_position_distribution()
     average_sentiment = state_manager.get_average_sentiment()
+    average_conviction = state_manager.get_average_conviction()
+    sentiment_variance = state_manager.get_sentiment_variance()
 
     return TimestepSummary(
         timestep=timestep,
@@ -44,6 +46,8 @@ def compute_timestep_summary(
         exposure_rate=exposure_rate,
         position_distribution=position_distribution,
         average_sentiment=average_sentiment,
+        average_conviction=average_conviction,
+        sentiment_variance=sentiment_variance,
     )
 
 
@@ -283,6 +287,8 @@ def compute_timeline_aggregates(
                 "exposure_rate": summary.exposure_rate,
                 "position_distribution": position_pct,
                 "average_sentiment": summary.average_sentiment,
+                "average_conviction": summary.average_conviction,
+                "sentiment_variance": summary.sentiment_variance,
                 "cumulative_shares": cumulative_shares,
                 "new_exposures": summary.new_exposures,
                 "agents_reasoned": summary.agents_reasoned,

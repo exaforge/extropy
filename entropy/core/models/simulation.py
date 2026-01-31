@@ -7,9 +7,12 @@ Defines all state and event models used during simulation execution:
 - SimulationEvent: Timeline event
 - PeerOpinion: Opinion of connected peer
 - ReasoningContext: Context for agent reasoning
-- ReasoningResponse: Response from agent LLM call
+- ReasoningResponse: Response from agent LLM call (Pass 1)
+- ClassificationResponse: Response from classification pass (Pass 2)
+- MemoryEntry: Agent reasoning memory trace
 - SimulationRunConfig: Configuration for a run
 - TimestepSummary: Summary statistics per timestep
+- ConvictionLevel: Categorical conviction levels
 """
 
 from datetime import datetime
@@ -17,6 +20,54 @@ from enum import Enum
 from typing import Any
 
 from pydantic import BaseModel, Field
+
+
+# =============================================================================
+# Conviction Levels
+# =============================================================================
+
+
+class ConvictionLevel(str, Enum):
+    """Categorical conviction levels.
+
+    The agent picks from these in Pass 1. Mapped to floats for storage/thresholds.
+    The agent never sees the numeric value.
+    """
+
+    VERY_UNCERTAIN = "very_uncertain"
+    LEANING = "leaning"
+    MODERATE = "moderate"
+    FIRM = "firm"
+    ABSOLUTE = "absolute"
+
+
+# Map conviction levels to float values for storage and threshold math
+CONVICTION_MAP: dict[str, float] = {
+    ConvictionLevel.VERY_UNCERTAIN: 0.1,
+    ConvictionLevel.LEANING: 0.3,
+    ConvictionLevel.MODERATE: 0.5,
+    ConvictionLevel.FIRM: 0.7,
+    ConvictionLevel.ABSOLUTE: 0.9,
+}
+
+# Reverse map: float -> level name (for display in re-reasoning prompts)
+CONVICTION_REVERSE_MAP: dict[float, str] = {v: k for k, v in CONVICTION_MAP.items()}
+
+
+def conviction_to_float(level: str | None) -> float | None:
+    """Convert a conviction level string to its float value."""
+    if level is None:
+        return None
+    return CONVICTION_MAP.get(level)
+
+
+def float_to_conviction(value: float | None) -> str | None:
+    """Convert a float to the nearest conviction level string."""
+    if value is None:
+        return None
+    # Find nearest level
+    closest = min(CONVICTION_MAP.items(), key=lambda x: abs(x[1] - value))
+    return closest[0]
 
 
 # =============================================================================
@@ -54,6 +105,26 @@ class ExposureRecord(BaseModel):
 
 
 # =============================================================================
+# Memory Entry
+# =============================================================================
+
+
+class MemoryEntry(BaseModel):
+    """A single entry in an agent's reasoning memory trace.
+
+    Stored after each reasoning pass — capped at 3 entries per agent.
+    Fed back into the prompt so agents remember their own reasoning history.
+    """
+
+    timestep: int = Field(description="When this reasoning occurred")
+    sentiment: float | None = Field(default=None, description="Sentiment at this time")
+    conviction: float | None = Field(
+        default=None, description="Conviction float value at this time"
+    )
+    summary: str = Field(description="1-sentence summary of reasoning at this time")
+
+
+# =============================================================================
 # Agent State
 # =============================================================================
 
@@ -71,15 +142,23 @@ class AgentState(BaseModel):
         default=-1, description="When they last reasoned"
     )
     position: str | None = Field(
-        default=None, description="Current position (from outcomes)"
+        default=None, description="Current position (from Pass 2 classification)"
     )
-    sentiment: float | None = Field(default=None, description="Current sentiment")
+    sentiment: float | None = Field(
+        default=None, description="Current sentiment (-1 to 1)"
+    )
+    conviction: float | None = Field(
+        default=None, description="Conviction as float (from categorical level)"
+    )
+    public_statement: str | None = Field(
+        default=None, description="1-2 sentence argument for peers"
+    )
     action_intent: str | None = Field(
         default=None, description="What they intend to do"
     )
     will_share: bool = Field(default=False, description="Will they propagate")
     outcomes: dict[str, Any] = Field(
-        default_factory=dict, description="All extracted outcomes"
+        default_factory=dict, description="All extracted outcomes (from Pass 2)"
     )
     raw_reasoning: str | None = Field(default=None, description="Full reasoning text")
     updated_at: int = Field(default=0, description="Last state change timestep")
@@ -110,12 +189,24 @@ class SimulationEvent(BaseModel):
 
 
 class PeerOpinion(BaseModel):
-    """Opinion of a connected peer (for social influence)."""
+    """Opinion of a connected peer (for social influence).
+
+    In the redesigned simulation, peers influence via public_statement + sentiment,
+    NOT position labels. Position is output-only (Pass 2).
+    """
 
     agent_id: str = Field(description="The peer's ID")
     relationship: str = Field(description="Edge type (colleague, mentor, etc.)")
-    position: str | None = Field(default=None, description="Their current position")
+    position: str | None = Field(
+        default=None, description="Their current position (for backwards compat only)"
+    )
     sentiment: float | None = Field(default=None, description="Their sentiment")
+    public_statement: str | None = Field(
+        default=None, description="Their argument/statement"
+    )
+    credibility: float = Field(
+        default=0.85, description="Dynamic credibility of this peer"
+    )
 
 
 # =============================================================================
@@ -136,23 +227,43 @@ class ReasoningContext(BaseModel):
     current_state: AgentState | None = Field(
         default=None, description="Previous state if re-reasoning"
     )
+    memory_trace: list[MemoryEntry] = Field(
+        default_factory=list, description="Agent's previous reasoning summaries (max 3)"
+    )
 
 
 # =============================================================================
-# Reasoning Response
+# Reasoning Response (Pass 1 — free-text role-play)
 # =============================================================================
 
 
 class ReasoningResponse(BaseModel):
-    """Response from agent reasoning LLM call."""
+    """Response from agent reasoning LLM call (Pass 1).
 
-    position: str | None = Field(default=None, description="Maps to outcome")
-    sentiment: float | None = Field(default=None, description="Sentiment value")
+    This is the free-text role-play pass. No categorical enums here —
+    the agent reasons naturally. Classification happens in Pass 2.
+    """
+
+    position: str | None = Field(
+        default=None, description="Classified position (filled by Pass 2)"
+    )
+    sentiment: float | None = Field(
+        default=None, description="Sentiment value (-1 to 1)"
+    )
+    conviction: float | None = Field(
+        default=None, description="Conviction as float (mapped from categorical)"
+    )
+    public_statement: str | None = Field(
+        default=None, description="1-2 sentence argument for peers"
+    )
+    reasoning_summary: str | None = Field(
+        default=None, description="1-sentence summary for memory trace"
+    )
     action_intent: str | None = Field(default=None, description="Intended action")
     will_share: bool = Field(default=False, description="Will they share")
-    reasoning: str = Field(default="", description="1-3 sentence explanation")
+    reasoning: str = Field(default="", description="Full internal monologue")
     outcomes: dict[str, Any] = Field(
-        default_factory=dict, description="All structured outcomes"
+        default_factory=dict, description="All structured outcomes (from Pass 2)"
     )
 
 
@@ -169,6 +280,14 @@ class SimulationRunConfig(BaseModel):
     model: str = Field(
         default="",
         description="LLM model for agent reasoning (empty = use config default)",
+    )
+    pivotal_model: str = Field(
+        default="",
+        description="Model for pivotal reasoning (default: same as model)",
+    )
+    routine_model: str = Field(
+        default="",
+        description="Cheap model for routine reasoning + classification (default: provider cheap tier)",
     )
     reasoning_effort: str = Field(default="low", description="Reasoning effort level")
     multi_touch_threshold: int = Field(
@@ -201,4 +320,10 @@ class TimestepSummary(BaseModel):
     )
     average_sentiment: float | None = Field(
         default=None, description="Mean sentiment of aware agents"
+    )
+    average_conviction: float | None = Field(
+        default=None, description="Mean conviction of aware agents"
+    )
+    sentiment_variance: float | None = Field(
+        default=None, description="Variance of sentiment (for convergence detection)"
     )

@@ -1,7 +1,8 @@
 """SQLite-backed agent state management for simulation.
 
 Provides scalable state storage that can handle large populations
-without excessive memory usage.
+without excessive memory usage. Includes support for conviction,
+public statements, and memory traces.
 """
 
 import json
@@ -12,6 +13,7 @@ from typing import Any
 from ..core.models import (
     AgentState,
     ExposureRecord,
+    MemoryEntry,
     SimulationEvent,
     TimestepSummary,
 )
@@ -55,6 +57,8 @@ class StateManager:
                 last_reasoning_timestep INTEGER DEFAULT -1,
                 position TEXT,
                 sentiment REAL,
+                conviction REAL,
+                public_statement TEXT,
                 action_intent TEXT,
                 will_share INTEGER DEFAULT 0,
                 outcomes_json TEXT,
@@ -75,6 +79,21 @@ class StateManager:
                 source_agent_id TEXT,
                 content TEXT,
                 credibility REAL,
+                FOREIGN KEY (agent_id) REFERENCES agent_states(agent_id)
+            )
+        """
+        )
+
+        # Memory traces table (max 3 per agent, managed by application)
+        cursor.execute(
+            """
+            CREATE TABLE IF NOT EXISTS memory_traces (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                agent_id TEXT,
+                timestep INTEGER,
+                sentiment REAL,
+                conviction REAL,
+                summary TEXT,
                 FOREIGN KEY (agent_id) REFERENCES agent_states(agent_id)
             )
         """
@@ -105,7 +124,9 @@ class StateManager:
                 state_changes INTEGER,
                 exposure_rate REAL,
                 position_distribution_json TEXT,
-                average_sentiment REAL
+                average_sentiment REAL,
+                average_conviction REAL,
+                sentiment_variance REAL
             )
         """
         )
@@ -139,6 +160,12 @@ class StateManager:
             """
             CREATE INDEX IF NOT EXISTS idx_agent_states_will_share
             ON agent_states(will_share)
+        """
+        )
+        cursor.execute(
+            """
+            CREATE INDEX IF NOT EXISTS idx_memory_traces_agent
+            ON memory_traces(agent_id)
         """
         )
 
@@ -223,6 +250,8 @@ class StateManager:
             last_reasoning_timestep=row["last_reasoning_timestep"],
             position=row["position"],
             sentiment=row["sentiment"],
+            conviction=row["conviction"],
+            public_statement=row["public_statement"],
             action_intent=row["action_intent"],
             will_share=bool(row["will_share"]),
             outcomes=outcomes,
@@ -368,6 +397,8 @@ class StateManager:
             UPDATE agent_states
             SET position = ?,
                 sentiment = ?,
+                conviction = ?,
+                public_statement = ?,
                 action_intent = ?,
                 will_share = ?,
                 outcomes_json = ?,
@@ -379,6 +410,8 @@ class StateManager:
             (
                 state.position,
                 state.sentiment,
+                state.conviction,
+                state.public_statement,
                 state.action_intent,
                 1 if state.will_share else 0,
                 outcomes_json,
@@ -410,6 +443,8 @@ class StateManager:
                 UPDATE agent_states
                 SET position = ?,
                     sentiment = ?,
+                    conviction = ?,
+                    public_statement = ?,
                     action_intent = ?,
                     will_share = ?,
                     outcomes_json = ?,
@@ -421,6 +456,8 @@ class StateManager:
                 (
                     state.position,
                     state.sentiment,
+                    state.conviction,
+                    state.public_statement,
                     state.action_intent,
                     1 if state.will_share else 0,
                     outcomes_json,
@@ -432,6 +469,78 @@ class StateManager:
             )
 
         self.conn.commit()
+
+    def save_memory_entry(self, agent_id: str, entry: MemoryEntry) -> None:
+        """Save a memory trace entry for an agent.
+
+        Maintains a sliding window of max 3 entries per agent.
+        Oldest entries are evicted when the limit is reached.
+
+        Args:
+            agent_id: Agent ID
+            entry: Memory entry to save
+        """
+        cursor = self.conn.cursor()
+
+        # Insert new entry
+        cursor.execute(
+            """
+            INSERT INTO memory_traces (agent_id, timestep, sentiment, conviction, summary)
+            VALUES (?, ?, ?, ?, ?)
+        """,
+            (
+                agent_id,
+                entry.timestep,
+                entry.sentiment,
+                entry.conviction,
+                entry.summary,
+            ),
+        )
+
+        # Evict oldest entries beyond 3
+        cursor.execute(
+            """
+            DELETE FROM memory_traces
+            WHERE id NOT IN (
+                SELECT id FROM memory_traces
+                WHERE agent_id = ?
+                ORDER BY timestep DESC
+                LIMIT 3
+            ) AND agent_id = ?
+        """,
+            (agent_id, agent_id),
+        )
+
+        self.conn.commit()
+
+    def get_memory_traces(self, agent_id: str) -> list[MemoryEntry]:
+        """Get memory trace entries for an agent (max 3, oldest first).
+
+        Args:
+            agent_id: Agent ID
+
+        Returns:
+            List of MemoryEntry objects
+        """
+        cursor = self.conn.cursor()
+        cursor.execute(
+            """
+            SELECT * FROM memory_traces
+            WHERE agent_id = ?
+            ORDER BY timestep ASC
+        """,
+            (agent_id,),
+        )
+
+        return [
+            MemoryEntry(
+                timestep=row["timestep"],
+                sentiment=row["sentiment"],
+                conviction=row["conviction"],
+                summary=row["summary"],
+            )
+            for row in cursor.fetchall()
+        ]
 
     def log_event(self, event: SimulationEvent) -> None:
         """Log a simulation event to the timeline.
@@ -502,6 +611,49 @@ class StateManager:
 
         return row["avg_sentiment"] if row else None
 
+    def get_average_conviction(self) -> float | None:
+        """Get average conviction of aware agents."""
+        cursor = self.conn.cursor()
+
+        cursor.execute(
+            """
+            SELECT AVG(conviction) as avg_conviction
+            FROM agent_states
+            WHERE conviction IS NOT NULL
+        """
+        )
+        row = cursor.fetchone()
+
+        return row["avg_conviction"] if row else None
+
+    def get_sentiment_variance(self) -> float | None:
+        """Get variance of sentiment across aware agents (for convergence detection)."""
+        cursor = self.conn.cursor()
+
+        cursor.execute(
+            """
+            SELECT AVG(sentiment) as mean_s, COUNT(*) as cnt
+            FROM agent_states
+            WHERE sentiment IS NOT NULL
+        """
+        )
+        row = cursor.fetchone()
+
+        if not row or row["cnt"] < 2:
+            return None
+
+        mean = row["mean_s"]
+        cursor.execute(
+            """
+            SELECT AVG((sentiment - ?) * (sentiment - ?)) as variance
+            FROM agent_states
+            WHERE sentiment IS NOT NULL
+        """,
+            (mean, mean),
+        )
+        var_row = cursor.fetchone()
+        return var_row["variance"] if var_row else None
+
     def save_timestep_summary(self, summary: TimestepSummary) -> None:
         """Save a timestep summary.
 
@@ -514,8 +666,9 @@ class StateManager:
             """
             INSERT OR REPLACE INTO timestep_summaries
             (timestep, new_exposures, agents_reasoned, shares_occurred,
-             state_changes, exposure_rate, position_distribution_json, average_sentiment)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+             state_changes, exposure_rate, position_distribution_json, average_sentiment,
+             average_conviction, sentiment_variance)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """,
             (
                 summary.timestep,
@@ -526,6 +679,8 @@ class StateManager:
                 summary.exposure_rate,
                 json.dumps(summary.position_distribution),
                 summary.average_sentiment,
+                summary.average_conviction,
+                summary.sentiment_variance,
             ),
         )
 
@@ -560,6 +715,8 @@ class StateManager:
                     exposure_rate=row["exposure_rate"],
                     position_distribution=position_dist,
                     average_sentiment=row["average_sentiment"],
+                    average_conviction=row["average_conviction"],
+                    sentiment_variance=row["sentiment_variance"],
                 )
             )
 
@@ -601,6 +758,8 @@ class StateManager:
                     "last_reasoning_timestep": row["last_reasoning_timestep"],
                     "position": row["position"],
                     "sentiment": row["sentiment"],
+                    "conviction": row["conviction"],
+                    "public_statement": row["public_statement"],
                     "action_intent": row["action_intent"],
                     "will_share": bool(row["will_share"]),
                     "outcomes": outcomes,

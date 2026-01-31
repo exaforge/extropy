@@ -71,8 +71,14 @@ from .scenario import (
 
 # Simulation models (Phase 3)
 from .simulation import (
+    ConvictionLevel,
+    CONVICTION_MAP,
+    CONVICTION_REVERSE_MAP,
+    conviction_to_float,
+    float_to_conviction,
     SimulationEventType,
     ExposureRecord,
+    MemoryEntry,
     AgentState,
     SimulationEvent,
     PeerOpinion,
@@ -159,8 +165,14 @@ __all__ = [
     "ValidationIssue",
     "ValidationResult",
     # Simulation
+    "ConvictionLevel",
+    "CONVICTION_MAP",
+    "CONVICTION_REVERSE_MAP",
+    "conviction_to_float",
+    "float_to_conviction",
     "SimulationEventType",
     "ExposureRecord",
+    "MemoryEntry",
     "AgentState",
     "SimulationEvent",
     "PeerOpinion",

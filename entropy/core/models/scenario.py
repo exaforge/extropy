@@ -212,6 +212,10 @@ class OutcomeConfig(BaseModel):
     extraction_instructions: str | None = Field(
         default=None, description="Hints for Phase 3 outcome extraction"
     )
+    decision_relevant_attributes: list[str] = Field(
+        default_factory=list,
+        description="Attributes most relevant to this scenario's decision (for trait salience in persona rendering)",
+    )
 
 
 # =============================================================================

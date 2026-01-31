@@ -39,7 +39,6 @@ def get_simulation_provider() -> LLMProvider:
     return _create_provider(config.simulation.provider)
 
 
-
 __all__ = [
     "LLMProvider",
     "get_pipeline_provider",
