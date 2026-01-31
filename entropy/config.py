@@ -212,7 +212,7 @@ def get_api_key(provider: str) -> str:
 
     Supports:
         - openai: OPENAI_API_KEY
-        - claude: ANTHROPIC_API_KEY or ANTHROPIC_ACCESS_TOKEN (OAuth)
+        - claude: ANTHROPIC_API_KEY
 
     Returns empty string if not found (providers will raise on missing keys).
     """
@@ -220,10 +220,7 @@ def get_api_key(provider: str) -> str:
     if provider == "openai":
         return os.environ.get("OPENAI_API_KEY", "")
     elif provider == "claude":
-        # API key takes precedence, fall back to OAuth access token
-        return os.environ.get("ANTHROPIC_API_KEY", "") or os.environ.get(
-            "ANTHROPIC_ACCESS_TOKEN", ""
-        )
+        return os.environ.get("ANTHROPIC_API_KEY", "")
     return ""
 
 

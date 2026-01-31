@@ -1,4 +1,4 @@
-# CLI Reference
+# Entropy CLI Reference
 
 A hands-on walkthrough of every command in order, using a single example from start to finish.
 
@@ -191,7 +191,8 @@ Each agent is a dictionary of concrete values:
   "has_transit_access": false,
   "price_sensitivity": 0.78,
   "trust_in_local_government": 0.35,
-  "environmental_values": 0.42
+  "environmental_values": 0.42,
+  ...
 }
 ```
 
@@ -200,6 +201,10 @@ Agent 001 is a 34-year-old making $62k, driving 14 miles from south Austin with 
 ### The `--report` flag
 
 Add `--report` / `-r` to see distribution summaries after sampling — means, standard deviations, and top categorical values. Useful for sanity-checking that sampled agents match the spec.
+
+```bash
+entropy sample austin/population.yaml -o austin/agents.json --report
+```
 
 ### Arguments & options
 
@@ -294,11 +299,21 @@ The difference between "puppetry" (the LLM referencing external data) and "embod
 
 4. **Relative phrasings** — Generate 5-tier positioning labels based on z-scores: *"I'm far more price-sensitive than most people"* (z > 1) vs *"I'm about average"* (|z| < 0.3).
 
-5. **Concrete phrasings** — Generate templates with format specs: *"I drive {value} miles to downtown"* with `.1f` formatting, or *"I start work around {value}"* with `time12` formatting (8.5 -> "8:30 AM").
+5. **Concrete phrasings** — Generate templates with format specs: *"I drive {value} miles to downtown"* with `.1f` formatting, or *"I start work around {value}"* with `time12` formatting (8.5 → "8:30 AM").
 
 ### Scalability
 
 The persona config is generated **once per population** via LLM, then applied to all agents computationally. There are no per-agent LLM calls for persona rendering — just template substitution and z-score lookups.
+
+### Preview mode
+
+By default, the command shows a sample persona before saving:
+
+```bash
+entropy persona austin/population.yaml --agents austin/agents.json --agent 42
+```
+
+Use `--no-preview` to skip, or `--agent N` to preview a specific agent.
 
 ### Arguments & options
 
@@ -351,7 +366,11 @@ This compiles everything into an **executable scenario specification** — the c
 
 4. **Spread configuration** — How information and opinions propagate through the network. Includes edge-type modifiers (e.g., neighbor connections amplify sharing about local policy).
 
-5. **Outcome definitions** — What to measure: `compliance_intent` (categorical: comply/switch_transit/protest/avoid), `sentiment` (float: -1 to 1), `willingness_to_pay` (boolean), etc.
+5. **Outcome definitions** — What to measure: `compliance_intent` (categorical: comply/switch_transit/protest/avoid), `sentiment` (int: -10 to 10), `willingness_to_pay` (boolean), etc.
+
+### Scenario description
+
+The `-d` flag overrides the scenario description. If omitted, it uses the description from `entropy extend` (stored in the spec's metadata). Since we already described the scenario in step 2, we can skip `-d` here.
 
 ### Arguments & options
 
@@ -384,8 +403,12 @@ This is where it all comes together. The simulation engine loads the scenario sp
 
 1. **Seed exposure** — Agents learn about the congestion tax through channels defined in the scenario (city notices, news, social media).
 2. **Network propagation** — Exposed agents share information through their social connections. Edge types and spread modifiers control how fast and far information travels.
-3. **Two-pass agent reasoning** — Each newly-exposed agent receives their persona + the event description + what they've heard from connections. **Pass 1**: the agent role-plays their reaction in natural language (no enums, no anchoring). **Pass 2**: a cheap model classifies the freeform response into outcome categories. This eliminates central tendency bias.
-4. **State update** — Agent states are updated with position, sentiment, conviction, and a public statement summarizing their stance. Agents who receive information from multiple sources may re-evaluate (controlled by `--threshold`).
+3. **Agent reasoning** — Each newly-exposed agent receives their persona + the event description + what they've heard from connections. An LLM reasons *as that agent* and produces:
+   - Their position on the issue
+   - Emotional sentiment
+   - Whether they'd share/discuss it
+   - Their likely behavioral outcome
+4. **State update** — Agent states are updated. Agents who receive information from multiple sources may re-evaluate (controlled by `--threshold`).
 5. **Stopping check** — The engine checks if exposure has saturated, opinions have converged, or max timesteps are reached.
 
 ### What emerges
@@ -405,10 +428,7 @@ These aren't scripted responses. They emerge from each agent's unique combinatio
 | **Arg** | `scenario_file` | Scenario spec YAML |
 | **Opt** | `--output` / `-o` | Output results directory **(required)** |
 | **Opt** | `--model` / `-m` | LLM model for reasoning (default: from `entropy config`) |
-| **Opt** | `--pivotal-model` | Model for Pass 1 reasoning (default: provider default) |
-| **Opt** | `--routine-model` | Model for Pass 2 classification (default: provider default) |
 | **Opt** | `--threshold` / `-t` | Multi-touch threshold for re-reasoning (default: `3`) |
-| **Opt** | `--rate-tier` | Provider rate limit tier (default: auto-detect) |
 | **Opt** | `--seed` | Random seed for reproducibility |
 | **Opt** | `--quiet` / `-q` | Suppress progress output |
 | **Opt** | `--verbose` / `-v` | Show detailed logs |
@@ -420,7 +440,6 @@ A results directory containing:
 - `simulation.db` — SQLite database with full simulation state
 - `timeline.jsonl` — Event-by-event timeline
 - `agent_states.json` — Final state of every agent
-- `by_timestep.json` — Per-timestep metrics (exposure, sentiment, conviction, position distributions)
 - `outcome_distributions.json` — Aggregate outcome distributions
 - `meta.json` — Run configuration and metadata
 
@@ -477,14 +496,29 @@ entropy validate austin/scenario.yaml           # scenario spec (auto-detected)
 entropy validate austin/population.yaml --strict  # treat warnings as errors
 ```
 
-Validate a spec file at any point in the pipeline. Checks for structural issues, distribution validity, formula syntax, dependency cycles, and scenario-specific rules.
+Validate a spec file at any point in the pipeline. Auto-detects whether the file is a population spec or scenario spec based on naming convention (`*.scenario.yaml` vs `*.yaml`).
+
+Checks for:
+- Structural issues (duplicate attributes, missing fields)
+- Distribution validity (min < max, std > 0)
+- Formula syntax and reference integrity
+- Dependency cycles
+- Scenario-specific rules (exposure rules reference valid attributes, outcomes are well-formed)
+
+### Exit codes
+
+| Code | Meaning |
+|------|---------|
+| `0` | Valid |
+| `1` | Validation errors found |
+| `2` | File not found |
 
 ### Arguments & options
 
 | | Name | Description |
 |---|---|---|
-| **Arg** | `spec_file` | Spec file to validate |
-| **Opt** | `--strict` | Treat warnings as errors |
+| **Arg** | `spec_file` | Spec file to validate (`.yaml` or `.scenario.yaml`) |
+| **Opt** | `--strict` | Treat warnings as errors (population specs only) |
 
 ---
 
@@ -501,18 +535,24 @@ Entropy uses a **two-zone configuration** system. The **pipeline** zone controls
 
 Config is stored at `~/.config/entropy/config.json` and managed exclusively through this command.
 
+### Actions
+
+| Action | Description |
+|--------|-------------|
+| `show` | Display current resolved configuration, API key status, and config file location |
+| `set <key> <value>` | Set a config value and persist to disk |
+| `reset` | Delete config file and return to defaults |
+
 ### Available Keys
 
 | Key | Description | Default |
 |-----|-------------|---------|
 | `pipeline.provider` | LLM provider for steps 1-6 (`openai` or `claude`) | `openai` |
-| `pipeline.model_simple` | Model for simple calls (sufficiency checks) | provider default |
-| `pipeline.model_reasoning` | Model for reasoning calls (attribute selection, hydration) | provider default |
-| `pipeline.model_research` | Model for research calls (web search + reasoning) | provider default |
+| `pipeline.model_simple` | Model override for simple calls (sufficiency checks) | provider default |
+| `pipeline.model_reasoning` | Model override for reasoning calls (attribute selection, hydration) | provider default |
+| `pipeline.model_research` | Model override for research calls (web search + reasoning) | provider default |
 | `simulation.provider` | LLM provider for step 7 (`openai` or `claude`) | `openai` |
 | `simulation.model` | Model for agent reasoning | provider default |
-| `simulation.pivotal_model` | Model for Pass 1 (role-play reasoning) | provider default |
-| `simulation.routine_model` | Model for Pass 2 (classification) | provider default |
 | `simulation.max_concurrent` | Max concurrent LLM calls during simulation | `50` |
 
 ### Resolution Order
@@ -532,9 +572,24 @@ API keys are always read from environment variables (never stored in config):
 |----------|---------|
 | `OPENAI_API_KEY` | OpenAI API key |
 | `ANTHROPIC_API_KEY` | Anthropic API key |
+| `LLM_PROVIDER` | Legacy: sets both pipeline and simulation provider |
 | `PIPELINE_PROVIDER` | Override pipeline provider |
 | `SIMULATION_PROVIDER` | Override simulation provider |
 | `SIMULATION_MODEL` | Override simulation model |
+
+---
+
+## Global Options
+
+These apply to any command:
+
+| Option | Description |
+|--------|-------------|
+| `--json` | Output machine-readable JSON instead of human-friendly text. Useful for scripting and integration with other tools. |
+
+```bash
+entropy --json sample austin/population.yaml -o austin/agents.json --report
+```
 
 ---
 
@@ -554,4 +609,8 @@ entropy simulate austin/scenario.yaml -o austin/results/ --seed 42
 entropy results austin/results/
 entropy results austin/results/ --segment income
 entropy results austin/results/ --timeline
+
+# Validate at any point
+entropy validate austin/population.yaml
+entropy validate austin/scenario.yaml
 ```

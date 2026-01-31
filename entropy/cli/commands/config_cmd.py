@@ -100,7 +100,7 @@ def _show_config():
     console.print()
     console.print("[bold cyan]API Keys[/bold cyan] (from env vars)")
     _show_key_status("openai", "OPENAI_API_KEY")
-    _show_key_status("claude", "ANTHROPIC_API_KEY / ANTHROPIC_ACCESS_TOKEN")
+    _show_key_status("claude", "ANTHROPIC_API_KEY")
 
     # Config file
     console.print()

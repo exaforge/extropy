@@ -3,11 +3,27 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "entropy"
+name = "entropy-predict"
 version = "0.1.0"
-description = "Simulate how populations respond to scenarios"
+description = "Predictive intelligence through agent-based population simulation"
 readme = "README.md"
+license = "MIT"
 requires-python = ">=3.11"
+authors = [
+    { name = "Devesh Paragiri" },
+]
+keywords = ["simulation", "agent-based", "population", "predictive-intelligence", "llm"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
 dependencies = [
     "typer>=0.12.0",
     "rich>=13.0.0",
@@ -27,7 +43,13 @@ dependencies = [
 dev = [
     "pytest>=8.0.0",
     "pytest-asyncio>=0.24.0",
+    "ruff>=0.14.0",
 ]
+
+[project.urls]
+Homepage = "https://github.com/exaforge/entropy"
+Repository = "https://github.com/exaforge/entropy"
+Issues = "https://github.com/exaforge/entropy/issues"
 
 [project.scripts]
 entropy = "entropy.cli:app"
@@ -40,4 +62,3 @@ dev = [
     "pytest>=9.0.2",
     "ruff>=0.14.10",
 ]
-

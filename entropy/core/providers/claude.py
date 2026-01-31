@@ -66,15 +66,13 @@ class ClaudeProvider(LLMProvider):
     Uses the tool use pattern for structured output — Claude "calls" a tool
     with the response data, guaranteeing valid JSON matching the schema.
 
-    Supports both API key (sk-ant-api...) and OAuth access token authentication.
     """
 
     def __init__(self, api_key: str = "") -> None:
         if not api_key:
             raise ValueError(
-                "Anthropic credentials not found. Set one of:\n"
-                "  export ANTHROPIC_API_KEY=sk-ant-...       # API key\n"
-                "  export ANTHROPIC_ACCESS_TOKEN=...         # OAuth token\n"
+                "Anthropic API key not found. Set it via:\n"
+                "  export ANTHROPIC_API_KEY=sk-ant-...\n"
                 "Get your key from: https://console.anthropic.com/settings/keys"
             )
         super().__init__(api_key)
@@ -91,22 +89,10 @@ class ClaudeProvider(LLMProvider):
     def default_research_model(self) -> str:
         return "claude-sonnet-4-5-20250929"
 
-    def _is_oauth_token(self) -> bool:
-        """Check if the credential is an OAuth access token (not an API key).
-
-        OAuth tokens start with 'sk-ant-oat' while regular API keys start
-        with 'sk-ant-api' or similar.
-        """
-        return "oat" in self._api_key[:15]
-
     def _get_client(self) -> anthropic.Anthropic:
-        if self._is_oauth_token():
-            return anthropic.Anthropic(auth_token=self._api_key)
         return anthropic.Anthropic(api_key=self._api_key)
 
     def _get_async_client(self) -> anthropic.AsyncAnthropic:
-        if self._is_oauth_token():
-            return anthropic.AsyncAnthropic(auth_token=self._api_key)
         return anthropic.AsyncAnthropic(api_key=self._api_key)
 
     def simple_call(
