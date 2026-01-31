@@ -39,6 +39,7 @@ class StateManager:
         self.conn.row_factory = sqlite3.Row
 
         self._create_schema()
+        self._upgrade_schema()
 
         if agents:
             self.initialize_agents(agents)
@@ -168,6 +169,26 @@ class StateManager:
             ON memory_traces(agent_id)
         """
         )
+
+        self.conn.commit()
+
+    def _upgrade_schema(self) -> None:
+        """Add columns that may be missing from older databases."""
+        cursor = self.conn.cursor()
+
+        migrations = [
+            ("agent_states", "conviction", "REAL"),
+            ("agent_states", "public_statement", "TEXT"),
+            ("timestep_summaries", "average_conviction", "REAL"),
+            ("timestep_summaries", "sentiment_variance", "REAL"),
+        ]
+
+        for table, column, col_type in migrations:
+            try:
+                cursor.execute(f"ALTER TABLE {table} ADD COLUMN {column} {col_type}")
+            except sqlite3.OperationalError:
+                # Column already exists
+                pass
 
         self.conn.commit()
 

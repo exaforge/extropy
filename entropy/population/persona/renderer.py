@@ -271,12 +271,16 @@ def render_intro(agent: dict[str, Any], config: PersonaConfig) -> str:
 def render_persona(
     agent: dict[str, Any],
     config: PersonaConfig,
+    decision_relevant_attributes: list[str] | None = None,
 ) -> str:
     """Render complete first-person persona for an agent.
 
     Args:
         agent: Agent attribute dictionary
         config: Persona configuration
+        decision_relevant_attributes: Attributes most relevant to scenario outcome.
+            If provided, these are pulled out and rendered first under a dedicated
+            "Most Relevant to This Decision" section.
 
     Returns:
         Complete persona as markdown string
@@ -288,9 +292,55 @@ def render_persona(
     if intro:
         sections.append(intro)
 
-    # Render each group in order
+    decision_set = set(decision_relevant_attributes or [])
+
+    # Render decision-relevant attributes first if specified
+    if decision_set:
+        decision_phrases = []
+        for attr_name in decision_relevant_attributes:
+            value = agent.get(attr_name)
+            phrase = render_attribute(attr_name, value, config)
+            if phrase:
+                decision_phrases.append(phrase)
+        if decision_phrases:
+            sections.append(
+                "## Most Relevant to This Decision\n\n" + " ".join(decision_phrases)
+            )
+
+    # Render each group in order, excluding decision-relevant attrs already shown
     for group in config.groups:
-        section = render_persona_section(group.name, agent, config)
+        if not decision_set:
+            section = render_persona_section(group.name, agent, config)
+        else:
+            # Filter out decision-relevant attributes from regular groups
+            remaining_attrs = [a for a in group.attributes if a not in decision_set]
+            if not remaining_attrs:
+                continue
+            # Render manually with filtered attributes
+            group_obj = config.get_group(group.name)
+            if not group_obj:
+                continue
+            lines = [f"## {group_obj.label}", ""]
+            phrases = []
+            for attr_name in remaining_attrs:
+                value = agent.get(attr_name)
+                phrase = render_attribute(attr_name, value, config)
+                if phrase:
+                    phrases.append(phrase)
+            if not phrases:
+                continue
+            current_para = []
+            paragraphs = []
+            for phrase in phrases:
+                current_para.append(phrase)
+                if len(current_para) >= 3 or phrase.endswith("."):
+                    if current_para:
+                        paragraphs.append(" ".join(current_para))
+                        current_para = []
+            if current_para:
+                paragraphs.append(" ".join(current_para))
+            lines.extend(paragraphs)
+            section = "\n\n".join(lines)
         if section:
             sections.append(section)
 

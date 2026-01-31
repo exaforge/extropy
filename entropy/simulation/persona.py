@@ -242,7 +242,7 @@ def generate_persona(
     if persona_config is not None:
         from ..population.persona import render_persona as render_new_persona
 
-        return render_new_persona(agent, persona_config)
+        return render_new_persona(agent, persona_config, decision_relevant_attributes)
 
     # Legacy rendering below
     if not population_spec:

@@ -633,7 +633,7 @@ def reason_agent(
 
     if pass2_schema:
         pass2_prompt = build_pass2_prompt(reasoning, scenario)
-        classify_model = config.routine_model or config.model or None
+        classify_model = config.routine_model or None
 
         for attempt in range(config.max_retries):
             try:
