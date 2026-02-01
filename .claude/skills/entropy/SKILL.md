@@ -19,16 +19,16 @@ Entropy simulates how real human populations respond to scenarios. It creates sy
 entropy spec → entropy extend → entropy sample → entropy network → entropy persona → entropy scenario → entropy simulate → entropy results
 ```
 
-| Step | Command | What It Does |
-|------|---------|-------------|
-| 1 | `entropy spec "<description>" -o base.yaml` | Build base population spec from natural language |
-| 2 | `entropy extend base.yaml -s "<scenario>" -o population.yaml` | Add scenario-specific attributes |
-| 3 | `entropy sample population.yaml -o agents.json --seed 42` | Sample concrete agents from distributions |
-| 4 | `entropy network agents.json -o network.json --seed 42` | Generate social network graph |
-| 5 | `entropy persona population.yaml --agents agents.json` | Generate persona rendering config |
-| 6 | `entropy scenario -p population.yaml -a agents.json -n network.json -o scenario.yaml` | Compile executable scenario spec |
-| 7 | `entropy simulate scenario.yaml -o results/ --seed 42` | Run the simulation |
-| 8 | `entropy results results/` | View outcomes |
+| Step | Command                                                                               | What It Does                                     |
+| ---- | ------------------------------------------------------------------------------------- | ------------------------------------------------ |
+| 1    | `entropy spec "<description>" -o base.yaml`                                           | Build base population spec from natural language |
+| 2    | `entropy extend base.yaml -s "<scenario>" -o population.yaml`                         | Add scenario-specific attributes                 |
+| 3    | `entropy sample population.yaml -o agents.json --seed 42`                             | Sample concrete agents from distributions        |
+| 4    | `entropy network agents.json -o network.json -p population.yaml --seed 42`            | Generate social network graph                    |
+| 5    | `entropy persona population.yaml --agents agents.json`                                | Generate persona rendering config                |
+| 6    | `entropy scenario -p population.yaml -a agents.json -n network.json -o scenario.yaml` | Compile executable scenario spec                 |
+| 7    | `entropy simulate scenario.yaml -o results/ --seed 42`                                | Run the simulation                               |
+| 8    | `entropy results results/`                                                            | View outcomes                                    |
 
 Add `-y` / `--yes` to skip confirmation prompts for scripting.
 
@@ -59,6 +59,7 @@ API keys are always env vars: `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`.
 When `entropy validate` fails, common issues and fixes:
 
 ### Structural Errors (must fix)
+
 - **Circular dependency** — Check the `depends_on` fields. Use `entropy validate <spec> --strict` for full details. The error message includes the cycle path.
 - **Invalid distribution params** — e.g., `std: 0` or `min > max`. Fix in the YAML directly.
 - **Missing dependency reference** — A formula or condition references an attribute that doesn't exist. Check spelling.
@@ -66,11 +67,13 @@ When `entropy validate` fails, common issues and fixes:
 - **Invalid modifier conditions** — Condition syntax uses restricted Python. Only these builtins are allowed: abs, min, max, round, int, float, str, len, sum, all, any, bool.
 
 ### Semantic Warnings (should fix)
+
 - **No-op modifiers** — A modifier that doesn't actually change anything (e.g., `multiply: 1.0, add: 0`).
 - **Categorical option mismatch** — Modifier references an option that doesn't exist in the attribute's options list. Use `entropy fix <spec>` to auto-fix fuzzy matches.
 - **Modifier stacking** — Multiple modifiers that could conflict.
 
 ### Common Fix Commands
+
 ```bash
 entropy validate population.yaml              # Check for issues
 entropy validate population.yaml --strict     # Treat warnings as errors
@@ -83,18 +86,21 @@ entropy fix population.yaml                   # Apply auto-fixes
 When the user asks about simulation results:
 
 1. **Read the key files:**
+
    - `meta.json` — run config, timing, rate limiter stats
    - `outcome_distributions.json` — final aggregate outcomes
    - `by_timestep.json` — how outcomes evolved over time
    - `agent_states.json` — per-agent final states (for deep dives)
 
 2. **Highlight interesting patterns:**
+
    - Convergence speed (how many timesteps until exposure saturated)
    - Distribution shape (is it polarized or clustered?)
    - Sentiment vs. position mismatches (agents who chose "comply" but have negative sentiment)
    - Conviction levels (high conviction = stable opinions, low = could shift with more exposure)
 
 3. **Suggest segment analysis:**
+
    ```bash
    entropy results results/ --segment income
    entropy results results/ --segment age
@@ -133,14 +139,14 @@ Entropy is built for **population-level behavioral prediction** with heterogeneo
 
 ## File Formats Quick Reference
 
-| File | Format | Key Fields |
-|------|--------|-----------|
-| `population.yaml` | YAML | meta, attributes, sampling_order, grounding |
-| `agents.json` | JSON array | Each object has `_id` + all attribute values |
-| `network.json` | JSON | meta, nodes, edges (bidirectional, typed) |
-| `*.persona.yaml` | YAML | intro_template, treatments, groups, phrasings, population_stats |
-| `scenario.yaml` | YAML | meta, event, seed_exposure, interaction, spread, outcomes, simulation |
-| `results/meta.json` | JSON | scenario_name, population_size, model, completed_at |
-| `results/outcome_distributions.json` | JSON | Per-outcome aggregate distributions |
-| `results/by_timestep.json` | JSON array | Per-timestep: exposure_rate, position_distribution, sentiment, conviction |
-| `results/agent_states.json` | JSON array | Per-agent: position, sentiment, conviction, public_statement, memory |
+| File                                 | Format     | Key Fields                                                                |
+| ------------------------------------ | ---------- | ------------------------------------------------------------------------- |
+| `population.yaml`                    | YAML       | meta, attributes, sampling_order, grounding                               |
+| `agents.json`                        | JSON array | Each object has `_id` + all attribute values                              |
+| `network.json`                       | JSON       | meta, nodes, edges (bidirectional, typed)                                 |
+| `*.persona.yaml`                     | YAML       | intro_template, treatments, groups, phrasings, population_stats           |
+| `scenario.yaml`                      | YAML       | meta, event, seed_exposure, interaction, spread, outcomes, simulation     |
+| `results/meta.json`                  | JSON       | scenario_name, population_size, model, completed_at                       |
+| `results/outcome_distributions.json` | JSON       | Per-outcome aggregate distributions                                       |
+| `results/by_timestep.json`           | JSON array | Per-timestep: exposure_rate, position_distribution, sentiment, conviction |
+| `results/agent_states.json`          | JSON array | Per-agent: position, sentiment, conviction, public_statement, memory      |

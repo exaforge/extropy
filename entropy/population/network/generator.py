@@ -11,7 +11,7 @@ from typing import Any
 
 from ...core.models import Edge, NetworkResult
 from ...utils.callbacks import NetworkProgressCallback
-from .config import NetworkConfig, SENIORITY_LEVELS
+from .config import NetworkConfig, InfluenceFactorConfig
 from .similarity import (
     compute_similarity,
     compute_degree_factor,
@@ -23,102 +23,170 @@ from .metrics import (
 )
 
 
-def _get_seniority_level(agent: dict[str, Any]) -> int:
-    """Get numeric seniority level for an agent."""
-    role = agent.get("role_seniority", "")
-    return SENIORITY_LEVELS.get(role, 1)
+def _eval_edge_condition(
+    condition: str,
+    agent_a: dict[str, Any],
+    agent_b: dict[str, Any],
+) -> bool:
+    """Evaluate an edge type rule condition against two agents.
+
+    Builds a context with a_{attr} and b_{attr} variables for each
+    agent attribute, then evaluates the condition string.
+
+    Only supports comparisons (==, !=, <, >, <=, >=) and boolean operators
+    (and, or, not). No function calls or assignments.
+    """
+    context: dict[str, Any] = {}
+    for key, val in agent_a.items():
+        context[f"a_{key}"] = val
+    for key, val in agent_b.items():
+        context[f"b_{key}"] = val
+
+    try:
+        return bool(eval(condition, {"__builtins__": {}}, context))  # noqa: S307
+    except Exception:
+        return False
 
 
 def _infer_edge_type(
     agent_a: dict[str, Any],
     agent_b: dict[str, Any],
+    config: NetworkConfig | None = None,
     is_rewired: bool = False,
 ) -> str:
-    """Infer edge type based on agent attributes.
+    """Infer edge type based on agent attributes and config rules.
 
-    Edge types from design doc:
-        - mentor_mentee: Same employer + years_experience diff > 10
-        - colleague: Same employer + years_experience diff <= 10
-        - society: Same specialty + different employer + both society members
-        - conference: Same specialty + different employer + not both society members
-        - regional: Same federal_state + different specialty + different employer
-        - weak_tie: Random rewiring (incidental connection)
+    If config has edge_type_rules, evaluates them in priority order
+    (highest first). Otherwise falls back to hardcoded German surgeon logic
+    for backward compatibility.
+
+    Args:
+        agent_a: First agent's attributes
+        agent_b: Second agent's attributes
+        config: Network config with edge_type_rules
+        is_rewired: Whether this edge was created by rewiring
+
+    Returns:
+        Edge type string
     """
+    if config is None:
+        config = NetworkConfig()
+
     if is_rewired:
-        return "weak_tie"
+        return config.default_edge_type
 
-    same_employer = agent_a.get("employer_type") == agent_b.get("employer_type")
-    same_specialty = agent_a.get("surgical_specialty") == agent_b.get(
-        "surgical_specialty"
-    )
-    same_state = agent_a.get("federal_state") == agent_b.get("federal_state")
+    # Data-driven: evaluate rules in priority order
+    if config.edge_type_rules:
+        sorted_rules = sorted(
+            config.edge_type_rules, key=lambda r: r.priority, reverse=True
+        )
+        for rule in sorted_rules:
+            if _eval_edge_condition(rule.condition, agent_a, agent_b):
+                return rule.name
+        return config.default_edge_type
 
-    # Get experience difference
-    exp_a = agent_a.get("years_experience", 0) or 0
-    exp_b = agent_b.get("years_experience", 0) or 0
-    exp_diff = abs(exp_a - exp_b)
+    # No rules configured — return default edge type
+    return config.default_edge_type
 
-    # Both have society membership?
-    society_a = agent_a.get("professional_society_membership", False)
-    society_b = agent_b.get("professional_society_membership", False)
-    both_society = society_a and society_b
 
-    # Infer type based on conditions
-    if same_employer:
-        if exp_diff > 10:
-            return "mentor_mentee"
-        return "colleague"
+def _compute_influence_factor(
+    agent_a: dict[str, Any],
+    agent_b: dict[str, Any],
+    factor: InfluenceFactorConfig,
+) -> float:
+    """Compute a single influence factor's contribution (A influencing B).
 
-    if same_specialty:
-        if both_society:
-            return "society"
-        return "conference"
+    Returns a multiplier >= 0.1 representing how much this factor
+    amplifies or dampens A's influence on B.
+    """
+    val_a = agent_a.get(factor.attribute)
+    val_b = agent_b.get(factor.attribute)
 
-    if same_state:
-        return "regional"
+    if val_a is None or val_b is None:
+        return 1.0
 
-    return "weak_tie"
+    if factor.type == "ordinal":
+        if factor.levels is None:
+            return 1.0
+        level_a = factor.levels.get(str(val_a), 1)
+        level_b = factor.levels.get(str(val_b), 1)
+        ratio = level_a / level_b if level_b > 0 else 1.0
+        # Scale by weight: closer to 1.0 means less impact
+        return 1.0 + factor.weight * (ratio - 1.0)
+
+    elif factor.type == "boolean":
+        bool_a = 1 if val_a else 0
+        bool_b = 1 if val_b else 0
+        return 1.0 + factor.weight * (bool_a - bool_b)
+
+    elif factor.type == "numeric":
+        try:
+            num_a = float(val_a)
+            num_b = float(val_b)
+            if num_b > 0:
+                ratio = num_a / num_b
+            else:
+                ratio = 1.0
+            # Dampen: sqrt to reduce extreme ratios
+            import math
+
+            dampened = (
+                math.sqrt(ratio)
+                if ratio >= 1.0
+                else 1.0 / math.sqrt(1.0 / ratio)
+                if ratio > 0
+                else 1.0
+            )
+            return 1.0 + factor.weight * (dampened - 1.0)
+        except (TypeError, ValueError):
+            return 1.0
+
+    return 1.0
 
 
 def _compute_influence_weights(
     agent_a: dict[str, Any],
     agent_b: dict[str, Any],
     edge_weight: float,
+    config: NetworkConfig | None = None,
 ) -> dict[str, float]:
     """Compute asymmetric influence weights for an edge.
 
-    influence(A -> B) = base_influence × seniority_ratio × expertise_ratio
+    If config has influence_factors, uses them to compute data-driven
+    asymmetric influence. Otherwise returns symmetric influence based
+    on edge_weight alone.
 
-    seniority_ratio = seniority_level(A) / seniority_level(B)
+    Args:
+        agent_a: Source agent attributes
+        agent_b: Target agent attributes
+        edge_weight: Base edge weight (similarity)
+        config: Network config with influence_factors
 
-    expertise_ratio = 1.0 + 0.2 * (int(research_A) - int(research_B))
-                          + 0.1 * (int(teaching_A) - int(teaching_B))
+    Returns:
+        Dict with "source_to_target" and "target_to_source" influence weights
     """
-    level_a = _get_seniority_level(agent_a)
-    level_b = _get_seniority_level(agent_b)
+    if config is None:
+        config = NetworkConfig()
 
-    research_a = 1 if agent_a.get("participation_in_research", False) else 0
-    research_b = 1 if agent_b.get("participation_in_research", False) else 0
-    teaching_a = 1 if agent_a.get("teaching_responsibility", False) else 0
-    teaching_b = 1 if agent_b.get("teaching_responsibility", False) else 0
+    if not config.influence_factors:
+        return {
+            "source_to_target": edge_weight,
+            "target_to_source": edge_weight,
+        }
 
-    # A -> B influence
-    seniority_ratio_a_to_b = level_a / level_b if level_b > 0 else 1.0
-    expertise_ratio_a_to_b = (
-        1.0 + 0.2 * (research_a - research_b) + 0.1 * (teaching_a - teaching_b)
-    )
-    influence_a_to_b = (
-        edge_weight * seniority_ratio_a_to_b * max(0.1, expertise_ratio_a_to_b)
-    )
+    # Compute A -> B influence
+    influence_a_to_b = edge_weight
+    for factor in config.influence_factors:
+        influence_a_to_b *= max(
+            0.1, _compute_influence_factor(agent_a, agent_b, factor)
+        )
 
-    # B -> A influence
-    seniority_ratio_b_to_a = level_b / level_a if level_a > 0 else 1.0
-    expertise_ratio_b_to_a = (
-        1.0 + 0.2 * (research_b - research_a) + 0.1 * (teaching_b - teaching_a)
-    )
-    influence_b_to_a = (
-        edge_weight * seniority_ratio_b_to_a * max(0.1, expertise_ratio_b_to_a)
-    )
+    # Compute B -> A influence
+    influence_b_to_a = edge_weight
+    for factor in config.influence_factors:
+        influence_b_to_a *= max(
+            0.1, _compute_influence_factor(agent_b, agent_a, factor)
+        )
 
     return {
         "source_to_target": influence_a_to_b,
@@ -211,7 +279,9 @@ def generate_network(
 
     for i in range(n):
         for j in range(i + 1, n):
-            sim = compute_similarity(agents[i], agents[j], config.attribute_weights)
+            sim = compute_similarity(
+                agents[i], agents[j], config.attribute_weights, config.ordinal_levels
+            )
             if sim >= threshold:
                 similarities[(i, j)] = sim
 
@@ -254,8 +324,10 @@ def generate_network(
             id_a = agent_ids[i]
             id_b = agent_ids[j]
 
-            edge_type = _infer_edge_type(agent_a, agent_b, is_rewired=False)
-            influence_weights = _compute_influence_weights(agent_a, agent_b, sim)
+            edge_type = _infer_edge_type(agent_a, agent_b, config, is_rewired=False)
+            influence_weights = _compute_influence_weights(
+                agent_a, agent_b, sim, config
+            )
 
             edge = Edge(
                 source=id_a,
@@ -309,17 +381,20 @@ def generate_network(
 
                     # Compute new similarity for weight
                     new_sim = compute_similarity(
-                        agent_a, agent_b, config.attribute_weights
+                        agent_a,
+                        agent_b,
+                        config.attribute_weights,
+                        config.ordinal_levels,
                     )
                     influence_weights = _compute_influence_weights(
-                        agent_a, agent_b, new_sim
+                        agent_a, agent_b, new_sim, config
                     )
 
                     new_edge = Edge(
                         source=old_edge.source,
                         target=new_target_id,
                         weight=new_sim,
-                        edge_type="weak_tie",  # Rewired edges are weak ties
+                        edge_type=config.default_edge_type,  # Rewired edges get default type
                         influence_weight=influence_weights,
                     )
                     edges[edge_idx] = new_edge

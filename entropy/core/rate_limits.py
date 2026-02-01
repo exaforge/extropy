@@ -9,7 +9,6 @@ Sources:
 - Anthropic: https://docs.anthropic.com/en/api/rate-limits
 """
 
-
 # Provider rate limit profiles
 # Structure: provider → model → tier → {rpm, tpm} or {rpm, itpm, otpm}
 # Tier 1 is the default (lowest). Tiers 2-4 require higher spend thresholds.

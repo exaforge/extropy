@@ -18,6 +18,23 @@ def network_command(
         ..., help="Agents JSON file to generate network from"
     ),
     output: Path = typer.Option(..., "--output", "-o", help="Output network JSON file"),
+    population: Path | None = typer.Option(
+        None,
+        "--population",
+        "-p",
+        help="Population spec YAML — generates network config via LLM",
+    ),
+    network_config: Path | None = typer.Option(
+        None,
+        "--network-config",
+        "-c",
+        help="Custom network config YAML file",
+    ),
+    save_config: Path | None = typer.Option(
+        None,
+        "--save-config",
+        help="Save the (generated or loaded) network config to YAML",
+    ),
     avg_degree: float = typer.Option(
         20.0, "--avg-degree", help="Target average degree (connections per agent)"
     ),
@@ -41,17 +58,26 @@ def network_command(
     degree correction for high-influence agents and Watts-Strogatz
     rewiring for small-world properties.
 
+    Network config resolution:
+      1. --network-config file → load from YAML
+      2. Auto-detect {population_stem}.network-config.yaml if it exists
+      3. --population spec → generate config via LLM
+      4. None of the above → empty config (flat network, no similarity structure)
+
     Example:
         entropy network agents.json -o network.json
-        entropy network agents.json -o network.json --avg-degree 25 --validate
-        entropy network agents.json -o network.json --seed 42
+        entropy network agents.json -o network.json -p population.yaml
+        entropy network agents.json -o network.json -c network-config.yaml
+        entropy network agents.json -o network.json -p population.yaml --save-config my-config.yaml
     """
     from ...population.network import (
         generate_network,
         generate_network_with_metrics,
         load_agents_json,
         NetworkConfig,
+        generate_network_config,
     )
+    from ...core.models import PopulationSpec
 
     start_time = time.time()
     console.print()
@@ -72,8 +98,82 @@ def network_command(
         f"[green]✓[/green] Loaded {len(agents)} agents from [bold]{agents_file}[/bold]"
     )
 
-    # Generate Network
-    config = NetworkConfig(avg_degree=avg_degree, rewire_prob=rewire_prob, seed=seed)
+    # =========================================================================
+    # Resolve network config
+    # =========================================================================
+
+    config = None
+
+    # 1. Explicit --network-config file
+    if network_config:
+        if not network_config.exists():
+            console.print(f"[red]✗[/red] Network config not found: {network_config}")
+            raise typer.Exit(1)
+        with console.status("[cyan]Loading network config...[/cyan]"):
+            config = NetworkConfig.from_yaml(network_config)
+        console.print(
+            f"[green]✓[/green] Loaded network config from [bold]{network_config}[/bold] "
+            f"({len(config.attribute_weights)} weights, {len(config.edge_type_rules)} rules)"
+        )
+
+    # 2. Auto-detect {population_stem}.network-config.yaml
+    if config is None and population:
+        auto_config_path = population.parent / f"{population.stem}.network-config.yaml"
+        if auto_config_path.exists():
+            with console.status("[cyan]Loading auto-detected network config...[/cyan]"):
+                config = NetworkConfig.from_yaml(auto_config_path)
+            console.print(
+                f"[green]✓[/green] Auto-detected config: [bold]{auto_config_path}[/bold] "
+                f"({len(config.attribute_weights)} weights, {len(config.edge_type_rules)} rules)"
+            )
+
+    # 3. --population spec → LLM generation
+    if config is None and population:
+        if not population.exists():
+            console.print(f"[red]✗[/red] Population spec not found: {population}")
+            raise typer.Exit(1)
+        with console.status("[cyan]Loading population spec...[/cyan]"):
+            pop_spec = PopulationSpec.from_yaml(population)
+        console.print(
+            f"[green]✓[/green] Loaded population: [bold]{pop_spec.meta.description}[/bold]"
+        )
+        console.print()
+
+        # Sample a few agents for context
+        agents_sample = agents[:5] if len(agents) >= 5 else agents
+
+        with console.status("[cyan]Generating network config via LLM...[/cyan]"):
+            config = generate_network_config(pop_spec, agents_sample)
+        console.print(
+            f"[green]✓[/green] Generated network config: "
+            f"{len(config.attribute_weights)} weights, "
+            f"{len(config.edge_type_rules)} edge rules, "
+            f"{len(config.influence_factors)} influence factors"
+        )
+
+    # 4. No config source → empty config (flat network)
+    if config is None:
+        config = NetworkConfig()
+        console.print(
+            "[yellow]![/yellow] No network config — generating flat network "
+            "(use -p or -c for meaningful social structure)"
+        )
+
+    # Apply CLI overrides
+    config = config.model_copy(
+        update={
+            "avg_degree": avg_degree,
+            "rewire_prob": rewire_prob,
+            "seed": seed if seed is not None else config.seed,
+        }
+    )
+
+    # Save config if requested
+    if save_config:
+        config.to_yaml(save_config)
+        console.print(
+            f"[green]✓[/green] Saved network config to [bold]{save_config}[/bold]"
+        )
 
     console.print()
     generation_start = time.time()

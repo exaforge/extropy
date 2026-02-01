@@ -741,7 +741,7 @@ def batch_reason_agents(
             stagger_interval = 60.0 / rate_limiter.pivotal.rpm
             logger.info(
                 f"[BATCH] Concurrency cap: {concurrency}, "
-                f"stagger: {stagger_interval*1000:.0f}ms between launches"
+                f"stagger: {stagger_interval * 1000:.0f}ms between launches"
             )
         else:
             concurrency = max_concurrency
@@ -804,8 +804,12 @@ def batch_reason_agents(
         stats = rate_limiter.stats()
         pivotal_stats = stats.get("pivotal", stats)
         routine_stats = stats.get("routine", pivotal_stats)
-        total_acquired = pivotal_stats.get("total_acquired", 0) + routine_stats.get("total_acquired", 0)
-        total_wait = pivotal_stats.get("total_wait_time_seconds", 0) + routine_stats.get("total_wait_time_seconds", 0)
+        total_acquired = pivotal_stats.get("total_acquired", 0) + routine_stats.get(
+            "total_acquired", 0
+        )
+        total_wait = pivotal_stats.get(
+            "total_wait_time_seconds", 0
+        ) + routine_stats.get("total_wait_time_seconds", 0)
         logger.info(
             f"[BATCH] Rate limiter: {total_acquired} acquired, "
             f"{total_wait:.2f}s total wait"

@@ -8,8 +8,6 @@ from typing import Any
 
 from .config import (
     AttributeWeightConfig,
-    DEFAULT_ATTRIBUTE_WEIGHTS,
-    SENIORITY_LEVELS,
     NetworkConfig,
 )
 
@@ -18,6 +16,7 @@ def compute_match_score(
     value_a: Any,
     value_b: Any,
     config: AttributeWeightConfig,
+    ordinal_levels: dict[str, int] | None = None,
 ) -> float:
     """Compute match score between two attribute values.
 
@@ -25,6 +24,8 @@ def compute_match_score(
         value_a: First agent's attribute value
         value_b: Second agent's attribute value
         config: Configuration for how to compare
+        ordinal_levels: For within_n match type, maps string values to ordinal integers.
+            Checked after config.ordinal_levels.
 
     Returns:
         Match score in [0, 1]
@@ -48,10 +49,11 @@ def compute_match_score(
         # 1 if within n levels, 0 otherwise
         # Used for ordinal attributes like seniority
         try:
-            # Check if these are seniority values that need level lookup
-            if isinstance(value_a, str) and value_a in SENIORITY_LEVELS:
-                level_a = SENIORITY_LEVELS[value_a]
-                level_b = SENIORITY_LEVELS.get(value_b, 0)
+            # Resolve ordinal levels: attribute-level > passed-in > numeric fallback
+            levels = config.ordinal_levels or ordinal_levels
+            if levels and isinstance(value_a, str) and value_a in levels:
+                level_a = levels[value_a]
+                level_b = levels.get(value_b, 0)
             else:
                 level_a = float(value_a)
                 level_b = float(value_b)
@@ -68,6 +70,7 @@ def compute_similarity(
     agent_a: dict[str, Any],
     agent_b: dict[str, Any],
     attribute_weights: dict[str, AttributeWeightConfig] | None = None,
+    ordinal_levels: dict[str, dict[str, int]] | None = None,
 ) -> float:
     """Compute normalized similarity between two agents.
 
@@ -82,12 +85,14 @@ def compute_similarity(
         agent_a: First agent's attributes
         agent_b: Second agent's attributes
         attribute_weights: Weights for each attribute (uses defaults if None)
+        ordinal_levels: Global ordinal level mappings keyed by attribute name.
+            Used by within_n match type when attribute-level ordinal_levels is None.
 
     Returns:
         Normalized similarity score in [0, 1]
     """
     if attribute_weights is None:
-        attribute_weights = DEFAULT_ATTRIBUTE_WEIGHTS
+        attribute_weights = {}
 
     raw_similarity = 0.0
     total_weight = 0.0
@@ -100,7 +105,9 @@ def compute_similarity(
         if value_a is None or value_b is None:
             continue
 
-        match_score = compute_match_score(value_a, value_b, config)
+        # Pass attribute-specific ordinal levels if available
+        attr_ordinal = ordinal_levels.get(attr_name) if ordinal_levels else None
+        match_score = compute_match_score(value_a, value_b, config, attr_ordinal)
         raw_similarity += config.weight * match_score
         total_weight += config.weight
 
@@ -135,7 +142,9 @@ def compute_similarity_matrix_sparse(
 
     for i in range(n):
         for j in range(i + 1, n):
-            sim = compute_similarity(agents[i], agents[j], config.attribute_weights)
+            sim = compute_similarity(
+                agents[i], agents[j], config.attribute_weights, config.ordinal_levels
+            )
             if sim >= threshold:
                 similarities[(i, j)] = sim
 
