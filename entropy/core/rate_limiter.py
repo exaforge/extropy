@@ -114,15 +114,11 @@ class RateLimiter:
         self.otpm = otpm
         self._has_split_tokens = itpm > 0 and otpm > 0
 
-        # RPM bucket — start with only a small burst allowance, not full capacity.
-        # Full capacity (e.g. 500) lets all tasks fire at once and get 429'd.
-        # Start with ~2 seconds worth of tokens so the first burst is controlled.
-        initial_rpm_tokens = min(float(rpm), rpm / 60.0 * 2.0)
+        # RPM bucket
         self.rpm_bucket = TokenBucket(
             capacity=float(rpm),
             refill_rate=rpm / 60.0,
         )
-        self.rpm_bucket.tokens = initial_rpm_tokens
 
         if self._has_split_tokens:
             # Anthropic: separate input and output token buckets
