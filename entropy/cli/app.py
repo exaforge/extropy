@@ -65,6 +65,7 @@ from .commands import (  # noqa: E402, F401
     spec,
     sample,
     network,
+    persona,
     scenario,
     simulate,
     estimate,

@@ -68,11 +68,11 @@ export OPENAI_API_KEY=sk-...              # For OpenAI
 When using entropy as a library, configure programmatically — no files needed:
 
 ```python
-from entropy.config import configure, EntropyConfig, PipelineConfig, SimulationConfig
+from entropy.config import configure, EntropyConfig, PipelineConfig, SimZoneConfig
 
 configure(EntropyConfig(
     pipeline=PipelineConfig(provider="claude"),
-    simulation=SimulationConfig(provider="openai", model="gpt-5-mini"),
+    simulation=SimZoneConfig(provider="openai", model="gpt-5-mini"),
 ))
 ```
 
@@ -429,7 +429,10 @@ These aren't scripted responses. They emerge from each agent's unique combinatio
 | **Opt** | `--routine-model` | Model override for Pass 2 classification |
 | **Opt** | `--threshold` / `-t` | Multi-touch threshold for re-reasoning (default: `3`) |
 | **Opt** | `--rate-tier` | Provider rate limit tier 1-4 (default: from config) |
+| **Opt** | `--rpm-override` | Override requests per minute limit |
+| **Opt** | `--tpm-override` | Override tokens per minute limit |
 | **Opt** | `--seed` | Random seed for reproducibility |
+| **Opt** | `--persona` / `-p` | Persona config YAML (auto-detected if not specified) |
 | **Opt** | `--quiet` / `-q` | Suppress progress output |
 | **Opt** | `--verbose` / `-v` | Show detailed logs |
 | **Opt** | `--debug` | Show debug-level logs |
@@ -587,6 +590,9 @@ Config is stored at `~/.config/entropy/config.json` and managed exclusively thro
 | `simulation.pivotal_model` | Model for Pass 1 (role-play reasoning) | provider default |
 | `simulation.routine_model` | Model for Pass 2 (classification) | provider default |
 | `simulation.max_concurrent` | Max concurrent LLM calls during simulation | `50` |
+| `simulation.rate_tier` | Rate limit tier (1-4, higher = more generous limits) | `None` (Tier 1) |
+| `simulation.rpm_override` | Override requests per minute limit | `None` |
+| `simulation.tpm_override` | Override tokens per minute limit | `None` |
 
 ### Resolution Order
 
