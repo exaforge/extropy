@@ -94,15 +94,17 @@ def define_outcomes(
 Create ONE categorical decision outcome that captures what agents will decide/do.
 
 Requirements:
-- 3-5 mutually exclusive options
-- Options should be short, clear, in snake_case
-- Cover the full spectrum of possible responses (including neutral/undecided)
-- Think about what THIS population would realistically decide
+- 3-5 mutually exclusive options in snake_case
+- Each option must represent a DISTINCT behavioral state — avoid catch-all middle options
+- Do NOT include 'undecided' or 'wait_and_see' as options — agents who are unsure will naturally distribute across the more specific options
+- Include at least one clearly positive action and one clearly negative/opt-out option
+- Prefer behavioral options (what people DO) over attitudinal ones (what people FEEL)
+- Options should NOT be orderable on a single scale — each should capture a qualitatively different response
 
 Examples of good decision outcomes:
-- adoption_intent: [adopt_now, pilot_first, wait_and_see, not_interested, undecided]
-- cancel_decision: [will_cancel, considering, staying, undecided]
-- compliance_stance: [full_compliance, partial_compliance, resist, undecided]"""
+- adoption_intent: [adopt_immediately, try_pilot_first, interested_but_blocked, not_relevant_to_me]
+- cancel_decision: [cancel_immediately, downgrade_plan, stay_but_unhappy, satisfied_staying]
+- compliance_stance: [comply_fully, comply_with_workarounds, openly_resist, ignore_entirely]"""
 
     data = simple_call(
         prompt=prompt,

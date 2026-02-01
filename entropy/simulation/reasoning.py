@@ -55,9 +55,10 @@ def build_pass1_prompt(
         Complete prompt string for LLM
     """
     prompt_parts = [
-        "You ARE the person described below. Respond as yourself - not as an observer or simulator.",
-        "Your background, attitudes, and circumstances shape how you interpret and react to information.",
-        "People with different characteristics respond very differently to the same news.",
+        "You ARE the person described below. Think and respond as yourself — first person, authentic, decisive.",
+        "IMPORTANT: Do NOT hedge, equivocate, or give a 'balanced' take. Real people have clear reactions.",
+        "Some people love this. Some are indifferent. Some are annoyed. Be honest about YOUR reaction.",
+        "Your background and circumstances determine your response — not politeness or caution.",
         "",
         context.persona,
         "",
@@ -120,30 +121,28 @@ def build_pass1_prompt(
         prompt_parts.extend(
             [
                 "",
-                "## Your Authentic Response",
+                "## Your Honest Reaction",
                 "",
                 "Given YOUR background, YOUR previous thinking, and what you're hearing:",
-                "1. How has your thinking EVOLVED from before?",
-                "2. What is your current genuine stance and how firmly do you hold it?",
-                "3. What would you tell a colleague about this?",
+                "- Has your view changed? If so, own it. If not, say so plainly.",
+                "- What are you actually going to DO about this now?",
+                "- What would you bluntly tell a friend?",
                 "",
-                "Be true to your characteristics. Your view may have shifted, strengthened, or stayed the same.",
+                "Commit to where you stand now. Don't hedge just because your opinion changed.",
             ]
         )
     else:
         prompt_parts.extend(
             [
                 "",
-                "## Your Authentic Response",
+                "## Your Honest Reaction",
                 "",
-                "Given YOUR specific background, attitudes, constraints, and priorities:",
-                "- What is your genuine, gut reaction?",
-                "- How does this actually affect YOUR situation?",
-                "- What will YOU realistically do (or not do)?",
-                "- What would you tell a colleague about this?",
+                "React as YOU — given your background, priorities, and constraints:",
+                "- What is your immediate, honest reaction? Don't overthink it.",
+                "- What are you actually going to DO about this? Decide now.",
+                "- What would you bluntly tell a friend?",
                 "",
-                "Be true to your characteristics. Not everyone reacts the same way.",
-                "Someone with your profile might be enthusiastic, skeptical, cautious, opposed, or indifferent.",
+                "Commit to a clear position. Saying 'I'll wait and see' is only valid if you genuinely don't care.",
             ]
         )
 
@@ -160,11 +159,11 @@ def build_pass1_schema() -> dict[str, Any]:
         "properties": {
             "reasoning": {
                 "type": "string",
-                "description": "What goes through your mind — your gut reaction in 2-4 sentences.",
+                "description": "Your honest first reaction in 2-4 sentences. Be direct — state what you think, not both sides.",
             },
             "public_statement": {
                 "type": "string",
-                "description": "A 1-2 sentence statement you'd make to colleagues about this. What's your argument or take?",
+                "description": "What would you bluntly tell a friend about this? One strong sentence.",
             },
             "reasoning_summary": {
                 "type": "string",
@@ -180,7 +179,7 @@ def build_pass1_schema() -> dict[str, Any]:
                 "type": "integer",
                 "minimum": 0,
                 "maximum": 100,
-                "description": "How confident are you in this view? 0 = completely unsure, 100 = absolutely certain.",
+                "description": "How sure are you? 0 = genuinely no idea what to think, 25 = starting to lean one way, 50 = clear opinion, 75 = quite sure and hard to change your mind, 100 = absolutely certain.",
             },
             "will_share": {
                 "type": "boolean",
