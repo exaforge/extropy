@@ -70,6 +70,31 @@ def float_to_conviction(value: float | None) -> str | None:
     return closest[0]
 
 
+def score_to_conviction_float(score: int | float | None) -> float | None:
+    """Convert a 0-100 conviction score to conviction float.
+
+    Buckets:
+        0-15  → very_uncertain (0.1)
+        16-35 → leaning (0.3)
+        36-60 → moderate (0.5)
+        61-85 → firm (0.7)
+        86-100 → absolute (0.9)
+    """
+    if score is None:
+        return None
+    score = int(score)
+    if score <= 15:
+        return 0.1  # very_uncertain
+    elif score <= 35:
+        return 0.3  # leaning
+    elif score <= 60:
+        return 0.5  # moderate
+    elif score <= 85:
+        return 0.7  # firm
+    else:
+        return 0.9  # absolute
+
+
 # =============================================================================
 # Event Types
 # =============================================================================

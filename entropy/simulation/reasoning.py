@@ -16,7 +16,6 @@ from typing import Any
 
 from ..core.llm import simple_call, simple_call_async
 from ..core.models import (
-    ConvictionLevel,
     ExposureRecord,
     MemoryEntry,
     OutcomeConfig,
@@ -26,8 +25,8 @@ from ..core.models import (
     ReasoningResponse,
     ScenarioSpec,
     SimulationRunConfig,
-    conviction_to_float,
     float_to_conviction,
+    score_to_conviction_float,
 )
 
 logger = logging.getLogger(__name__)
@@ -177,9 +176,10 @@ def build_pass1_schema() -> dict[str, Any]:
                 "description": "Your emotional reaction: -1 = very negative, 0 = neutral, 1 = very positive.",
             },
             "conviction": {
-                "type": "string",
-                "enum": [level.value for level in ConvictionLevel],
-                "description": "How firmly do you hold this view?",
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 100,
+                "description": "How confident are you in this view? 0 = completely unsure, 100 = absolutely certain.",
             },
             "will_share": {
                 "type": "boolean",
@@ -486,11 +486,11 @@ async def _reason_agent_two_pass_async(
     public_statement = pass1_response.get("public_statement", "")
     reasoning_summary = pass1_response.get("reasoning_summary", "")
     sentiment = pass1_response.get("sentiment")
-    conviction_label = pass1_response.get("conviction")
+    conviction_score = pass1_response.get("conviction")
     will_share = pass1_response.get("will_share", False)
 
-    # Map conviction categorical to float
-    conviction_float = conviction_to_float(conviction_label)
+    # Map conviction score (0-100) to float via bucketing
+    conviction_float = score_to_conviction_float(conviction_score)
 
     # === Pass 2: Classification (if needed) ===
     pass2_schema = build_pass2_schema(scenario.outcomes)
@@ -635,9 +635,9 @@ def reason_agent(
     public_statement = pass1_response.get("public_statement", "")
     reasoning_summary = pass1_response.get("reasoning_summary", "")
     sentiment = pass1_response.get("sentiment")
-    conviction_label = pass1_response.get("conviction")
+    conviction_score = pass1_response.get("conviction")
     will_share = pass1_response.get("will_share", False)
-    conviction_float = conviction_to_float(conviction_label)
+    conviction_float = score_to_conviction_float(conviction_score)
 
     # === Pass 2: Classification ===
     pass2_schema = build_pass2_schema(scenario.outcomes)
@@ -683,7 +683,7 @@ def reason_agent(
 
     logger.info(
         f"[REASON] Agent {context.agent_id} - SUCCESS: position={position}, "
-        f"sentiment={sentiment}, conviction={conviction_label}, will_share={will_share}"
+        f"sentiment={sentiment}, conviction={conviction_score}→{float_to_conviction(conviction_float)}, will_share={will_share}"
     )
 
     return ReasoningResponse(
