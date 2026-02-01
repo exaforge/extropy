@@ -795,9 +795,13 @@ def batch_reason_agents(
 
     if rate_limiter:
         stats = rate_limiter.stats()
+        pivotal_stats = stats.get("pivotal", stats)
+        routine_stats = stats.get("routine", pivotal_stats)
+        total_acquired = pivotal_stats.get("total_acquired", 0) + routine_stats.get("total_acquired", 0)
+        total_wait = pivotal_stats.get("total_wait_time_seconds", 0) + routine_stats.get("total_wait_time_seconds", 0)
         logger.info(
-            f"[BATCH] Rate limiter: {stats['total_acquired']} acquired, "
-            f"{stats['total_wait_time_seconds']}s total wait"
+            f"[BATCH] Rate limiter: {total_acquired} acquired, "
+            f"{total_wait:.2f}s total wait"
         )
 
     return list(results)
