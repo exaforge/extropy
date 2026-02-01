@@ -114,11 +114,15 @@ class RateLimiter:
         self.otpm = otpm
         self._has_split_tokens = itpm > 0 and otpm > 0
 
-        # RPM bucket
+        # RPM bucket — start with only a small burst allowance, not full capacity.
+        # Full capacity (e.g. 500) lets all tasks fire at once and get 429'd.
+        # Start with ~2 seconds worth of tokens so the first burst is controlled.
+        initial_rpm_tokens = min(float(rpm), rpm / 60.0 * 2.0)
         self.rpm_bucket = TokenBucket(
             capacity=float(rpm),
             refill_rate=rpm / 60.0,
         )
+        self.rpm_bucket.tokens = initial_rpm_tokens
 
         if self._has_split_tokens:
             # Anthropic: separate input and output token buckets
@@ -162,19 +166,20 @@ class RateLimiter:
     def max_safe_concurrent(self) -> int:
         """Calculate max safe concurrent requests.
 
-        Based on RPM and TPM limits with average call characteristics.
+        Sized to match what the API can absorb in a 2-second window,
+        since asyncio.gather fires all permitted tasks near-simultaneously.
+        With 500 RPM, that's ~8 RPM/60*2 ≈ 16 requests per 2s burst.
         """
-        avg_call_duration = 5.0  # seconds
+        burst_window = 2.0  # seconds — tasks fire within this window
         avg_tokens_per_call = 800  # input + output estimate
 
-        rpm_concurrent = self.rpm / 60.0 * avg_call_duration
+        rpm_concurrent = self.rpm / 60.0 * burst_window
 
         if self._has_split_tokens:
-            # For Anthropic, use input tokens as the tighter constraint
-            tpm_concurrent = self.itpm / avg_tokens_per_call
+            tpm_concurrent = self.itpm / avg_tokens_per_call * (burst_window / 60.0)
         else:
             effective_tpm = self.tpm or 100_000
-            tpm_concurrent = effective_tpm / avg_tokens_per_call
+            tpm_concurrent = effective_tpm / avg_tokens_per_call * (burst_window / 60.0)
 
         return max(1, int(min(rpm_concurrent, tpm_concurrent)))
 
