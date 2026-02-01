@@ -1,0 +1,15 @@
+{
+  "retinol_serum_purchase_intent": {
+    "consider_later": 0.816,
+    "purchase_if_cheaper": 0.026,
+    "purchase_immediately": 0.104,
+    "unlikely_due_to_dtc": 0.008
+  },
+  "sentiment": {
+    "mean": 0.5293501048218029,
+    "std": 0.26832854221471664,
+    "min": 0.0,
+    "max": 1.0,
+    "count": 477
+  }
+}

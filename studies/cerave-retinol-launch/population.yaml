@@ -1,0 +1,1858 @@
+meta:
+  description: 500 US women aged 20-45 for a skincare consumer research study on purchase
+    intent, price sensitivity, and DTC channel preferences for a retinol serum launch
+  size: 500
+  geography: US
+  created_at: '2026-01-31T20:12:10.817310'
+  version: '1.0'
+  persona_template: null
+  scenario_description: null
+grounding:
+  overall: medium
+  sources_count: 124
+  strong_count: 10
+  medium_count: 20
+  low_count: 3
+  sources:
+  - https://censusreporter.org/topics/marital-status/
+  - https://nces.ed.gov/pubs/96768.pdf
+  - https://www.census.gov/content/dam/Census/library/publications/2016/demo/p20-578.pdf
+  - https://www.theglobalstatistics.com/female-population-in-us/
+  - https://www.census.gov/data/tables/time-series/demo/families/marital.html
+  - https://www.justuno.com/blog/dtc-beauty-cosmetics-strategies/
+  - https://www.researchandmarkets.com/report/retinol
+  - https://www.tangent.ai/resources/dtc-beauty-brands
+  - https://www.americashealthrankings.org/explore/measures/college_women
+  - https://www.indexmundi.com/facts/united-states/quick-facts/all-states/female-population-percentage
+  - https://www.bls.gov/news.release/nlsoy.nr0.htm
+  - https://educationdata.org/education-attainment-statistics
+  - https://www.ncbi.nlm.nih.gov/books/NBK593023/
+  - https://www.bls.gov/cps/cpsaat11.htm
+  - https://www.bls.gov/opub/mlr/2024/article/patterns-of-marriage-and-divorce-from-ages-15-to-55-evidence-from-the-nlsy79.htm
+  - https://www.consumeredge.com/resources/insights/2025-beauty-trends-consumer-edge-data-in-the-spotlight/
+  - https://www.statista.com/statistics/1479826/distribution-of-women-by-race-in-the-us/
+  - https://usafacts.org/articles/state-relationships-marriages-and-living-alone-us/
+  - https://censusreporter.org/tables/B12002/
+  - https://www.census.gov/newsroom/press-releases/2022/urban-rural-populations.html
+  - https://www.advdermatology.com/blog/americas-beauty-budgets/
+  - https://www.census.gov/popclock/
+  - https://www.visualcapitalist.com/u-s-population-by-age-group/
+  - https://www.statista.com/statistics/183648/average-size-of-households-in-the-us/
+  - https://populationeducation.org/how-to-understand-the-urban-rural-population-split-in-the-u-s/
+  - https://en.wikipedia.org/wiki/Educational_attainment_in_the_United_States
+  - https://www.statista.com/statistics/867517/us-skin-care-formats-preferences-among-women/
+  - https://www.ausmetics.com/retinol-beauty-products-market-trends/
+  - https://www.researchgate.net/figure/The-distribution-of-the-Baumann-skin-type-according-to-age-A-Twenties-B-thirties_fig4_319646907
+  - https://www.bls.gov/news.release/pdf/wkyeng.pdf
+  - https://www.bls.gov/web/empsit/cpseea10.htm
+  - https://www.bls.gov/cps/earnings.htm
+  - https://www.census.gov/data/tables/time-series/demo/popest/2020s-state-detail.html
+  - https://www.census.gov/topics/families/families-and-households.html
+  - https://market.us/report/skincare-products-market/
+  - https://nielseniq.com/global/en/insights/analysis/2022/can-the-dtc-beauty-model-survive-2023/
+  - https://electroiq.com/stats/male-vs-female-spending-statistics/
+  - https://www.census.gov/library/stories/2025/09/median-household-income.html
+  - https://www.pewresearch.org/social-trends/2018/05/22/demographic-and-economic-trends-in-urban-suburban-and-rural-communities/
+  - https://somewang.com/blog/how-covid-19-catapulted-the-rise-of-dtc-beauty-brands/
+  - https://www.bls.gov/news.release/pdf/nlsoy.pdf
+  - https://www.kff.org/state-health-policy-data/state-indicator/distribution-by-sex/
+  - https://budgetmodel.wharton.upenn.edu/issues/2023/11/27/explaining-prime-age-womens-employment
+  - https://www.bls.gov/opub/ted/2017/a-look-at-womens-education-and-earnings-since-the-1970s.htm
+  - https://www.bgsu.edu/ncfmr/resources/data/family-profiles/FP-25-05.html
+  - https://www.grandviewresearch.com/industry-analysis/us-beauty-personal-care-products-market-report
+  - https://www.eelet.org.uk/index.php/journal/article/download/2723/2448/3019
+  - https://thesalonproject.com/blogs/how-women-balance-budget-and-beauty-in-2025
+  - https://fred.stlouisfed.org/series/TTLHH
+  - https://usafacts.org/data/topics/people-society/population-and-demographics/our-changing-population/
+  - https://www.giiresearch.com/report/ires1596236-retinol-market-by-type-natural-synthetic-form.html
+  - https://www.mdpi.com/2079-9284/10/1/14
+  - https://ballotpedia.org/State_population_demographics_by_age_and_gender
+  - https://www.icip.iastate.edu/tables/population/urban-pct-states
+  - https://www.globenewswire.com/news-release/2025/05/09/3077982/28124/en/Retinol-Industry-Analysis-and-Strategic-Business-Report-2025-Growth-in-OTC-Retinoid-Formulations-Propels-Consumer-Access-and-Market-Penetration.html
+  - https://www.demandsage.com/average-us-income/
+  - https://en.wikipedia.org/wiki/Race_and_ethnicity_in_the_United_States
+  - https://en.wikipedia.org/wiki/Personal_income_in_the_United_States
+  - https://helplama.com/beauty-industry-revenue-usage-statistics/
+  - https://www.census.gov/popclock/data_tables.php?component=pyramid
+  - https://www.gcimagazine.com/consumers-markets/news/22631386/dtc-beauty-has-peaked-whats-next
+  - https://www.fortunebusinessinsights.com/retinol-beauty-products-market-112787
+  - https://www.statista.com/statistics/241488/population-of-the-us-by-sex-and-age/
+  - https://media.market.us/skincare-statistics/
+  - https://ourworldindata.org/grapher/female-population-by-age-group
+  - https://theworlddata.com/population-by-gender-in-us/
+  - https://www.americanprogress.org/article/fact-sheet-the-state-of-women-in-the-labor-market-in-2023/
+  - https://en.wikipedia.org/wiki/Demographics_of_the_United_States
+  - https://www.statista.com/statistics/242189/disitribution-of-households-in-the-us-by-household-size/
+  - https://www.statista.com/statistics/1471315/average-yearly-spend-on-beauty-products-us-by-age-group/
+  - https://www.statista.com/statistics/183657/average-size-of-a-family-in-the-us/
+  - https://www.census.gov/programs-surveys/geography/guidance/geo-areas/urban-rural.html
+  - https://www.bls.gov/opub/reports/womens-databook/2020/home.htm
+  - https://www.statista.com/topics/4517/us-skin-care-market/
+  - https://en.wikipedia.org/wiki/Household_income_in_the_United_States
+  - https://www.lendingtree.com/credit-cards/study/beauty-spending/
+  - https://www.census.gov/quickfacts/fact/table/US/PST045224
+  - https://www.dol.gov/agencies/wb/data/lfp/women-by-age
+  - https://www.census.gov/library/stories/2025/09/education-and-income.html
+  - https://www.statista.com/statistics/754049/us-consumers-shopping-location-skin-care-cosmetics/
+  - https://www.statista.com/statistics/737923/us-population-by-gender/
+  - https://www.fortunebusinessinsights.com/skin-care-market-102544
+  - https://www.grandviewresearch.com/industry-analysis/retinol-market-report
+  - https://www.bls.gov/opub/ted/women.htm
+  - https://usamap.net/usa-population-density/
+  - https://jdroth.com/demographics-by-race-and-gender/
+  - https://deepmarketinsights.com/report/retinol-beauty-products-market-research-report
+  - https://www.census.gov/newsroom/press-releases/2025/educational-attainment-data.html
+  - https://www.census.gov/library/publications/2025/demo/p60-286.html
+  - https://www.statista.com/statistics/985183/size-urban-rural-population-us/
+  - https://www.pewresearch.org/short-reads/2022/09/26/women-now-outnumber-men-in-the-u-s-college-educated-labor-force/
+  - https://www.pewresearch.org/short-reads/2024/11/18/us-women-are-outpacing-men-in-college-completion-including-in-every-major-racial-and-ethnic-group/
+  - https://www.saffronedge.com/blog/dtc-cosmetics-industry-moving/
+  - https://worldpopulationreview.com/state-rankings/average-household-size-by-state
+  - https://freeyourself.com/blogs/news/dtc-direct-to-consumer-beauty-brand-trends
+  - https://www.marketingcharts.com/charts/us-population-distribution-by-age-and-gender-in-2024
+  - https://www.skyquestt.com/report/cosmetic-retinol-market
+  - https://www.grandviewresearch.com/industry-analysis/facial-skincare-market-report
+  - https://www.census.gov/data/tables/time-series/demo/families/households.html
+  - https://www.grandviewresearch.com/industry-analysis/retinol-beauty-products-market-report
+  - https://www.census.gov/data/tables/2023/demo/families/cps-2023.html
+  - https://www.statista.com/statistics/716226/skin-care-products-frequency-of-use-by-age-group/
+  - https://en.wikipedia.org/wiki/Urbanization_in_the_United_States
+  - https://www.census.gov/topics/families/marriage-and-divorce.html
+  - https://bathbodysoul.com/2025/10/21/beauty-industry-statistics-2025-the-complete-consumer-spending-guide/
+  - https://fred.stlouisfed.org/series/LREM25FEUSQ156S
+  - https://www.census.gov/quickfacts/
+  - https://www2.census.gov/library/publications/2025/demo/p60-286.pdf
+  - https://www.tricociuniversity.edu/beauty-blog/skincare-industry-statistics-2025-u-s-market-overview/
+  - https://www.datainsightsmarket.com/reports/retinol-serum-1897163
+  - https://www.nlc.org/article/2025/04/28/urban-and-rural-everything-in-between-and-why-it-matters/
+  - https://www.dol.gov/agencies/wb/data/widget
+  - https://www.marchofdimes.org/peristats/data?reg=99&top=14&stop=127&lev=1&slev=1&obj=3
+  - https://www.advisorperspectives.com/dshort/updates/2025/09/19/household-incomes-2024-the-value-of-higher-education
+  - https://fred.stlouisfed.org/graph/?g=cWvT
+  - https://www.neilsberg.com/insights/united-states-population-by-age/
+  - https://www.bgsu.edu/ncfmr/resources/data/family-profiles/FP-25-15.html
+  - https://www.kff.org/interactive/womens-health-profiles/united-states/demographics/
+  - https://www.macrotrends.net/global-metrics/countries/usa/united-states/rural-population
+  - https://www.statisticstimes.com/demographics/country/us-sex-ratio.php
+  - https://www.census.gov/newsroom/press-releases/2025/families-and-living-arrangements.html
+  - https://www.beautyindependent.com/rhode-maelys-phlur-consumer-edge-fastest-growing-dtc/
+  - https://www.bgsu.edu/ncfmr/resources/data/family-profiles/marital-status-distribution-of-u-s--adults-aged-65-and-older--19.html
+  - https://www.statista.com/statistics/184272/educational-attainment-of-college-diploma-or-higher-by-gender/
+attributes:
+- name: age
+  type: int
+  category: universal
+  description: Age of the agent in years (20-45 range for this population)
+  sampling:
+    strategy: independent
+    distribution:
+      type: uniform
+      min: 20.0
+      max: 45.0
+    formula: null
+    depends_on: []
+    modifiers: []
+  grounding:
+    level: strong
+    method: researched
+    source: https://www.visualcapitalist.com/u-s-population-by-age-group/ - US Census
+      Bureau data shows relatively uniform distribution across 20-45 age range for
+      women
+    note: Ages 31-40 are the largest cohort, but 20-45 distribution is relatively
+      balanced. Using uniform for simplicity and representativeness.
+  constraints:
+  - type: hard_min
+    value: 20.0
+    expression: null
+    reason: Lower bound of study population
+  - type: hard_max
+    value: 45.0
+    expression: null
+    reason: Upper bound of study population
+- name: state
+  type: categorical
+  category: universal
+  description: US state of residence
+  sampling:
+    strategy: independent
+    distribution:
+      type: categorical
+      options:
+      - CA
+      - TX
+      - FL
+      - NY
+      - PA
+      - IL
+      - OH
+      - GA
+      - NC
+      - MI
+      - NJ
+      - VA
+      - WA
+      - AZ
+      - MA
+      - TN
+      - IN
+      - MO
+      - MD
+      - WI
+      - CO
+      - MN
+      - SC
+      - AL
+      - LA
+      - KY
+      - OR
+      - OK
+      - CT
+      - UT
+      - IA
+      - NV
+      - AR
+      - MS
+      - KS
+      - NM
+      - NE
+      - ID
+      - WV
+      - HI
+      - NH
+      - ME
+      - MT
+      - RI
+      - DE
+      - SD
+      - ND
+      - AK
+      - VT
+      - WY
+      - DC
+      weights:
+      - 0.118
+      - 0.088
+      - 0.065
+      - 0.059
+      - 0.039
+      - 0.038
+      - 0.035
+      - 0.032
+      - 0.032
+      - 0.03
+      - 0.027
+      - 0.026
+      - 0.023
+      - 0.022
+      - 0.021
+      - 0.021
+      - 0.02
+      - 0.019
+      - 0.018
+      - 0.018
+      - 0.017
+      - 0.017
+      - 0.016
+      - 0.015
+      - 0.014
+      - 0.013
+      - 0.013
+      - 0.012
+      - 0.011
+      - 0.01
+      - 0.01
+      - 0.009
+      - 0.009
+      - 0.009
+      - 0.008
+      - 0.006
+      - 0.006
+      - 0.005
+      - 0.004
+      - 0.004
+      - 0.004
+      - 0.003
+      - 0.003
+      - 0.003
+      - 0.003
+      - 0.003
+      - 0.002
+      - 0.002
+      - 0.002
+      - 0.002
+      - 0.002
+    formula: null
+    depends_on: []
+    modifiers: []
+  grounding:
+    level: strong
+    method: researched
+    source: https://www.statista.com/statistics/241488/population-of-the-us-by-sex-and-age/
+      - California is the highest population state per US Census
+    note: Weights proportional to state populations. California 11.8%, Texas 8.8%,
+      Florida 6.5% reflecting actual US population distribution.
+  constraints:
+  - type: spec_expression
+    value: null
+    expression: sum(weights)==1.0
+    reason: Categorical weights must sum to 1.0
+- name: education_level
+  type: categorical
+  category: universal
+  description: Highest completed education level (high school, some college, bachelor's,
+    graduate degree)
+  sampling:
+    strategy: independent
+    distribution:
+      type: categorical
+      options:
+      - high_school
+      - some_college
+      - bachelors
+      - graduate_degree
+      weights:
+      - 0.22
+      - 0.31
+      - 0.32
+      - 0.15
+    formula: null
+    depends_on: []
+    modifiers: []
+  grounding:
+    level: strong
+    method: researched
+    source: https://www.pewresearch.org/short-reads/2024/11/18/us-women-are-outpacing-men-in-college-completion-including-in-every-major-racial-and-ethnic-group/
+      - 47% of women 25-34 have bachelor's degree
+    note: 'For women 20-45: ~22% high school only, ~31% some college/associate''s,
+      ~32% bachelor''s, ~15% graduate degree. Based on Census data showing 40.1% of
+      women 25+ have bachelor''s or higher, adjusted for younger cohort.'
+  constraints:
+  - type: spec_expression
+    value: null
+    expression: sum(weights)==1.0
+    reason: Categorical weights must sum to 1.0
+- name: ethnicity
+  type: categorical
+  category: universal
+  description: Self-identified ethnicity (White, Black/African American, Hispanic/Latina,
+    Asian, Other/Mixed)
+  sampling:
+    strategy: independent
+    distribution:
+      type: categorical
+      options:
+      - White
+      - Black_African_American
+      - Hispanic_Latina
+      - Asian
+      - Other_Mixed
+      weights:
+      - 0.58
+      - 0.13
+      - 0.19
+      - 0.07
+      - 0.03
+    formula: null
+    depends_on: []
+    modifiers: []
+  grounding:
+    level: strong
+    method: researched
+    source: https://www.statista.com/statistics/1479826/distribution-of-women-by-race-in-the-us/
+      - 60% White, 17% Hispanic, 13% Black among adult US women in 2022
+    note: 'Distribution among US women: White 58% (non-Hispanic), Black/African American
+      13%, Hispanic/Latina 19%, Asian 7%, Other/Mixed 3%. Based on KFF data.'
+  constraints:
+  - type: spec_expression
+    value: null
+    expression: sum(weights)==1.0
+    reason: Categorical weights must sum to 1.0
+- name: skin_type
+  type: categorical
+  category: population_specific
+  description: Self-reported skin type (oily, dry, combination, normal, sensitive)
+  sampling:
+    strategy: independent
+    distribution:
+      type: categorical
+      options:
+      - oily
+      - dry
+      - combination
+      - normal
+      - sensitive
+      weights:
+      - 0.18
+      - 0.22
+      - 0.32
+      - 0.18
+      - 0.1
+    formula: null
+    depends_on: []
+    modifiers: []
+  grounding:
+    level: medium
+    method: extrapolated
+    source: https://www.mdpi.com/2079-9284/10/1/14 - Baumann Skin Type research showing
+      oily vs dry distribution
+    note: 'No single definitive US source found. Estimated: combination 32%, dry 22%,
+      oily 18%, normal 18%, sensitive 10% based on dermatological research and skincare
+      industry surveys.'
+  constraints:
+  - type: spec_expression
+    value: null
+    expression: sum(weights)==1.0
+    reason: Categorical weights must sum to 1.0
+- name: current_skincare_routine_complexity
+  type: categorical
+  category: population_specific
+  description: Complexity of current skincare routine (minimal 1-3 products, moderate
+    4-6 products, extensive 7+ products)
+  sampling:
+    strategy: independent
+    distribution:
+      type: categorical
+      options:
+      - minimal
+      - moderate
+      - extensive
+      weights:
+      - 0.35
+      - 0.48
+      - 0.17
+    formula: null
+    depends_on: []
+    modifiers: []
+  grounding:
+    level: medium
+    method: extrapolated
+    source: https://www.statista.com/statistics/716226/skin-care-products-frequency-of-use-by-age-group/
+      - 54% of US consumers 18-29 use skincare daily
+    note: 'Estimated: minimal (1-3 products) 35%, moderate (4-6 products) 48%, extensive
+      (7+ products) 17%. Based on usage frequency data and skincare routine trends
+      in target demographic.'
+  constraints:
+  - type: spec_expression
+    value: null
+    expression: sum(weights)==1.0
+    reason: Categorical weights must sum to 1.0
+- name: brand_loyalty
+  type: categorical
+  category: population_specific
+  description: Tendency toward brand loyalty in skincare (switches frequently, somewhat
+    loyal, very loyal)
+  sampling:
+    strategy: independent
+    distribution:
+      type: categorical
+      options:
+      - switches_frequently
+      - somewhat_loyal
+      - very_loyal
+      weights:
+      - 0.38
+      - 0.46
+      - 0.16
+    formula: null
+    depends_on: []
+    modifiers: []
+  grounding:
+    level: low
+    method: estimated
+    source: null
+    note: 'No specific data found for skincare brand loyalty. Estimated: switches
+      frequently 38%, somewhat loyal 46%, very loyal 16% based on general consumer
+      brand loyalty patterns in beauty/personal care categories.'
+  constraints:
+  - type: spec_expression
+    value: null
+    expression: sum(weights)==1.0
+    reason: Categorical weights must sum to 1.0
+- name: reviews_influence
+  type: categorical
+  category: population_specific
+  description: How much online reviews influence purchase decisions (not at all, somewhat,
+    heavily, only buy reviewed products)
+  sampling:
+    strategy: independent
+    distribution:
+      type: categorical
+      options:
+      - not_at_all
+      - somewhat
+      - heavily
+      - only_buy_reviewed
+      weights:
+      - 0.08
+      - 0.31
+      - 0.48
+      - 0.13
+    formula: null
+    depends_on: []
+    modifiers: []
+  grounding:
+    level: medium
+    method: researched
+    source: https://media.market.us/skincare-statistics/ - 81% of consumers consider
+      reviews/recommendations when making skincare decisions
+    note: 'Based on finding that 81% consider reviews: not at all 8%, somewhat 31%,
+      heavily 48%, only buy reviewed 13%. Heavily influenced group is largest given
+      social media and influencer impact on skincare purchases.'
+  constraints:
+  - type: spec_expression
+    value: null
+    expression: sum(weights)==1.0
+    reason: Categorical weights must sum to 1.0
+- name: clean_beauty_preference
+  type: categorical
+  category: population_specific
+  description: Preference for clean/natural beauty products (not important, somewhat
+    important, very important, exclusively clean)
+  sampling:
+    strategy: independent
+    distribution:
+      type: categorical
+      options:
+      - not_important
+      - somewhat_important
+      - very_important
+      - exclusively_clean
+      weights:
+      - 0.18
+      - 0.41
+      - 0.32
+      - 0.09
+    formula: null
+    depends_on: []
+    modifiers: []
+  grounding:
+    level: strong
+    method: researched
+    source: https://media.market.us/skincare-statistics/ - 59% of consumers prefer
+      natural/organic skincare; 65% globally seek natural ingredients
+    note: 'Based on 59% preferring natural/organic: not important 18%, somewhat important
+      41%, very important 32%, exclusively clean 9%. Women in target age range show
+      higher clean beauty interest.'
+  constraints:
+  - type: spec_expression
+    value: null
+    expression: sum(weights)==1.0
+    reason: Categorical weights must sum to 1.0
+- name: openness
+  type: float
+  category: personality
+  description: 'Big Five trait: openness to experience, imagination, and trying new
+    things (0-1 scale)'
+  sampling:
+    strategy: independent
+    distribution:
+      type: normal
+      mean: 0.6
+      std: 0.15
+      min: 0.0
+      max: 1.0
+      mean_formula: null
+      std_formula: null
+      min_formula: null
+      max_formula: null
+    formula: null
+    depends_on: []
+    modifiers: []
+  grounding:
+    level: medium
+    method: extrapolated
+    source: General Big Five personality trait research; consumer behavior studies
+      showing willingness to try new beauty products
+    note: Estimated mean 0.60 for women 20-45 (slightly above midpoint) given demographic
+      shows higher engagement with new skincare products and trends. SD 0.15 for moderate
+      variability.
+  constraints:
+  - type: hard_min
+    value: 0.0
+    expression: null
+    reason: Theoretical minimum for 0-1 scale
+  - type: hard_max
+    value: 1.0
+    expression: null
+    reason: Theoretical maximum for 0-1 scale
+- name: conscientiousness
+  type: float
+  category: personality
+  description: 'Big Five trait: organization, dependability, and self-discipline (0-1
+    scale)'
+  sampling:
+    strategy: independent
+    distribution:
+      type: normal
+      mean: 0.55
+      std: 0.15
+      min: 0.0
+      max: 1.0
+      mean_formula: null
+      std_formula: null
+      min_formula: null
+      max_formula: null
+    formula: null
+    depends_on: []
+    modifiers: []
+  grounding:
+    level: medium
+    method: estimated
+    source: Big Five personality trait distributions in general population
+    note: Mean 0.55, SD 0.15. Conscientiousness relates to following skincare routines
+      consistently. Normal distribution centered slightly above midpoint as skincare
+      consumers tend toward organized behavior.
+  constraints:
+  - type: hard_min
+    value: 0.0
+    expression: null
+    reason: Theoretical minimum for 0-1 scale
+  - type: hard_max
+    value: 1.0
+    expression: null
+    reason: Theoretical maximum for 0-1 scale
+- name: extraversion
+  type: float
+  category: personality
+  description: 'Big Five trait: sociability, assertiveness, and energy level (0-1
+    scale)'
+  sampling:
+    strategy: independent
+    distribution:
+      type: normal
+      mean: 0.5
+      std: 0.18
+      min: 0.0
+      max: 1.0
+      mean_formula: null
+      std_formula: null
+      min_formula: null
+      max_formula: null
+    formula: null
+    depends_on: []
+    modifiers: []
+  grounding:
+    level: medium
+    method: estimated
+    source: Big Five personality trait distributions in general population
+    note: Mean 0.50, SD 0.18 (higher variability). Extraversion widely distributed
+      in general population. No specific skincare consumer bias expected.
+  constraints:
+  - type: hard_min
+    value: 0.0
+    expression: null
+    reason: Theoretical minimum for 0-1 scale
+  - type: hard_max
+    value: 1.0
+    expression: null
+    reason: Theoretical maximum for 0-1 scale
+- name: agreeableness
+  type: float
+  category: personality
+  description: 'Big Five trait: compassion, cooperation, and trust in others (0-1
+    scale)'
+  sampling:
+    strategy: independent
+    distribution:
+      type: normal
+      mean: 0.58
+      std: 0.14
+      min: 0.0
+      max: 1.0
+      mean_formula: null
+      std_formula: null
+      min_formula: null
+      max_formula: null
+    formula: null
+    depends_on: []
+    modifiers: []
+  grounding:
+    level: medium
+    method: estimated
+    source: Big Five personality trait distributions; women tend to score slightly
+      higher on agreeableness
+    note: Mean 0.58, SD 0.14. Women typically score slightly higher on agreeableness
+      in personality research. Moderate variability.
+  constraints:
+  - type: hard_min
+    value: 0.0
+    expression: null
+    reason: Theoretical minimum for 0-1 scale
+  - type: hard_max
+    value: 1.0
+    expression: null
+    reason: Theoretical maximum for 0-1 scale
+- name: neuroticism
+  type: float
+  category: personality
+  description: 'Big Five trait: emotional instability, anxiety, and stress sensitivity
+    (0-1 scale)'
+  sampling:
+    strategy: independent
+    distribution:
+      type: normal
+      mean: 0.48
+      std: 0.17
+      min: 0.0
+      max: 1.0
+      mean_formula: null
+      std_formula: null
+      min_formula: null
+      max_formula: null
+    formula: null
+    depends_on: []
+    modifiers: []
+  grounding:
+    level: medium
+    method: estimated
+    source: Big Five personality trait distributions in general population
+    note: Mean 0.48, SD 0.17. Neuroticism shows moderate variability. Slightly below
+      midpoint for general adult population. Higher neuroticism may correlate with
+      skincare concerns.
+  constraints:
+  - type: hard_min
+    value: 0.0
+    expression: null
+    reason: Theoretical minimum for 0-1 scale
+  - type: hard_max
+    value: 1.0
+    expression: null
+    reason: Theoretical maximum for 0-1 scale
+- name: risk_tolerance
+  type: categorical
+  category: personality
+  description: General willingness to take risks with new products and purchases (risk-averse,
+    moderate, risk-seeking)
+  sampling:
+    strategy: independent
+    distribution:
+      type: categorical
+      options:
+      - risk_averse
+      - moderate
+      - risk_seeking
+      weights:
+      - 0.35
+      - 0.5
+      - 0.15
+    formula: null
+    depends_on: []
+    modifiers: []
+  grounding:
+    level: low
+    method: estimated
+    source: null
+    note: 'Estimated distribution for risk tolerance with new products/purchases:
+      risk-averse 35%, moderate 50%, risk-seeking 15%. Most consumers fall in moderate
+      category, with cautious approach to skincare given potential for adverse reactions.'
+  constraints:
+  - type: spec_expression
+    value: null
+    expression: sum(weights)==1.0
+    reason: Categorical weights must sum to 1.0
+- name: impulsivity
+  type: float
+  category: personality
+  description: Tendency toward impulsive purchasing decisions (0-1 scale, where higher
+    is more impulsive)
+  sampling:
+    strategy: independent
+    distribution:
+      type: beta
+      alpha: 2.0
+      beta: 3.0
+      min: 0.0
+      max: 1.0
+      min_formula: null
+      max_formula: null
+    formula: null
+    depends_on: []
+    modifiers: []
+  grounding:
+    level: low
+    method: estimated
+    source: null
+    note: Beta distribution (alpha=2, beta=3) creates right-skewed distribution with
+      mode around 0.33, mean 0.4. Most consumers show moderate-low impulsivity for
+      skincare purchases (considered purchases), with tail of highly impulsive buyers.
+      Skincare influenced by social media and influencer marketing.
+  constraints:
+  - type: hard_min
+    value: 0.0
+    expression: null
+    reason: Theoretical minimum for 0-1 scale
+  - type: hard_max
+    value: 1.0
+    expression: null
+    reason: Theoretical maximum for 0-1 scale
+- name: urban_rural
+  type: categorical
+  category: universal
+  description: Urban, suburban, or rural residence classification
+  sampling:
+    strategy: conditional
+    distribution:
+      type: categorical
+      options:
+      - urban
+      - suburban
+      - rural
+      weights:
+      - 0.31
+      - 0.55
+      - 0.14
+    formula: null
+    depends_on:
+    - state
+    modifiers:
+    - when: state in ['NY', 'NJ', 'MA', 'CT', 'RI', 'DC', 'CA', 'IL', 'WA']
+      multiply: null
+      add: null
+      weight_overrides:
+        urban: 0.65
+        suburban: 0.3
+        rural: 0.05
+      probability_override: null
+    - when: state in ['TX', 'FL', 'GA', 'NC', 'VA', 'AZ', 'TN', 'MD', 'CO', 'OR',
+        'NV', 'UT']
+      multiply: null
+      add: null
+      weight_overrides:
+        urban: 0.45
+        suburban: 0.45
+        rural: 0.1
+      probability_override: null
+  grounding:
+    level: strong
+    method: researched
+    source: US Census Bureau 2020-2025 data, Pew Research Center classification
+    note: Urban 31% (large central metro), Suburban 55% (large fringe metro, medium/small
+      metro), Rural 14%. Distribution varies by state but these are national averages
+      applicable to the specified states (CA, TX, FL).
+  constraints: []
+- name: household_income
+  type: int
+  category: universal
+  description: Annual household income in USD
+  sampling:
+    strategy: conditional
+    distribution:
+      type: lognormal
+      mean: 85000.0
+      std: 45000.0
+      min: 15000.0
+      max: 350000.0
+      mean_formula: null
+      std_formula: null
+      min_formula: null
+      max_formula: null
+    formula: null
+    depends_on:
+    - education_level
+    - age
+    modifiers:
+    - when: education_level == 'graduate_degree'
+      multiply: 1.35
+      add: 0.0
+      weight_overrides: null
+      probability_override: null
+    - when: education_level == 'bachelors'
+      multiply: 1.15
+      add: 0.0
+      weight_overrides: null
+      probability_override: null
+    - when: education_level == 'high_school'
+      multiply: 0.75
+      add: 0.0
+      weight_overrides: null
+      probability_override: null
+    - when: age >= 35
+      multiply: 1.2
+      add: 0.0
+      weight_overrides: null
+      probability_override: null
+    - when: age < 25
+      multiply: 0.7
+      add: 0.0
+      weight_overrides: null
+      probability_override: null
+  grounding:
+    level: strong
+    method: researched
+    source: US Census Bureau 2024 data, median household income $83,730
+    note: Median household income for all households was $83,730 in 2024. For women
+      20-45 with varying education levels, using $85K mean with lognormal distribution
+      to capture right skew. Education and age modifiers will adjust this base.
+  constraints:
+  - type: hard_min
+    value: 15000.0
+    expression: null
+    reason: Minimum household income for survival in US
+  - type: hard_max
+    value: 350000.0
+    expression: null
+    reason: Captures 98th percentile for this demographic
+- name: marital_status
+  type: categorical
+  category: universal
+  description: Marital status (single, married, divorced, partnered)
+  sampling:
+    strategy: conditional
+    distribution:
+      type: categorical
+      options:
+      - single
+      - married
+      - divorced
+      - partnered
+      weights:
+      - 0.35
+      - 0.45
+      - 0.08
+      - 0.12
+    formula: null
+    depends_on:
+    - age
+    modifiers:
+    - when: age < 25
+      multiply: null
+      add: null
+      weight_overrides:
+        single: 0.75
+        married: 0.1
+        divorced: 0.02
+        partnered: 0.13
+      probability_override: null
+    - when: age >= 25 and age < 30
+      multiply: null
+      add: null
+      weight_overrides:
+        single: 0.5
+        married: 0.25
+        divorced: 0.03
+        partnered: 0.22
+      probability_override: null
+    - when: age >= 30 and age < 35
+      multiply: null
+      add: null
+      weight_overrides:
+        single: 0.3
+        married: 0.45
+        divorced: 0.05
+        partnered: 0.2
+      probability_override: null
+    - when: age >= 35
+      multiply: null
+      add: null
+      weight_overrides:
+        single: 0.2
+        married: 0.55
+        divorced: 0.12
+        partnered: 0.13
+      probability_override: null
+  grounding:
+    level: strong
+    method: researched
+    source: US Census Bureau 2024-2025, BGSU NCFMR marriage data
+    note: 'For women 20-45: median marriage age is 28.4. By age 35, ~20% never married,
+      by age 45 ~13% never married. Married 45%, Single 35%, Partnered/cohabiting
+      12%, Divorced 8%. Age modifiers will shift these substantially.'
+  constraints: []
+- name: household_size
+  type: int
+  category: universal
+  description: Number of people living in household
+  sampling:
+    strategy: conditional
+    distribution:
+      type: normal
+      mean: 2.5
+      std: 1.2
+      min: 1.0
+      max: 7.0
+      mean_formula: null
+      std_formula: null
+      min_formula: null
+      max_formula: null
+    formula: null
+    depends_on:
+    - marital_status
+    - age
+    modifiers:
+    - when: marital_status == 'single'
+      multiply: 0.65
+      add: 0.0
+      weight_overrides: null
+      probability_override: null
+    - when: marital_status == 'married' and age >= 30
+      multiply: 1.35
+      add: 0.0
+      weight_overrides: null
+      probability_override: null
+    - when: marital_status == 'partnered'
+      multiply: 0.85
+      add: 0.0
+      weight_overrides: null
+      probability_override: null
+  grounding:
+    level: strong
+    method: researched
+    source: US Census Bureau 2023, average household size 2.51
+    note: 'Average US household size is 2.51 people. For women 20-45, varies by marital
+      status: single ~1.3, married ~3.2, divorced ~2.1, partnered ~2.4. Base mean
+      2.5 will be adjusted by marital status and age modifiers.'
+  constraints:
+  - type: hard_min
+    value: 1.0
+    expression: null
+    reason: Minimum household size is 1 person
+  - type: hard_max
+    value: 7.0
+    expression: null
+    reason: Captures 99th percentile of household sizes
+- name: employment_status
+  type: categorical
+  category: universal
+  description: Current employment status (full-time, part-time, self-employed, not
+    employed, student)
+  sampling:
+    strategy: conditional
+    distribution:
+      type: categorical
+      options:
+      - full_time
+      - part_time
+      - self_employed
+      - not_employed
+      - student
+      weights:
+      - 0.6
+      - 0.12
+      - 0.08
+      - 0.15
+      - 0.05
+    formula: null
+    depends_on:
+    - age
+    - education_level
+    modifiers:
+    - when: age < 25 and education_level in ['high_school', 'some_college']
+      multiply: null
+      add: null
+      weight_overrides:
+        full_time: 0.35
+        part_time: 0.25
+        self_employed: 0.05
+        not_employed: 0.1
+        student: 0.25
+      probability_override: null
+    - when: age >= 25 and age < 35 and education_level in ['bachelors', 'graduate_degree']
+      multiply: null
+      add: null
+      weight_overrides:
+        full_time: 0.7
+        part_time: 0.1
+        self_employed: 0.12
+        not_employed: 0.05
+        student: 0.03
+      probability_override: null
+    - when: age >= 35
+      multiply: null
+      add: null
+      weight_overrides:
+        full_time: 0.65
+        part_time: 0.12
+        self_employed: 0.15
+        not_employed: 0.07
+        student: 0.01
+      probability_override: null
+  grounding:
+    level: medium
+    method: researched
+    source: BLS 2023-2025 women's labor force data, prime-age women employment ~75%
+    note: 'Prime-age women (25-54) have ~75% employment rate, with 84% of employed
+      working full-time. For 20-45 age range: Full-time 60%, Part-time 12%, Self-employed
+      8%, Not employed 15%, Student 5%. Age and education will modify heavily.'
+  constraints: []
+- name: personal_income
+  type: int
+  category: universal
+  description: Individual annual income in USD
+  sampling:
+    strategy: conditional
+    distribution:
+      type: lognormal
+      mean: 48000.0
+      std: 28000.0
+      min: 0.0
+      max: 250000.0
+      mean_formula: null
+      std_formula: null
+      min_formula: null
+      max_formula: null
+    formula: null
+    depends_on:
+    - employment_status
+    - education_level
+    - age
+    modifiers:
+    - when: employment_status == 'full_time' and education_level == 'graduate_degree'
+      multiply: 1.5
+      add: 0.0
+      weight_overrides: null
+      probability_override: null
+    - when: employment_status == 'full_time' and education_level == 'bachelors'
+      multiply: 1.25
+      add: 0.0
+      weight_overrides: null
+      probability_override: null
+    - when: employment_status == 'part_time'
+      multiply: 0.55
+      add: 0.0
+      weight_overrides: null
+      probability_override: null
+    - when: employment_status == 'self_employed'
+      multiply: 1.1
+      add: 0.0
+      weight_overrides: null
+      probability_override: null
+    - when: employment_status in ['not_employed', 'student']
+      multiply: 0.3
+      add: 0.0
+      weight_overrides: null
+      probability_override: null
+    - when: age >= 35
+      multiply: 1.3
+      add: 0.0
+      weight_overrides: null
+      probability_override: null
+    - when: age < 25
+      multiply: 0.65
+      add: 0.0
+      weight_overrides: null
+      probability_override: null
+  grounding:
+    level: strong
+    method: researched
+    source: US Census Bureau 2024, median earnings full-time women workers ~$52,000
+    note: Median personal income for all workers $51,370 (2024). For women full-time
+      workers median ~$52K, but includes part-time and non-employed. Using $48K mean
+      with lognormal distribution. Employment status and education will heavily modify.
+  constraints:
+  - type: hard_min
+    value: 0.0
+    expression: null
+    reason: Personal income can be zero for non-employed individuals
+  - type: hard_max
+    value: 250000.0
+    expression: null
+    reason: Captures 98th percentile for women 20-45
+- name: skin_concerns
+  type: categorical
+  category: population_specific
+  description: Primary skin concern (aging/wrinkles, acne, hyperpigmentation, texture,
+    none)
+  sampling:
+    strategy: conditional
+    distribution:
+      type: categorical
+      options:
+      - aging_wrinkles
+      - acne
+      - hyperpigmentation
+      - texture
+      - none
+      weights:
+      - 0.25
+      - 0.3
+      - 0.2
+      - 0.15
+      - 0.1
+    formula: null
+    depends_on:
+    - age
+    modifiers:
+    - when: age < 25
+      multiply: null
+      add: null
+      weight_overrides:
+        aging_wrinkles: 0.05
+        acne: 0.55
+        hyperpigmentation: 0.15
+        texture: 0.2
+        none: 0.05
+      probability_override: null
+    - when: age >= 25 and age < 30
+      multiply: null
+      add: null
+      weight_overrides:
+        aging_wrinkles: 0.2
+        acne: 0.35
+        hyperpigmentation: 0.2
+        texture: 0.2
+        none: 0.05
+      probability_override: null
+    - when: age >= 30 and age < 35
+      multiply: null
+      add: null
+      weight_overrides:
+        aging_wrinkles: 0.4
+        acne: 0.15
+        hyperpigmentation: 0.25
+        texture: 0.15
+        none: 0.05
+      probability_override: null
+    - when: age >= 35
+      multiply: null
+      add: null
+      weight_overrides:
+        aging_wrinkles: 0.6
+        acne: 0.08
+        hyperpigmentation: 0.2
+        texture: 0.1
+        none: 0.02
+      probability_override: null
+  grounding:
+    level: medium
+    method: extrapolated
+    source: Skincare industry consumer surveys, dermatology research
+    note: 'For women 20-45: Acne most common early 20s (30%), Aging/wrinkles increases
+      with age (25% average), Hyperpigmentation 20%, Texture 15%, None 10%. Age will
+      heavily modify - younger women more acne, older women more aging concerns.'
+  constraints: []
+- name: monthly_skincare_spend
+  type: int
+  category: population_specific
+  description: Average monthly spending on skincare products in USD
+  sampling:
+    strategy: conditional
+    distribution:
+      type: lognormal
+      mean: 75.0
+      std: 55.0
+      min: 5.0
+      max: 500.0
+      mean_formula: null
+      std_formula: null
+      min_formula: null
+      max_formula: null
+    formula: null
+    depends_on:
+    - personal_income
+    - current_skincare_routine_complexity
+    modifiers:
+    - when: personal_income >= 75000
+      multiply: 1.6
+      add: 0.0
+      weight_overrides: null
+      probability_override: null
+    - when: personal_income >= 50000 and personal_income < 75000
+      multiply: 1.25
+      add: 0.0
+      weight_overrides: null
+      probability_override: null
+    - when: personal_income < 35000
+      multiply: 0.6
+      add: 0.0
+      weight_overrides: null
+      probability_override: null
+    - when: current_skincare_routine_complexity == 'extensive'
+      multiply: 2.0
+      add: 0.0
+      weight_overrides: null
+      probability_override: null
+    - when: current_skincare_routine_complexity == 'moderate'
+      multiply: 1.15
+      add: 0.0
+      weight_overrides: null
+      probability_override: null
+    - when: current_skincare_routine_complexity == 'minimal'
+      multiply: 0.55
+      add: 0.0
+      weight_overrides: null
+      probability_override: null
+  grounding:
+    level: medium
+    method: extrapolated
+    source: Beauty industry reports, consumer spending surveys
+    note: Average US woman spends $50-100/month on skincare. Using $75 mean with high
+      variance. Will be modified by personal income and routine complexity. Minimal
+      routine ~$30, Moderate ~$75, Extensive ~$150+.
+  constraints:
+  - type: hard_min
+    value: 5.0
+    expression: null
+    reason: Minimum realistic monthly skincare spend
+  - type: hard_max
+    value: 500.0
+    expression: null
+    reason: Captures luxury skincare consumers at 98th percentile
+- name: retinol_experience
+  type: categorical
+  category: population_specific
+  description: Prior experience with retinol products (never used, tried once/discontinued,
+    occasional user, regular user)
+  sampling:
+    strategy: conditional
+    distribution:
+      type: categorical
+      options:
+      - never_used
+      - tried_once_discontinued
+      - occasional_user
+      - regular_user
+      weights:
+      - 0.4
+      - 0.2
+      - 0.25
+      - 0.15
+    formula: null
+    depends_on:
+    - age
+    - current_skincare_routine_complexity
+    modifiers:
+    - when: age < 25 and current_skincare_routine_complexity == 'minimal'
+      multiply: null
+      add: null
+      weight_overrides:
+        never_used: 0.7
+        tried_once_discontinued: 0.15
+        occasional_user: 0.1
+        regular_user: 0.05
+      probability_override: null
+    - when: age >= 25 and age < 30 and current_skincare_routine_complexity in ['moderate',
+        'extensive']
+      multiply: null
+      add: null
+      weight_overrides:
+        never_used: 0.3
+        tried_once_discontinued: 0.2
+        occasional_user: 0.3
+        regular_user: 0.2
+      probability_override: null
+    - when: age >= 30 and current_skincare_routine_complexity == 'extensive'
+      multiply: null
+      add: null
+      weight_overrides:
+        never_used: 0.15
+        tried_once_discontinued: 0.15
+        occasional_user: 0.3
+        regular_user: 0.4
+      probability_override: null
+    - when: age >= 35 and current_skincare_routine_complexity in ['moderate', 'extensive']
+      multiply: null
+      add: null
+      weight_overrides:
+        never_used: 0.2
+        tried_once_discontinued: 0.15
+        occasional_user: 0.25
+        regular_user: 0.4
+      probability_override: null
+  grounding:
+    level: medium
+    method: extrapolated
+    source: Retinol market research, skincare industry data
+    note: 'Retinol adoption for women 20-45: Never used 40%, Tried but discontinued
+      20% (due to irritation/results), Occasional user 25%, Regular user 15%. Age
+      and routine complexity will modify - older women and extensive routines have
+      higher usage.'
+  constraints: []
+- name: dermatologist_visits
+  type: categorical
+  category: population_specific
+  description: Frequency of dermatologist visits (never, rarely, annually, multiple
+    times per year)
+  sampling:
+    strategy: conditional
+    distribution:
+      type: categorical
+      options:
+      - never
+      - rarely
+      - annually
+      - multiple_times_per_year
+      weights:
+      - 0.3
+      - 0.35
+      - 0.25
+      - 0.1
+    formula: null
+    depends_on:
+    - household_income
+    - skin_concerns
+    modifiers:
+    - when: household_income >= 100000 and skin_concerns in ['aging_wrinkles', 'acne',
+        'hyperpigmentation']
+      multiply: null
+      add: null
+      weight_overrides:
+        never: 0.1
+        rarely: 0.25
+        annually: 0.4
+        multiple_times_per_year: 0.25
+      probability_override: null
+    - when: household_income < 60000 and skin_concerns != 'none'
+      multiply: null
+      add: null
+      weight_overrides:
+        never: 0.35
+        rarely: 0.4
+        annually: 0.2
+        multiple_times_per_year: 0.05
+      probability_override: null
+    - when: skin_concerns == 'acne'
+      multiply: null
+      add: null
+      weight_overrides:
+        never: 0.2
+        rarely: 0.3
+        annually: 0.3
+        multiple_times_per_year: 0.2
+      probability_override: null
+  grounding:
+    level: medium
+    method: extrapolated
+    source: Healthcare utilization data, dermatology practice surveys
+    note: 'Dermatologist access varies by income and insurance: Never 30%, Rarely
+      35%, Annually 25%, Multiple/year 10%. Will be modified by household income and
+      skin concerns. Those with significant concerns and higher income visit more
+      frequently.'
+  constraints: []
+- name: shopping_channel_preference
+  type: categorical
+  category: population_specific
+  description: Preferred shopping channel for skincare (online DTC, online marketplace,
+    retail store, beauty specialty store)
+  sampling:
+    strategy: conditional
+    distribution:
+      type: categorical
+      options:
+      - online_dtc
+      - online_marketplace
+      - retail_store
+      - beauty_specialty_store
+      weights:
+      - 0.25
+      - 0.35
+      - 0.25
+      - 0.15
+    formula: null
+    depends_on:
+    - age
+    - urban_rural
+    modifiers:
+    - when: age < 30 and urban_rural == 'urban'
+      multiply: null
+      add: null
+      weight_overrides:
+        online_dtc: 0.45
+        online_marketplace: 0.3
+        retail_store: 0.15
+        beauty_specialty_store: 0.1
+      probability_override: null
+    - when: age >= 30 and age < 40 and urban_rural in ['urban', 'suburban']
+      multiply: null
+      add: null
+      weight_overrides:
+        online_dtc: 0.35
+        online_marketplace: 0.3
+        retail_store: 0.2
+        beauty_specialty_store: 0.15
+      probability_override: null
+    - when: age >= 40
+      multiply: null
+      add: null
+      weight_overrides:
+        online_dtc: 0.25
+        online_marketplace: 0.25
+        retail_store: 0.3
+        beauty_specialty_store: 0.2
+      probability_override: null
+    - when: urban_rural == 'rural'
+      multiply: null
+      add: null
+      weight_overrides:
+        online_dtc: 0.3
+        online_marketplace: 0.4
+        retail_store: 0.25
+        beauty_specialty_store: 0.05
+      probability_override: null
+  grounding:
+    level: medium
+    method: extrapolated
+    source: E-commerce beauty sales data, retail trends
+    note: 'Skincare shopping for women 20-45 in 2025: Online marketplace (Amazon)
+      35%, Online DTC 25%, Retail store 25%, Beauty specialty (Sephora/Ulta) 15%.
+      Age and urban_rural will modify - younger and urban prefer online/specialty.'
+  constraints: []
+- name: social_media_hours_daily
+  type: float
+  category: population_specific
+  description: Average daily hours spent on social media platforms
+  sampling:
+    strategy: conditional
+    distribution:
+      type: lognormal
+      mean: 2.5
+      std: 1.3
+      min: 0.3
+      max: 8.0
+      mean_formula: null
+      std_formula: null
+      min_formula: null
+      max_formula: null
+    formula: null
+    depends_on:
+    - age
+    modifiers:
+    - when: age < 25
+      multiply: 1.4
+      add: 0.0
+      weight_overrides: null
+      probability_override: null
+    - when: age >= 25 and age < 35
+      multiply: 1.15
+      add: 0.0
+      weight_overrides: null
+      probability_override: null
+    - when: age >= 35
+      multiply: 0.8
+      add: 0.0
+      weight_overrides: null
+      probability_override: null
+  grounding:
+    level: medium
+    method: extrapolated
+    source: Social media usage statistics 2024-2025, Pew Research
+    note: Average US adult spends ~2.5 hours/day on social media. Women 20-45 slightly
+      higher than average. Younger women (20-25) ~3.5hrs, older (40-45) ~1.8hrs. Age
+      will heavily modify this base distribution.
+  constraints:
+  - type: hard_min
+    value: 0.3
+    expression: null
+    reason: Minimum realistic daily social media use (20 minutes)
+  - type: hard_max
+    value: 8.0
+    expression: null
+    reason: Maximum realistic daily hours for non-professional use
+- name: beauty_influencer_following
+  type: categorical
+  category: population_specific
+  description: Level of beauty influencer engagement (none, passive viewer, active
+    follower, highly engaged)
+  sampling:
+    strategy: conditional
+    distribution:
+      type: categorical
+      options:
+      - none
+      - passive_viewer
+      - active_follower
+      - highly_engaged
+      weights:
+      - 0.2
+      - 0.4
+      - 0.3
+      - 0.1
+    formula: null
+    depends_on:
+    - social_media_hours_daily
+    modifiers:
+    - when: social_media_hours_daily >= 4.0
+      multiply: null
+      add: null
+      weight_overrides:
+        none: 0.05
+        passive_viewer: 0.15
+        active_follower: 0.45
+        highly_engaged: 0.35
+      probability_override: null
+    - when: social_media_hours_daily >= 2.5 and social_media_hours_daily < 4.0
+      multiply: null
+      add: null
+      weight_overrides:
+        none: 0.1
+        passive_viewer: 0.25
+        active_follower: 0.45
+        highly_engaged: 0.2
+      probability_override: null
+    - when: social_media_hours_daily < 1.5
+      multiply: null
+      add: null
+      weight_overrides:
+        none: 0.3
+        passive_viewer: 0.4
+        active_follower: 0.25
+        highly_engaged: 0.05
+      probability_override: null
+  grounding:
+    level: medium
+    method: extrapolated
+    source: Influencer marketing studies, beauty consumer research
+    note: 'Beauty influencer engagement for women 20-45: None 20%, Passive viewer
+      40%, Active follower 30%, Highly engaged 10%. Correlates strongly with social
+      media hours. Will be modified by social_media_hours_daily.'
+  constraints: []
+- name: ingredient_awareness
+  type: categorical
+  category: population_specific
+  description: Level of skincare ingredient knowledge (low, moderate, high, expert)
+  sampling:
+    strategy: conditional
+    distribution:
+      type: categorical
+      options:
+      - low
+      - moderate
+      - high
+      - expert
+      weights:
+      - 0.3
+      - 0.45
+      - 0.2
+      - 0.05
+    formula: null
+    depends_on:
+    - education_level
+    - current_skincare_routine_complexity
+    modifiers:
+    - when: education_level == 'graduate_degree' and current_skincare_routine_complexity
+        == 'extensive'
+      multiply: null
+      add: null
+      weight_overrides:
+        low: 0.05
+        moderate: 0.2
+        high: 0.5
+        expert: 0.25
+      probability_override: null
+    - when: education_level in ['bachelors', 'graduate_degree'] and current_skincare_routine_complexity
+        == 'moderate'
+      multiply: null
+      add: null
+      weight_overrides:
+        low: 0.1
+        moderate: 0.4
+        high: 0.4
+        expert: 0.1
+      probability_override: null
+    - when: current_skincare_routine_complexity == 'minimal'
+      multiply: null
+      add: null
+      weight_overrides:
+        low: 0.45
+        moderate: 0.4
+        high: 0.12
+        expert: 0.03
+      probability_override: null
+    - when: current_skincare_routine_complexity == 'extensive'
+      multiply: null
+      add: null
+      weight_overrides:
+        low: 0.08
+        moderate: 0.25
+        high: 0.47
+        expert: 0.2
+      probability_override: null
+  grounding:
+    level: medium
+    method: extrapolated
+    source: Clean beauty trends, skincare consumer education research
+    note: 'Ingredient awareness increasing: Low 30%, Moderate 45%, High 20%, Expert
+      5%. Correlates with education level and routine complexity. College-educated
+      and extensive routine users have higher awareness.'
+  constraints: []
+- name: price_sensitivity_skincare
+  type: categorical
+  category: population_specific
+  description: Price sensitivity for skincare purchases (very price-sensitive, moderate,
+    willing to pay premium)
+  sampling:
+    strategy: conditional
+    distribution:
+      type: categorical
+      options:
+      - very_price_sensitive
+      - moderate
+      - willing_to_pay_premium
+      weights:
+      - 0.35
+      - 0.45
+      - 0.2
+    formula: null
+    depends_on:
+    - personal_income
+    - monthly_skincare_spend
+    modifiers:
+    - when: personal_income >= 75000 and monthly_skincare_spend >= 120
+      multiply: null
+      add: null
+      weight_overrides:
+        very_price_sensitive: 0.15
+        moderate: 0.35
+        willing_to_pay_premium: 0.5
+      probability_override: null
+    - when: personal_income < 50000 and monthly_skincare_spend < 60
+      multiply: null
+      add: null
+      weight_overrides:
+        very_price_sensitive: 0.6
+        moderate: 0.3
+        willing_to_pay_premium: 0.1
+      probability_override: null
+    - when: personal_income >= 50000 and personal_income < 75000
+      multiply: null
+      add: null
+      weight_overrides:
+        very_price_sensitive: 0.35
+        moderate: 0.45
+        willing_to_pay_premium: 0.2
+      probability_override: null
+  grounding:
+    level: medium
+    method: extrapolated
+    source: Consumer price sensitivity studies, premium beauty market size
+    note: 'Skincare price sensitivity: Very sensitive 35%, Moderate 45%, Premium willing
+      20%. Strongly correlates with personal income and monthly spend. Higher income
+      and current spenders more willing to pay premium.'
+  constraints: []
+- name: subscription_service_user
+  type: boolean
+  category: population_specific
+  description: Currently uses any subscription-based beauty or skincare service
+  sampling:
+    strategy: conditional
+    distribution:
+      type: boolean
+      probability_true: 0.18
+    formula: null
+    depends_on:
+    - shopping_channel_preference
+    - age
+    modifiers:
+    - when: shopping_channel_preference == 'online_dtc' and age < 35
+      multiply: null
+      add: null
+      weight_overrides: null
+      probability_override: 0.55
+    - when: shopping_channel_preference in ['online_dtc', 'online_marketplace'] and
+        age >= 25 and age < 40
+      multiply: null
+      add: null
+      weight_overrides: null
+      probability_override: 0.45
+    - when: shopping_channel_preference in ['retail_store', 'beauty_specialty_store']
+      multiply: null
+      add: null
+      weight_overrides: null
+      probability_override: 0.2
+    - when: age >= 40
+      multiply: null
+      add: null
+      weight_overrides: null
+      probability_override: 0.25
+  grounding:
+    level: medium
+    method: extrapolated
+    source: Beauty subscription box market data, DTC trends
+    note: Beauty/skincare subscription adoption ~18% for women 20-45. Higher among
+      younger, online DTC shoppers. Includes boxes like Ipsy, FabFitFun, brand subscriptions.
+      Will be modified by shopping channel and age.
+  constraints: []
+- name: health_insurance_quality
+  type: categorical
+  category: population_specific
+  description: Quality of health insurance coverage (none, basic, comprehensive)
+  sampling:
+    strategy: conditional
+    distribution:
+      type: categorical
+      options:
+      - none
+      - basic
+      - comprehensive
+      weights:
+      - 0.12
+      - 0.48
+      - 0.4
+    formula: null
+    depends_on:
+    - employment_status
+    - household_income
+    modifiers:
+    - when: employment_status == 'full_time' and household_income >= 85000
+      multiply: null
+      add: null
+      weight_overrides:
+        none: 0.08
+        basic: 0.3
+        comprehensive: 0.62
+      probability_override: null
+    - when: employment_status in ['part_time', 'self_employed']
+      multiply: null
+      add: null
+      weight_overrides:
+        none: 0.25
+        basic: 0.5
+        comprehensive: 0.25
+      probability_override: null
+    - when: employment_status in ['not_employed', 'student']
+      multiply: null
+      add: null
+      weight_overrides:
+        none: 0.35
+        basic: 0.45
+        comprehensive: 0.2
+      probability_override: null
+    - when: household_income < 50000
+      multiply: null
+      add: null
+      weight_overrides:
+        none: 0.3
+        basic: 0.5
+        comprehensive: 0.2
+      probability_override: null
+  grounding:
+    level: medium
+    method: extrapolated
+    source: US health insurance coverage data, KFF reports
+    note: 'For women 20-45: Uninsured ~12%, Basic coverage 48%, Comprehensive 40%.
+      Correlates with employment status and household income. Full-time employed have
+      better coverage. ACA has reduced uninsured rates.'
+  constraints: []
+sampling_order:
+- age
+- agreeableness
+- brand_loyalty
+- clean_beauty_preference
+- conscientiousness
+- current_skincare_routine_complexity
+- education_level
+- employment_status
+- ethnicity
+- extraversion
+- household_income
+- health_insurance_quality
+- impulsivity
+- ingredient_awareness
+- marital_status
+- household_size
+- neuroticism
+- openness
+- personal_income
+- monthly_skincare_spend
+- price_sensitivity_skincare
+- retinol_experience
+- reviews_influence
+- risk_tolerance
+- skin_concerns
+- dermatologist_visits
+- skin_type
+- social_media_hours_daily
+- beauty_influencer_following
+- state
+- urban_rural
+- shopping_channel_preference
+- subscription_service_user

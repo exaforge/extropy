@@ -1,0 +1,198 @@
+meta:
+  name: cerave_launches_a_new
+  description: 'CeraVe launches a new Retinol Resurfacing Serum at $22. Available
+    DTC-only: website, Instagram Shop, and TikTok Shop. Product claims: dermatologist-developed,
+    encapsulated 0.3% retinol, fragrance-free, MVE delivery technology for slow release
+    and minimal irritation. No retail availability at Ulta, Sephora, Target, or drugstores.
+    Study measures: purchase intent (1-5 scale), price sensitivity (would buy at $18/$22/$28/$35),
+    and channel friction (how much DTC-only impacts decision).'
+  population_spec: population.yaml
+  agents_file: agents.json
+  network_file: network.json
+  created_at: '2026-01-31T20:14:20.293362'
+event:
+  type: product_launch
+  content: 'CeraVe has launched a new Retinol Resurfacing Serum priced at $22. The
+    product is available exclusively through direct-to-consumer channels: CeraVe''s
+    website, Instagram Shop, and TikTok Shop. The serum is dermatologist-developed
+    and features encapsulated 0.3% retinol with MVE (MultiVesicular Emulsion) delivery
+    technology designed for slow release and minimal irritation. The product is fragrance-free.
+    This product will NOT be available at traditional retail locations including Ulta,
+    Sephora, Target, or drugstores—it is DTC-only.'
+  source: CeraVe
+  credibility: 0.95
+  ambiguity: 0.1
+  emotional_valence: 0.3
+seed_exposure:
+  channels:
+  - name: brand_email_and_app
+    description: Direct communication from CeraVe via email newsletters and mobile
+      app notifications to existing customers and subscribers
+    reach: targeted
+    credibility_modifier: 1.2
+  - name: social_media_ads
+    description: Paid advertising on Instagram and TikTok targeting skincare enthusiasts,
+      particularly promoting the DTC shopping features
+    reach: targeted
+    credibility_modifier: 0.95
+  - name: beauty_influencer_content
+    description: Beauty influencers and skincare content creators posting about the
+      new retinol serum on Instagram and TikTok
+    reach: organic
+    credibility_modifier: 0.85
+  - name: beauty_news_sites
+    description: Beauty and skincare news websites and blogs covering the product
+      launch (Allure, Byrdie, Cosmopolitan Beauty, etc.)
+    reach: broadcast
+    credibility_modifier: 1.1
+  - name: word_of_mouth
+    description: Personal recommendations and discussions through social networks,
+      both online and offline
+    reach: organic
+    credibility_modifier: 0.9
+  rules:
+  - channel: brand_email_and_app
+    when: retinol_experience in ['occasional user', 'regular user'] and shopping_channel_preference
+      == 'online DTC'
+    probability: 0.8
+    timestep: 0
+  - channel: brand_email_and_app
+    when: subscription_service_user == True and monthly_skincare_spend > 30
+    probability: 0.7
+    timestep: 0
+  - channel: social_media_ads
+    when: social_media_hours_daily >= 2.0 and age <= 35 and shopping_channel_preference
+      in ['online DTC', 'online marketplace']
+    probability: 0.65
+    timestep: 0
+  - channel: social_media_ads
+    when: social_media_hours_daily >= 1.5 and skin_concerns in ['aging/wrinkles',
+      'hyperpigmentation', 'texture'] and retinol_experience != 'never used'
+    probability: 0.55
+    timestep: 1
+  - channel: beauty_influencer_content
+    when: beauty_influencer_following in ['active follower', 'highly engaged'] and
+      social_media_hours_daily >= 1.5
+    probability: 0.7
+    timestep: 1
+  - channel: beauty_influencer_content
+    when: beauty_influencer_following == 'passive viewer' and social_media_hours_daily
+      >= 1.0
+    probability: 0.4
+    timestep: 1
+  - channel: beauty_news_sites
+    when: ingredient_awareness in ['high', 'expert'] and current_skincare_routine_complexity
+      == 'extensive 7+ products'
+    probability: 0.6
+    timestep: 1
+  - channel: beauty_news_sites
+    when: reviews_influence in ['heavily', 'only buy reviewed products']
+    probability: 0.5
+    timestep: 1
+  - channel: word_of_mouth
+    when: extraversion > 0.6 and beauty_influencer_following in ['active follower',
+      'highly engaged']
+    probability: 0.3
+    timestep: 1
+  - channel: word_of_mouth
+    when: current_skincare_routine_complexity in ['moderate 4-6 products', 'extensive
+      7+ products'] and reviews_influence != 'not at all'
+    probability: 0.25
+    timestep: 1
+  - channel: social_media_ads
+    when: price_sensitivity_skincare != 'very price-sensitive' and monthly_skincare_spend
+      >= 25
+    probability: 0.45
+    timestep: 1
+  - channel: beauty_news_sites
+    when: dermatologist_visits in ['annually', 'multiple times per year'] and skin_concerns
+      == 'aging/wrinkles'
+    probability: 0.55
+    timestep: 0
+interaction:
+  primary_model: passive_observation
+  secondary_model: direct_conversation
+  description: Women in this skincare consumer research cohort will primarily engage
+    through passive observation - seeing the product launch on social media (Instagram,
+    TikTok), observing reactions, reviews, and influencer content about the new CeraVe
+    Retinol Serum. This mimics organic social media discovery. Secondary direct conversations
+    will occur between close ties about personal skincare experiences, recommendations,
+    and opinions on the product's price point and DTC availability. This hybrid model
+    captures both the social media-driven product discovery and the peer-to-peer recommendation
+    behavior typical in beauty product adoption.
+spread:
+  share_probability: 0.45
+  share_modifiers:
+  - when: extraversion > 0.7
+    multiply: 1.4
+    add: 0.0
+  - when: social_media_hours_daily > 3.0
+    multiply: 1.5
+    add: 0.0
+  - when: beauty_influencer_following == 'high'
+    multiply: 1.6
+    add: 0.0
+  - when: retinol_experience == 'experienced'
+    multiply: 1.3
+    add: 0.05
+  - when: shopping_channel_preference == 'online'
+    multiply: 1.3
+    add: 0.0
+  - when: price_sensitivity_skincare == 'low'
+    multiply: 1.2
+    add: 0.0
+  - when: brand_loyalty == 'high'
+    multiply: 1.4
+    add: 0.1
+  - when: age < 30
+    multiply: 1.3
+    add: 0.0
+  - when: reviews_influence == 'high'
+    multiply: 1.2
+    add: 0.0
+  - when: ingredient_awareness == 'high'
+    multiply: 1.25
+    add: 0.05
+  - when: impulsivity > 0.7
+    multiply: 1.3
+    add: 0.0
+  - when: edge_type == 'weak_tie'
+    multiply: 0.7
+    add: 0.0
+  - when: monthly_skincare_spend > 100
+    multiply: 1.35
+    add: 0.0
+  decay_per_hop: 0.08
+  max_hops: 5
+outcomes:
+  suggested_outcomes:
+  - name: retinol_serum_purchase_intent
+    type: categorical
+    description: Whether agents will purchase CeraVe's new Retinol Resurfacing Serum
+      given the $22 price point, DTC-only distribution model, and product formulation
+      claims
+    options:
+    - purchase_immediately
+    - purchase_if_cheaper
+    - consider_later
+    - unlikely_due_to_dtc
+    - not_interested
+    range: null
+    required: true
+  - name: sentiment
+    type: float
+    description: Overall sentiment toward the event (-1 very negative to 1 very positive)
+    options: null
+    range:
+    - -1.0
+    - 1.0
+    required: true
+  capture_full_reasoning: true
+  extraction_instructions: null
+  decision_relevant_attributes: []
+simulation:
+  max_timesteps: 2
+  timestep_unit: hour
+  stop_conditions:
+  - exposure_rate > 0.95 and no_state_changes_for > 10
+  seed: null
