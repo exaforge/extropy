@@ -345,8 +345,7 @@ def ten_agents() -> list[dict]:
     """Ten agents with varied attributes for propagation/integration tests."""
     roles = ["junior", "mid", "senior"]
     return [
-        {"_id": f"a{i}", "age": 25 + i * 5, "role": roles[i % 3]}
-        for i in range(10)
+        {"_id": f"a{i}", "age": 25 + i * 5, "role": roles[i % 3]} for i in range(10)
     ]
 
 

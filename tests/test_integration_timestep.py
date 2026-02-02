@@ -132,9 +132,7 @@ def _make_engine(scenario, agents, network, tmp_path):
     )
     return SimulationEngine(
         scenario=scenario,
-        population_spec=pytest.importorskip(
-            "tests.conftest"
-        ).minimal_population_spec
+        population_spec=pytest.importorskip("tests.conftest").minimal_population_spec
         if False
         else _minimal_pop_spec(),
         agents=agents,
@@ -147,7 +145,6 @@ def _minimal_pop_spec():
     """Inline minimal population spec to avoid fixture dependency."""
     from entropy.core.models.population import (
         AttributeSpec,
-        CategoricalDistribution,
         GroundingInfo,
         GroundingSummary,
         NormalDistribution,
@@ -312,9 +309,7 @@ class TestSingleTimestep:
         mock_batch.return_value = []
         # Rules only at timestep=5, running timestep=0
         rules = [
-            ExposureRule(
-                channel="broadcast", timestep=5, when="true", probability=1.0
-            ),
+            ExposureRule(channel="broadcast", timestep=5, when="true", probability=1.0),
         ]
         scenario = _make_scenario(max_timesteps=10, rules=rules)
         config = SimulationRunConfig(
@@ -340,9 +335,7 @@ class TestSingleTimestep:
         assert contexts_arg == []
 
     @patch("entropy.simulation.engine.batch_reason_agents")
-    def test_memory_entry_saved(
-        self, mock_batch, ten_agents, linear_network, tmp_path
-    ):
+    def test_memory_entry_saved(self, mock_batch, ten_agents, linear_network, tmp_path):
         """Reasoning produces a memory entry for each agent."""
         mock_batch.side_effect = _mock_batch_reason()
         scenario = _make_scenario(max_timesteps=5)
@@ -419,8 +412,11 @@ class TestSingleTimestep:
             engine.state_manager.record_exposure(
                 "a0",
                 ExposureRecord(
-                    timestep=t, channel="network", content="test",
-                    credibility=0.85, source_agent_id=f"a{t}",
+                    timestep=t,
+                    channel="network",
+                    content="test",
+                    credibility=0.85,
+                    source_agent_id=f"a{t}",
                 ),
             )
 
@@ -567,9 +563,7 @@ class TestMultiTimestepDynamics:
         assert result.stopped_reason is not None
 
     @patch("entropy.simulation.engine.batch_reason_agents")
-    def test_isolated_agent_never_exposed(
-        self, mock_batch, tmp_path
-    ):
+    def test_isolated_agent_never_exposed(self, mock_batch, tmp_path):
         """Agent with no network edges never gets network exposure."""
         mock_batch.side_effect = _mock_batch_reason(
             default_response=_make_reasoning_response(will_share=True)

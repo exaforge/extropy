@@ -5,10 +5,8 @@ and the top-level stopping condition evaluator.
 Functions under test in entropy/simulation/stopping.py.
 """
 
-import pytest
-
 from entropy.core.models import TimestepSummary
-from entropy.core.models.scenario import SimulationConfig, TimestepUnit
+from entropy.core.models.scenario import SimulationConfig
 from entropy.simulation.state import StateManager
 from entropy.simulation.stopping import (
     evaluate_convergence,
@@ -98,9 +96,7 @@ class TestEvaluateNoStateChanges:
     def test_exactly_at_threshold(self):
         """10 stable timesteps satisfies > 10 because we check the last N."""
         summaries = [_make_summary(i, state_changes=0) for i in range(10)]
-        assert (
-            evaluate_no_state_changes("no_state_changes_for > 10", summaries) is True
-        )
+        assert evaluate_no_state_changes("no_state_changes_for > 10", summaries) is True
 
     def test_not_enough_summaries(self):
         """5 summaries can't satisfy > 10."""
@@ -228,9 +224,7 @@ class TestEvaluateStoppingConditions:
         """Doesn't stop when exposure rate is below threshold."""
         agents = [{"_id": f"a{i}"} for i in range(10)]
         # Make 3/10 agents aware → 30% exposure rate
-        sm = self._make_state_manager(
-            tmp_path, agents, aware_ids=["a0", "a1", "a2"]
-        )
+        sm = self._make_state_manager(tmp_path, agents, aware_ids=["a0", "a1", "a2"])
         config = SimulationConfig(
             max_timesteps=100,
             stop_conditions=["exposure_rate > 0.95"],

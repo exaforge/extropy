@@ -6,12 +6,11 @@ Implements adaptive calibration to hit target metrics (avg_degree, clustering, m
 import json
 import logging
 import random
-from collections import defaultdict
 from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-from ...core.models import Edge, NetworkResult, NetworkMetrics
+from ...core.models import Edge, NetworkResult
 from ...utils.callbacks import NetworkProgressCallback
 from .config import NetworkConfig, InfluenceFactorConfig
 from .similarity import (
@@ -110,6 +109,7 @@ def _compute_influence_factor(
             else:
                 ratio = 1.0
             import math
+
             dampened = (
                 math.sqrt(ratio)
                 if ratio >= 1.0
@@ -338,7 +338,9 @@ def _sample_edges(
     avg_sim_intra = sum(s for _, _, s in intra_pairs) / n_intra if n_intra > 0 else 0.5
     avg_sim_inter = sum(s for _, _, s in inter_pairs) / n_inter if n_inter > 0 else 0.3
 
-    total_weighted_pairs = n_intra * avg_sim_intra * intra_scale + n_inter * avg_sim_inter * inter_scale
+    total_weighted_pairs = (
+        n_intra * avg_sim_intra * intra_scale + n_inter * avg_sim_inter * inter_scale
+    )
     if total_weighted_pairs > 0:
         base_prob = target_edges / total_weighted_pairs
     else:
@@ -347,7 +349,10 @@ def _sample_edges(
 
     # Phase 1: Sample initial edges based on similarity
     # Sort by similarity (highest first) and sample top candidates
-    all_pairs = [(i, j, sim, communities[i] == communities[j]) for (i, j), sim in similarities.items()]
+    all_pairs = [
+        (i, j, sim, communities[i] == communities[j])
+        for (i, j), sim in similarities.items()
+    ]
     all_pairs.sort(key=lambda x: x[2], reverse=True)
 
     for i, j, sim, same_community in all_pairs:
@@ -370,7 +375,9 @@ def _sample_edges(
 
     # Phase 2: Local attachment - preferentially add edges to friends-of-friends
     # This is key for high clustering
-    local_attachment_budget = int(target_edges * 0.5)  # 50% of edges via local attachment
+    local_attachment_budget = int(
+        target_edges * 0.5
+    )  # 50% of edges via local attachment
     local_edges_added = 0
 
     # Build list of potential local attachments (pairs with common neighbors but no edge)
@@ -400,7 +407,7 @@ def _sample_edges(
     unique_fof.sort(reverse=True, key=lambda x: x[0])
 
     # Add top local attachment edges
-    for score, i, j, sim in unique_fof[:local_attachment_budget * 2]:
+    for score, i, j, sim in unique_fof[: local_attachment_budget * 2]:
         if local_edges_added >= local_attachment_budget:
             break
         if (min(i, j), max(i, j)) in added_pairs:
@@ -448,7 +455,6 @@ def _triadic_closure(
 
     # Edge budget: don't exceed max_edge_increase factor
     max_edges = int(len(edges) * max_edge_increase)
-    initial_edges = len(edges)
 
     max_iterations = 25  # More iterations for better convergence
     max_closures_per_iter = int(n * 0.25)  # More closures per iteration
@@ -508,7 +514,9 @@ def _triadic_closure(
                 id_c = agent_ids[c]
 
                 edge_type = _infer_edge_type(agent_a, agent_c, config, is_rewired=False)
-                influence_weights = _compute_influence_weights(agent_a, agent_c, sim, config)
+                influence_weights = _compute_influence_weights(
+                    agent_a, agent_c, sim, config
+                )
 
                 new_edge = Edge(
                     source=id_a,
@@ -660,13 +668,25 @@ def _generate_network_single_pass(
 
     # Sample edges
     edges, edge_set = _sample_edges(
-        agents, agent_ids, similarities, communities, degree_factors,
-        config, intra_scale, inter_scale, rng
+        agents,
+        agent_ids,
+        similarities,
+        communities,
+        degree_factors,
+        config,
+        intra_scale,
+        inter_scale,
+        rng,
     )
 
     # Apply triadic closure for clustering (allow more edges to be added)
     edges, edge_set = _triadic_closure(
-        agents, agent_ids, edges, edge_set, config, rng,
+        agents,
+        agent_ids,
+        edges,
+        edge_set,
+        config,
+        rng,
         communities=communities,
         target_clustering=config.target_clustering,
         max_edge_increase=2.5,  # Allow up to 2.5x edges for better clustering
@@ -776,19 +796,28 @@ def generate_network(
     target_cluster_min = 0.3
 
     best_edges = None
-    best_score = float('inf')
+    best_score = float("inf")
 
     for iteration in range(config.max_calibration_iterations):
         if on_progress:
-            on_progress("Calibrating network", iteration, config.max_calibration_iterations)
+            on_progress(
+                "Calibrating network", iteration, config.max_calibration_iterations
+            )
 
         # Generate with current parameters
         # Use a derived seed for reproducibility within calibration
         iter_rng = random.Random(seed + iteration * 1000)
 
         edges, avg_degree, clustering, modularity = _generate_network_single_pass(
-            agents, agent_ids, similarities, communities, degree_factors,
-            config, intra_scale, inter_scale, iter_rng
+            agents,
+            agent_ids,
+            similarities,
+            communities,
+            degree_factors,
+            config,
+            intra_scale,
+            inter_scale,
+            iter_rng,
         )
 
         # Score: sum of squared deviations from target ranges
@@ -835,7 +864,9 @@ def generate_network(
         # Adjust parameters for next iteration
         # Degree adjustment: scale both proportionally
         if avg_degree < target_degree_min * 0.9:
-            scale_adj = min(1.5, target_degree_min / avg_degree) if avg_degree > 0 else 1.5
+            scale_adj = (
+                min(1.5, target_degree_min / avg_degree) if avg_degree > 0 else 1.5
+            )
             intra_scale *= scale_adj
             inter_scale *= scale_adj
         elif avg_degree > target_degree_max * 1.1:
@@ -866,7 +897,11 @@ def generate_network(
         inter_scale = max(0.3, min(6.0, inter_scale))
 
     if on_progress:
-        on_progress("Calibrating network", config.max_calibration_iterations, config.max_calibration_iterations)
+        on_progress(
+            "Calibrating network",
+            config.max_calibration_iterations,
+            config.max_calibration_iterations,
+        )
 
     # Use best result found
     edges = best_edges if best_edges else edges

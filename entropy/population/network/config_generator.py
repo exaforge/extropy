@@ -206,7 +206,7 @@ def _build_prompt(
             line += f" [{attr.category}]"
         if hasattr(attr, "sampling") and attr.sampling:
             dist = attr.sampling.distribution
-            dist_options = getattr(dist, 'options', None) if dist else None
+            dist_options = getattr(dist, "options", None) if dist else None
             if dist_options:
                 opts = ", ".join(dist_options[:8])
                 if len(dist_options) > 8:
@@ -214,7 +214,7 @@ def _build_prompt(
                 line += f": options=[{opts}]"
             elif dist and dist.type:
                 line += f": {dist.type}"
-                dist_mean = getattr(dist, 'mean', None)
+                dist_mean = getattr(dist, "mean", None)
                 if dist_mean is not None:
                     line += f" (mean={dist_mean})"
         attr_lines.append(line)
@@ -346,7 +346,9 @@ def _make_validator(population_spec: PopulationSpec) -> ValidatorCallback:
         if not errors:
             return True, ""
         # Format errors for retry prompt - include all errors so LLM can fix them
-        error_msg = "VALIDATION FAILED. Fix these errors:\n" + "\n".join(f"- {e}" for e in errors)
+        error_msg = "VALIDATION FAILED. Fix these errors:\n" + "\n".join(
+            f"- {e}" for e in errors
+        )
         return False, error_msg
 
     return validator

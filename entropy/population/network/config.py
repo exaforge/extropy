@@ -130,7 +130,9 @@ class NetworkConfig(BaseModel):
     target_clustering: float = 0.35
     target_modularity: float = 0.55  # Target modularity (0.4-0.7 range)
     community_count: int | None = None  # Auto-detected if None
-    inter_community_scale: float = 0.3  # Initial edge prob between communities vs within
+    inter_community_scale: float = (
+        0.3  # Initial edge prob between communities vs within
+    )
     max_calibration_iterations: int = 12  # Max iterations for adaptive calibration
     attribute_weights: dict[str, AttributeWeightConfig] = Field(default_factory=dict)
     degree_multipliers: list[DegreeMultiplierConfig] = Field(default_factory=list)

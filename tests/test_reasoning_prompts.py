@@ -10,12 +10,10 @@ from datetime import datetime
 import pytest
 
 from entropy.core.models import (
-    ConvictionLevel,
     ExposureRecord,
     MemoryEntry,
     PeerOpinion,
     ReasoningContext,
-    float_to_conviction,
 )
 from entropy.core.models.scenario import (
     Event,
@@ -32,7 +30,6 @@ from entropy.core.models.scenario import (
     SeedExposure,
     SimulationConfig,
     SpreadConfig,
-    TimestepUnit,
 )
 from entropy.simulation.reasoning import (
     _get_primary_position_outcome,
@@ -278,10 +275,11 @@ class TestBuildPass1Prompt:
         scenario = _make_scenario()
         prompt = build_pass1_prompt(context, scenario)
 
-        # The word "reject" as a position label shouldn't appear
-        # (it could appear in the public_statement if the person says it, but
-        # the prompt should not have a "position: reject" field)
-        assert "position" not in prompt.lower() or "position" in "passive_observation"
+        # The position label "reject" should not appear as a structured field
+        # (the word "position" may appear in instruction text, but not as
+        # "position: reject" or similar structured label for the peer)
+        assert "position: reject" not in prompt.lower()
+        assert "position=reject" not in prompt.lower()
 
     def test_re_reasoning_instructions_differ(self):
         """With memory trace, prompt uses re-reasoning instructions."""
@@ -296,10 +294,11 @@ class TestBuildPass1Prompt:
         prompt_first = build_pass1_prompt(context_first, scenario)
         prompt_re = build_pass1_prompt(context_re, scenario)
 
-        # First reasoning asks about "gut reaction"
-        assert "gut reaction" in prompt_first.lower() or "genuine" in prompt_first.lower()
-        # Re-reasoning asks about evolution
-        assert "evolved" in prompt_re.lower() or "shifted" in prompt_re.lower()
+        # First reasoning has no "Previous Thinking" section
+        assert "Previous Thinking" not in prompt_first
+        # Re-reasoning has "Previous Thinking" section and asks about change
+        assert "Previous Thinking" in prompt_re
+        assert "changed" in prompt_re.lower() or "stand now" in prompt_re.lower()
 
 
 # ============================================================================
@@ -329,13 +328,13 @@ class TestBuildPass1Schema:
         assert sentiment["minimum"] == -1.0
         assert sentiment["maximum"] == 1.0
 
-    def test_conviction_is_enum(self):
-        """Conviction field uses ConvictionLevel enum values."""
+    def test_conviction_is_integer_0_100(self):
+        """Conviction field is an integer from 0 to 100."""
         schema = build_pass1_schema()
         conviction = schema["properties"]["conviction"]
-        assert "enum" in conviction
-        for level in ConvictionLevel:
-            assert level.value in conviction["enum"]
+        assert conviction["type"] == "integer"
+        assert conviction["minimum"] == 0
+        assert conviction["maximum"] == 100
 
     def test_will_share_is_boolean(self):
         schema = build_pass1_schema()

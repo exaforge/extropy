@@ -198,8 +198,12 @@ class RateLimiter:
         # Cap estimates to bucket capacity to avoid infinite loops
         # (can't acquire more than capacity, so just use capacity as upper bound)
         if self._has_split_tokens:
-            estimated_input_tokens = min(estimated_input_tokens, int(self.itpm_bucket.capacity * 0.9))
-            estimated_output_tokens = min(estimated_output_tokens, int(self.otpm_bucket.capacity * 0.9))
+            estimated_input_tokens = min(
+                estimated_input_tokens, int(self.itpm_bucket.capacity * 0.9)
+            )
+            estimated_output_tokens = min(
+                estimated_output_tokens, int(self.otpm_bucket.capacity * 0.9)
+            )
         else:
             max_total = int(self.tpm_bucket.capacity * 0.9)
             if estimated_input_tokens + estimated_output_tokens > max_total:
@@ -283,8 +287,12 @@ class RateLimiter:
         # Cap estimates to bucket capacity to avoid infinite loops
         # (can't acquire more than capacity, so just use capacity as upper bound)
         if self._has_split_tokens:
-            estimated_input_tokens = min(estimated_input_tokens, int(self.itpm_bucket.capacity * 0.9))
-            estimated_output_tokens = min(estimated_output_tokens, int(self.otpm_bucket.capacity * 0.9))
+            estimated_input_tokens = min(
+                estimated_input_tokens, int(self.itpm_bucket.capacity * 0.9)
+            )
+            estimated_output_tokens = min(
+                estimated_output_tokens, int(self.otpm_bucket.capacity * 0.9)
+            )
         else:
             max_total = int(self.tpm_bucket.capacity * 0.9)
             if estimated_input_tokens + estimated_output_tokens > max_total:

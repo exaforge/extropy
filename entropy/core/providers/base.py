@@ -56,7 +56,9 @@ class LLMProvider(ABC):
             )
         return self._rate_limiter
 
-    def _acquire_rate_limit(self, prompt: str, model: str = "", max_output: int = 1000) -> float:
+    def _acquire_rate_limit(
+        self, prompt: str, model: str = "", max_output: int = 1000
+    ) -> float:
         """Acquire rate limit capacity before making an API call.
 
         Args:

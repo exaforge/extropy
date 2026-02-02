@@ -117,12 +117,16 @@ class TestEvaluateExposureRule:
     """Test evaluate_exposure_rule(rule, agent, timestep)."""
 
     def test_matching_timestep_and_true_condition(self):
-        rule = ExposureRule(channel="broadcast", timestep=0, when="true", probability=1.0)
+        rule = ExposureRule(
+            channel="broadcast", timestep=0, when="true", probability=1.0
+        )
         agent = {"_id": "a0", "age": 30}
         assert evaluate_exposure_rule(rule, agent, 0) is True
 
     def test_wrong_timestep(self):
-        rule = ExposureRule(channel="broadcast", timestep=0, when="true", probability=1.0)
+        rule = ExposureRule(
+            channel="broadcast", timestep=0, when="true", probability=1.0
+        )
         agent = {"_id": "a0", "age": 30}
         assert evaluate_exposure_rule(rule, agent, 1) is False
 
@@ -197,9 +201,7 @@ class TestApplySeedExposures:
     def test_no_exposure_wrong_timestep(self, tmp_path, ten_agents, rng):
         """Rule at timestep=5, called at timestep=0 → no exposures."""
         rules = [
-            ExposureRule(
-                channel="broadcast", timestep=5, when="true", probability=1.0
-            ),
+            ExposureRule(channel="broadcast", timestep=5, when="true", probability=1.0),
         ]
         scenario = _make_scenario(rules=rules)
         sm = StateManager(tmp_path / "test.db", agents=ten_agents)
@@ -235,9 +237,7 @@ class TestApplySeedExposures:
     def test_probabilistic_exposure(self, tmp_path, ten_agents):
         """prob=0.5, seeded rng → deterministic subset."""
         rules = [
-            ExposureRule(
-                channel="broadcast", timestep=0, when="true", probability=0.5
-            ),
+            ExposureRule(channel="broadcast", timestep=0, when="true", probability=0.5),
         ]
         scenario = _make_scenario(rules=rules)
         sm = StateManager(tmp_path / "test.db", agents=ten_agents)
@@ -268,9 +268,7 @@ class TestApplySeedExposures:
         rules = [
             ExposureRule(channel="email", timestep=0, when="true", probability=1.0),
         ]
-        scenario = _make_scenario(
-            rules=rules, channels=channels, event_credibility=0.9
-        )
+        scenario = _make_scenario(rules=rules, channels=channels, event_credibility=0.9)
         sm = StateManager(tmp_path / "test.db", agents=agents)
 
         apply_seed_exposures(0, scenario, agents, sm, rng)
@@ -543,7 +541,9 @@ class TestPropagateNetwork:
         assert state.exposures[0].channel == "network"
         assert state.exposures[0].source_agent_id == "a0"
 
-    def test_already_aware_still_gets_exposure(self, tmp_path, ten_agents, linear_network):
+    def test_already_aware_still_gets_exposure(
+        self, tmp_path, ten_agents, linear_network
+    ):
         """Already-aware agents still receive new exposures (multi-touch)."""
         scenario = _make_scenario(share_probability=1.0)
         sm = StateManager(tmp_path / "test.db", agents=ten_agents)

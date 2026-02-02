@@ -153,8 +153,11 @@ class TestGetAgentsToReason:
         state_mgr.update_agent_state(
             "a0",
             AgentState(
-                agent_id="a0", aware=True, position="adopt",
-                sentiment=0.5, conviction=0.5,
+                agent_id="a0",
+                aware=True,
+                position="adopt",
+                sentiment=0.5,
+                conviction=0.5,
             ),
             timestep=0,
         )
@@ -172,8 +175,11 @@ class TestGetAgentsToReason:
         state_mgr.update_agent_state(
             "a0",
             AgentState(
-                agent_id="a0", aware=True, position="adopt",
-                sentiment=0.5, conviction=0.5,
+                agent_id="a0",
+                aware=True,
+                position="adopt",
+                sentiment=0.5,
+                conviction=0.5,
             ),
             timestep=0,
         )
@@ -192,8 +198,11 @@ class TestGetAgentsToReason:
         state_mgr.update_agent_state(
             "a0",
             AgentState(
-                agent_id="a0", aware=True, position="adopt",
-                sentiment=0.5, conviction=0.5,
+                agent_id="a0",
+                aware=True,
+                position="adopt",
+                sentiment=0.5,
+                conviction=0.5,
             ),
             timestep=0,
         )
@@ -211,8 +220,11 @@ class TestGetAgentsToReason:
         state_mgr.update_agent_state(
             "a0",
             AgentState(
-                agent_id="a0", aware=True, position="adopt",
-                sentiment=0.5, conviction=0.5,
+                agent_id="a0",
+                aware=True,
+                position="adopt",
+                sentiment=0.5,
+                conviction=0.5,
             ),
             timestep=5,
         )
@@ -229,8 +241,13 @@ class TestGetAgentsToReason:
         state_mgr.record_exposure("a1", _make_exposure(timestep=0))
         state_mgr.update_agent_state(
             "a1",
-            AgentState(agent_id="a1", aware=True, position="adopt",
-                       sentiment=0.5, conviction=0.5),
+            AgentState(
+                agent_id="a1",
+                aware=True,
+                position="adopt",
+                sentiment=0.5,
+                conviction=0.5,
+            ),
             timestep=0,
         )
         for t in range(1, 4):
@@ -241,8 +258,13 @@ class TestGetAgentsToReason:
         state_mgr.record_exposure("a3", _make_exposure(timestep=0))
         state_mgr.update_agent_state(
             "a3",
-            AgentState(agent_id="a3", aware=True, position="reject",
-                       sentiment=-0.3, conviction=0.7),
+            AgentState(
+                agent_id="a3",
+                aware=True,
+                position="reject",
+                sentiment=-0.3,
+                conviction=0.7,
+            ),
             timestep=0,
         )
         state_mgr.record_exposure("a3", _make_exposure(timestep=1))

@@ -67,7 +67,7 @@ def float_to_conviction(value: float | None) -> str | None:
         return None
     # Find nearest level
     closest = min(CONVICTION_MAP.items(), key=lambda x: abs(x[1] - value))
-    return closest[0]
+    return closest[0].value
 
 
 def score_to_conviction_float(score: int | float | None) -> float | None:
