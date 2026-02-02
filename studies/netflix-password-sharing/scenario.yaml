@@ -1,0 +1,199 @@
+meta:
+  name: netflix_announces_enforcement_of
+  description: 'Netflix announces enforcement of password-sharing rules: users must
+    pay .99/month extra per shared member outside household or stop sharing'
+  population_spec: studies/netflix-password-sharing/population.yaml
+  agents_file: studies/netflix-password-sharing/agents.json
+  network_file: studies/netflix-password-sharing/network.json
+  created_at: '2026-02-02T15:05:10.271096'
+event:
+  type: announcement
+  content: 'Netflix announces enforcement of password-sharing rules: users must pay
+    $7.99/month extra per shared member outside household or stop sharing. This policy
+    applies to all Netflix subscribers who currently share their account credentials
+    with people who do not live in the same household. Subscribers will need to either
+    add these outside-household members as paid "extra members" at $7.99 per month
+    each, or remove their access to the account. The enforcement will require account
+    holders to verify which devices are part of their household.'
+  source: Netflix
+  credibility: 0.95
+  ambiguity: 0.15
+  emotional_valence: -0.7
+seed_exposure:
+  channels:
+  - name: official_netflix_notification
+    description: Direct email and in-app notification from Netflix to subscribers
+      about password-sharing enforcement
+    reach: broadcast
+    credibility_modifier: 1.25
+  - name: tech_news_media
+    description: Coverage in technology news outlets, streaming industry publications,
+      and general news media
+    reach: broadcast
+    credibility_modifier: 1.15
+  - name: social_media_discussion
+    description: Discussion and sharing on social media platforms like Twitter, Reddit,
+      Facebook about the Netflix policy
+    reach: organic
+    credibility_modifier: 0.85
+  - name: word_of_mouth
+    description: Informal conversations with friends, family, and sharing buddies
+      about the policy change
+    reach: organic
+    credibility_modifier: 0.9
+  rules:
+  - channel: official_netflix_notification
+    when: received_notification == True and sharing_account_ownership == True
+    probability: 0.95
+    timestep: 0
+  - channel: official_netflix_notification
+    when: received_notification == True and sharing_account_ownership == False
+    probability: 0.7
+    timestep: 0
+  - channel: official_netflix_notification
+    when: received_notification == False and sharing_account_ownership == True
+    probability: 0.4
+    timestep: 1
+  - channel: tech_news_media
+    when: age < 45 and tech_savviness == 'high'
+    probability: 0.75
+    timestep: 0
+  - channel: tech_news_media
+    when: age >= 45 and tech_savviness == 'high'
+    probability: 0.6
+    timestep: 0
+  - channel: tech_news_media
+    when: tech_savviness == 'medium' and weekly_viewing_hours > 10
+    probability: 0.45
+    timestep: 1
+  - channel: tech_news_media
+    when: awareness_of_sharing_policy == 'well_aware'
+    probability: 0.55
+    timestep: 0
+  - channel: social_media_discussion
+    when: age < 35 and extraversion > 0.6
+    probability: 0.65
+    timestep: 1
+  - channel: social_media_discussion
+    when: age >= 35 and age < 50 and extraversion > 0.5
+    probability: 0.5
+    timestep: 1
+  - channel: social_media_discussion
+    when: emotional_reaction_intensity > 0.6
+    probability: 0.7
+    timestep: 1
+  - channel: social_media_discussion
+    when: price_sensitivity == 'high' and awareness_of_sharing_policy == 'vaguely_aware'
+    probability: 0.55
+    timestep: 2
+  - channel: word_of_mouth
+    when: contact_frequency_with_sharers == 'daily' or contact_frequency_with_sharers
+      == 'weekly'
+    probability: 0.6
+    timestep: 1
+  - channel: word_of_mouth
+    when: sharing_relationship == 'family' and agreeableness > 0.6
+    probability: 0.55
+    timestep: 2
+  - channel: word_of_mouth
+    when: num_people_sharing_with >= 3
+    probability: 0.5
+    timestep: 2
+  - channel: word_of_mouth
+    when: social_obligation_weight > 0.7
+    probability: 0.45
+    timestep: 2
+interaction:
+  primary_model: broadcast_response
+  secondary_model: direct_conversation
+  description: This is a corporate policy announcement that directly affects all 1000
+    Netflix subscribers in the population. The interaction follows a broadcast_response
+    pattern where Netflix makes an official announcement and subscribers react to
+    it, comparing their reactions and discussing options with their network. The secondary
+    direct_conversation model captures the important one-on-one discussions that will
+    happen between people who are currently sharing passwords (sharing buddies, close
+    family, close friends) as they need to coordinate decisions about whether to pay
+    extra, stop sharing, or find alternatives. These direct conversations will be
+    particularly important given the financial and relationship implications of the
+    decision.
+spread:
+  share_probability: 0.65
+  share_modifiers:
+  - when: num_people_sharing_with >= 2
+    multiply: 1.4
+    add: 0.0
+  - when: emotional_reaction_intensity > 0.7
+    multiply: 1.3
+    add: 0.0
+  - when: price_sensitivity == 'high'
+    multiply: 1.35
+    add: 0.0
+  - when: edge_type == 'sharing_buddy'
+    multiply: 2.5
+    add: 0.15
+  - when: edge_type == 'close_family'
+    multiply: 2.0
+    add: 0.1
+  - when: edge_type == 'close_friend'
+    multiply: 1.6
+    add: 0.05
+  - when: willingness_to_pay_extra == 'unwilling'
+    multiply: 1.4
+    add: 0.0
+  - when: perceived_fairness_of_policy == 'unfair'
+    multiply: 1.3
+    add: 0.0
+  - when: extraversion > 0.7
+    multiply: 1.2
+    add: 0.0
+  - when: age < 35
+    multiply: 1.2
+    add: 0.0
+  - when: household_income < 50000
+    multiply: 1.25
+    add: 0.0
+  - when: neuroticism > 0.7
+    multiply: 1.15
+    add: 0.0
+  - when: brand_loyalty_to_netflix < 0.3
+    multiply: 1.2
+    add: 0.0
+  - when: past_cancellation_history > 0
+    multiply: 1.25
+    add: 0.0
+  - when: social_obligation_weight > 0.7
+    multiply: 1.2
+    add: 0.0
+  decay_per_hop: 0.08
+  max_hops: 5
+outcomes:
+  suggested_outcomes:
+  - name: password_sharing_response
+    type: categorical
+    description: How Netflix subscribers respond to enforcement of password-sharing
+      restrictions—their chosen behavioral action regarding paid extra members, account
+      sharing, or subscription status
+    options:
+    - pay_for_extra_members
+    - remove_shared_access
+    - cancel_or_downgrade_subscription
+    - switch_to_competitor_service
+    range: null
+    required: true
+  - name: sentiment
+    type: float
+    description: Overall sentiment toward the event (-1 very negative to 1 very positive)
+    options: null
+    range:
+    - -1.0
+    - 1.0
+    required: true
+  capture_full_reasoning: true
+  extraction_instructions: null
+  decision_relevant_attributes: []
+simulation:
+  max_timesteps: 100
+  timestep_unit: hour
+  stop_conditions:
+  - exposure_rate > 0.95 and no_state_changes_for > 10
+  seed: null

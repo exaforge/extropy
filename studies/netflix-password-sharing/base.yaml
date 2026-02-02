@@ -1,0 +1,1817 @@
+meta:
+  description: 1000 US Netflix subscribers who currently share their password with
+    people outside their household
+  size: 1000
+  geography: US
+  created_at: '2026-02-01T19:22:54.549557'
+  version: '1.0'
+  persona_template: null
+  scenario_description: null
+grounding:
+  overall: medium
+  sources_count: 105
+  strong_count: 6
+  medium_count: 21
+  low_count: 8
+  sources:
+  - https://www.netflix.com/signup
+  - https://www.census.gov/topics/education/educational-attainment/data/tables.html
+  - https://bitwarden.com/resources/world-password-day/
+  - https://www.cnbc.com/2023/06/09/netflix-subscriptions-rise-password-sharing-crackdown.html
+  - https://nerdist.com/article/netflix-stopping-password-sharing-with-price-increases/
+  - https://www.g2a.com/news/features/netflix-plans-comparison-which-subscription-is-right-for-you/
+  - https://www.howtogeek.com/bitwarden-world-password-day/
+  - https://www.quickanddirtytips.com/articles/netflix-hacks-why-most-users-pay-more-than-they-should/
+  - https://bjs.ojp.gov/content/pub/pdf/cusrancvs.pdf
+  - https://market.us/statistics/online-video-and-streaming-sites/netflix/
+  - https://www.census.gov/data/tables/2023/demo/families/cps-2023.html
+  - https://www.census.gov/library/visualizations/interactive/marital-status-in-united-states.html
+  - https://www.indiewire.com/news/analysis/10-percent-netflix-users-still-borrowing-passwords-1234967098/
+  - https://www.bls.gov/news.release/famee.t05.htm
+  - https://www.bloggersideas.com/netflix-statistics/
+  - https://www.infosecurity-magazine.com/next-gen-infosec/password-habits-differ-generations/
+  - https://www.statista.com/chart/27333/netflix-password-sharing/
+  - https://usafacts.org/articles/state-relationships-marriages-and-living-alone-us/
+  - https://businessmodelanalyst.com/netflix-target-market/
+  - https://worldpopulationreview.com/states
+  - https://www.census.gov/newsroom/press-releases/2025/families-and-living-arrangements.html
+  - https://www.census.gov/data/tables/time-series/demo/popest/2020s-state-total.html
+  - https://electroiq.com/stats/netflix-statistics/
+  - https://www.cnn.com/2024/04/18/business/netflix-earnings-first-quarter
+  - https://www.huduser.gov/portal/pdredge/pdr-edge-frm-asst-sec-080320.html
+  - https://www.statista.com/statistics/742108/netflix-subscription-adults-usa-by-age/
+  - https://www.census.gov/topics/families/families-and-households.html
+  - https://www.statista.com/statistics/698020/netflix-subscription-by-age/
+  - https://nofilmschool.com/netflix-tier-limits-access
+  - https://www.start.io/blog/netflix-target-market-consumer-segmentation-the-complete-brand-analysis/
+  - https://www.androidauthority.com/netflix-standard-vs-premium-3282785/
+  - https://www.bgsu.edu/ncfmr/resources/data/family-profiles/FP-24-10.html
+  - https://www.bgsu.edu/ncfmr/resources/data/family-profiles/marital-status-distribution-of-u-s--adults-aged-65-and-older--19.html
+  - https://vpnalert.com/resources/netflix-statistics/
+  - https://www.statista.com/statistics/183497/population-in-the-federal-states-of-the-us/
+  - https://www.statista.com/statistics/184259/mean-earnings-by-educational-attainment-and-ethnic-group/
+  - https://fred.stlouisfed.org/release/tables?eid=1197546&rid=50
+  - https://www.animenewsnetwork.com/news/2024-04-19/netflix-adds-9.3-million-subscribers-in-1st-quarter-2024-co-ceo-states-password-sharing-policy-has-/.210006
+  - https://www.census.gov/library/stories/2025/09/education-and-income.html
+  - https://help.netflix.com/en/node/24926
+  - https://populationeducation.org/how-to-understand-the-urban-rural-population-split-in-the-u-s/
+  - https://datacenter.aecf.org/data/tables/4404-income--median-earnings-for-population-age-25-and-over-by-educational-attainment
+  - https://www.statista.com/statistics/233301/median-household-income-in-the-united-states-by-education/
+  - https://greenlitcontent.com/comparison/netflix-plans-and-pricing-compared
+  - https://bitwarden.com/blog/a-closer-look-at-password-statistics/
+  - https://www.wallstreetzen.com/stocks/us/nasdaq/nflx/statistics
+  - https://financesonline.com/number-of-netflix-subscribers/
+  - https://www2.census.gov/library/publications/2024/demo/p20-587.pdf
+  - https://pro.morningconsult.com/analysis/streaming-account-sharing-gen-z
+  - https://www.bls.gov/emp/chart-unemployment-earnings-education.htm
+  - https://geonode.com/blog/password-security-habits-generational-comparison
+  - https://www.viaccess-orca.com/blog/how-you-can-reproduce-the-massive-success-of-netflixs-password-sharing-crackdown
+  - https://truelist.co/blog/netflix-statistics/
+  - https://financesonline.com/netflix-statistics/
+  - https://statisticalatlas.com/United-States/Marital-Status
+  - https://www.techadvisor.com/article/740349/which-netflix-plan-is-right-for-you.html
+  - https://www.gamsgo.com/blog/netflix-standard-vs-premium
+  - https://www.census.gov/topics/families/marriage-and-divorce.html
+  - https://www.statista.com/statistics/183648/average-size-of-households-in-the-us/
+  - https://www.statista.com/statistics/985183/size-urban-rural-population-us/
+  - https://www.oliverwymanforum.com/gen-z/2023/aug/how-gen-z-uses-social-media-is-causing-a-data-privacy-paradox.html
+  - https://www.spglobal.com/market-intelligence/en/news-insights/research/how-widespread-is-netflix-password-sharing
+  - https://www.demandsage.com/netflix-subscribers/
+  - https://www.antenna.live/insights/a-first-look-at-the-impact-of-netflixs-password-sharing-crackdown
+  - https://avada.io/blog/netflix-statistics/
+  - https://en.wikipedia.org/wiki/List_of_U.S._states_and_territories_by_population
+  - https://www.census.gov/newsroom/press-releases/2024/families-and-living-arrangements.html
+  - https://www.inc.com/kit-eaton/netflixs-subscriber-numbers-soar-after-its-password-sharing-crackdown-but-what-next.html
+  - https://www.census.gov/programs-surveys/geography/guidance/geo-areas/urban-rural.html
+  - https://www.kaggle.com/datasets/dataanalyst001/us-states-ranked-by-population-2024
+  - https://www.census.gov/newsroom/press-releases/2024/families-living-arrangements.html
+  - https://www.digitaltrends.com/movies/netflix-cost-pricing-plan-breakdown/
+  - https://www.iowadatacenter.org/index.php/blog/httpswwwiowadatacenterorgindexphpblog2023-annual-state-population-estimates
+  - https://www.cabletv.com/netflix
+  - https://www.census.gov/popclock/
+  - https://www.techtimes.com/articles/306757/20240719/netflix-s-password-sharing-crackdown-hinders-platform-growthshould-allowed-again.htm
+  - https://evoca.tv/netflix-user-statistics/
+  - https://data.census.gov/table/ACSST1Y2024.S1101?q=Household+Size+and+Type&g=040XX00US11_010XX00US
+  - https://www.statista.com/statistics/1488093/consumer-response-netflix-password-sharing-crackdown-us/
+  - https://nces.ed.gov/programs/coe/indicator/cba/annual-earnings
+  - https://www.census.gov/newsroom/press-releases/2022/urban-rural-populations.html
+  - https://www.npr.org/2024/07/19/nx-s1-5046733/netflix-ends-its-cheapest-ad-free-subscription
+  - https://nces.ed.gov/programs/coe/pdf/2024/cba_508c.pdf
+  - https://www.cinemablend.com/streaming-news/netflix-subscription-the-plans-the-price-and-whats-included
+  - https://www.bls.gov/opub/mlr/2024/article/patterns-of-marriage-and-divorce-from-ages-15-to-55-evidence-from-the-nlsy79.htm
+  - https://www.morningstar.com/news/business-wire/20250423085569/gen-zs-password-fatigue-finds-72-of-digital-natives-reuse-the-same-password-across-accounts
+  - https://fred.stlouisfed.org/release/tables?eid=259194&rid=118
+  - https://www.census.gov/data/tables/time-series/demo/families/marital.html
+  - https://medium.com/pew-research-center-decoded/evaluating-what-makes-a-u-s-community-urban-suburban-or-rural-159f9d082842
+  - https://www.streamtvinsider.com/video/netflix-password-sharing-crackdown-paying-us-10-still-share
+  - https://pac.org/impact/rural-americans-vs-urban-americans
+  - https://thestreamable.com/what-are-netflix-subscription-tiers-price-features-content
+  - https://www.statsamerica.org/sip/rank_list.aspx?rank_label=pop1
+  - https://www.nlc.org/article/2025/04/28/urban-and-rural-everything-in-between-and-why-it-matters/
+  - https://www.ssa.gov/policy/docs/population-profiles/marital-status-poverty.html
+  - https://www.statista.com/statistics/242189/disitribution-of-households-in-the-us-by-household-size/
+  - https://dqydj.com/income-by-education/
+  - https://www.gamsgo.com/blog/netflix-prices
+  - https://www.pewresearch.org/social-trends/2018/05/22/demographic-and-economic-trends-in-urban-suburban-and-rural-communities/
+  - https://www.businesswire.com/news/home/20250423085569/en/Gen-Zs-Password-Fatigue-Finds-72-of-Digital-Natives-Reuse-the-Same-Password-Across-Accounts
+  - https://proximityone.com/statepop2025.htm
+  - https://content.govdelivery.com/accounts/USCENSUS/bulletins/3c16e18
+  - https://99firms.com/research/netflix-statistics/
+  - https://www.silicon.co.uk/press-release/gen-zs-password-fatigue-finds-72-of-digital-natives-reuse-the-same-password-across-accounts
+  - https://www.tomsguide.com/news/netflix-pricing
+attributes:
+- name: age
+  type: int
+  category: universal
+  description: Age of the subscriber in years
+  sampling:
+    strategy: independent
+    distribution:
+      type: normal
+      mean: 32.0
+      std: 10.0
+      min: 18.0
+      max: 75.0
+      mean_formula: null
+      std_formula: null
+      min_formula: null
+      max_formula: null
+    formula: null
+    depends_on: []
+    modifiers: []
+  grounding:
+    level: strong
+    method: researched
+    source: https://financesonline.com/number-of-netflix-subscribers/
+    note: Password sharing is most common among younger generations. Gen Z (70% subscription
+      rate) and Millennials (10% share passwords) dominate. Research shows 75% of
+      18-34 year-olds subscribe to Netflix, and younger users (18-34) account for
+      60% of all borrowed DTC services. Centered distribution on late millennials/early
+      Gen Z (mean 32) who are most likely to share.
+  constraints:
+  - type: hard_min
+    value: 18.0
+    expression: null
+    reason: Legal age for contracts and Netflix subscriptions
+  - type: hard_max
+    value: 80.0
+    expression: null
+    reason: Upper bound for typical Netflix users who share passwords
+- name: gender
+  type: categorical
+  category: universal
+  description: Gender identity of the subscriber
+  sampling:
+    strategy: independent
+    distribution:
+      type: categorical
+      options:
+      - female
+      - male
+      - non_binary
+      - prefer_not_to_say
+      weights:
+      - 0.52
+      - 0.46
+      - 0.015
+      - 0.005
+    formula: null
+    depends_on: []
+    modifiers: []
+  grounding:
+    level: medium
+    method: researched
+    source: https://www.demandsage.com/netflix-subscribers/
+    note: Netflix demographics show 51% female, 49% male subscribers. Applied slight
+      female skew (52/46) with small percentages for non-binary and prefer not to
+      say based on general US population surveys showing ~1.5-2% non-binary identification
+      among younger adults.
+  constraints:
+  - type: spec_expression
+    value: null
+    expression: sum(weights)==1
+    reason: Weights must sum to 1 for categorical distribution
+- name: state
+  type: categorical
+  category: universal
+  description: US state where the subscriber resides
+  sampling:
+    strategy: independent
+    distribution:
+      type: categorical
+      options:
+      - CA
+      - TX
+      - FL
+      - NY
+      - PA
+      - IL
+      - OH
+      - GA
+      - NC
+      - MI
+      - NJ
+      - VA
+      - WA
+      - AZ
+      - MA
+      - TN
+      - IN
+      - MO
+      - MD
+      - WI
+      - CO
+      - MN
+      - SC
+      - AL
+      - LA
+      - KY
+      - OR
+      - OK
+      - CT
+      - UT
+      - IA
+      - NV
+      - AR
+      - MS
+      - KS
+      - NM
+      - NE
+      - ID
+      - WV
+      - HI
+      - NH
+      - ME
+      - MT
+      - RI
+      - DE
+      - SD
+      - ND
+      - AK
+      - VT
+      - WY
+      weights:
+      - 0.118
+      - 0.09
+      - 0.066
+      - 0.058
+      - 0.038
+      - 0.038
+      - 0.035
+      - 0.033
+      - 0.032
+      - 0.03
+      - 0.028
+      - 0.027
+      - 0.024
+      - 0.022
+      - 0.021
+      - 0.021
+      - 0.02
+      - 0.018
+      - 0.018
+      - 0.018
+      - 0.018
+      - 0.017
+      - 0.016
+      - 0.015
+      - 0.014
+      - 0.013
+      - 0.013
+      - 0.012
+      - 0.011
+      - 0.01
+      - 0.01
+      - 0.009
+      - 0.009
+      - 0.009
+      - 0.009
+      - 0.006
+      - 0.006
+      - 0.006
+      - 0.005
+      - 0.004
+      - 0.004
+      - 0.004
+      - 0.003
+      - 0.003
+      - 0.003
+      - 0.003
+      - 0.002
+      - 0.002
+      - 0.002
+      - 0.002
+    formula: null
+    depends_on: []
+    modifiers: []
+  grounding:
+    level: strong
+    method: researched
+    source: https://www.census.gov/data/tables/time-series/demo/popest/2020s-state-total.html
+    note: Based on 2024 US Census population estimates by state. California has highest
+      population (39.4M), followed by Texas (30M+), Florida, New York, etc. Weights
+      proportional to state populations, which correlates with Netflix subscriber
+      distribution.
+  constraints:
+  - type: spec_expression
+    value: null
+    expression: abs(sum(weights)-1)<0.001
+    reason: Weights must sum to 1 for categorical distribution
+- name: urban_rural
+  type: categorical
+  category: universal
+  description: Whether subscriber lives in urban, suburban, or rural area
+  sampling:
+    strategy: independent
+    distribution:
+      type: categorical
+      options:
+      - urban
+      - suburban
+      - rural
+      weights:
+      - 0.28
+      - 0.58
+      - 0.14
+    formula: null
+    depends_on: []
+    modifiers: []
+  grounding:
+    level: strong
+    method: researched
+    source: https://www.pewresearch.org/social-trends/2018/05/22/demographic-and-economic-trends-in-urban-suburban-and-rural-communities/
+    note: 'Pew Research and American Housing Survey show ~31% urban, 55% suburban,
+      14% rural based on self-identification. Netflix users skew slightly more urban
+      than general population. Distribution: 28% urban (younger demographics concentrated
+      in cities), 58% suburban (majority of Americans), 14% rural.'
+  constraints:
+  - type: spec_expression
+    value: null
+    expression: sum(weights)==1
+    reason: Weights must sum to 1 for categorical distribution
+- name: education_level
+  type: categorical
+  category: universal
+  description: Highest level of education completed
+  sampling:
+    strategy: independent
+    distribution:
+      type: categorical
+      options:
+      - high_school_or_less
+      - some_college
+      - bachelors_degree
+      - graduate_degree
+      weights:
+      - 0.3
+      - 0.38
+      - 0.24
+      - 0.08
+    formula: null
+    depends_on: []
+    modifiers: []
+  grounding:
+    level: strong
+    method: researched
+    source: https://truelist.co/blog/netflix-statistics/
+    note: 'Netflix demographics show 68% have some or no college education, only 33%
+      have bachelor''s degree or higher. Password sharers skew younger (less likely
+      to have completed degrees). Distribution: 30% high school or less, 38% some
+      college, 24% bachelor''s, 8% graduate degree.'
+  constraints:
+  - type: spec_expression
+    value: null
+    expression: sum(weights)==1
+    reason: Weights must sum to 1 for categorical distribution
+- name: employment_status
+  type: categorical
+  category: universal
+  description: Current employment situation (employed, unemployed, student, retired)
+  sampling:
+    strategy: independent
+    distribution:
+      type: categorical
+      options:
+      - employed
+      - unemployed
+      - student
+      - retired
+      weights:
+      - 0.68
+      - 0.08
+      - 0.21
+      - 0.03
+    formula: null
+    depends_on: []
+    modifiers: []
+  grounding:
+    level: medium
+    method: extrapolated
+    source: https://financesonline.com/number-of-netflix-subscribers/
+    note: 'Password sharers skew young (18-34), suggesting higher student percentage
+      than general population. Estimated: 68% employed (working age population), 8%
+      unemployed (slightly above national average for younger cohort), 21% students
+      (high representation of college-age Gen Z), 3% retired (minimal among young
+      password sharers).'
+  constraints:
+  - type: spec_expression
+    value: null
+    expression: sum(weights)==1
+    reason: Weights must sum to 1 for categorical distribution
+- name: netflix_tenure_months
+  type: int
+  category: population_specific
+  description: How many months subscriber has had Netflix continuously
+  sampling:
+    strategy: independent
+    distribution:
+      type: lognormal
+      mean: 36.0
+      std: 24.0
+      min: 3.0
+      max: 180.0
+      mean_formula: null
+      std_formula: null
+      min_formula: null
+      max_formula: null
+    formula: null
+    depends_on: []
+    modifiers: []
+  grounding:
+    level: medium
+    method: estimated
+    source: null
+    note: 'No specific data on password sharer tenure. Lognormal distribution accounts
+      for: many recent subscribers (younger users), some long-term subscribers, right-skewed
+      pattern. Mean 36 months (3 years) reflects mix of newer Gen Z users and established
+      Millennial subscribers. Netflix crackdown started 2023, so current sharers likely
+      joined before that.'
+  constraints:
+  - type: hard_min
+    value: 1.0
+    expression: null
+    reason: Minimum one month subscription to establish password sharing
+  - type: hard_max
+    value: 200.0
+    expression: null
+    reason: Netflix streaming launched broadly 2007-2010, max ~15 years
+- name: content_preference
+  type: categorical
+  category: population_specific
+  description: Primary genre preference (drama, comedy, documentary, reality, action,
+    other)
+  sampling:
+    strategy: independent
+    distribution:
+      type: categorical
+      options:
+      - drama
+      - comedy
+      - documentary
+      - reality
+      - action
+      - other
+      weights:
+      - 0.26
+      - 0.24
+      - 0.1
+      - 0.14
+      - 0.18
+      - 0.08
+    formula: null
+    depends_on: []
+    modifiers: []
+  grounding:
+    level: low
+    method: estimated
+    source: null
+    note: No specific data on password sharer content preferences. Based on general
+      Netflix viewing patterns and younger demographic preferences. Drama and comedy
+      most popular (26%, 24%), action appeals to younger viewers (18%), reality TV
+      popular with millennials/Gen Z (14%), documentary smaller niche (10%), other
+      genres (8%).
+  constraints:
+  - type: spec_expression
+    value: null
+    expression: sum(weights)==1
+    reason: Weights must sum to 1 for categorical distribution
+- name: awareness_of_sharing_policy
+  type: categorical
+  category: population_specific
+  description: How aware subscriber is of Netflix crackdown (unaware, vaguely_aware,
+    well_aware)
+  sampling:
+    strategy: independent
+    distribution:
+      type: categorical
+      options:
+      - unaware
+      - vaguely_aware
+      - well_aware
+      weights:
+      - 0.15
+      - 0.45
+      - 0.4
+    formula: null
+    depends_on: []
+    modifiers: []
+  grounding:
+    level: medium
+    method: extrapolated
+    source: https://www.statista.com/statistics/1488093/consumer-response-netflix-password-sharing-crackdown-us/
+    note: 'Netflix crackdown widely publicized since 2023. Most current sharers are
+      aware but continue anyway. Estimated: 15% unaware (not following news), 45%
+      vaguely aware (heard something but unclear on details), 40% well aware (know
+      policy but share anyway). Those still sharing in 2026 likely aware but unconcerned.'
+  constraints:
+  - type: spec_expression
+    value: null
+    expression: sum(weights)==1
+    reason: Weights must sum to 1 for categorical distribution
+- name: payment_method
+  type: categorical
+  category: population_specific
+  description: How subscriber pays for Netflix (credit_card, debit_card, gift_card,
+    through_partner)
+  sampling:
+    strategy: independent
+    distribution:
+      type: categorical
+      options:
+      - credit_card
+      - debit_card
+      - gift_card
+      - through_partner
+      weights:
+      - 0.48
+      - 0.35
+      - 0.08
+      - 0.09
+    formula: null
+    depends_on: []
+    modifiers: []
+  grounding:
+    level: low
+    method: estimated
+    source: null
+    note: 'No specific data on Netflix payment methods. Based on general US digital
+      payment trends for younger demographics: 48% credit card (most common for subscriptions),
+      35% debit card (popular with younger users without credit), 8% gift card (privacy-conscious
+      or no bank account), 9% through partner (bundled with mobile/ISP).'
+  constraints:
+  - type: spec_expression
+    value: null
+    expression: sum(weights)==1
+    reason: Weights must sum to 1 for categorical distribution
+- name: who_initiated_sharing
+  type: categorical
+  category: population_specific
+  description: Who initiated the password sharing arrangement (subscriber, recipient,
+    mutual)
+  sampling:
+    strategy: independent
+    distribution:
+      type: categorical
+      options:
+      - subscriber
+      - recipient
+      - mutual
+      weights:
+      - 0.42
+      - 0.38
+      - 0.2
+    formula: null
+    depends_on: []
+    modifiers: []
+  grounding:
+    level: low
+    method: estimated
+    source: null
+    note: 'No specific research on initiation of password sharing. Estimated based
+      on social dynamics: 42% subscriber initiated (offering to help friend/family),
+      38% recipient asked (needed access), 20% mutual agreement (reciprocal arrangement
+      or shared cost). Distribution reflects both generous offers and requests for
+      access.'
+  constraints:
+  - type: spec_expression
+    value: null
+    expression: sum(weights)==1
+    reason: Weights must sum to 1 for categorical distribution
+- name: openness
+  type: float
+  category: personality
+  description: 'Big Five trait: openness to experience'
+  sampling:
+    strategy: independent
+    distribution:
+      type: normal
+      mean: 3.5
+      std: 0.7
+      min: 1.0
+      max: 5.0
+      mean_formula: null
+      std_formula: null
+      min_formula: null
+      max_formula: null
+    formula: null
+    depends_on: []
+    modifiers: []
+  grounding:
+    level: medium
+    method: extrapolated
+    source: null
+    note: Password sharers likely slightly above average openness (willingness to
+      bend rules, adopt new technologies, share resources). General population mean
+      ~3.0, password sharers estimated at 3.5 with SD 0.7 on standard 1-5 Big Five
+      scale. Reflects openness to alternative arrangements and tech-savviness.
+  constraints:
+  - type: hard_min
+    value: 1.0
+    expression: null
+    reason: Minimum score on 1-5 Big Five scale
+  - type: hard_max
+    value: 5.0
+    expression: null
+    reason: Maximum score on 1-5 Big Five scale
+- name: conscientiousness
+  type: float
+  category: personality
+  description: 'Big Five trait: conscientiousness and self-discipline'
+  sampling:
+    strategy: independent
+    distribution:
+      type: normal
+      mean: 2.9
+      std: 0.7
+      min: 1.0
+      max: 5.0
+      mean_formula: null
+      std_formula: null
+      min_formula: null
+      max_formula: null
+    formula: null
+    depends_on: []
+    modifiers: []
+  grounding:
+    level: medium
+    method: extrapolated
+    source: null
+    note: Password sharers likely slightly below average conscientiousness (less adherence
+      to formal rules/terms of service). General population mean ~3.0, password sharers
+      estimated at 2.9 with SD 0.7. Sharing passwords violates TOS, suggesting lower
+      emphasis on strict rule-following and organization.
+  constraints:
+  - type: hard_min
+    value: 1.0
+    expression: null
+    reason: Minimum score on 1-5 Big Five scale
+  - type: hard_max
+    value: 5.0
+    expression: null
+    reason: Maximum score on 1-5 Big Five scale
+- name: extraversion
+  type: float
+  category: personality
+  description: 'Big Five trait: extraversion and sociability'
+  sampling:
+    strategy: independent
+    distribution:
+      type: normal
+      mean: 3.3
+      std: 0.8
+      min: 1.0
+      max: 5.0
+      mean_formula: null
+      std_formula: null
+      min_formula: null
+      max_formula: null
+    formula: null
+    depends_on: []
+    modifiers: []
+  grounding:
+    level: medium
+    method: extrapolated
+    source: null
+    note: Password sharers may be slightly more extraverted (larger social networks,
+      more connections to share with). General population mean ~3.0, estimated at
+      3.3 with SD 0.8. Password sharing often involves social relationships and maintaining
+      connections, suggesting slightly elevated extraversion.
+  constraints:
+  - type: hard_min
+    value: 1.0
+    expression: null
+    reason: Minimum score on 1-5 Big Five scale
+  - type: hard_max
+    value: 5.0
+    expression: null
+    reason: Maximum score on 1-5 Big Five scale
+- name: agreeableness
+  type: float
+  category: personality
+  description: 'Big Five trait: agreeableness and cooperation'
+  sampling:
+    strategy: independent
+    distribution:
+      type: normal
+      mean: 3.6
+      std: 0.7
+      min: 1.0
+      max: 5.0
+      mean_formula: null
+      std_formula: null
+      min_formula: null
+      max_formula: null
+    formula: null
+    depends_on: []
+    modifiers: []
+  grounding:
+    level: medium
+    method: extrapolated
+    source: null
+    note: Password sharers likely higher agreeableness (helping others, cooperation,
+      sharing resources with friends/family). General population mean ~3.0, estimated
+      at 3.6 with SD 0.7. Sharing passwords is prosocial behavior indicating willingness
+      to help and cooperate.
+  constraints:
+  - type: hard_min
+    value: 1.0
+    expression: null
+    reason: Minimum score on 1-5 Big Five scale
+  - type: hard_max
+    value: 5.0
+    expression: null
+    reason: Maximum score on 1-5 Big Five scale
+- name: neuroticism
+  type: float
+  category: personality
+  description: 'Big Five trait: neuroticism and emotional stability'
+  sampling:
+    strategy: independent
+    distribution:
+      type: normal
+      mean: 3.0
+      std: 0.8
+      min: 1.0
+      max: 5.0
+      mean_formula: null
+      std_formula: null
+      min_formula: null
+      max_formula: null
+    formula: null
+    depends_on: []
+    modifiers: []
+  grounding:
+    level: low
+    method: estimated
+    source: null
+    note: No clear theoretical relationship between neuroticism and password sharing.
+      Using population average of 3.0 with SD 0.8 on standard Big Five scale. Password
+      sharing behavior doesn't clearly indicate higher or lower emotional stability.
+  constraints:
+  - type: hard_min
+    value: 1.0
+    expression: null
+    reason: Minimum score on 1-5 Big Five scale
+  - type: hard_max
+    value: 5.0
+    expression: null
+    reason: Maximum score on 1-5 Big Five scale
+- name: rule_following_tendency
+  type: float
+  category: personality
+  description: Tendency to follow rules and terms of service regardless of enforcement
+  sampling:
+    strategy: independent
+    distribution:
+      type: normal
+      mean: 2.6
+      std: 0.8
+      min: 1.0
+      max: 5.0
+      mean_formula: null
+      std_formula: null
+      min_formula: null
+      max_formula: null
+    formula: null
+    depends_on: []
+    modifiers: []
+  grounding:
+    level: medium
+    method: extrapolated
+    source: https://www.howtogeek.com/bitwarden-world-password-day/
+    note: Password sharers by definition violate Netflix TOS, indicating below-average
+      rule-following. Research shows 72% of Gen Z admit password reuse is risky but
+      do it anyway, showing awareness but low compliance. Estimated mean 2.6 (below
+      midpoint 3.0) with SD 0.8, reflecting population actively breaking platform
+      rules.
+  constraints:
+  - type: hard_min
+    value: 1.0
+    expression: null
+    reason: Minimum score on 1-5 tendency scale
+  - type: hard_max
+    value: 5.0
+    expression: null
+    reason: Maximum score on 1-5 tendency scale
+- name: financial_risk_tolerance
+  type: categorical
+  category: personality
+  description: Willingness to take financial risks (low, medium, high)
+  sampling:
+    strategy: independent
+    distribution:
+      type: categorical
+      options:
+      - low
+      - medium
+      - high
+      weights:
+      - 0.3
+      - 0.48
+      - 0.22
+    formula: null
+    depends_on: []
+    modifiers: []
+  grounding:
+    level: low
+    method: estimated
+    source: null
+    note: 'Password sharing involves minimal financial risk (potential account termination).
+      Estimated distribution: 30% low risk tolerance (cautious, worry about consequences),
+      48% medium (balanced approach, aware but willing to take small risks), 22% high
+      (unconcerned about potential penalties). Younger demographics typically show
+      higher risk tolerance.'
+  constraints:
+  - type: spec_expression
+    value: null
+    expression: sum(weights)==1
+    reason: Weights must sum to 1 for categorical distribution
+- name: social_obligation_weight
+  type: float
+  category: personality
+  description: How heavily subscriber weighs social obligations to people they share
+    with
+  sampling:
+    strategy: independent
+    distribution:
+      type: normal
+      mean: 3.7
+      std: 0.8
+      min: 1.0
+      max: 5.0
+      mean_formula: null
+      std_formula: null
+      min_formula: null
+      max_formula: null
+    formula: null
+    depends_on: []
+    modifiers: []
+  grounding:
+    level: medium
+    method: extrapolated
+    source: https://pro.morningconsult.com/analysis/streaming-account-sharing-gen-z
+    note: Password sharers likely feel strong social obligations to friends/family
+      they share with. Research shows Gen Z reluctant to stop sharing even facing
+      restrictions, suggesting high social obligation weight. Estimated mean 3.7 (above
+      midpoint) with SD 0.8, reflecting importance of maintaining sharing relationships
+      and helping others access content.
+  constraints:
+  - type: hard_min
+    value: 1.0
+    expression: null
+    reason: Minimum score on 1-5 weight scale
+  - type: hard_max
+    value: 5.0
+    expression: null
+    reason: Maximum score on 1-5 weight scale
+- name: household_income
+  type: int
+  category: universal
+  description: Annual household income in USD
+  sampling:
+    strategy: conditional
+    distribution:
+      type: normal
+      mean: 75000.0
+      std: 35000.0
+      min: 15000.0
+      max: 250000.0
+      mean_formula: null
+      std_formula: null
+      min_formula: null
+      max_formula: null
+    formula: null
+    depends_on:
+    - education_level
+    - employment_status
+    modifiers:
+    - when: education_level == 'graduate_degree'
+      multiply: 1.0
+      add: 0.0
+      weight_overrides: null
+      probability_override: null
+    - when: education_level == 'bachelors_degree'
+      multiply: 1.0
+      add: 0.0
+      weight_overrides: null
+      probability_override: null
+    - when: employment_status == 'employed'
+      multiply: 1.0
+      add: 0.0
+      weight_overrides: null
+      probability_override: null
+    - when: employment_status == 'student'
+      multiply: 0.85
+      add: -5000.0
+      weight_overrides: null
+      probability_override: null
+  grounding:
+    level: strong
+    method: researched
+    source: US Census Bureau 2024 data shows median household income of $85,580; bachelor's
+      degree households earn median $132,700 vs $58,410 for high school only
+    note: Base distribution centered lower than general population to reflect younger
+      Netflix sharers (avg age 32). Modifiers will adjust by education/employment.
+  constraints:
+  - type: hard_min
+    value: 15000.0
+    expression: null
+    reason: Minimum realistic household income for subscribers
+  - type: hard_max
+    value: 250000.0
+    expression: null
+    reason: Upper bound wider than observed data, accounting for high earners
+- name: marital_status
+  type: categorical
+  category: universal
+  description: Current marital or relationship status
+  sampling:
+    strategy: conditional
+    distribution:
+      type: categorical
+      options:
+      - single
+      - married
+      - divorced
+      - partnered
+      weights:
+      - 0.45
+      - 0.35
+      - 0.1
+      - 0.1
+    formula: null
+    depends_on:
+    - age
+    modifiers:
+    - when: age < 30
+      multiply: 1.0
+      add: 0.0
+      weight_overrides:
+        single: 0.65
+        married: 0.15
+        divorced: 0.02
+        partnered: 0.18
+      probability_override: null
+    - when: age >= 30 and age < 40
+      multiply: 1.0
+      add: 0.0
+      weight_overrides:
+        single: 0.35
+        married: 0.4
+        divorced: 0.05
+        partnered: 0.2
+      probability_override: null
+    - when: age >= 40
+      multiply: 1.0
+      add: 0.0
+      weight_overrides:
+        single: 0.2
+        married: 0.55
+        divorced: 0.15
+        partnered: 0.1
+      probability_override: null
+  grounding:
+    level: medium
+    method: researched
+    source: 'Census 2024: 34% never married, median first marriage age 30.2 (men)
+      and 28.6 (women); BLS 2024: by age 35, 20% never married'
+    note: Base weights reflect age 32 average. Higher single proportion than general
+      population given younger cohort sharing passwords. Age-based modifiers will
+      adjust.
+  constraints: []
+- name: household_size
+  type: int
+  category: universal
+  description: Number of people living in the household
+  sampling:
+    strategy: conditional
+    distribution:
+      type: normal
+      mean: 2.3
+      std: 1.1
+      min: 1.0
+      max: 8.0
+      mean_formula: null
+      std_formula: null
+      min_formula: null
+      max_formula: null
+    formula: null
+    depends_on:
+    - marital_status
+    - age
+    modifiers:
+    - when: marital_status == 'single'
+      multiply: 0.85
+      add: -0.3
+      weight_overrides: null
+      probability_override: null
+    - when: marital_status == 'married'
+      multiply: 1.15
+      add: 0.4
+      weight_overrides: null
+      probability_override: null
+    - when: age < 30
+      multiply: 0.9
+      add: -0.2
+      weight_overrides: null
+      probability_override: null
+  grounding:
+    level: strong
+    method: researched
+    source: 'US Census 2024: 34.59% of households are 2-person, 29% are single-person
+      households; average household size declining over time'
+    note: Base mean of 2.3 reflects typical US household. Marital status and age modifiers
+      will adjust upward for married/older individuals.
+  constraints:
+  - type: hard_min
+    value: 1.0
+    expression: null
+    reason: Minimum one person in household (the subscriber)
+  - type: hard_max
+    value: 8.0
+    expression: null
+    reason: Reasonable upper bound for household size
+- name: has_children
+  type: boolean
+  category: universal
+  description: Whether the subscriber has children
+  sampling:
+    strategy: conditional
+    distribution:
+      type: boolean
+      probability_true: 0.35
+    formula: null
+    depends_on:
+    - age
+    - marital_status
+    modifiers:
+    - when: age < 25
+      multiply: null
+      add: null
+      weight_overrides: null
+      probability_override: 0.1
+    - when: age >= 25 and age < 35
+      multiply: null
+      add: null
+      weight_overrides: null
+      probability_override: 0.35
+    - when: age >= 35 and age < 45
+      multiply: null
+      add: null
+      weight_overrides: null
+      probability_override: 0.6
+    - when: age >= 45
+      multiply: null
+      add: null
+      weight_overrides: null
+      probability_override: 0.55
+    - when: marital_status == 'married'
+      multiply: null
+      add: null
+      weight_overrides: null
+      probability_override: 0.65
+    - when: marital_status == 'single'
+      multiply: null
+      add: null
+      weight_overrides: null
+      probability_override: 0.2
+  grounding:
+    level: medium
+    method: researched
+    source: 'US Census 2024: 39% of families have children under 18; lower for age
+      32 cohort before typical child-rearing peak'
+    note: Base probability 35% reflects younger avg age (32). Age and marital status
+      modifiers will increase probability for older/married individuals.
+  constraints: []
+- name: netflix_subscription_type
+  type: categorical
+  category: population_specific
+  description: Current Netflix plan tier (Basic, Standard, Premium)
+  sampling:
+    strategy: conditional
+    distribution:
+      type: categorical
+      options:
+      - Standard_with_Ads
+      - Standard
+      - Premium
+      weights:
+      - 0.25
+      - 0.45
+      - 0.3
+    formula: null
+    depends_on:
+    - household_income
+    modifiers:
+    - when: household_income < 50000
+      multiply: 1.0
+      add: 0.0
+      weight_overrides:
+        Standard_with_Ads: 0.25
+        Standard: 0.55
+        Premium: 0.2
+      probability_override: null
+    - when: household_income >= 50000 and household_income < 100000
+      multiply: 1.0
+      add: 0.0
+      weight_overrides:
+        Standard_with_Ads: 0.15
+        Standard: 0.5
+        Premium: 0.35
+      probability_override: null
+    - when: household_income >= 100000
+      multiply: 1.0
+      add: 0.0
+      weight_overrides:
+        Standard_with_Ads: 0.08
+        Standard: 0.37
+        Premium: 0.55
+      probability_override: null
+  grounding:
+    level: medium
+    method: extrapolated
+    source: 'Netflix 2024: Basic plan discontinued, current tiers are Standard with
+      Ads ($6.99), Standard ($15.49-17.99), Premium ($22.99-24.99)'
+    note: Password sharers likely skew toward higher tiers (Standard/Premium) to enable
+      sharing. Base weights will be adjusted by household income in modifiers.
+  constraints: []
+- name: num_people_sharing_with
+  type: int
+  category: population_specific
+  description: Number of people outside household who use the account
+  sampling:
+    strategy: conditional
+    distribution:
+      type: normal
+      mean: 2.0
+      std: 1.0
+      min: 1.0
+      max: 6.0
+      mean_formula: null
+      std_formula: null
+      min_formula: null
+      max_formula: null
+    formula: null
+    depends_on:
+    - netflix_subscription_type
+    modifiers:
+    - when: netflix_subscription_type == 'Standard_with_Ads'
+      multiply: 0.75
+      add: -0.3
+      weight_overrides: null
+      probability_override: null
+    - when: netflix_subscription_type == 'Standard'
+      multiply: 1.0
+      add: 0.0
+      weight_overrides: null
+      probability_override: null
+    - when: netflix_subscription_type == 'Premium'
+      multiply: 1.25
+      add: 0.5
+      weight_overrides: null
+      probability_override: null
+  grounding:
+    level: medium
+    method: researched
+    source: 'Wedbush 2024 survey: over 1/3 of Netflix sharers share with 1-2 people;
+      Netflix 2022 estimated 100M households sharing passwords'
+    note: Base mean of 2 people reflects typical sharing pattern. Premium subscribers
+      can share more widely; modifier will adjust by subscription type.
+  constraints:
+  - type: hard_min
+    value: 1.0
+    expression: null
+    reason: Survey is of people who share with at least 1 person outside household
+  - type: hard_max
+    value: 6.0
+    expression: null
+    reason: Practical limit given device restrictions and sharing behavior
+- name: sharing_relationship
+  type: categorical
+  category: population_specific
+  description: Primary relationship to people sharing password (family, friends, ex-partner,
+    mix)
+  sampling:
+    strategy: conditional
+    distribution:
+      type: categorical
+      options:
+      - family
+      - friends
+      - ex_partner
+      - mix
+      weights:
+      - 0.5
+      - 0.3
+      - 0.05
+      - 0.15
+    formula: null
+    depends_on:
+    - age
+    modifiers:
+    - when: age < 30
+      multiply: 1.0
+      add: 0.0
+      weight_overrides:
+        family: 0.5
+        friends: 0.35
+        ex_partner: 0.03
+        mix: 0.12
+      probability_override: null
+    - when: age >= 30 and age < 45
+      multiply: 1.0
+      add: 0.0
+      weight_overrides:
+        family: 0.6
+        friends: 0.2
+        ex_partner: 0.05
+        mix: 0.15
+      probability_override: null
+    - when: age >= 45
+      multiply: 1.0
+      add: 0.0
+      weight_overrides:
+        family: 0.7
+        friends: 0.15
+        ex_partner: 0.02
+        mix: 0.13
+      probability_override: null
+  grounding:
+    level: low
+    method: estimated
+    source: null
+    note: No specific research found on sharing relationship types. Estimated that
+      family sharing is most common, followed by friends. Age modifiers will adjust
+      (younger→friends, older→family).
+  constraints: []
+- name: weekly_viewing_hours
+  type: float
+  category: population_specific
+  description: Average hours per week subscriber watches Netflix
+  sampling:
+    strategy: conditional
+    distribution:
+      type: normal
+      mean: 12.0
+      std: 6.0
+      min: 2.0
+      max: 50.0
+      mean_formula: null
+      std_formula: null
+      min_formula: null
+      max_formula: null
+    formula: null
+    depends_on:
+    - employment_status
+    modifiers:
+    - when: employment_status == 'employed'
+      multiply: 0.95
+      add: -1.0
+      weight_overrides: null
+      probability_override: null
+    - when: employment_status == 'unemployed'
+      multiply: 1.35
+      add: 3.5
+      weight_overrides: null
+      probability_override: null
+    - when: employment_status == 'student'
+      multiply: 1.15
+      add: 1.5
+      weight_overrides: null
+      probability_override: null
+    - when: employment_status == 'retired'
+      multiply: 1.25
+      add: 2.5
+      weight_overrides: null
+      probability_override: null
+  grounding:
+    level: medium
+    method: estimated
+    source: null
+    note: Based on general streaming consumption patterns. Employment status modifiers
+      will adjust (unemployed/retired higher, employed lower).
+  constraints:
+  - type: hard_min
+    value: 2.0
+    expression: null
+    reason: Minimum realistic usage for active subscribers who share
+  - type: hard_max
+    value: 50.0
+    expression: null
+    reason: Upper bound for heavy users (~7 hours/day)
+- name: num_streaming_services
+  type: int
+  category: population_specific
+  description: Total number of streaming services subscriber pays for
+  sampling:
+    strategy: conditional
+    distribution:
+      type: normal
+      mean: 3.5
+      std: 1.5
+      min: 1.0
+      max: 10.0
+      mean_formula: null
+      std_formula: null
+      min_formula: null
+      max_formula: null
+    formula: null
+    depends_on:
+    - household_income
+    modifiers:
+    - when: household_income < 50000
+      multiply: 0.85
+      add: -0.5
+      weight_overrides: null
+      probability_override: null
+    - when: household_income >= 50000 and household_income < 100000
+      multiply: 1.0
+      add: 0.0
+      weight_overrides: null
+      probability_override: null
+    - when: household_income >= 100000
+      multiply: 1.2
+      add: 0.8
+      weight_overrides: null
+      probability_override: null
+  grounding:
+    level: medium
+    method: estimated
+    source: null
+    note: Average US household subscribes to 3-4 streaming services. Household income
+      modifiers will adjust (higher income → more services).
+  constraints:
+  - type: hard_min
+    value: 1.0
+    expression: null
+    reason: At minimum they have Netflix
+  - type: hard_max
+    value: 10.0
+    expression: null
+    reason: Practical upper bound for number of paid subscriptions
+- name: streaming_budget_monthly
+  type: int
+  category: population_specific
+  description: Monthly budget in USD for all streaming services
+  sampling:
+    strategy: conditional
+    distribution:
+      type: normal
+      mean: 55.0
+      std: 25.0
+      min: 10.0
+      max: 200.0
+      mean_formula: null
+      std_formula: null
+      min_formula: null
+      max_formula: null
+    formula: null
+    depends_on:
+    - household_income
+    - num_streaming_services
+    modifiers:
+    - when: household_income < 50000
+      multiply: 0.8
+      add: -10.0
+      weight_overrides: null
+      probability_override: null
+    - when: household_income >= 50000 and household_income < 100000
+      multiply: 1.0
+      add: 0.0
+      weight_overrides: null
+      probability_override: null
+    - when: household_income >= 100000
+      multiply: 1.3
+      add: 15.0
+      weight_overrides: null
+      probability_override: null
+    - when: num_streaming_services >= 5
+      multiply: 1.25
+      add: 12.0
+      weight_overrides: null
+      probability_override: null
+    - when: num_streaming_services <= 2
+      multiply: 0.75
+      add: -8.0
+      weight_overrides: null
+      probability_override: null
+  grounding:
+    level: medium
+    method: estimated
+    source: null
+    note: Base mean ~$55 reflects 3-4 services at mixed tiers. Both household income
+      and num_streaming_services will influence via modifiers.
+  constraints:
+  - type: hard_min
+    value: 10.0
+    expression: null
+    reason: Minimum realistic spending (e.g., one ad-supported service)
+  - type: hard_max
+    value: 200.0
+    expression: null
+    reason: Upper bound for multiple premium subscriptions
+- name: price_sensitivity
+  type: categorical
+  category: population_specific
+  description: How sensitive subscriber is to price changes (low, medium, high)
+  sampling:
+    strategy: conditional
+    distribution:
+      type: categorical
+      options:
+      - low
+      - medium
+      - high
+      weights:
+      - 0.25
+      - 0.45
+      - 0.3
+    formula: null
+    depends_on:
+    - household_income
+    modifiers:
+    - when: household_income < 50000
+      multiply: 1.0
+      add: 0.0
+      weight_overrides:
+        low: 0.1
+        medium: 0.35
+        high: 0.55
+      probability_override: null
+    - when: household_income >= 50000 and household_income < 100000
+      multiply: 1.0
+      add: 0.0
+      weight_overrides:
+        low: 0.2
+        medium: 0.55
+        high: 0.25
+      probability_override: null
+    - when: household_income >= 100000
+      multiply: 1.0
+      add: 0.0
+      weight_overrides:
+        low: 0.45
+        medium: 0.4
+        high: 0.15
+      probability_override: null
+  grounding:
+    level: medium
+    method: estimated
+    source: null
+    note: Password sharers likely more price-sensitive than average. Base distribution
+      will be modulated by household income (lower income → higher sensitivity).
+  constraints: []
+- name: past_cancellation_history
+  type: int
+  category: population_specific
+  description: Number of times subscriber has cancelled and resubscribed to Netflix
+  sampling:
+    strategy: conditional
+    distribution:
+      type: normal
+      mean: 0.8
+      std: 1.0
+      min: 0.0
+      max: null
+      mean_formula: null
+      std_formula: null
+      min_formula: null
+      max_formula: max(0, netflix_tenure_months / 12)
+    formula: null
+    depends_on:
+    - netflix_tenure_months
+    modifiers:
+    - when: netflix_tenure_months < 12
+      multiply: 0.5
+      add: -0.3
+      weight_overrides: null
+      probability_override: null
+    - when: netflix_tenure_months >= 12 and netflix_tenure_months < 36
+      multiply: 0.9
+      add: -0.1
+      weight_overrides: null
+      probability_override: null
+    - when: netflix_tenure_months >= 36 and netflix_tenure_months < 60
+      multiply: 1.1
+      add: 0.2
+      weight_overrides: null
+      probability_override: null
+    - when: netflix_tenure_months >= 60
+      multiply: 1.3
+      add: 0.4
+      weight_overrides: null
+      probability_override: null
+  grounding:
+    level: low
+    method: estimated
+    source: null
+    note: Many subscribers never cancel. Base mean 0.8 suggests most have 0-1 cancellations.
+      Tenure modifiers will allow more cancellations for longer subscribers.
+  constraints:
+  - type: hard_min
+    value: 0.0
+    expression: null
+    reason: Cannot have negative cancellations
+  - type: expression
+    value: null
+    expression: past_cancellation_history <= netflix_tenure_months / 12
+    reason: Cannot cancel more times than years of tenure (assuming max 1 cancel/resubscribe
+      per year)
+- name: primary_device
+  type: categorical
+  category: population_specific
+  description: Main device used to watch Netflix (smart_tv, laptop, mobile, tablet,
+    game_console)
+  sampling:
+    strategy: conditional
+    distribution:
+      type: categorical
+      options:
+      - smart_tv
+      - laptop
+      - mobile
+      - tablet
+      - game_console
+      weights:
+      - 0.45
+      - 0.25
+      - 0.15
+      - 0.08
+      - 0.07
+    formula: null
+    depends_on:
+    - age
+    modifiers:
+    - when: age < 30
+      multiply: 1.0
+      add: 0.0
+      weight_overrides:
+        smart_tv: 0.25
+        laptop: 0.3
+        mobile: 0.3
+        tablet: 0.08
+        game_console: 0.07
+      probability_override: null
+    - when: age >= 30 and age < 50
+      multiply: 1.0
+      add: 0.0
+      weight_overrides:
+        smart_tv: 0.45
+        laptop: 0.25
+        mobile: 0.15
+        tablet: 0.1
+        game_console: 0.05
+      probability_override: null
+    - when: age >= 50
+      multiply: 1.0
+      add: 0.0
+      weight_overrides:
+        smart_tv: 0.6
+        laptop: 0.18
+        mobile: 0.08
+        tablet: 0.12
+        game_console: 0.02
+      probability_override: null
+  grounding:
+    level: medium
+    method: estimated
+    source: null
+    note: Smart TVs dominate streaming device usage. Age modifiers will adjust (younger→mobile/laptop,
+      older→smart_tv).
+  constraints: []
+- name: sharing_duration_months
+  type: int
+  category: population_specific
+  description: How long subscriber has been sharing password in months
+  sampling:
+    strategy: conditional
+    distribution:
+      type: normal
+      mean: 24.0
+      std: 18.0
+      min: 1.0
+      max: null
+      mean_formula: null
+      std_formula: null
+      min_formula: null
+      max_formula: netflix_tenure_months
+    formula: null
+    depends_on:
+    - netflix_tenure_months
+    modifiers:
+    - when: netflix_tenure_months < 12
+      multiply: 0.6
+      add: -5.0
+      weight_overrides: null
+      probability_override: null
+    - when: netflix_tenure_months >= 12 and netflix_tenure_months < 36
+      multiply: 0.85
+      add: -2.0
+      weight_overrides: null
+      probability_override: null
+    - when: netflix_tenure_months >= 36 and netflix_tenure_months < 60
+      multiply: 1.05
+      add: 1.0
+      weight_overrides: null
+      probability_override: null
+    - when: netflix_tenure_months >= 60
+      multiply: 1.15
+      add: 3.0
+      weight_overrides: null
+      probability_override: null
+  grounding:
+    level: low
+    method: estimated
+    source: null
+    note: Estimated that sharing starts relatively early in subscription. Base mean
+      24 months with tenure modifiers to ensure sharing_duration <= tenure.
+  constraints:
+  - type: hard_min
+    value: 1.0
+    expression: null
+    reason: Must have shared for at least 1 month to be in survey
+  - type: expression
+    value: null
+    expression: sharing_duration_months <= netflix_tenure_months
+    reason: Cannot share longer than they have had Netflix
+- name: perceived_sharing_risk
+  type: categorical
+  category: population_specific
+  description: How risky subscriber perceives password sharing to be (no_risk, low_risk,
+    moderate_risk, high_risk)
+  sampling:
+    strategy: conditional
+    distribution:
+      type: categorical
+      options:
+      - no_risk
+      - low_risk
+      - moderate_risk
+      - high_risk
+      weights:
+      - 0.15
+      - 0.35
+      - 0.35
+      - 0.15
+    formula: null
+    depends_on:
+    - awareness_of_sharing_policy
+    modifiers:
+    - when: awareness_of_sharing_policy == 'unaware'
+      multiply: 1.0
+      add: 0.0
+      weight_overrides:
+        no_risk: 0.6
+        low_risk: 0.3
+        moderate_risk: 0.08
+        high_risk: 0.02
+      probability_override: null
+    - when: awareness_of_sharing_policy == 'vaguely_aware'
+      multiply: 1.0
+      add: 0.0
+      weight_overrides:
+        no_risk: 0.25
+        low_risk: 0.45
+        moderate_risk: 0.25
+        high_risk: 0.05
+      probability_override: null
+    - when: awareness_of_sharing_policy == 'well_aware'
+      multiply: 1.0
+      add: 0.0
+      weight_overrides:
+        no_risk: 0.1
+        low_risk: 0.3
+        moderate_risk: 0.45
+        high_risk: 0.15
+      probability_override: null
+  grounding:
+    level: medium
+    method: researched
+    source: Netflix 2023-2024 password crackdown widely publicized; LRG 2024 study
+      shows 10% still share (down from 15% in 2022)
+    note: Base distribution assumes moderate awareness. Awareness_of_sharing_policy
+      modifiers will shift distribution (unaware→no/low risk, well_aware→moderate/high
+      risk).
+  constraints: []
+- name: netflix_satisfaction
+  type: int
+  category: context_specific
+  description: Satisfaction with Netflix on scale of 1-10
+  sampling:
+    strategy: conditional
+    distribution:
+      type: normal
+      mean: 7.2
+      std: 1.5
+      min: 1.0
+      max: 10.0
+      mean_formula: null
+      std_formula: null
+      min_formula: null
+      max_formula: null
+    formula: null
+    depends_on:
+    - content_preference
+    modifiers:
+    - when: content_preference == 'drama'
+      multiply: 1.05
+      add: 0.3
+      weight_overrides: null
+      probability_override: null
+    - when: content_preference == 'comedy'
+      multiply: 1.02
+      add: 0.2
+      weight_overrides: null
+      probability_override: null
+    - when: content_preference == 'documentary'
+      multiply: 0.98
+      add: -0.1
+      weight_overrides: null
+      probability_override: null
+    - when: content_preference == 'reality'
+      multiply: 1.0
+      add: 0.0
+      weight_overrides: null
+      probability_override: null
+    - when: content_preference == 'action'
+      multiply: 1.03
+      add: 0.2
+      weight_overrides: null
+      probability_override: null
+    - when: content_preference == 'other'
+      multiply: 0.95
+      add: -0.3
+      weight_overrides: null
+      probability_override: null
+  grounding:
+    level: medium
+    method: estimated
+    source: null
+    note: Active subscribers generally satisfied. Base mean 7.2/10 reflects positive
+      but not exceptional satisfaction. Content_preference modifiers will adjust based
+      on genre availability.
+  constraints:
+  - type: hard_min
+    value: 1.0
+    expression: null
+    reason: Minimum satisfaction rating
+  - type: hard_max
+    value: 10.0
+    expression: null
+    reason: Maximum satisfaction rating
+sampling_order:
+- age
+- agreeableness
+- awareness_of_sharing_policy
+- conscientiousness
+- content_preference
+- education_level
+- employment_status
+- extraversion
+- financial_risk_tolerance
+- gender
+- household_income
+- marital_status
+- has_children
+- household_size
+- netflix_satisfaction
+- netflix_subscription_type
+- netflix_tenure_months
+- neuroticism
+- num_people_sharing_with
+- num_streaming_services
+- openness
+- past_cancellation_history
+- payment_method
+- perceived_sharing_risk
+- price_sensitivity
+- primary_device
+- rule_following_tendency
+- sharing_duration_months
+- sharing_relationship
+- social_obligation_weight
+- state
+- streaming_budget_monthly
+- urban_rural
+- weekly_viewing_hours
+- who_initiated_sharing
