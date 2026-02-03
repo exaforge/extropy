@@ -169,9 +169,11 @@ def _validate_scenario_spec(spec_file: Path, out: Output) -> int:
 
     # Show file references (human mode only)
     if not get_json_mode():
+        from ...utils import resolve_relative_to
+
         out.text("[bold]File References:[/bold]")
 
-        pop_path = Path(spec.meta.population_spec)
+        pop_path = resolve_relative_to(spec.meta.population_spec, spec_file)
         if pop_path.exists():
             out.text(f"  [green]✓[/green] Population: {spec.meta.population_spec}")
         else:
@@ -179,13 +181,13 @@ def _validate_scenario_spec(spec_file: Path, out: Output) -> int:
                 f"  [red]✗[/red] Population: {spec.meta.population_spec} (not found)"
             )
 
-        agents_path = Path(spec.meta.agents_file)
+        agents_path = resolve_relative_to(spec.meta.agents_file, spec_file)
         if agents_path.exists():
             out.text(f"  [green]✓[/green] Agents: {spec.meta.agents_file}")
         else:
             out.text(f"  [red]✗[/red] Agents: {spec.meta.agents_file} (not found)")
 
-        network_path = Path(spec.meta.network_file)
+        network_path = resolve_relative_to(spec.meta.network_file, spec_file)
         if network_path.exists():
             out.text(f"  [green]✓[/green] Network: {spec.meta.network_file}")
         else:

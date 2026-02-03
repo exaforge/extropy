@@ -36,6 +36,10 @@ from .eval_safe import (
     ConditionError,
     SAFE_BUILTINS,
 )
+from .paths import (
+    resolve_relative_to,
+    make_relative_to,
+)
 
 __all__ = [
     # Graphs
@@ -62,4 +66,7 @@ __all__ = [
     "FormulaError",
     "ConditionError",
     "SAFE_BUILTINS",
+    # Paths
+    "resolve_relative_to",
+    "make_relative_to",
 ]

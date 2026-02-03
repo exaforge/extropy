@@ -49,6 +49,7 @@ def scenario_command(
     """
     from ...core.models import PopulationSpec
     from ...scenario import create_scenario
+    from ...utils import make_relative_to
 
     start_time = time.time()
     console.print()
@@ -237,6 +238,11 @@ def scenario_command(
         if choice == "n":
             console.print("[dim]Cancelled.[/dim]")
             raise typer.Exit(0)
+
+    # Convert paths to be relative to output file before saving
+    result_spec.meta.population_spec = make_relative_to(population, output_path)
+    result_spec.meta.agents_file = make_relative_to(agents, output_path)
+    result_spec.meta.network_file = make_relative_to(network, output_path)
 
     # Save to YAML
     result_spec.to_yaml(output_path)

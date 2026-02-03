@@ -2,9 +2,9 @@ meta:
   name: netflix_announces_enforcement_of
   description: 'Netflix announces enforcement of password-sharing rules: users must
     pay .99/month extra per shared member outside household or stop sharing'
-  population_spec: studies/netflix-password-sharing/population.yaml
-  agents_file: studies/netflix-password-sharing/agents.json
-  network_file: studies/netflix-password-sharing/network.json
+  population_spec: population.yaml
+  agents_file: agents.json
+  network_file: network.json
   created_at: '2026-02-02T15:05:10.271096'
 event:
   type: announcement

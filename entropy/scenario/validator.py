@@ -525,18 +525,20 @@ def load_and_validate_scenario(
     agent_count = None
     network = None
 
-    pop_path = Path(spec.meta.population_spec)
+    from ..utils import resolve_relative_to
+
+    pop_path = resolve_relative_to(spec.meta.population_spec, scenario_path)
     if pop_path.exists():
         try:
             population_spec = PopulationSpec.from_yaml(pop_path)
         except Exception:
             pass  # Will be caught as validation error
 
-    agents_path = Path(spec.meta.agents_file)
+    agents_path = resolve_relative_to(spec.meta.agents_file, scenario_path)
     if agents_path.exists():
         agent_count = get_agent_count(agents_path)
 
-    network_path = Path(spec.meta.network_file)
+    network_path = resolve_relative_to(spec.meta.network_file, scenario_path)
     if network_path.exists():
         try:
             with open(network_path) as f:
