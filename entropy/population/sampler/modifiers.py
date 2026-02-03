@@ -58,7 +58,7 @@ def apply_modifiers_and_sample(
     matching_modifiers: list[tuple[int, Modifier]] = []
     for i, mod in enumerate(modifiers):
         try:
-            if eval_condition(mod.when, agent):
+            if eval_condition(mod.when, agent, raise_on_error=True):
                 matching_modifiers.append((i, mod))
                 triggered_indices.append(i)
         except Exception as e:

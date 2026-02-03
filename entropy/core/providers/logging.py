@@ -22,7 +22,7 @@ def log_request_response(
 ) -> None:
     """Log full request and response to a JSON file."""
     logs_dir = get_logs_dir()
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
     prefix = f"{provider}_" if provider else ""
     log_file = logs_dir / f"{timestamp}_{prefix}{function_name}.json"
 

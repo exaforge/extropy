@@ -38,6 +38,7 @@ class StateManager:
         self.db_path.parent.mkdir(parents=True, exist_ok=True)
         self.conn = sqlite3.connect(str(self.db_path))
         self.conn.row_factory = sqlite3.Row
+        self.conn.execute("PRAGMA foreign_keys = ON")
 
         self._create_schema()
         self._upgrade_schema()
@@ -349,9 +350,15 @@ class StateManager:
         # Get agents who have had exposures since their last reasoning
         cursor.execute(
             """
-            SELECT agent_id, exposure_count, last_reasoning_timestep
-            FROM agent_states
-            WHERE aware = 1 AND last_reasoning_timestep >= 0
+            SELECT s.agent_id,
+                   s.exposure_count,
+                   s.last_reasoning_timestep,
+                   COUNT(e.id) as count_at_last
+            FROM agent_states s
+            LEFT JOIN exposures e
+              ON e.agent_id = s.agent_id AND e.timestep <= s.last_reasoning_timestep
+            WHERE s.aware = 1 AND s.last_reasoning_timestep >= 0
+            GROUP BY s.agent_id, s.exposure_count, s.last_reasoning_timestep
         """
         )
 
@@ -359,17 +366,7 @@ class StateManager:
         for row in cursor.fetchall():
             agent_id = row["agent_id"]
             current_count = row["exposure_count"]
-            last_timestep = row["last_reasoning_timestep"]
-
-            # Count exposures at time of last reasoning
-            cursor.execute(
-                """
-                SELECT COUNT(*) as cnt FROM exposures
-                WHERE agent_id = ? AND timestep <= ?
-            """,
-                (agent_id, last_timestep),
-            )
-            count_at_last = cursor.fetchone()["cnt"]
+            count_at_last = row["count_at_last"]
 
             if current_count - count_at_last >= threshold:
                 multi_touch.append(agent_id)
@@ -754,17 +751,20 @@ class StateManager:
         cursor = self.conn.cursor()
 
         cursor.execute("SELECT * FROM agent_states")
+        agent_rows = cursor.fetchall()
         states = []
 
-        for row in cursor.fetchall():
-            # Get exposures
-            cursor.execute(
-                """
-                SELECT COUNT(*) as cnt FROM exposures WHERE agent_id = ?
-            """,
-                (row["agent_id"],),
-            )
-            exposure_count = cursor.fetchone()["cnt"]
+        cursor.execute(
+            """
+            SELECT agent_id, COUNT(*) as cnt
+            FROM exposures
+            GROUP BY agent_id
+        """
+        )
+        exposure_counts = {row["agent_id"]: row["cnt"] for row in cursor.fetchall()}
+
+        for row in agent_rows:
+            exposure_count = exposure_counts.get(row["agent_id"], 0)
 
             outcomes = {}
             if row["outcomes_json"]:

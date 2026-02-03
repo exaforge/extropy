@@ -263,6 +263,7 @@ class SimulationEngine:
         runtime = time.time() - start_time
         summary = self._finalize(final_timestep, stopped_reason, runtime)
         self._export_results()
+        self.state_manager.close()
 
         return summary
 

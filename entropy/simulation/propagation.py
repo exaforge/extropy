@@ -47,7 +47,7 @@ def evaluate_exposure_rule(
         return True
 
     try:
-        return eval_condition(rule.when, agent)
+        return eval_condition(rule.when, agent, raise_on_error=True)
     except ConditionError as e:
         logger.warning(f"Failed to evaluate exposure rule '{rule.when}': {e}")
         return False
@@ -187,7 +187,7 @@ def calculate_share_probability(
             context["edge_type"] = edge_data.get("type", "unknown")
             context["edge_weight"] = edge_data.get("weight", 0.5)
 
-            if eval_condition(modifier.when, context):
+            if eval_condition(modifier.when, context, raise_on_error=True):
                 base_prob = base_prob * modifier.multiply + modifier.add
         except ConditionError:
             # Skip modifier if condition fails

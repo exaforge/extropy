@@ -82,7 +82,7 @@ def _evaluate_rule_reach(
     matching = 0
     for agent in agents:
         try:
-            if eval_condition(rule_when, agent):
+            if eval_condition(rule_when, agent, raise_on_error=True):
                 matching += 1
         except ConditionError:
             pass

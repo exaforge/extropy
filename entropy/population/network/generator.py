@@ -12,6 +12,7 @@ from typing import Any
 
 from ...core.models import Edge, NetworkResult
 from ...utils.callbacks import NetworkProgressCallback
+from ...utils.eval_safe import ConditionError, eval_condition
 from .config import NetworkConfig, InfluenceFactorConfig
 from .similarity import (
     compute_similarity,
@@ -41,8 +42,8 @@ def _eval_edge_condition(
         context[f"b_{key}"] = val
 
     try:
-        return bool(eval(condition, {"__builtins__": {}}, context))  # noqa: S307
-    except Exception:
+        return eval_condition(condition, context, raise_on_error=True)
+    except ConditionError:
         return False
 
 
@@ -554,6 +555,7 @@ def _apply_rewiring(
     n = len(agents)
     n_rewire = int(len(edges) * config.rewire_prob)
     rewired_count = 0
+    id_to_idx = {aid: i for i, aid in enumerate(agent_ids)}
 
     for _ in range(n_rewire):
         if not edges:
@@ -562,7 +564,9 @@ def _apply_rewiring(
         edge_idx = rng.randint(0, len(edges) - 1)
         old_edge = edges[edge_idx]
 
-        source_idx = agent_ids.index(old_edge.source)
+        source_idx = id_to_idx.get(old_edge.source)
+        if source_idx is None:
+            continue
         attempts = 0
         while attempts < 10:
             new_target_idx = rng.randint(0, n - 1)

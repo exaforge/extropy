@@ -32,6 +32,10 @@ BUILTIN_NAMES = frozenset(
         "float",
         "str",
         "len",
+        "sum",
+        "all",
+        "any",
+        "bool",
         # Logical operators (for AST walking)
         "and",
         "or",
@@ -57,6 +61,23 @@ PYTHON_KEYWORDS = frozenset(
         "None",
         "if",
         "else",
+    }
+)
+
+SAFE_CALL_NAMES = frozenset(
+    {
+        "abs",
+        "min",
+        "max",
+        "round",
+        "int",
+        "float",
+        "str",
+        "len",
+        "sum",
+        "all",
+        "any",
+        "bool",
     }
 )
 
@@ -150,6 +171,126 @@ def validate_expression_syntax(expr: str | None) -> str | None:
     except SyntaxError as e:
         error_msg = str(e.msg) if hasattr(e, "msg") else str(e)
         return f"invalid Python syntax: {error_msg}"
+
+    # Validate allowed AST nodes to keep expressions safe and consistent
+    try:
+        tree = ast.parse(expr, mode="eval")
+    except SyntaxError:
+        return None
+
+    safety_error = _validate_safe_expression_tree(tree)
+    if safety_error:
+        return safety_error
+
+    return None
+
+
+def _validate_safe_expression_tree(tree: ast.AST) -> str | None:
+    """Validate expression AST for safe, supported nodes only."""
+    allowed_nodes = (
+        ast.Expression,
+        ast.BoolOp,
+        ast.BinOp,
+        ast.UnaryOp,
+        ast.Compare,
+        ast.Add,
+        ast.Sub,
+        ast.Mult,
+        ast.Div,
+        ast.FloorDiv,
+        ast.Mod,
+        ast.Pow,
+        ast.UAdd,
+        ast.USub,
+        ast.Not,
+        ast.And,
+        ast.Or,
+        ast.Eq,
+        ast.NotEq,
+        ast.Lt,
+        ast.LtE,
+        ast.Gt,
+        ast.GtE,
+        ast.In,
+        ast.NotIn,
+        ast.Is,
+        ast.IsNot,
+        ast.Name,
+        ast.Constant,
+        ast.List,
+        ast.Tuple,
+        ast.Set,
+        ast.Dict,
+        ast.Call,
+        ast.IfExp,
+        ast.Load,
+        ast.keyword,
+    )
+    allowed_bin_ops = (
+        ast.Add,
+        ast.Sub,
+        ast.Mult,
+        ast.Div,
+        ast.FloorDiv,
+        ast.Mod,
+        ast.Pow,
+    )
+    allowed_unary_ops = (ast.UAdd, ast.USub, ast.Not)
+    allowed_bool_ops = (ast.And, ast.Or)
+    allowed_cmp_ops = (
+        ast.Eq,
+        ast.NotEq,
+        ast.Lt,
+        ast.LtE,
+        ast.Gt,
+        ast.GtE,
+        ast.In,
+        ast.NotIn,
+        ast.Is,
+        ast.IsNot,
+    )
+
+    for node in ast.walk(tree):
+        if not isinstance(node, allowed_nodes):
+            return f"unsupported expression element: {type(node).__name__}"
+
+        if isinstance(node, ast.Name):
+            if node.id.startswith("__"):
+                return "expression may not reference dunder names"
+
+        if isinstance(node, ast.BinOp):
+            if not isinstance(node.op, allowed_bin_ops):
+                return f"operator not allowed: {type(node.op).__name__}"
+
+        if isinstance(node, ast.UnaryOp):
+            if not isinstance(node.op, allowed_unary_ops):
+                return f"unary operator not allowed: {type(node.op).__name__}"
+
+        if isinstance(node, ast.BoolOp):
+            if not isinstance(node.op, allowed_bool_ops):
+                return f"boolean operator not allowed: {type(node.op).__name__}"
+
+        if isinstance(node, ast.Compare):
+            for op in node.ops:
+                if not isinstance(op, allowed_cmp_ops):
+                    return f"comparison operator not allowed: {type(op).__name__}"
+
+        if isinstance(node, ast.Dict):
+            for key in node.keys:
+                if key is None:
+                    return "dict unpacking is not allowed"
+
+        if isinstance(node, ast.Call):
+            if not isinstance(node.func, ast.Name):
+                return "function calls must be direct names"
+            if node.func.id not in SAFE_CALL_NAMES:
+                return f"function '{node.func.id}' is not allowed"
+            for arg in node.args:
+                if isinstance(arg, ast.Starred):
+                    return "star-args are not allowed"
+            for kw in node.keywords:
+                if kw.arg is None:
+                    return "keyword splats are not allowed"
 
     return None
 
