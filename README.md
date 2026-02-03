@@ -1,5 +1,10 @@
 # Entropy
 
+[![CI](https://github.com/exaforge/entropy/actions/workflows/test.yml/badge.svg)](https://github.com/exaforge/entropy/actions/workflows/test.yml)
+[![PyPI version](https://img.shields.io/pypi/v/entropy-predict.svg)](https://pypi.org/project/entropy-predict/)
+[![Python](https://img.shields.io/pypi/pyversions/entropy-predict.svg)](https://pypi.org/project/entropy-predict/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 Predictive intelligence through agent-based population simulation. Create synthetic populations grounded in real-world data, simulate how they respond to events, and watch opinions emerge through social networks.
 
 Not a survey. Not a poll. A simulation of collective human behavior.
