@@ -326,6 +326,9 @@ class SimulationRunConfig(BaseModel):
     random_seed: int | None = Field(
         default=None, description="Random seed for reproducibility"
     )
+    chunk_size: int = Field(
+        default=50, description="Agents per reasoning chunk for checkpointing"
+    )
 
 
 # =============================================================================

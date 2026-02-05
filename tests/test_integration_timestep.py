@@ -329,10 +329,8 @@ class TestSingleTimestep:
 
         assert summary.new_exposures == 0
         assert summary.agents_reasoned == 0
-        # batch_reason_agents is called with empty contexts list
-        mock_batch.assert_called_once()
-        contexts_arg = mock_batch.call_args[0][0]
-        assert contexts_arg == []
+        # No agents to reason → batch_reason_agents is never called
+        mock_batch.assert_not_called()
 
     @patch("entropy.simulation.engine.batch_reason_agents")
     def test_memory_entry_saved(self, mock_batch, ten_agents, linear_network, tmp_path):

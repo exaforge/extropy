@@ -28,8 +28,8 @@ class TimelineManager:
         self.output_path = Path(output_path)
         self.output_path.parent.mkdir(parents=True, exist_ok=True)
 
-        # Open file in append mode for streaming
-        self._file = open(self.output_path, "w")
+        # Open file in append mode for streaming (supports resume)
+        self._file = open(self.output_path, "a")
         self._event_count = 0
 
     def log_event(self, event: SimulationEvent) -> None:

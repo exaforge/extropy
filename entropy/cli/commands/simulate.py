@@ -68,6 +68,9 @@ def simulate_command(
     tpm_override: int | None = typer.Option(
         None, "--tpm-override", help="Override tokens per minute limit"
     ),
+    chunk_size: int = typer.Option(
+        50, "--chunk-size", help="Agents per reasoning chunk for checkpointing"
+    ),
     seed: int | None = typer.Option(
         None, "--seed", help="Random seed for reproducibility"
     ),
@@ -178,6 +181,7 @@ def simulate_command(
                 rate_tier=effective_tier,
                 rpm_override=effective_rpm,
                 tpm_override=effective_tpm,
+                chunk_size=chunk_size,
             )
             simulation_error = None
         except Exception as e:
@@ -205,6 +209,7 @@ def simulate_command(
                     rate_tier=effective_tier,
                     rpm_override=effective_rpm,
                     tpm_override=effective_tpm,
+                    chunk_size=chunk_size,
                 )
             except Exception as e:
                 simulation_error = e

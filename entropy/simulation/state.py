@@ -191,6 +191,16 @@ class StateManager:
         """
         )
 
+        # Simulation metadata table (for checkpointing)
+        cursor.execute(
+            """
+            CREATE TABLE IF NOT EXISTS simulation_metadata (
+                key TEXT PRIMARY KEY,
+                value TEXT
+            )
+        """
+        )
+
         self.conn.commit()
 
     def _upgrade_schema(self) -> None:
@@ -463,6 +473,98 @@ class StateManager:
                 eligible.append(nid)
 
         return eligible
+
+    def save_metadata(self, key: str, value: str) -> None:
+        """Save a metadata key-value pair with immediate commit.
+
+        Args:
+            key: Metadata key
+            value: Metadata value
+        """
+        cursor = self.conn.cursor()
+        cursor.execute(
+            "INSERT OR REPLACE INTO simulation_metadata (key, value) VALUES (?, ?)",
+            (key, value),
+        )
+        self.conn.commit()
+
+    def get_metadata(self, key: str) -> str | None:
+        """Get a metadata value by key.
+
+        Args:
+            key: Metadata key
+
+        Returns:
+            Value string or None if not found
+        """
+        cursor = self.conn.cursor()
+        cursor.execute("SELECT value FROM simulation_metadata WHERE key = ?", (key,))
+        row = cursor.fetchone()
+        return row["value"] if row else None
+
+    def delete_metadata(self, key: str) -> None:
+        """Delete a metadata key with immediate commit.
+
+        Args:
+            key: Metadata key to delete
+        """
+        cursor = self.conn.cursor()
+        cursor.execute("DELETE FROM simulation_metadata WHERE key = ?", (key,))
+        self.conn.commit()
+
+    def get_last_completed_timestep(self) -> int:
+        """Get the last fully completed timestep.
+
+        Returns:
+            Max timestep from timestep_summaries, or -1 if none exist.
+        """
+        cursor = self.conn.cursor()
+        cursor.execute("SELECT MAX(timestep) as max_ts FROM timestep_summaries")
+        row = cursor.fetchone()
+        if row and row["max_ts"] is not None:
+            return row["max_ts"]
+        return -1
+
+    def get_checkpoint_timestep(self) -> int | None:
+        """Get the timestep that was started but not completed (crash recovery).
+
+        Returns:
+            Timestep number or None if no checkpoint is set.
+        """
+        value = self.get_metadata("checkpoint_timestep")
+        return int(value) if value is not None else None
+
+    def mark_timestep_started(self, timestep: int) -> None:
+        """Mark a timestep as started (for crash recovery).
+
+        Args:
+            timestep: Timestep being started
+        """
+        self.save_metadata("checkpoint_timestep", str(timestep))
+
+    def mark_timestep_completed(self, timestep: int) -> None:
+        """Mark a timestep as completed, clearing the checkpoint.
+
+        Args:
+            timestep: Timestep that completed
+        """
+        self.delete_metadata("checkpoint_timestep")
+
+    def get_agents_already_reasoned_this_timestep(self, timestep: int) -> set[str]:
+        """Get agents that already reasoned in this timestep (for resume).
+
+        Args:
+            timestep: Current timestep
+
+        Returns:
+            Set of agent IDs that have last_reasoning_timestep == timestep
+        """
+        cursor = self.conn.cursor()
+        cursor.execute(
+            "SELECT agent_id FROM agent_states WHERE last_reasoning_timestep = ?",
+            (timestep,),
+        )
+        return {row["agent_id"] for row in cursor.fetchall()}
 
     def record_exposure(self, agent_id: str, exposure: ExposureRecord) -> None:
         """Record an exposure event for an agent.

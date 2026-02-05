@@ -122,6 +122,7 @@ class SimulationEngine:
         config: SimulationRunConfig,
         persona_config: PersonaConfig | None = None,
         rate_limiter: DualRateLimiter | None = None,
+        chunk_size: int = 50,
     ):
         """Initialize simulation engine.
 
@@ -133,6 +134,7 @@ class SimulationEngine:
             config: Simulation run configuration
             persona_config: Optional PersonaConfig for embodied persona rendering
             rate_limiter: Optional DualRateLimiter for API pacing (pivotal + routine)
+            chunk_size: Number of agents per reasoning chunk for checkpointing
         """
         self.scenario = scenario
         self.population_spec = population_spec
@@ -141,6 +143,7 @@ class SimulationEngine:
         self.config = config
         self.persona_config = persona_config
         self.rate_limiter = rate_limiter
+        self.chunk_size = chunk_size
 
         # Build agent map for quick lookup
         self.agent_map = {a.get("_id", str(i)): a for i, a in enumerate(agents)}
@@ -216,8 +219,32 @@ class SimulationEngine:
                 status,
             )
 
+    def _get_resume_timestep(self) -> int:
+        """Determine which timestep to start/resume from.
+
+        Returns:
+            Timestep number to begin execution at.
+        """
+        checkpoint = self.state_manager.get_checkpoint_timestep()
+        if checkpoint is not None:
+            # Crashed mid-timestep — resume it
+            logger.info(f"Resuming from checkpoint timestep {checkpoint}")
+            return checkpoint
+
+        last_completed = self.state_manager.get_last_completed_timestep()
+        if last_completed >= 0:
+            # Completed some timesteps — start from next one
+            logger.info(f"Resuming from timestep {last_completed + 1}")
+            return last_completed + 1
+
+        return 0
+
     def run(self) -> SimulationSummary:
         """Execute the full simulation.
+
+        Supports automatic resume: if the output directory contains a
+        simulation.db with partial progress, the engine picks up where
+        it left off.
 
         Returns:
             SimulationSummary with results
@@ -226,8 +253,17 @@ class SimulationEngine:
         stopped_reason = None
         final_timestep = 0
 
+        start_timestep = self._get_resume_timestep()
+
+        # Reload recent_summaries from DB on resume
+        if start_timestep > 0:
+            existing_summaries = self.state_manager.get_timestep_summaries()
+            self.recent_summaries = existing_summaries[-20:]
+
         try:
-            for timestep in range(self.scenario.simulation.max_timesteps):
+            for timestep in range(
+                start_timestep, self.scenario.simulation.max_timesteps
+            ):
                 final_timestep = timestep
 
                 # Report progress
@@ -270,6 +306,10 @@ class SimulationEngine:
     def _run_timestep(self, timestep: int) -> TimestepSummary:
         """Execute one timestep of simulation.
 
+        Each phase (exposures, reasoning chunks, summary) has its own
+        transaction. This enables per-chunk checkpointing so that a crash
+        mid-timestep doesn't lose all progress.
+
         Args:
             timestep: Current timestep number
 
@@ -278,12 +318,9 @@ class SimulationEngine:
         """
         logger.info(f"[TIMESTEP {timestep}] ========== STARTING ==========")
 
-        return self._run_timestep_inner(timestep)
+        self.state_manager.mark_timestep_started(timestep)
 
-    def _run_timestep_inner(self, timestep: int) -> TimestepSummary:
-        """Inner timestep logic wrapped in a transaction."""
-        with self.state_manager.transaction():
-            return self._execute_timestep(timestep)
+        return self._execute_timestep(timestep)
 
     def _execute_timestep(self, timestep: int) -> TimestepSummary:
         """Execute the actual timestep logic — orchestrates sub-steps.
@@ -294,30 +331,29 @@ class SimulationEngine:
         Returns:
             TimestepSummary for this timestep
         """
-        # 1. Exposures (seed + network)
-        total_new_exposures = self._apply_exposures(timestep)
+        # 1. Exposures (seed + network) — own transaction
+        with self.state_manager.transaction():
+            total_new_exposures = self._apply_exposures(timestep)
         self.total_exposures += total_new_exposures
 
-        # 2. Identify agents and run reasoning
-        results, old_states = self._reason_agents(timestep)
+        # 2. Chunked reasoning — each chunk has its own transaction
+        agents_reasoned, state_changes, shares_occurred = self._reason_agents(timestep)
 
-        # 3. Apply state updates
-        agents_reasoned, state_changes, shares_occurred = self._apply_state_updates(
-            timestep, results, old_states
-        )
+        # 3. Compute and save timestep summary — own transaction
+        with self.state_manager.transaction():
+            summary = compute_timestep_summary(
+                timestep,
+                self.state_manager,
+                self.recent_summaries[-1] if self.recent_summaries else None,
+            )
+            summary.new_exposures = total_new_exposures
+            summary.agents_reasoned = agents_reasoned
+            summary.state_changes = state_changes
+            summary.shares_occurred = shares_occurred
 
-        # 4. Compute and save timestep summary
-        summary = compute_timestep_summary(
-            timestep,
-            self.state_manager,
-            self.recent_summaries[-1] if self.recent_summaries else None,
-        )
-        summary.new_exposures = total_new_exposures
-        summary.agents_reasoned = agents_reasoned
-        summary.state_changes = state_changes
-        summary.shares_occurred = shares_occurred
+            self.state_manager.save_timestep_summary(summary)
 
-        self.state_manager.save_timestep_summary(summary)
+        self.state_manager.mark_timestep_completed(timestep)
 
         # Flush timeline periodically
         if timestep % 10 == 0:
@@ -354,20 +390,35 @@ class SimulationEngine:
 
         return new_seed + new_network
 
-    def _reason_agents(
-        self, timestep: int
-    ) -> tuple[list[tuple[str, Any]], dict[str, AgentState]]:
-        """Identify agents needing reasoning and run two-pass LLM calls.
+    def _reason_agents(self, timestep: int) -> tuple[int, int, int]:
+        """Identify agents needing reasoning, run in chunks, commit per-chunk.
+
+        On resume, agents already processed this timestep are skipped.
 
         Returns:
-            Tuple of (reasoning results, old_states dict).
+            Tuple of (agents_reasoned, state_changes, shares_occurred).
         """
         agents_to_reason = self.state_manager.get_agents_to_reason(
             timestep,
             self.config.multi_touch_threshold,
         )
+
+        # Filter out agents already processed this timestep (resume support)
+        already_done = self.state_manager.get_agents_already_reasoned_this_timestep(
+            timestep
+        )
+        if already_done:
+            agents_to_reason = [a for a in agents_to_reason if a not in already_done]
+            logger.info(
+                f"[TIMESTEP {timestep}] Skipping {len(already_done)} already-processed agents"
+            )
+
         logger.info(f"[TIMESTEP {timestep}] Agents to reason: {len(agents_to_reason)}")
 
+        if not agents_to_reason:
+            return 0, 0, 0
+
+        # Build contexts and old states
         contexts = []
         old_states: dict[str, AgentState] = {}
         for agent_id in agents_to_reason:
@@ -376,32 +427,50 @@ class SimulationEngine:
             context = self._build_reasoning_context(agent_id, old_state)
             contexts.append(context)
 
-        reasoning_start = time.time()
-        results = batch_reason_agents(
-            contexts,
-            self.scenario,
-            self.config,
-            rate_limiter=self.rate_limiter,
-        )
-        reasoning_elapsed = time.time() - reasoning_start
-        self.total_reasoning_calls += len(results)
+        # Split into chunks
+        total_reasoned = 0
+        total_changes = 0
+        total_shares = 0
 
-        logger.info(
-            f"[TIMESTEP {timestep}] Reasoning complete: {len(results)} agents in {reasoning_elapsed:.2f}s "
-            f"({reasoning_elapsed / len(results):.2f}s/agent avg)"
-            if results
-            else f"[TIMESTEP {timestep}] No agents reasoned"
-        )
+        for chunk_start in range(0, len(contexts), self.chunk_size):
+            chunk_contexts = contexts[chunk_start : chunk_start + self.chunk_size]
 
-        return results, old_states
+            reasoning_start = time.time()
+            chunk_results = batch_reason_agents(
+                chunk_contexts,
+                self.scenario,
+                self.config,
+                rate_limiter=self.rate_limiter,
+            )
+            reasoning_elapsed = time.time() - reasoning_start
+            self.total_reasoning_calls += len(chunk_results)
 
-    def _apply_state_updates(
+            logger.info(
+                f"[TIMESTEP {timestep}] Chunk {chunk_start // self.chunk_size + 1}: "
+                f"{len(chunk_results)} agents in {reasoning_elapsed:.2f}s"
+                if chunk_results
+                else f"[TIMESTEP {timestep}] Chunk empty"
+            )
+
+            # Process and commit this chunk
+            with self.state_manager.transaction():
+                reasoned, changes, shares = self._process_reasoning_chunk(
+                    timestep, chunk_results, old_states
+                )
+
+            total_reasoned += reasoned
+            total_changes += changes
+            total_shares += shares
+
+        return total_reasoned, total_changes, total_shares
+
+    def _process_reasoning_chunk(
         self,
         timestep: int,
         results: list[tuple[str, Any]],
         old_states: dict[str, AgentState],
     ) -> tuple[int, int, int]:
-        """Process reasoning results and update agent states.
+        """Process a chunk of reasoning results and update agent states.
 
         Returns:
             Tuple of (agents_reasoned, state_changes, shares_occurred).
@@ -729,6 +798,7 @@ def run_simulation(
     rate_tier: int | None = None,
     rpm_override: int | None = None,
     tpm_override: int | None = None,
+    chunk_size: int = 50,
 ) -> SimulationSummary:
     """Run a simulation from a scenario file.
 
@@ -747,6 +817,7 @@ def run_simulation(
         rate_tier: Rate limit tier (1-4, None = Tier 1)
         rpm_override: Override RPM limit
         tpm_override: Override TPM limit
+        chunk_size: Agents per reasoning chunk for checkpointing
 
     Returns:
         SimulationSummary with results
@@ -828,6 +899,7 @@ def run_simulation(
         config=config,
         persona_config=persona_config,
         rate_limiter=rate_limiter,
+        chunk_size=chunk_size,
     )
 
     if on_progress:

@@ -236,8 +236,10 @@ class TestFlipResistance:
         results = [("a0", response)]
         old_states = {"a0": old_state}
 
-        agents_reasoned, state_changes, shares_occurred = engine._apply_state_updates(
-            timestep=1, results=results, old_states=old_states
+        agents_reasoned, state_changes, shares_occurred = (
+            engine._process_reasoning_chunk(
+                timestep=1, results=results, old_states=old_states
+            )
         )
 
         # The flip should have been rejected — check the state
@@ -279,7 +281,9 @@ class TestFlipResistance:
         results = [("a0", response)]
         old_states = {"a0": old_state}
 
-        engine._apply_state_updates(timestep=1, results=results, old_states=old_states)
+        engine._process_reasoning_chunk(
+            timestep=1, results=results, old_states=old_states
+        )
 
         final_state = engine.state_manager.get_agent_state("a0")
         assert final_state.position == "reject"  # flip accepted
@@ -317,7 +321,9 @@ class TestConvictionGatedSharing:
         results = [("a0", response)]
         old_states = {"a0": old_state}
 
-        engine._apply_state_updates(timestep=0, results=results, old_states=old_states)
+        engine._process_reasoning_chunk(
+            timestep=0, results=results, old_states=old_states
+        )
 
         final_state = engine.state_manager.get_agent_state("a0")
         assert final_state.will_share is False  # sharing gated
@@ -575,7 +581,9 @@ class TestCommittedFlag:
         results = [("a0", response)]
         old_states = {"a0": old_state}
 
-        engine._apply_state_updates(timestep=0, results=results, old_states=old_states)
+        engine._process_reasoning_chunk(
+            timestep=0, results=results, old_states=old_states
+        )
 
         final_state = engine.state_manager.get_agent_state("a0")
         assert final_state.committed is True
@@ -609,7 +617,9 @@ class TestCommittedFlag:
         results = [("a0", response)]
         old_states = {"a0": old_state}
 
-        engine._apply_state_updates(timestep=0, results=results, old_states=old_states)
+        engine._process_reasoning_chunk(
+            timestep=0, results=results, old_states=old_states
+        )
 
         final_state = engine.state_manager.get_agent_state("a0")
         assert final_state.committed is False
@@ -689,3 +699,402 @@ class TestOneShotSharing:
             agent_map=engine.agent_map,
         )
         assert new2 == 0  # No new exposures — already shared
+
+
+class TestSimulationMetadata:
+    """Test simulation_metadata table and checkpoint methods."""
+
+    def test_metadata_round_trip(
+        self,
+        minimal_scenario,
+        simple_agents,
+        simple_network,
+        minimal_pop_spec,
+        tmp_path,
+    ):
+        """save_metadata / get_metadata round trip."""
+        config = SimulationRunConfig(
+            scenario_path="test.yaml",
+            output_dir=str(tmp_path / "output"),
+        )
+        engine = SimulationEngine(
+            scenario=minimal_scenario,
+            population_spec=minimal_pop_spec,
+            agents=simple_agents,
+            network=simple_network,
+            config=config,
+        )
+
+        engine.state_manager.save_metadata("foo", "bar")
+        assert engine.state_manager.get_metadata("foo") == "bar"
+        assert engine.state_manager.get_metadata("missing") is None
+
+    def test_last_completed_timestep_empty(
+        self,
+        minimal_scenario,
+        simple_agents,
+        simple_network,
+        minimal_pop_spec,
+        tmp_path,
+    ):
+        """Returns -1 when no timestep summaries exist."""
+        config = SimulationRunConfig(
+            scenario_path="test.yaml",
+            output_dir=str(tmp_path / "output"),
+        )
+        engine = SimulationEngine(
+            scenario=minimal_scenario,
+            population_spec=minimal_pop_spec,
+            agents=simple_agents,
+            network=simple_network,
+            config=config,
+        )
+        assert engine.state_manager.get_last_completed_timestep() == -1
+
+    def test_last_completed_timestep_with_data(
+        self,
+        minimal_scenario,
+        simple_agents,
+        simple_network,
+        minimal_pop_spec,
+        tmp_path,
+    ):
+        """Returns correct max timestep from summaries."""
+        from entropy.core.models import TimestepSummary
+
+        config = SimulationRunConfig(
+            scenario_path="test.yaml",
+            output_dir=str(tmp_path / "output"),
+        )
+        engine = SimulationEngine(
+            scenario=minimal_scenario,
+            population_spec=minimal_pop_spec,
+            agents=simple_agents,
+            network=simple_network,
+            config=config,
+        )
+
+        for ts in [0, 1, 2]:
+            summary = TimestepSummary(timestep=ts, exposure_rate=0.5)
+            engine.state_manager.save_timestep_summary(summary)
+
+        assert engine.state_manager.get_last_completed_timestep() == 2
+
+    def test_checkpoint_lifecycle(
+        self,
+        minimal_scenario,
+        simple_agents,
+        simple_network,
+        minimal_pop_spec,
+        tmp_path,
+    ):
+        """mark_timestep_started sets checkpoint, mark_timestep_completed clears it."""
+        config = SimulationRunConfig(
+            scenario_path="test.yaml",
+            output_dir=str(tmp_path / "output"),
+        )
+        engine = SimulationEngine(
+            scenario=minimal_scenario,
+            population_spec=minimal_pop_spec,
+            agents=simple_agents,
+            network=simple_network,
+            config=config,
+        )
+
+        assert engine.state_manager.get_checkpoint_timestep() is None
+
+        engine.state_manager.mark_timestep_started(5)
+        assert engine.state_manager.get_checkpoint_timestep() == 5
+
+        engine.state_manager.mark_timestep_completed(5)
+        assert engine.state_manager.get_checkpoint_timestep() is None
+
+    def test_agents_already_reasoned(
+        self,
+        minimal_scenario,
+        simple_agents,
+        simple_network,
+        minimal_pop_spec,
+        tmp_path,
+    ):
+        """get_agents_already_reasoned_this_timestep filters by last_reasoning_timestep."""
+        config = SimulationRunConfig(
+            scenario_path="test.yaml",
+            output_dir=str(tmp_path / "output"),
+        )
+        engine = SimulationEngine(
+            scenario=minimal_scenario,
+            population_spec=minimal_pop_spec,
+            agents=simple_agents,
+            network=simple_network,
+            config=config,
+        )
+
+        # Update a0 as having reasoned at timestep 3
+        state = AgentState(
+            agent_id="a0",
+            aware=True,
+            position="adopt",
+            conviction=0.5,
+        )
+        engine.state_manager.update_agent_state("a0", state, timestep=3)
+
+        already = engine.state_manager.get_agents_already_reasoned_this_timestep(3)
+        assert "a0" in already
+        assert "a1" not in already
+
+        # Different timestep — should be empty for timestep 4
+        already_4 = engine.state_manager.get_agents_already_reasoned_this_timestep(4)
+        assert "a0" not in already_4
+
+
+class TestResumeLogic:
+    """Test engine resume/checkpoint logic."""
+
+    def test_resume_skips_completed_timesteps(
+        self,
+        minimal_scenario,
+        simple_agents,
+        simple_network,
+        minimal_pop_spec,
+        tmp_path,
+    ):
+        """Engine should start from the next timestep after last completed."""
+        from entropy.core.models import TimestepSummary
+
+        config = SimulationRunConfig(
+            scenario_path="test.yaml",
+            output_dir=str(tmp_path / "output"),
+        )
+        engine = SimulationEngine(
+            scenario=minimal_scenario,
+            population_spec=minimal_pop_spec,
+            agents=simple_agents,
+            network=simple_network,
+            config=config,
+        )
+
+        # Simulate 2 completed timesteps
+        for ts in [0, 1]:
+            summary = TimestepSummary(timestep=ts, exposure_rate=0.5)
+            engine.state_manager.save_timestep_summary(summary)
+
+        assert engine._get_resume_timestep() == 2
+
+    def test_resume_from_checkpoint(
+        self,
+        minimal_scenario,
+        simple_agents,
+        simple_network,
+        minimal_pop_spec,
+        tmp_path,
+    ):
+        """If checkpoint_timestep is set, resume that timestep."""
+        from entropy.core.models import TimestepSummary
+
+        config = SimulationRunConfig(
+            scenario_path="test.yaml",
+            output_dir=str(tmp_path / "output"),
+        )
+        engine = SimulationEngine(
+            scenario=minimal_scenario,
+            population_spec=minimal_pop_spec,
+            agents=simple_agents,
+            network=simple_network,
+            config=config,
+        )
+
+        # Simulate: timestep 0 completed, timestep 1 started but crashed
+        summary = TimestepSummary(timestep=0, exposure_rate=0.5)
+        engine.state_manager.save_timestep_summary(summary)
+        engine.state_manager.mark_timestep_started(1)
+
+        assert engine._get_resume_timestep() == 1
+
+    def test_resume_fresh_start(
+        self,
+        minimal_scenario,
+        simple_agents,
+        simple_network,
+        minimal_pop_spec,
+        tmp_path,
+    ):
+        """Fresh database should start from timestep 0."""
+        config = SimulationRunConfig(
+            scenario_path="test.yaml",
+            output_dir=str(tmp_path / "output"),
+        )
+        engine = SimulationEngine(
+            scenario=minimal_scenario,
+            population_spec=minimal_pop_spec,
+            agents=simple_agents,
+            network=simple_network,
+            config=config,
+        )
+
+        assert engine._get_resume_timestep() == 0
+
+    def test_resume_skips_processed_agents(
+        self,
+        minimal_scenario,
+        simple_agents,
+        simple_network,
+        minimal_pop_spec,
+        tmp_path,
+    ):
+        """On resume, agents already reasoned this timestep should be skipped."""
+        config = SimulationRunConfig(
+            scenario_path="test.yaml",
+            output_dir=str(tmp_path / "output"),
+        )
+        engine = SimulationEngine(
+            scenario=minimal_scenario,
+            population_spec=minimal_pop_spec,
+            agents=simple_agents,
+            network=simple_network,
+            config=config,
+        )
+
+        # Expose all agents so they need reasoning
+        for aid in ["a0", "a1", "a2"]:
+            exposure = ExposureRecord(
+                timestep=0, channel="broadcast", content="Test", credibility=0.9
+            )
+            engine.state_manager.record_exposure(aid, exposure)
+
+        # Mark a0 as already reasoned at timestep 0
+        state = AgentState(
+            agent_id="a0",
+            aware=True,
+            position="adopt",
+            conviction=0.5,
+        )
+        engine.state_manager.update_agent_state("a0", state, timestep=0)
+
+        # Get agents to reason — a0 should be skipped because it already reasoned
+        agents_to_reason = engine.state_manager.get_agents_to_reason(
+            timestep=0, threshold=3
+        )
+        already_done = engine.state_manager.get_agents_already_reasoned_this_timestep(0)
+        filtered = [a for a in agents_to_reason if a not in already_done]
+
+        assert "a0" not in filtered
+        # a1 and a2 should still need reasoning (never reasoned)
+        assert "a1" in filtered
+        assert "a2" in filtered
+
+
+class TestTimelineAppend:
+    """Test that timeline uses append mode for resume support."""
+
+    def test_timeline_preserves_events_on_reopen(self, tmp_path):
+        """Events written before close should persist when file is reopened."""
+        from entropy.simulation.timeline import TimelineManager, TimelineReader
+        from entropy.core.models import SimulationEvent, SimulationEventType
+
+        timeline_path = tmp_path / "timeline.jsonl"
+
+        # Write first batch
+        tm1 = TimelineManager(timeline_path)
+        tm1.log_event(
+            SimulationEvent(
+                timestep=0,
+                event_type=SimulationEventType.AGENT_REASONED,
+                agent_id="a0",
+                details={"batch": 1},
+            )
+        )
+        tm1.flush()
+        tm1.close()
+
+        # Reopen and write second batch (append mode)
+        tm2 = TimelineManager(timeline_path)
+        tm2.log_event(
+            SimulationEvent(
+                timestep=1,
+                event_type=SimulationEventType.AGENT_REASONED,
+                agent_id="a1",
+                details={"batch": 2},
+            )
+        )
+        tm2.flush()
+        tm2.close()
+
+        # Read all events — both batches should be present
+        reader = TimelineReader(timeline_path)
+        events = reader.get_all_events()
+        assert len(events) == 2
+        assert events[0]["agent_id"] == "a0"
+        assert events[1]["agent_id"] == "a1"
+
+
+class TestChunkedCommit:
+    """Test that chunked reasoning commits partial results."""
+
+    def test_chunk_size_respected(
+        self,
+        minimal_scenario,
+        simple_agents,
+        simple_network,
+        minimal_pop_spec,
+        tmp_path,
+    ):
+        """Engine should use configured chunk_size."""
+        config = SimulationRunConfig(
+            scenario_path="test.yaml",
+            output_dir=str(tmp_path / "output"),
+        )
+        engine = SimulationEngine(
+            scenario=minimal_scenario,
+            population_spec=minimal_pop_spec,
+            agents=simple_agents,
+            network=simple_network,
+            config=config,
+            chunk_size=2,
+        )
+        assert engine.chunk_size == 2
+
+    def test_process_reasoning_chunk_commits_results(
+        self,
+        minimal_scenario,
+        simple_agents,
+        simple_network,
+        minimal_pop_spec,
+        tmp_path,
+    ):
+        """After processing a chunk, agent states should be updated in DB."""
+        config = SimulationRunConfig(
+            scenario_path="test.yaml",
+            output_dir=str(tmp_path / "output"),
+        )
+        engine = SimulationEngine(
+            scenario=minimal_scenario,
+            population_spec=minimal_pop_spec,
+            agents=simple_agents,
+            network=simple_network,
+            config=config,
+            chunk_size=1,
+        )
+
+        old_state_a0 = AgentState(agent_id="a0")
+        old_state_a1 = AgentState(agent_id="a1")
+        old_states = {"a0": old_state_a0, "a1": old_state_a1}
+
+        # Process first chunk (just a0)
+        response_a0 = _make_reasoning_response(position="adopt", conviction=0.5)
+        chunk1_results = [("a0", response_a0)]
+
+        with engine.state_manager.transaction():
+            r1, c1, s1 = engine._process_reasoning_chunk(
+                timestep=0, results=chunk1_results, old_states=old_states
+            )
+
+        # a0 should be updated
+        state_a0 = engine.state_manager.get_agent_state("a0")
+        assert state_a0.position == "adopt"
+        assert state_a0.last_reasoning_timestep == 0
+
+        # a1 should still be unprocessed
+        state_a1 = engine.state_manager.get_agent_state("a1")
+        assert state_a1.position is None
+        assert state_a1.last_reasoning_timestep == -1
