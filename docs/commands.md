@@ -404,9 +404,28 @@ This is where it all comes together. The simulation engine loads the scenario sp
 
 1. **Seed exposure** — Agents learn about the congestion tax through channels defined in the scenario (city notices, news, social media).
 2. **Network propagation** — Exposed agents share information through their social connections. Edge types and spread modifiers control how fast and far information travels.
-3. **Two-pass agent reasoning** — Each newly-exposed agent receives their persona + the event description + what they've heard from connections. **Pass 1**: the agent role-plays their reaction in natural language (no enums, no anchoring). **Pass 2**: a cheap model classifies the freeform response into outcome categories. This eliminates central tendency bias.
+3. **Two-pass agent reasoning** — Each newly-exposed agent receives their persona + the event description + what they've heard from connections. **Pass 1**: the agent role-plays their reaction in natural language (no enums, no anchoring). **Pass 2**: a cheap model classifies the freeform response into outcome categories. This eliminates central tendency bias. Agents are processed in chunks (default 50, configurable via `--chunk-size`) with per-chunk SQLite commits for crash safety.
 4. **State update** — Agent states are updated with position, sentiment, conviction, and a public statement summarizing their stance. Agents who receive information from multiple sources may re-evaluate (controlled by `--threshold`).
 5. **Stopping check** — The engine checks if exposure has saturated, opinions have converged, or max timesteps are reached.
+
+### Live progress display
+
+In normal mode, the CLI shows a live-updating display with per-agent progress and decision distribution bars:
+
+```
+Timestep 1/100 | 267/513 agents (52%) | Exposure: 65.3% | 5m 23s
+
+  pay_for_extra_members   52% ████████████████░░░░
+  remove_shared_access    31% ██████████░░░░░░░░░░
+  cancel_or_downgrade     12% ████░░░░░░░░░░░░░░░░
+  switch_to_competitor     5% ██░░░░░░░░░░░░░░░░░░
+```
+
+Position counts are cumulative across all timesteps. In verbose mode (`-v`), per-agent log lines include the agent's position and the engine logs periodic summary blocks every 50 agents with distribution and averages.
+
+### Checkpointing and resume
+
+The simulation checkpoints after each chunk of agents. If the process crashes or is interrupted (`Ctrl-C`), rerunning the same command with the same `--output` directory automatically resumes from where it left off — completed timesteps are skipped, and already-processed agents within a partial timestep are not re-reasoned.
 
 ### What emerges
 
@@ -431,6 +450,7 @@ These aren't scripted responses. They emerge from each agent's unique combinatio
 | **Opt** | `--rate-tier` | Provider rate limit tier 1-4 (default: from config) |
 | **Opt** | `--rpm-override` | Override requests per minute limit |
 | **Opt** | `--tpm-override` | Override tokens per minute limit |
+| **Opt** | `--chunk-size` | Agents per reasoning chunk for checkpointing (default: `50`) |
 | **Opt** | `--seed` | Random seed for reproducibility |
 | **Opt** | `--persona` / `-p` | Persona config YAML (auto-detected if not specified) |
 | **Opt** | `--quiet` / `-q` | Suppress progress output |

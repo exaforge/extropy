@@ -97,6 +97,8 @@ Three phases, each mapping to a package under `entropy/`:
 
 **Checkpointing** (`state.py`, `engine.py`): Each timestep phase has its own transaction — exposures, each reasoning chunk, and summary are committed separately. The `simulation_metadata` table stores checkpoint state: `mark_timestep_started()` records which timestep is in progress, `mark_timestep_completed()` clears it. On resume (`_get_resume_timestep()`), the engine detects crashed-mid-timestep (checkpoint set) or last-completed-timestep and picks up from there. Already-processed agents within a partial timestep are skipped via `get_agents_already_reasoned_this_timestep()`. Metadata uses immediate commits (not wrapped in `transaction()`). Setup methods (`_create_schema`, `initialize_agents`) also retain their own commits. CLI: `--chunk-size` (default 50).
 
+**Live progress** (`progress.py`, `cli/commands/simulate.py`): `SimulationProgress` is a thread-safe dataclass shared between the simulation thread and CLI display thread. The engine calls `record_agent_done(position, sentiment, conviction)` per agent via an `on_agent_done` callback passed to `batch_reason_agents()`. The CLI renders a `Rich.Live` display at 4 Hz showing timestep/agent progress, exposure rate, elapsed time, and unicode distribution bars for each position. Position counts are cumulative across all timesteps. Verbose mode logs periodic summary blocks every 50 agents via `_log_verbose_summary()`.
+
 **Conviction system**: Agents output a 0-100 integer score on a free scale (with descriptive anchors: 0=no idea, 25=leaning, 50=clear opinion, 75=quite sure, 100=certain). `score_to_conviction_float()` buckets it immediately: 0-15→0.1 (very_uncertain), 16-35→0.3 (leaning), 36-60→0.5 (moderate), 61-85→0.7 (firm), 86-100→0.9 (absolute). Agents never see categorical labels or float values — only the 0-100 scale. On re-reasoning, memory traces show the bucketed label (e.g. "you felt *moderate* about this") via `float_to_conviction()`. Engine conviction thresholds reference `CONVICTION_MAP[ConvictionLevel.*]` constants, not hardcoded floats.
 
 **Cost estimation** (`simulation/estimator.py`): `entropy estimate` runs a simplified SIR-like propagation model to predict LLM calls per timestep without making any API calls. Token counts estimated from persona size + scenario content. Pricing from `core/pricing.py` model database. Supports `--verbose` for per-timestep breakdown.
@@ -170,10 +172,11 @@ Scenario validation (`entropy/scenario/validator.py`): attribute reference valid
 
 ## Tests
 
-pytest + pytest-asyncio. Fixtures in `tests/conftest.py` include seeded RNG (`Random(42)`), minimal/complex population specs, and sample agents. 570+ tests across 14+ test files:
+pytest + pytest-asyncio. Fixtures in `tests/conftest.py` include seeded RNG (`Random(42)`), minimal/complex population specs, and sample agents. 580+ tests across 15+ test files:
 
 - `test_models.py`, `test_network.py`, `test_sampler.py`, `test_scenario.py`, `test_simulation.py`, `test_validator.py` — core logic
-- `test_engine.py` — mock-based engine integration (seed exposure, flip resistance, conviction-gated sharing, chunked reasoning, checkpointing, resume logic, metadata lifecycle)
+- `test_engine.py` — mock-based engine integration (seed exposure, flip resistance, conviction-gated sharing, chunked reasoning, checkpointing, resume logic, metadata lifecycle, progress state wiring)
+- `test_progress.py` — SimulationProgress thread-safe state (begin_timestep, record_agent_done, position counts, running averages, snapshot isolation)
 - `test_compiler.py` — scenario compiler pipeline with mocked LLM calls, auto-configuration
 - `test_providers.py` — provider response extraction, transient error retry, validation-retry exhaustion, source URL extraction (mocked HTTP)
 - `test_rate_limiter.py` — token bucket, dual-bucket rate limiter, `for_provider` factory
