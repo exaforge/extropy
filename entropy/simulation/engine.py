@@ -38,6 +38,7 @@ from ..core.models import (
 from ..core.rate_limiter import DualRateLimiter
 from ..population.network import load_agents_json
 from ..population.persona import PersonaConfig
+from .progress import SimulationProgress
 from .state import StateManager
 from .persona import generate_persona
 from .reasoning import batch_reason_agents, create_reasoning_context
@@ -202,6 +203,10 @@ class SimulationEngine:
         # Progress callback
         self._on_progress: TimestepProgressCallback | None = None
 
+        # Live progress state (thread-safe, for CLI display)
+        self._progress: SimulationProgress | None = None
+        self._summary_interval: int = 50
+
     def set_progress_callback(self, callback: TimestepProgressCallback) -> None:
         """Set progress callback.
 
@@ -209,6 +214,14 @@ class SimulationEngine:
             callback: Function(timestep, max_timesteps, status)
         """
         self._on_progress = callback
+
+    def set_progress_state(self, progress: SimulationProgress) -> None:
+        """Set shared progress state for live display.
+
+        Args:
+            progress: Thread-safe SimulationProgress instance
+        """
+        self._progress = progress
 
     def _report_progress(self, timestep: int, status: str) -> None:
         """Report progress to callback."""
@@ -218,6 +231,35 @@ class SimulationEngine:
                 self.scenario.simulation.max_timesteps,
                 status,
             )
+
+    def _log_verbose_summary(self, snap: dict) -> None:
+        """Log a periodic summary block with distribution and averages.
+
+        Args:
+            snap: Snapshot dict from SimulationProgress.snapshot()
+        """
+        counts = snap.get("position_counts", {})
+        total = sum(counts.values()) or 1
+        avg_sent = snap.get("avg_sentiment")
+        avg_conv = snap.get("avg_conviction")
+        done = snap.get("agents_done", 0)
+        agents_total = snap.get("agents_total", 0)
+
+        lines = [
+            f"[SUMMARY] Timestep {snap['timestep']} | {done}/{agents_total} agents"
+        ]
+
+        # Distribution sorted by count desc
+        for position, count in sorted(counts.items(), key=lambda x: -x[1]):
+            pct = count / total * 100
+            lines.append(f"  {position}: {pct:.0f}% ({count})")
+
+        if avg_sent is not None:
+            lines.append(f"  avg_sentiment: {avg_sent:.2f}")
+        if avg_conv is not None:
+            lines.append(f"  avg_conviction: {avg_conv:.2f}")
+
+        logger.info("\n".join(lines))
 
     def _get_resume_timestep(self) -> int:
         """Determine which timestep to start/resume from.
@@ -418,6 +460,33 @@ class SimulationEngine:
         if not agents_to_reason:
             return 0, 0, 0
 
+        # Update progress state for live display
+        if self._progress:
+            exposure_rate = self.state_manager.get_exposure_rate()
+            self._progress.begin_timestep(
+                timestep=timestep,
+                max_timesteps=self.scenario.simulation.max_timesteps,
+                agents_total=len(agents_to_reason),
+                exposure_rate=exposure_rate,
+            )
+
+        # Create on_agent_done closure for progress tracking
+        def _on_agent_done(agent_id: str, result: Any) -> None:
+            if result is None:
+                return
+            if self._progress:
+                self._progress.record_agent_done(
+                    position=result.position,
+                    sentiment=result.sentiment,
+                    conviction=result.conviction,
+                )
+                # Log verbose summary at intervals
+                if (
+                    self._progress.agents_done % self._summary_interval == 0
+                    and self._progress.agents_done > 0
+                ):
+                    self._log_verbose_summary(self._progress.snapshot())
+
         # Build contexts and old states
         contexts = []
         old_states: dict[str, AgentState] = {}
@@ -441,6 +510,7 @@ class SimulationEngine:
                 self.scenario,
                 self.config,
                 rate_limiter=self.rate_limiter,
+                on_agent_done=_on_agent_done,
             )
             reasoning_elapsed = time.time() - reasoning_start
             self.total_reasoning_calls += len(chunk_results)
@@ -799,6 +869,7 @@ def run_simulation(
     rpm_override: int | None = None,
     tpm_override: int | None = None,
     chunk_size: int = 50,
+    progress: SimulationProgress | None = None,
 ) -> SimulationSummary:
     """Run a simulation from a scenario file.
 
@@ -818,6 +889,7 @@ def run_simulation(
         rpm_override: Override RPM limit
         tpm_override: Override TPM limit
         chunk_size: Agents per reasoning chunk for checkpointing
+        progress: Optional SimulationProgress for live display tracking
 
     Returns:
         SimulationSummary with results
@@ -904,5 +976,8 @@ def run_simulation(
 
     if on_progress:
         engine.set_progress_callback(on_progress)
+
+    if progress:
+        engine.set_progress_state(progress)
 
     return engine.run()

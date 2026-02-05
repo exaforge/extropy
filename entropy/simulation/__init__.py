@@ -60,6 +60,8 @@ from .engine import (
     run_simulation,
 )
 
+from .progress import SimulationProgress
+
 from .state import StateManager
 from .persona import generate_persona, render_persona
 from .reasoning import (
@@ -93,6 +95,7 @@ __all__ = [
     "run_simulation",
     "SimulationEngine",
     "SimulationSummary",
+    "SimulationProgress",
     # Models
     "SimulationEventType",
     "ExposureRecord",

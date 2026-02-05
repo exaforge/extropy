@@ -8,6 +8,8 @@ from datetime import datetime
 
 import pytest
 
+from unittest.mock import patch
+
 from entropy.core.models import (
     AgentState,
     ConvictionLevel,
@@ -16,6 +18,7 @@ from entropy.core.models import (
     ReasoningResponse,
     SimulationRunConfig,
 )
+from entropy.simulation.progress import SimulationProgress
 from entropy.core.models.scenario import (
     Event,
     EventType,
@@ -1098,3 +1101,110 @@ class TestChunkedCommit:
         state_a1 = engine.state_manager.get_agent_state("a1")
         assert state_a1.position is None
         assert state_a1.last_reasoning_timestep == -1
+
+
+class TestProgressState:
+    """Test that engine wires SimulationProgress correctly."""
+
+    def test_progress_state_updated(
+        self,
+        minimal_scenario,
+        simple_agents,
+        simple_network,
+        minimal_pop_spec,
+        tmp_path,
+    ):
+        """Progress state should reflect agents processed after reasoning."""
+        config = SimulationRunConfig(
+            scenario_path="test.yaml",
+            output_dir=str(tmp_path / "output"),
+        )
+        engine = SimulationEngine(
+            scenario=minimal_scenario,
+            population_spec=minimal_pop_spec,
+            agents=simple_agents,
+            network=simple_network,
+            config=config,
+        )
+
+        progress = SimulationProgress()
+        engine.set_progress_state(progress)
+
+        # Mock batch_reason_agents to return fixed results
+        response_a0 = _make_reasoning_response(position="adopt", conviction=0.5)
+        response_a1 = _make_reasoning_response(position="reject", conviction=0.7)
+
+        def fake_batch(contexts, scenario, cfg, rate_limiter=None, on_agent_done=None):
+            results = []
+            for ctx in contexts:
+                if ctx.agent_id == "a0":
+                    resp = response_a0
+                elif ctx.agent_id == "a1":
+                    resp = response_a1
+                else:
+                    resp = _make_reasoning_response()
+                results.append((ctx.agent_id, resp))
+                if on_agent_done:
+                    on_agent_done(ctx.agent_id, resp)
+            return results
+
+        # Expose all agents so they need reasoning
+        for aid in ["a0", "a1", "a2"]:
+            exposure = ExposureRecord(
+                timestep=0, channel="broadcast", content="Test", credibility=0.9
+            )
+            engine.state_manager.record_exposure(aid, exposure)
+
+        with patch(
+            "entropy.simulation.engine.batch_reason_agents", side_effect=fake_batch
+        ):
+            engine._reason_agents(0)
+
+        snap = progress.snapshot()
+        assert snap["agents_done"] == 3
+        assert "adopt" in snap["position_counts"]
+        assert "reject" in snap["position_counts"]
+
+    def test_on_agent_done_callback_passed(
+        self,
+        minimal_scenario,
+        simple_agents,
+        simple_network,
+        minimal_pop_spec,
+        tmp_path,
+    ):
+        """batch_reason_agents should receive on_agent_done kwarg when progress is set."""
+        config = SimulationRunConfig(
+            scenario_path="test.yaml",
+            output_dir=str(tmp_path / "output"),
+        )
+        engine = SimulationEngine(
+            scenario=minimal_scenario,
+            population_spec=minimal_pop_spec,
+            agents=simple_agents,
+            network=simple_network,
+            config=config,
+        )
+
+        progress = SimulationProgress()
+        engine.set_progress_state(progress)
+
+        # Expose one agent
+        exposure = ExposureRecord(
+            timestep=0, channel="broadcast", content="Test", credibility=0.9
+        )
+        engine.state_manager.record_exposure("a0", exposure)
+
+        received_kwargs = {}
+
+        def fake_batch(contexts, scenario, cfg, rate_limiter=None, on_agent_done=None):
+            received_kwargs["on_agent_done"] = on_agent_done
+            resp = _make_reasoning_response()
+            return [(ctx.agent_id, resp) for ctx in contexts]
+
+        with patch(
+            "entropy.simulation.engine.batch_reason_agents", side_effect=fake_batch
+        ):
+            engine._reason_agents(0)
+
+        assert received_kwargs.get("on_agent_done") is not None

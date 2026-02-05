@@ -4,7 +4,7 @@ These Protocol classes provide type-safe callback signatures without
 requiring runtime changes — existing callables continue to work via duck typing.
 """
 
-from typing import Protocol
+from typing import Any, Protocol
 
 
 class StepProgressCallback(Protocol):
@@ -63,3 +63,14 @@ class NetworkProgressCallback(Protocol):
     """
 
     def __call__(self, stage: str, current: int, total: int) -> None: ...
+
+
+class AgentDoneCallback(Protocol):
+    """Callback invoked after each agent completes reasoning.
+
+    Args:
+        agent_id: The agent's identifier
+        response: The ReasoningResponse (or None if failed)
+    """
+
+    def __call__(self, agent_id: str, response: Any) -> None: ...

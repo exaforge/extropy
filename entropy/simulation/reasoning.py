@@ -12,6 +12,7 @@ safe middle options when role-play and classification were combined.
 
 import logging
 import time
+from collections.abc import Callable
 from typing import Any
 
 from ..core.llm import simple_call, simple_call_async
@@ -710,6 +711,7 @@ def batch_reason_agents(
     config: SimulationRunConfig,
     max_concurrency: int = 50,
     rate_limiter: Any = None,
+    on_agent_done: Callable[[str, ReasoningResponse | None], None] | None = None,
 ) -> list[tuple[str, ReasoningResponse | None]]:
     """Reason multiple agents concurrently using asyncio with two-pass reasoning.
 
@@ -719,6 +721,7 @@ def batch_reason_agents(
         config: Simulation run configuration
         max_concurrency: Max concurrent API calls (default 50, fallback if no rate limiter)
         rate_limiter: Optional DualRateLimiter instance for API pacing
+        on_agent_done: Optional callback(agent_id, response) called per agent after reasoning
 
     Returns:
         List of (agent_id, response) tuples in original order
@@ -763,12 +766,16 @@ def batch_reason_agents(
                 if result:
                     logger.info(
                         f"[BATCH] {completed[0]}/{total}: {ctx.agent_id} done in {elapsed:.2f}s "
-                        f"(sentiment={result.sentiment}, conviction={float_to_conviction(result.conviction)})"
+                        f"(position={result.position}, sentiment={result.sentiment}, "
+                        f"conviction={float_to_conviction(result.conviction)})"
                     )
                 else:
                     logger.warning(
                         f"[BATCH] {completed[0]}/{total}: {ctx.agent_id} FAILED"
                     )
+
+                if on_agent_done:
+                    on_agent_done(ctx.agent_id, result)
 
                 return (ctx.agent_id, result)
 

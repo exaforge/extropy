@@ -9,9 +9,68 @@ import typer
 from rich.live import Live
 from rich.logging import RichHandler
 from rich.spinner import Spinner
+from rich.text import Text
 
 from ..app import app, console
 from ..utils import format_elapsed
+
+
+_BAR_WIDTH = 20
+
+
+def _build_progress_display(snap: dict, elapsed: float) -> Text:
+    """Build a Rich Text renderable showing live simulation progress.
+
+    Shows a header line with timestep/agent progress and distribution bars
+    for each position, sorted by count descending.
+
+    Args:
+        snap: Snapshot dict from SimulationProgress.snapshot()
+        elapsed: Elapsed seconds since simulation start
+
+    Returns:
+        Rich Text object for Live display
+    """
+    text = Text()
+
+    agents_done = snap.get("agents_done", 0)
+    agents_total = snap.get("agents_total", 0)
+    timestep = snap.get("timestep", 0)
+    max_ts = snap.get("max_timesteps", 0)
+    exposure_rate = snap.get("exposure_rate", 0.0)
+
+    # Header line
+    if max_ts > 0 and agents_total > 0:
+        pct = agents_done / agents_total * 100 if agents_total > 0 else 0
+        header = (
+            f"Timestep {timestep + 1}/{max_ts} | "
+            f"{agents_done}/{agents_total} agents ({pct:.0f}%) | "
+            f"Exposure: {exposure_rate:.1%} | "
+            f"{format_elapsed(elapsed)}"
+        )
+    elif max_ts > 0:
+        header = f"Timestep {timestep + 1}/{max_ts} | {format_elapsed(elapsed)}"
+    else:
+        header = f"Starting... | {format_elapsed(elapsed)}"
+
+    text.append(header, style="cyan bold")
+
+    # Distribution bars
+    counts = snap.get("position_counts", {})
+    if counts:
+        total = sum(counts.values()) or 1
+        # Find longest position name for alignment
+        max_name_len = max(len(name) for name in counts)
+
+        for position, count in sorted(counts.items(), key=lambda x: -x[1]):
+            pct = count / total * 100
+            filled = round(pct / 100 * _BAR_WIDTH)
+            bar = "\u2588" * filled + "\u2591" * (_BAR_WIDTH - filled)
+            text.append("\n")
+            text.append(f"\n  {position:<{max_name_len}}  {pct:>3.0f}% ", style="bold")
+            text.append(bar, style="cyan")
+
+    return text
 
 
 def setup_logging(verbose: bool = False, debug: bool = False):
@@ -101,6 +160,7 @@ def simulate_command(
         entropy simulate scenario.yaml -o results/ --persona population.persona.yaml
     """
     from ...simulation import run_simulation
+    from ...simulation.progress import SimulationProgress
 
     # Setup logging based on verbosity
     setup_logging(verbose=verbose, debug=debug)
@@ -155,7 +215,10 @@ def simulate_command(
         console.print(f"Logging: {'DEBUG' if debug else 'VERBOSE'}")
     console.print()
 
-    # Progress tracking
+    # Shared progress state for live display
+    progress_state = SimulationProgress()
+
+    # Progress tracking (timestep-level callback)
     current_progress = [0, 0, "Starting..."]
 
     def on_progress(timestep: int, max_timesteps: int, status: str):
@@ -182,13 +245,14 @@ def simulate_command(
                 rpm_override=effective_rpm,
                 tpm_override=effective_tpm,
                 chunk_size=chunk_size,
+                progress=progress_state,
             )
             simulation_error = None
         except Exception as e:
             simulation_error = e
             result = None
     else:
-        # Run simulation in thread with spinner
+        # Run simulation in thread with live display
         simulation_done = Event()
         simulation_error = None
         result = None
@@ -210,6 +274,7 @@ def simulate_command(
                     rpm_override=effective_rpm,
                     tpm_override=effective_tpm,
                     chunk_size=chunk_size,
+                    progress=progress_state,
                 )
             except Exception as e:
                 simulation_error = e
@@ -220,21 +285,17 @@ def simulate_command(
         simulation_thread.start()
 
         if not quiet:
-            spinner = Spinner("dots", text="Starting...", style="cyan")
             with Live(
-                spinner, console=console, refresh_per_second=12.5, transient=True
-            ):
+                Spinner("dots", text="Starting...", style="cyan"),
+                console=console,
+                refresh_per_second=4,
+                transient=True,
+            ) as live:
                 while not simulation_done.is_set():
                     elapsed = time.time() - start_time
-                    timestep, max_ts, status = current_progress
-                    if max_ts > 0:
-                        pct = timestep / max_ts * 100
-                        spinner.update(
-                            text=f"Timestep {timestep}/{max_ts} ({pct:.0f}%) | {status} | {format_elapsed(elapsed)}"
-                        )
-                    else:
-                        spinner.update(text=f"{status} | {format_elapsed(elapsed)}")
-                    time.sleep(0.1)
+                    snap = progress_state.snapshot()
+                    live.update(_build_progress_display(snap, elapsed))
+                    time.sleep(0.25)
         else:
             simulation_done.wait()
 

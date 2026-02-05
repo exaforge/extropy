@@ -83,10 +83,10 @@ Three phases, each mapping to a package under `entropy/`:
 
 **Engine** (`engine.py`) runs per-timestep loop, decomposed into sub-functions:
 1. **`_apply_exposures(timestep)`** — Apply seed exposures from scenario rules (`propagation.py`), then propagate through network via conviction-gated sharing (very_uncertain agents don't share). Uses pre-built adjacency list for O(1) neighbor lookups.
-2. **`_reason_agents(timestep)`** — Select agents to reason (first exposure OR multi-touch threshold exceeded, default: 3 new exposures since last reasoning), build reasoning contexts, run two-pass async LLM reasoning (`reasoning.py`, rate-limiter-controlled):
+2. **`_reason_agents(timestep)`** — Select agents to reason (first exposure OR multi-touch threshold exceeded, default: 3 new exposures since last reasoning), filter out already-processed agents (resume support), split into chunks of `chunk_size` (default 50), run two-pass async LLM reasoning per chunk (`reasoning.py`, rate-limiter-controlled), commit per chunk:
    - **Pass 1 (role-play)**: Agent reasons in first person with no categorical enums. Produces reasoning, public_statement, sentiment, conviction (0-100 integer, bucketed post-hoc), will_share. Memory trace (last 3 reasoning summaries) is fed back for re-reasoning agents.
    - **Pass 2 (classification)**: A cheap model classifies the free-text reasoning into scenario-defined categorical/boolean/float outcomes. Position is extracted here — it is output-only, never used in peer influence.
-3. **`_apply_state_updates(timestep, results, old_states)`** — Process reasoning results: conviction-based flip resistance (firm+ agents reject flips unless new conviction is moderate+), conviction-gated sharing, state persistence. State updates are batched via `batch_update_states()`.
+3. **`_process_reasoning_chunk(timestep, results, old_states)`** — Process a chunk of reasoning results: conviction-based flip resistance (firm+ agents reject flips unless new conviction is moderate+), conviction-gated sharing, state persistence. State updates are batched via `batch_update_states()`.
 4. Compute timestep summary, check stopping conditions (`stopping.py`) — Compound conditions like `"exposure_rate > 0.95 and no_state_changes_for > 10"`, convergence detection via sentiment variance.
 
 **Semantic peer influence**: Agents see peers' `public_statement` + sentiment tone, NOT position labels.
@@ -95,7 +95,7 @@ Three phases, each mapping to a package under `entropy/`:
 
 **Two-pass reasoning rationale**: Single-pass reasoning caused 83% of agents to pick safe middle options (central tendency bias). Splitting role-play from classification fixes this — agents reason naturally in Pass 1, then a cheap model maps to categories in Pass 2.
 
-**Transaction batching** (`state.py`): All writes within a timestep are wrapped in a single SQLite transaction via `state_manager.transaction()` context manager. Commits on success, rolls back on exception. Individual state methods (`record_exposure`, `update_agent_state`, `save_memory_entry`, `log_event`, `save_timestep_summary`) no longer commit individually — they rely on the transaction boundary. Setup methods (`_create_schema`, `initialize_agents`) retain their own commits.
+**Checkpointing** (`state.py`, `engine.py`): Each timestep phase has its own transaction — exposures, each reasoning chunk, and summary are committed separately. The `simulation_metadata` table stores checkpoint state: `mark_timestep_started()` records which timestep is in progress, `mark_timestep_completed()` clears it. On resume (`_get_resume_timestep()`), the engine detects crashed-mid-timestep (checkpoint set) or last-completed-timestep and picks up from there. Already-processed agents within a partial timestep are skipped via `get_agents_already_reasoned_this_timestep()`. Metadata uses immediate commits (not wrapped in `transaction()`). Setup methods (`_create_schema`, `initialize_agents`) also retain their own commits. CLI: `--chunk-size` (default 50).
 
 **Conviction system**: Agents output a 0-100 integer score on a free scale (with descriptive anchors: 0=no idea, 25=leaning, 50=clear opinion, 75=quite sure, 100=certain). `score_to_conviction_float()` buckets it immediately: 0-15→0.1 (very_uncertain), 16-35→0.3 (leaning), 36-60→0.5 (moderate), 61-85→0.7 (firm), 86-100→0.9 (absolute). Agents never see categorical labels or float values — only the 0-100 scale. On re-reasoning, memory traces show the bucketed label (e.g. "you felt *moderate* about this") via `float_to_conviction()`. Engine conviction thresholds reference `CONVICTION_MAP[ConvictionLevel.*]` constants, not hardcoded floats.
 
@@ -139,7 +139,7 @@ All Pydantic v2. Key hierarchy:
 
 - `population.py`: `PopulationSpec` → `AttributeSpec` → `SamplingConfig` → `Distribution` / `Modifier` / `Constraint`
 - `scenario.py`: `ScenarioSpec` → `Event`, `SeedExposure` (channels + rules), `InteractionConfig`, `SpreadConfig`, `OutcomeConfig`
-- `simulation.py`: `ConvictionLevel`, `MemoryEntry`, `AgentState` (conviction, public_statement), `PeerOpinion` (public_statement, credibility), `ReasoningContext` (memory_trace), `ReasoningResponse` (conviction, public_statement, reasoning_summary), `SimulationRunConfig` (pivotal_model, routine_model), `TimestepSummary` (average_conviction, sentiment_variance)
+- `simulation.py`: `ConvictionLevel`, `MemoryEntry`, `AgentState` (conviction, public_statement), `PeerOpinion` (public_statement, credibility), `ReasoningContext` (memory_trace), `ReasoningResponse` (conviction, public_statement, reasoning_summary), `SimulationRunConfig` (pivotal_model, routine_model, chunk_size), `TimestepSummary` (average_conviction, sentiment_variance)
 - `network.py`: `Edge`, `NodeMetrics`, `NetworkMetrics`
 - `validation.py`: `ValidationIssue`, `ValidationResult`
 
@@ -170,10 +170,10 @@ Scenario validation (`entropy/scenario/validator.py`): attribute reference valid
 
 ## Tests
 
-pytest + pytest-asyncio. Fixtures in `tests/conftest.py` include seeded RNG (`Random(42)`), minimal/complex population specs, and sample agents. Twelve test files:
+pytest + pytest-asyncio. Fixtures in `tests/conftest.py` include seeded RNG (`Random(42)`), minimal/complex population specs, and sample agents. 570+ tests across 14+ test files:
 
 - `test_models.py`, `test_network.py`, `test_sampler.py`, `test_scenario.py`, `test_simulation.py`, `test_validator.py` — core logic
-- `test_engine.py` — mock-based engine integration (seed exposure, flip resistance, conviction-gated sharing, sub-function decomposition)
+- `test_engine.py` — mock-based engine integration (seed exposure, flip resistance, conviction-gated sharing, chunked reasoning, checkpointing, resume logic, metadata lifecycle)
 - `test_compiler.py` — scenario compiler pipeline with mocked LLM calls, auto-configuration
 - `test_providers.py` — provider response extraction, transient error retry, validation-retry exhaustion, source URL extraction (mocked HTTP)
 - `test_rate_limiter.py` — token bucket, dual-bucket rate limiter, `for_provider` factory
@@ -188,6 +188,6 @@ CI: `.github/workflows/test.yml` — lint (ruff check + format) and test (pytest
 - Network config: YAML (`NetworkConfig.to_yaml()`/`from_yaml()`) — attribute weights, edge type rules, influence factors, degree multipliers
 - Agents: JSON (array of objects with `_id`)
 - Network: JSON (`{meta, nodes, edges}`)
-- Simulation state: SQLite (tables: agent_states, exposures, memory_traces, timeline, timestep_summaries)
+- Simulation state: SQLite (tables: agent_states, exposures, memory_traces, timeline, timestep_summaries, shared_to, simulation_metadata)
 - Timeline: JSONL (streaming, crash-safe)
 - Results: JSON files in output directory (agent_states.json, by_timestep.json, outcome_distributions.json, meta.json)
