@@ -269,3 +269,50 @@ class TestEvaluateStoppingConditions:
 
         should_stop, reason = evaluate_stopping_conditions(10, config, sm, summaries)
         assert should_stop is True
+
+    def test_quiescence_auto_stop(self, tmp_path):
+        """Simulation stops when no agents reason for 3 consecutive timesteps."""
+        agents = [{"_id": "a0"}]
+        sm = self._make_state_manager(tmp_path, agents)
+        config = SimulationConfig(max_timesteps=100)
+
+        summaries = [
+            _make_summary(0, agents_reasoned=5),
+            _make_summary(1, agents_reasoned=0),
+            _make_summary(2, agents_reasoned=0),
+            _make_summary(3, agents_reasoned=0),
+        ]
+
+        should_stop, reason = evaluate_stopping_conditions(3, config, sm, summaries)
+        assert should_stop is True
+        assert reason == "simulation_quiescent"
+
+    def test_quiescence_not_triggered_with_reasoning(self, tmp_path):
+        """Quiescence should NOT trigger if agents reasoned in one of the last 3 timesteps."""
+        agents = [{"_id": "a0"}]
+        sm = self._make_state_manager(tmp_path, agents)
+        config = SimulationConfig(max_timesteps=100)
+
+        summaries = [
+            _make_summary(0, agents_reasoned=5),
+            _make_summary(1, agents_reasoned=0),
+            _make_summary(2, agents_reasoned=1),  # one agent reasoned
+            _make_summary(3, agents_reasoned=0),
+        ]
+
+        should_stop, reason = evaluate_stopping_conditions(3, config, sm, summaries)
+        assert should_stop is False
+
+    def test_quiescence_needs_3_timesteps(self, tmp_path):
+        """Quiescence should NOT trigger with fewer than 3 summaries."""
+        agents = [{"_id": "a0"}]
+        sm = self._make_state_manager(tmp_path, agents)
+        config = SimulationConfig(max_timesteps=100)
+
+        summaries = [
+            _make_summary(0, agents_reasoned=0),
+            _make_summary(1, agents_reasoned=0),
+        ]
+
+        should_stop, reason = evaluate_stopping_conditions(1, config, sm, summaries)
+        assert should_stop is False

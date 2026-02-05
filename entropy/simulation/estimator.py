@@ -205,9 +205,10 @@ def estimate_simulation_cost(
         # First-time reasoning: all newly exposed agents reason
         first_time_reasoning = total_new
 
-        # Re-reasoning: ~5% of previously-reasoned agents per timestep
-        # (accounts for multi-touch threshold + network re-exposure)
-        re_reasoning = reasoned_ever * 0.05 if reasoned_ever > 0 and t > 0 else 0.0
+        # Re-reasoning: ~2% of previously-reasoned agents per timestep
+        # (committed agents with conviction >= firm skip re-reasoning;
+        # one-shot sharing + unique-source multi-touch reduce triggers)
+        re_reasoning = reasoned_ever * 0.02 if reasoned_ever > 0 and t > 0 else 0.0
 
         reasoning_this_step = int(round(first_time_reasoning + re_reasoning))
 

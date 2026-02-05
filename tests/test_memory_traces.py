@@ -15,11 +15,12 @@ from entropy.core.models import (
 from entropy.simulation.state import StateManager
 
 
-def _make_exposure(timestep=0, channel="broadcast"):
+def _make_exposure(timestep=0, channel="broadcast", source_agent_id=None):
     """Factory for ExposureRecord."""
     return ExposureRecord(
         timestep=timestep,
         channel=channel,
+        source_agent_id=source_agent_id,
         content="test content",
         credibility=0.9,
     )
@@ -147,7 +148,7 @@ class TestGetAgentsToReason:
         assert "a0" not in agents
 
     def test_multi_touch_below_threshold(self, state_mgr):
-        """Agent who reasoned and got < threshold new exposures → excluded."""
+        """Agent who reasoned and got < threshold unique source exposures → excluded."""
         # Make aware and reason
         state_mgr.record_exposure("a0", _make_exposure(timestep=0))
         state_mgr.update_agent_state(
@@ -162,15 +163,19 @@ class TestGetAgentsToReason:
             timestep=0,
         )
 
-        # Add 2 new exposures (threshold is 3)
-        state_mgr.record_exposure("a0", _make_exposure(timestep=1))
-        state_mgr.record_exposure("a0", _make_exposure(timestep=2))
+        # Add 2 network exposures from unique sources (threshold is 3)
+        state_mgr.record_exposure(
+            "a0", _make_exposure(timestep=1, channel="network", source_agent_id="s1")
+        )
+        state_mgr.record_exposure(
+            "a0", _make_exposure(timestep=2, channel="network", source_agent_id="s2")
+        )
 
         agents = state_mgr.get_agents_to_reason(timestep=2, threshold=3)
         assert "a0" not in agents
 
     def test_multi_touch_at_threshold(self, state_mgr):
-        """Agent who reasoned and got exactly threshold new exposures → included."""
+        """Agent who reasoned and got exactly threshold unique source exposures → included."""
         state_mgr.record_exposure("a0", _make_exposure(timestep=0))
         state_mgr.update_agent_state(
             "a0",
@@ -184,16 +189,20 @@ class TestGetAgentsToReason:
             timestep=0,
         )
 
-        # Add 3 new exposures (threshold is 3)
-        state_mgr.record_exposure("a0", _make_exposure(timestep=1))
-        state_mgr.record_exposure("a0", _make_exposure(timestep=2))
-        state_mgr.record_exposure("a0", _make_exposure(timestep=3))
+        # Add 3 network exposures from 3 unique sources (threshold is 3)
+        for i in range(3):
+            state_mgr.record_exposure(
+                "a0",
+                _make_exposure(
+                    timestep=i + 1, channel="network", source_agent_id=f"src_{i}"
+                ),
+            )
 
         agents = state_mgr.get_agents_to_reason(timestep=3, threshold=3)
         assert "a0" in agents
 
     def test_multi_touch_above_threshold(self, state_mgr):
-        """Agent who reasoned and got > threshold new exposures → included."""
+        """Agent who reasoned and got > threshold unique source exposures → included."""
         state_mgr.record_exposure("a0", _make_exposure(timestep=0))
         state_mgr.update_agent_state(
             "a0",
@@ -207,9 +216,14 @@ class TestGetAgentsToReason:
             timestep=0,
         )
 
-        # Add 5 new exposures
+        # Add 5 network exposures from unique sources
         for t in range(1, 6):
-            state_mgr.record_exposure("a0", _make_exposure(timestep=t))
+            state_mgr.record_exposure(
+                "a0",
+                _make_exposure(
+                    timestep=t, channel="network", source_agent_id=f"src_{t}"
+                ),
+            )
 
         agents = state_mgr.get_agents_to_reason(timestep=5, threshold=3)
         assert "a0" in agents
@@ -237,7 +251,7 @@ class TestGetAgentsToReason:
         # a0: aware, never reasoned → should reason
         state_mgr.record_exposure("a0", _make_exposure(timestep=0))
 
-        # a1: reasoned, 3 new exposures → should reason (multi-touch)
+        # a1: reasoned, 3 unique-source network exposures → should reason (multi-touch)
         state_mgr.record_exposure("a1", _make_exposure(timestep=0))
         state_mgr.update_agent_state(
             "a1",
@@ -251,10 +265,15 @@ class TestGetAgentsToReason:
             timestep=0,
         )
         for t in range(1, 4):
-            state_mgr.record_exposure("a1", _make_exposure(timestep=t))
+            state_mgr.record_exposure(
+                "a1",
+                _make_exposure(
+                    timestep=t, channel="network", source_agent_id=f"src_{t}"
+                ),
+            )
 
         # a2: not aware → should not reason
-        # a3: reasoned, only 1 new exposure → should not reason
+        # a3: reasoned, only 1 unique-source network exposure → should not reason
         state_mgr.record_exposure("a3", _make_exposure(timestep=0))
         state_mgr.update_agent_state(
             "a3",
@@ -263,11 +282,14 @@ class TestGetAgentsToReason:
                 aware=True,
                 position="reject",
                 sentiment=-0.3,
-                conviction=0.7,
+                conviction=0.3,
             ),
             timestep=0,
         )
-        state_mgr.record_exposure("a3", _make_exposure(timestep=1))
+        state_mgr.record_exposure(
+            "a3",
+            _make_exposure(timestep=1, channel="network", source_agent_id="src_x"),
+        )
 
         agents = state_mgr.get_agents_to_reason(timestep=3, threshold=3)
         assert "a0" in agents

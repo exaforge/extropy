@@ -447,6 +447,12 @@ class SimulationEngine:
             ):
                 effective_will_share = False
 
+            # Commitment: agents with conviction >= FIRM are committed
+            is_committed = (
+                response.conviction is not None
+                and response.conviction >= _FIRM_CONVICTION
+            )
+
             new_state = AgentState(
                 agent_id=agent_id,
                 aware=True,
@@ -459,6 +465,7 @@ class SimulationEngine:
                 public_statement=response.public_statement,
                 action_intent=response.action_intent,
                 will_share=effective_will_share,
+                committed=is_committed,
                 outcomes=response.outcomes,
                 raw_reasoning=response.reasoning,
                 updated_at=timestep,

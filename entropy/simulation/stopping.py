@@ -242,6 +242,12 @@ def evaluate_stopping_conditions(
             if evaluate_condition(condition, timestep, state_manager, recent_summaries):
                 return True, condition
 
+    # Quiescence auto-stop: no agents reasoned for last 3 timesteps
+    if len(recent_summaries) >= 3:
+        last_3 = recent_summaries[-3:]
+        if all(s.agents_reasoned == 0 for s in last_3):
+            return True, "simulation_quiescent"
+
     return False, None
 
 

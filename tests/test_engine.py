@@ -541,3 +541,151 @@ class TestStateManagerTransaction:
         # Both agents should remain unaware
         assert engine.state_manager.get_agent_state("a0").aware is False
         assert engine.state_manager.get_agent_state("a1").aware is False
+
+
+class TestCommittedFlag:
+    """Test that engine sets committed flag based on conviction."""
+
+    def test_firm_agent_becomes_committed(
+        self,
+        minimal_scenario,
+        simple_agents,
+        simple_network,
+        minimal_pop_spec,
+        tmp_path,
+    ):
+        """Agent with conviction >= FIRM should get committed=True."""
+        config = SimulationRunConfig(
+            scenario_path="test.yaml",
+            output_dir=str(tmp_path / "output"),
+        )
+        engine = SimulationEngine(
+            scenario=minimal_scenario,
+            population_spec=minimal_pop_spec,
+            agents=simple_agents,
+            network=simple_network,
+            config=config,
+        )
+
+        old_state = AgentState(agent_id="a0")
+        response = _make_reasoning_response(
+            conviction=CONVICTION_MAP[ConvictionLevel.FIRM],
+        )
+
+        results = [("a0", response)]
+        old_states = {"a0": old_state}
+
+        engine._apply_state_updates(timestep=0, results=results, old_states=old_states)
+
+        final_state = engine.state_manager.get_agent_state("a0")
+        assert final_state.committed is True
+
+    def test_moderate_agent_not_committed(
+        self,
+        minimal_scenario,
+        simple_agents,
+        simple_network,
+        minimal_pop_spec,
+        tmp_path,
+    ):
+        """Agent with conviction < FIRM should NOT get committed=True."""
+        config = SimulationRunConfig(
+            scenario_path="test.yaml",
+            output_dir=str(tmp_path / "output"),
+        )
+        engine = SimulationEngine(
+            scenario=minimal_scenario,
+            population_spec=minimal_pop_spec,
+            agents=simple_agents,
+            network=simple_network,
+            config=config,
+        )
+
+        old_state = AgentState(agent_id="a0")
+        response = _make_reasoning_response(
+            conviction=CONVICTION_MAP[ConvictionLevel.MODERATE],
+        )
+
+        results = [("a0", response)]
+        old_states = {"a0": old_state}
+
+        engine._apply_state_updates(timestep=0, results=results, old_states=old_states)
+
+        final_state = engine.state_manager.get_agent_state("a0")
+        assert final_state.committed is False
+
+
+class TestOneShotSharing:
+    """Test that one-shot sharing prevents duplicate network propagation."""
+
+    def test_agent_shares_once_per_neighbor(
+        self,
+        minimal_scenario,
+        simple_agents,
+        simple_network,
+        minimal_pop_spec,
+        tmp_path,
+    ):
+        """After sharing once, a second propagate call should produce 0 new exposures to same neighbor."""
+        config = SimulationRunConfig(
+            scenario_path="test.yaml",
+            output_dir=str(tmp_path / "output"),
+        )
+        engine = SimulationEngine(
+            scenario=minimal_scenario,
+            population_spec=minimal_pop_spec,
+            agents=simple_agents,
+            network=simple_network,
+            config=config,
+        )
+
+        # Set up a0 as a sharer with will_share=True
+        state = AgentState(
+            agent_id="a0",
+            aware=True,
+            will_share=True,
+            position="adopt",
+            conviction=0.7,
+            committed=True,
+        )
+        engine.state_manager.update_agent_state("a0", state, timestep=0)
+        # Also make a0 aware
+        exposure = ExposureRecord(
+            timestep=0, channel="broadcast", content="Test", credibility=0.9
+        )
+        engine.state_manager.record_exposure("a0", exposure)
+
+        from entropy.simulation.propagation import propagate_through_network
+        import random
+
+        # Use rng with seed for deterministic share_probability pass
+        rng = random.Random(42)
+
+        # Set share probability to 1.0 so sharing always succeeds
+        minimal_scenario.spread.share_probability = 1.0
+
+        # First propagation — should share to a1 (a0's only neighbor)
+        new1 = propagate_through_network(
+            timestep=1,
+            scenario=minimal_scenario,
+            agents=simple_agents,
+            network=simple_network,
+            state_manager=engine.state_manager,
+            rng=rng,
+            adjacency=engine.adjacency,
+            agent_map=engine.agent_map,
+        )
+        assert new1 >= 1  # At least one new exposure
+
+        # Second propagation — same position, should produce 0
+        new2 = propagate_through_network(
+            timestep=2,
+            scenario=minimal_scenario,
+            agents=simple_agents,
+            network=simple_network,
+            state_manager=engine.state_manager,
+            rng=rng,
+            adjacency=engine.adjacency,
+            agent_map=engine.agent_map,
+        )
+        assert new2 == 0  # No new exposures — already shared

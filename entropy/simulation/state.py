@@ -172,6 +172,25 @@ class StateManager:
         """
         )
 
+        # Shared-to tracking table (one-shot sharing)
+        cursor.execute(
+            """
+            CREATE TABLE IF NOT EXISTS shared_to (
+                source_agent_id TEXT,
+                target_agent_id TEXT,
+                timestep INTEGER,
+                position TEXT,
+                PRIMARY KEY (source_agent_id, target_agent_id)
+            )
+        """
+        )
+        cursor.execute(
+            """
+            CREATE INDEX IF NOT EXISTS idx_shared_to_source
+            ON shared_to(source_agent_id)
+        """
+        )
+
         self.conn.commit()
 
     def _upgrade_schema(self) -> None:
@@ -183,6 +202,7 @@ class StateManager:
             ("agent_states", "public_statement", "TEXT"),
             ("timestep_summaries", "average_conviction", "REAL"),
             ("timestep_summaries", "sentiment_variance", "REAL"),
+            ("agent_states", "committed", "INTEGER DEFAULT 0"),
         ]
 
         for table, column, col_type in migrations:
@@ -278,6 +298,12 @@ class StateManager:
             except json.JSONDecodeError:
                 pass
 
+        # committed column may not exist in older databases
+        try:
+            committed = bool(row["committed"])
+        except (IndexError, KeyError):
+            committed = False
+
         return AgentState(
             agent_id=agent_id,
             aware=bool(row["aware"]),
@@ -290,6 +316,7 @@ class StateManager:
             public_statement=row["public_statement"],
             action_intent=row["action_intent"],
             will_share=bool(row["will_share"]),
+            committed=committed,
             outcomes=outcomes,
             raw_reasoning=row["raw_reasoning"],
             updated_at=row["updated_at"],
@@ -326,7 +353,8 @@ class StateManager:
 
         Agents reason if:
         1. They're aware AND haven't reasoned yet, OR
-        2. Their exposure_count increased by >= threshold since last reasoning
+        2. They have >= threshold unique source agents exposing them since
+           last reasoning AND they are not committed (conviction >= firm)
 
         Args:
             timestep: Current timestep
@@ -346,32 +374,95 @@ class StateManager:
         )
         never_reasoned = [row["agent_id"] for row in cursor.fetchall()]
 
-        # For multi-touch, we need to check exposure counts
-        # Get agents who have had exposures since their last reasoning
+        # Multi-touch: count UNIQUE source agents since last reasoning,
+        # excluding committed agents
         cursor.execute(
             """
             SELECT s.agent_id,
-                   s.exposure_count,
-                   s.last_reasoning_timestep,
-                   COUNT(e.id) as count_at_last
+                   COUNT(DISTINCT e.source_agent_id) as unique_sources
             FROM agent_states s
-            LEFT JOIN exposures e
-              ON e.agent_id = s.agent_id AND e.timestep <= s.last_reasoning_timestep
-            WHERE s.aware = 1 AND s.last_reasoning_timestep >= 0
-            GROUP BY s.agent_id, s.exposure_count, s.last_reasoning_timestep
+            JOIN exposures e
+              ON e.agent_id = s.agent_id
+              AND e.timestep > s.last_reasoning_timestep
+              AND e.source_agent_id IS NOT NULL
+            WHERE s.aware = 1
+              AND s.last_reasoning_timestep >= 0
+              AND s.committed = 0
+            GROUP BY s.agent_id
         """
         )
 
         multi_touch = []
         for row in cursor.fetchall():
-            agent_id = row["agent_id"]
-            current_count = row["exposure_count"]
-            count_at_last = row["count_at_last"]
-
-            if current_count - count_at_last >= threshold:
-                multi_touch.append(agent_id)
+            if row["unique_sources"] >= threshold:
+                multi_touch.append(row["agent_id"])
 
         return never_reasoned + multi_touch
+
+    def record_share(
+        self, source_id: str, target_id: str, timestep: int, position: str | None
+    ) -> None:
+        """Record that source_id has attempted to share with target_id.
+
+        Uses INSERT OR REPLACE so a position change overwrites the old record.
+
+        Args:
+            source_id: Sharing agent ID
+            target_id: Target neighbor ID
+            timestep: When the share attempt occurred
+            position: Source agent's current position
+        """
+        cursor = self.conn.cursor()
+        cursor.execute(
+            """
+            INSERT OR REPLACE INTO shared_to
+            (source_agent_id, target_agent_id, timestep, position)
+            VALUES (?, ?, ?, ?)
+        """,
+            (source_id, target_id, timestep, position),
+        )
+
+    def get_unshared_neighbors(
+        self, source_id: str, neighbor_ids: list[str], current_position: str | None
+    ) -> list[str]:
+        """Return neighbors that source has not yet shared to (or shared with a different position).
+
+        Args:
+            source_id: Sharing agent ID
+            neighbor_ids: List of candidate neighbor IDs
+            current_position: Source agent's current position
+
+        Returns:
+            List of neighbor IDs eligible for sharing
+        """
+        if not neighbor_ids:
+            return []
+
+        cursor = self.conn.cursor()
+        placeholders = ",".join("?" for _ in neighbor_ids)
+        cursor.execute(
+            f"""
+            SELECT target_agent_id, position
+            FROM shared_to
+            WHERE source_agent_id = ?
+              AND target_agent_id IN ({placeholders})
+        """,
+            [source_id] + neighbor_ids,
+        )
+
+        already_shared = {
+            row["target_agent_id"]: row["position"] for row in cursor.fetchall()
+        }
+
+        eligible = []
+        for nid in neighbor_ids:
+            if nid not in already_shared:
+                eligible.append(nid)
+            elif already_shared[nid] != current_position:
+                # Position changed since last share — allow re-share
+                eligible.append(nid)
+
+        return eligible
 
     def record_exposure(self, agent_id: str, exposure: ExposureRecord) -> None:
         """Record an exposure event for an agent.
@@ -431,6 +522,7 @@ class StateManager:
                 public_statement = ?,
                 action_intent = ?,
                 will_share = ?,
+                committed = ?,
                 outcomes_json = ?,
                 raw_reasoning = ?,
                 last_reasoning_timestep = ?,
@@ -444,6 +536,7 @@ class StateManager:
                 state.public_statement,
                 state.action_intent,
                 1 if state.will_share else 0,
+                1 if state.committed else 0,
                 outcomes_json,
                 state.raw_reasoning,
                 timestep,
@@ -475,6 +568,7 @@ class StateManager:
                     public_statement = ?,
                     action_intent = ?,
                     will_share = ?,
+                    committed = ?,
                     outcomes_json = ?,
                     raw_reasoning = ?,
                     last_reasoning_timestep = ?,
@@ -488,6 +582,7 @@ class StateManager:
                     state.public_statement,
                     state.action_intent,
                     1 if state.will_share else 0,
+                    1 if state.committed else 0,
                     outcomes_json,
                     state.raw_reasoning,
                     timestep,

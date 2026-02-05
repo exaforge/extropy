@@ -546,3 +546,133 @@ class TestStateManagerEdgeCases:
 
             avg = manager.get_average_sentiment()
             assert avg == pytest.approx(0.4, abs=0.01)
+
+    def test_committed_agent_skipped_in_multi_touch(self, temp_db):
+        """Committed agents should NOT be selected for multi-touch re-reasoning."""
+        agents = [{"_id": "a0"}, {"_id": "a1"}]
+
+        with StateManager(temp_db, agents=agents) as manager:
+            # Expose both agents and reason them
+            for aid in ["a0", "a1"]:
+                exposure = ExposureRecord(
+                    timestep=0, channel="email", content="Test", credibility=0.9
+                )
+                manager.record_exposure(aid, exposure)
+
+            # a0: committed (firm conviction), a1: not committed
+            state_a0 = AgentState(
+                agent_id="a0",
+                aware=True,
+                position="adopt",
+                conviction=0.7,
+                committed=True,
+            )
+            state_a1 = AgentState(
+                agent_id="a1",
+                aware=True,
+                position="adopt",
+                conviction=0.3,
+                committed=False,
+            )
+            manager.update_agent_state("a0", state_a0, timestep=0)
+            manager.update_agent_state("a1", state_a1, timestep=0)
+
+            # Add 3 network exposures from unique sources for both after reasoning
+            for source_idx in range(3):
+                for aid in ["a0", "a1"]:
+                    exp = ExposureRecord(
+                        timestep=1,
+                        channel="network",
+                        source_agent_id=f"src_{source_idx}",
+                        content="Peer info",
+                        credibility=0.85,
+                    )
+                    manager.record_exposure(aid, exp)
+
+            to_reason = manager.get_agents_to_reason(timestep=1, threshold=3)
+            # a1 should be selected (not committed, 3 unique sources)
+            assert "a1" in to_reason
+            # a0 should NOT be selected (committed)
+            assert "a0" not in to_reason
+
+    def test_unique_source_multi_touch(self, temp_db):
+        """3 exposures from SAME source should not trigger re-reasoning;
+        3 from DIFFERENT sources should."""
+        agents = [{"_id": "a0"}, {"_id": "a1"}]
+
+        with StateManager(temp_db, agents=agents) as manager:
+            # Initial exposure + reasoning for both
+            for aid in ["a0", "a1"]:
+                exp = ExposureRecord(
+                    timestep=0, channel="email", content="Test", credibility=0.9
+                )
+                manager.record_exposure(aid, exp)
+                state = AgentState(
+                    agent_id=aid,
+                    aware=True,
+                    position="adopt",
+                    conviction=0.3,
+                    committed=False,
+                )
+                manager.update_agent_state(aid, state, timestep=0)
+
+            # a0: 3 exposures from same source
+            for _ in range(3):
+                exp = ExposureRecord(
+                    timestep=1,
+                    channel="network",
+                    source_agent_id="same_src",
+                    content="Repeated",
+                    credibility=0.85,
+                )
+                manager.record_exposure("a0", exp)
+
+            # a1: 3 exposures from different sources
+            for i in range(3):
+                exp = ExposureRecord(
+                    timestep=1,
+                    channel="network",
+                    source_agent_id=f"src_{i}",
+                    content="Unique",
+                    credibility=0.85,
+                )
+                manager.record_exposure("a1", exp)
+
+            to_reason = manager.get_agents_to_reason(timestep=1, threshold=3)
+            assert "a0" not in to_reason  # same source repeated
+            assert "a1" in to_reason  # 3 unique sources
+
+    def test_record_share_and_get_unshared(self, temp_db):
+        """Test one-shot sharing tracking."""
+        agents = [{"_id": "a0"}, {"_id": "a1"}, {"_id": "a2"}]
+
+        with StateManager(temp_db, agents=agents) as manager:
+            # a0 shares to a1 but not a2
+            manager.record_share("a0", "a1", timestep=0, position="adopt")
+
+            # Check unshared neighbors
+            unshared = manager.get_unshared_neighbors(
+                "a0", ["a1", "a2"], current_position="adopt"
+            )
+            assert "a1" not in unshared  # already shared
+            assert "a2" in unshared  # not yet shared
+
+    def test_position_change_enables_reshare(self, temp_db):
+        """After position change, agent can re-share to same neighbor."""
+        agents = [{"_id": "a0"}, {"_id": "a1"}]
+
+        with StateManager(temp_db, agents=agents) as manager:
+            # a0 shares with position "adopt"
+            manager.record_share("a0", "a1", timestep=0, position="adopt")
+
+            # Same position — should NOT be eligible
+            unshared = manager.get_unshared_neighbors(
+                "a0", ["a1"], current_position="adopt"
+            )
+            assert "a1" not in unshared
+
+            # Position changes to "reject" — should be eligible again
+            unshared = manager.get_unshared_neighbors(
+                "a0", ["a1"], current_position="reject"
+            )
+            assert "a1" in unshared

@@ -182,6 +182,10 @@ class AgentState(BaseModel):
         default=None, description="What they intend to do"
     )
     will_share: bool = Field(default=False, description="Will they propagate")
+    committed: bool = Field(
+        default=False,
+        description="Conviction >= firm; won't re-reason from repeated network exposure",
+    )
     outcomes: dict[str, Any] = Field(
         default_factory=dict, description="All extracted outcomes (from Pass 2)"
     )

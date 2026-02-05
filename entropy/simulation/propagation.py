@@ -242,10 +242,25 @@ def propagate_through_network(
         else:
             neighbors = get_neighbors(network, sharer_id)
 
-        for neighbor_id, edge_data in neighbors:
+        # One-shot sharing: filter to neighbors not yet shared to
+        # (or shared to with a different position — allows re-share on position change)
+        neighbor_ids = [nid for nid, _ in neighbors]
+        sharer_state = state_manager.get_agent_state(sharer_id)
+        eligible_ids = set(
+            state_manager.get_unshared_neighbors(
+                sharer_id, neighbor_ids, sharer_state.position
+            )
+        )
+
+        # Build lookup for edge data
+        neighbor_edge_map = {nid: edge for nid, edge in neighbors}
+
+        for neighbor_id in eligible_ids:
             neighbor_agent = agent_map.get(neighbor_id)
             if not neighbor_agent:
                 continue
+
+            edge_data = neighbor_edge_map[neighbor_id]
 
             # Calculate share probability for this edge
             prob = calculate_share_probability(
@@ -253,6 +268,12 @@ def propagate_through_network(
                 edge_data,
                 scenario.spread,
                 rng,
+            )
+
+            # Record the share attempt regardless of probability outcome
+            # (prevents retrying the same neighbor every timestep)
+            state_manager.record_share(
+                sharer_id, neighbor_id, timestep, sharer_state.position
             )
 
             if rng.random() > prob:
