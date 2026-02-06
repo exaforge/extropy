@@ -88,6 +88,9 @@ RATE_LIMIT_PROFILES: dict[str, dict[str, dict[int, dict[str, int]]]] = {
 # Map "claude" provider name to anthropic profiles
 RATE_LIMIT_PROFILES["claude"] = RATE_LIMIT_PROFILES["anthropic"]
 
+# Azure OpenAI uses the same rate limit profiles as standard OpenAI
+RATE_LIMIT_PROFILES["azure_openai"] = RATE_LIMIT_PROFILES["openai"]
+
 
 def get_limits(
     provider: str,

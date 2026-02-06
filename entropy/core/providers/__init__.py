@@ -9,7 +9,7 @@ across batch calls and closed cleanly before the event loop shuts down.
 """
 
 from .base import LLMProvider
-from ...config import get_config, get_api_key
+from ...config import get_config, get_api_key, get_azure_config
 
 
 # Cached simulation provider — reused across batch calls so the async
@@ -29,9 +29,25 @@ def _create_provider(provider_name: str) -> LLMProvider:
         from .claude import ClaudeProvider
 
         return ClaudeProvider(api_key=api_key)
+    elif provider_name == "azure_openai":
+        from .openai import OpenAIProvider
+
+        azure_cfg = get_azure_config(provider_name)
+        if not azure_cfg.get("azure_endpoint"):
+            raise ValueError(
+                "AZURE_OPENAI_ENDPOINT not found. Set it as an environment variable.\n"
+                "  export AZURE_OPENAI_ENDPOINT=https://<resource>.cognitiveservices.azure.com/"
+            )
+        return OpenAIProvider(
+            api_key=api_key,
+            azure_endpoint=azure_cfg["azure_endpoint"],
+            api_version=azure_cfg.get("api_version", "2025-03-01-preview"),
+            azure_deployment=azure_cfg.get("azure_deployment", ""),
+        )
     else:
         raise ValueError(
-            f"Unknown LLM provider: {provider_name}. Valid options: 'openai', 'claude'"
+            f"Unknown LLM provider: {provider_name}. "
+            f"Valid options: 'openai', 'claude', 'azure_openai'"
         )
 
 

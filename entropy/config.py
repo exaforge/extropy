@@ -213,6 +213,7 @@ def get_api_key(provider: str) -> str:
     Supports:
         - openai: OPENAI_API_KEY
         - claude: ANTHROPIC_API_KEY
+        - azure_openai: AZURE_OPENAI_API_KEY
 
     Returns empty string if not found (providers will raise on missing keys).
     """
@@ -221,7 +222,30 @@ def get_api_key(provider: str) -> str:
         return os.environ.get("OPENAI_API_KEY", "")
     elif provider == "claude":
         return os.environ.get("ANTHROPIC_API_KEY", "")
+    elif provider == "azure_openai":
+        return os.environ.get("AZURE_OPENAI_API_KEY", "")
     return ""
+
+
+def get_azure_config(provider: str) -> dict[str, str]:
+    """Get Azure-specific configuration from environment variables.
+
+    Args:
+        provider: 'azure_openai'
+
+    Returns:
+        Dict of Azure config values (endpoint, api_version, deployment).
+    """
+    _ensure_dotenv()
+    if provider == "azure_openai":
+        return {
+            "azure_endpoint": os.environ.get("AZURE_OPENAI_ENDPOINT", ""),
+            "api_version": os.environ.get(
+                "AZURE_OPENAI_API_VERSION", "2025-03-01-preview"
+            ),
+            "azure_deployment": os.environ.get("AZURE_OPENAI_DEPLOYMENT", ""),
+        }
+    return {}
 
 
 # =============================================================================

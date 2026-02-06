@@ -8,6 +8,7 @@ from ...config import (
     reset_config,
     CONFIG_FILE,
     get_api_key,
+    get_azure_config,
 )
 
 
@@ -121,6 +122,20 @@ def _show_config():
     console.print("[bold cyan]API Keys[/bold cyan] (from env vars)")
     _show_key_status("openai", "OPENAI_API_KEY")
     _show_key_status("claude", "ANTHROPIC_API_KEY")
+    _show_key_status("azure_openai", "AZURE_OPENAI_API_KEY")
+
+    # Azure-specific config (show when Azure provider is in use)
+    active_providers = {config.pipeline.provider, config.simulation.provider}
+    if "azure_openai" in active_providers:
+        azure_cfg = get_azure_config("azure_openai")
+        console.print()
+        console.print("[bold cyan]Azure OpenAI[/bold cyan]")
+        console.print(
+            f"  endpoint          = {azure_cfg['azure_endpoint'] or '[dim]not set[/dim]'}"
+        )
+        console.print(f"  api_version       = {azure_cfg['api_version']}")
+        if azure_cfg["azure_deployment"]:
+            console.print(f"  deployment        = {azure_cfg['azure_deployment']}")
 
     # Config file
     console.print()

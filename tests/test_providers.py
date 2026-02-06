@@ -18,6 +18,35 @@ OpenAIProvider._disable_rate_limiting = True
 ClaudeProvider._disable_rate_limiting = True
 
 
+def _make_openai_provider(**overrides):
+    """Create an OpenAIProvider via __new__ with all required attrs set.
+
+    Bypasses __init__ (no API key validation) for unit testing with mocked clients.
+    """
+    provider = OpenAIProvider.__new__(OpenAIProvider)
+    defaults = {
+        "_api_key": "test-key",
+        "_is_azure": False,
+        "_azure_endpoint": "",
+        "_api_version": "",
+        "_azure_deployment": "",
+    }
+    defaults.update(overrides)
+    for k, v in defaults.items():
+        setattr(provider, k, v)
+    return provider
+
+
+def _make_claude_provider(**overrides):
+    """Create a ClaudeProvider via __new__ with all required attrs set."""
+    provider = ClaudeProvider.__new__(ClaudeProvider)
+    defaults = {"_api_key": "test-key"}
+    defaults.update(overrides)
+    for k, v in defaults.items():
+        setattr(provider, k, v)
+    return provider
+
+
 # =============================================================================
 # Mock response factories
 # =============================================================================
@@ -66,13 +95,13 @@ class TestOpenAIExtractOutputText:
     """Test the _extract_output_text helper."""
 
     def test_extracts_text(self):
-        provider = OpenAIProvider.__new__(OpenAIProvider)
+        provider = _make_openai_provider()
         response = _make_openai_response('{"hello": "world"}')
         text = provider._extract_output_text(response)
         assert text == '{"hello": "world"}'
 
     def test_returns_none_on_empty(self):
-        provider = OpenAIProvider.__new__(OpenAIProvider)
+        provider = _make_openai_provider()
         response = MagicMock()
         response.output = []
         text = provider._extract_output_text(response)
@@ -84,8 +113,7 @@ class TestOpenAISimpleCall:
 
     @patch.object(OpenAIProvider, "_get_client")
     def test_returns_parsed_json(self, mock_get_client):
-        provider = OpenAIProvider.__new__(OpenAIProvider)
-        provider._api_key = "test-key"
+        provider = _make_openai_provider()
 
         mock_client = MagicMock()
         mock_client.responses.create.return_value = _make_openai_response(
@@ -103,8 +131,7 @@ class TestOpenAISimpleCall:
 
     @patch.object(OpenAIProvider, "_get_client")
     def test_returns_empty_dict_on_no_output(self, mock_get_client):
-        provider = OpenAIProvider.__new__(OpenAIProvider)
-        provider._api_key = "test-key"
+        provider = _make_openai_provider()
 
         empty_response = MagicMock()
         empty_response.output = []
@@ -126,8 +153,7 @@ class TestOpenAIRetry:
     def test_with_retry_succeeds_after_failure(self):
         import openai
 
-        provider = OpenAIProvider.__new__(OpenAIProvider)
-        provider._api_key = "test-key"
+        provider = _make_openai_provider()
 
         call_count = 0
 
@@ -147,8 +173,7 @@ class TestOpenAIRetry:
     def test_with_retry_exhausted(self):
         import openai
 
-        provider = OpenAIProvider.__new__(OpenAIProvider)
-        provider._api_key = "test-key"
+        provider = _make_openai_provider()
 
         def always_fails():
             raise openai.InternalServerError(
@@ -168,8 +193,7 @@ class TestOpenAIValidationRetry:
     @patch.object(OpenAIProvider, "_get_client")
     def test_validation_retry_succeeds(self, mock_get_client):
         """Test that a failing validation retries and eventually succeeds."""
-        provider = OpenAIProvider.__new__(OpenAIProvider)
-        provider._api_key = "test-key"
+        provider = _make_openai_provider()
 
         call_count = 0
 
@@ -202,8 +226,7 @@ class TestOpenAIValidationRetry:
     @patch.object(OpenAIProvider, "_get_client")
     def test_validation_retry_exhausted(self, mock_get_client):
         """Test that exhausting retries returns the last result."""
-        provider = OpenAIProvider.__new__(OpenAIProvider)
-        provider._api_key = "test-key"
+        provider = _make_openai_provider()
 
         mock_client = MagicMock()
         mock_client.responses.create.return_value = _make_openai_response(
@@ -244,8 +267,7 @@ class TestClaudeSimpleCall:
 
     @patch.object(ClaudeProvider, "_get_client")
     def test_returns_tool_input(self, mock_get_client):
-        provider = ClaudeProvider.__new__(ClaudeProvider)
-        provider._api_key = "test-key"
+        provider = _make_claude_provider()
 
         mock_client = MagicMock()
         mock_client.messages.create.return_value = _make_claude_response(
@@ -268,8 +290,7 @@ class TestClaudeRetry:
     def test_with_retry_succeeds_after_failure(self):
         import anthropic
 
-        provider = ClaudeProvider.__new__(ClaudeProvider)
-        provider._api_key = "test-key"
+        provider = _make_claude_provider()
 
         call_count = 0
 
@@ -292,8 +313,7 @@ class TestClaudeAgenticResearch:
 
     @patch.object(ClaudeProvider, "_get_client")
     def test_extracts_sources(self, mock_get_client):
-        provider = ClaudeProvider.__new__(ClaudeProvider)
-        provider._api_key = "test-key"
+        provider = _make_claude_provider()
 
         # Build response with web search results and tool_use
         search_result = MagicMock()
@@ -637,3 +657,159 @@ class TestBaseRetryWithValidation:
 
         assert len(prompts_received) == 1
         assert prompts_received[0] == "base prompt"
+
+
+# =============================================================================
+# Azure OpenAI Provider Tests
+# =============================================================================
+
+
+class TestAzureOpenAIProvider:
+    """Test Azure OpenAI provider client construction and model resolution."""
+
+    def test_azure_client_construction(self):
+        provider = OpenAIProvider(
+            api_key="test-key",
+            azure_endpoint="https://my-resource.openai.azure.com",
+            api_version="2024-12-01-preview",
+            azure_deployment="my-deployment",
+        )
+        assert provider._is_azure is True
+        assert provider._azure_endpoint == "https://my-resource.openai.azure.com"
+        assert provider._api_version == "2024-12-01-preview"
+        assert provider._azure_deployment == "my-deployment"
+        assert provider.provider_name == "azure_openai"
+
+    def test_non_azure_is_azure_false(self):
+        provider = OpenAIProvider(api_key="test-key")
+        assert provider._is_azure is False
+        assert provider.provider_name == "openai"
+
+    def test_azure_get_client_returns_azure_type(self):
+        from openai import AzureOpenAI
+
+        provider = OpenAIProvider(
+            api_key="test-key",
+            azure_endpoint="https://my-resource.openai.azure.com",
+            api_version="2024-12-01-preview",
+        )
+        client = provider._get_client()
+        assert isinstance(client, AzureOpenAI)
+
+    def test_azure_get_async_client_returns_azure_type(self):
+        from openai import AsyncAzureOpenAI
+
+        provider = OpenAIProvider(
+            api_key="test-key",
+            azure_endpoint="https://my-resource.openai.azure.com",
+            api_version="2024-12-01-preview",
+        )
+        client = provider._get_async_client()
+        assert isinstance(client, AsyncAzureOpenAI)
+
+    def test_resolve_model_uses_deployment(self):
+        """When no model is specified, Azure deployment name is used."""
+        provider = OpenAIProvider(
+            api_key="test-key",
+            azure_endpoint="https://my-resource.openai.azure.com",
+            api_version="2024-12-01-preview",
+            azure_deployment="gpt-5-deployment",
+        )
+        result = provider._resolve_model(None, "gpt-5-mini")
+        assert result == "gpt-5-deployment"
+
+    def test_resolve_model_explicit_overrides_deployment(self):
+        """Explicit model wins over deployment name."""
+        provider = OpenAIProvider(
+            api_key="test-key",
+            azure_endpoint="https://my-resource.openai.azure.com",
+            api_version="2024-12-01-preview",
+            azure_deployment="gpt-5-deployment",
+        )
+        result = provider._resolve_model("gpt-5", "gpt-5-mini")
+        assert result == "gpt-5"
+
+    def test_resolve_model_no_deployment_uses_default(self):
+        """Without deployment or explicit model, falls back to default."""
+        provider = OpenAIProvider(
+            api_key="test-key",
+            azure_endpoint="https://my-resource.openai.azure.com",
+            api_version="2024-12-01-preview",
+        )
+        result = provider._resolve_model(None, "gpt-5-mini")
+        assert result == "gpt-5-mini"
+
+    @patch.object(OpenAIProvider, "_get_client")
+    def test_azure_simple_call(self, mock_get_client):
+        """Verify Azure provider simple_call works through mocked client."""
+        provider = _make_openai_provider(
+            _is_azure=True,
+            _azure_endpoint="https://test.openai.azure.com",
+            _api_version="2024-12-01-preview",
+            _azure_deployment="my-deploy",
+        )
+
+        mock_client = MagicMock()
+        mock_client.responses.create.return_value = _make_openai_response(
+            '{"result": "azure_ok"}'
+        )
+        mock_get_client.return_value = mock_client
+
+        result = provider.simple_call(
+            prompt="test prompt",
+            response_schema={"type": "object", "properties": {}},
+            log=False,
+        )
+
+        assert result == {"result": "azure_ok"}
+
+    def test_azure_missing_api_key_raises(self):
+        with pytest.raises(ValueError, match="AZURE_OPENAI_API_KEY"):
+            OpenAIProvider(
+                api_key="",
+                azure_endpoint="https://my-resource.openai.azure.com",
+            )
+
+    def test_non_azure_missing_api_key_raises(self):
+        with pytest.raises(ValueError, match="OPENAI_API_KEY"):
+            OpenAIProvider(api_key="")
+
+
+# =============================================================================
+# Provider Factory Azure Tests
+# =============================================================================
+
+
+class TestProviderFactoryAzure:
+    """Test provider factory with Azure OpenAI provider creation."""
+
+    @patch.dict(
+        "os.environ",
+        {
+            "AZURE_OPENAI_API_KEY": "test-azure-key",
+            "AZURE_OPENAI_ENDPOINT": "https://my-resource.openai.azure.com",
+            "AZURE_OPENAI_API_VERSION": "2025-03-01-preview",
+            "AZURE_OPENAI_DEPLOYMENT": "my-deployment",
+        },
+    )
+    def test_create_azure_openai_provider(self):
+        from entropy.core.providers import _create_provider
+
+        provider = _create_provider("azure_openai")
+        assert isinstance(provider, OpenAIProvider)
+        assert provider._is_azure is True
+        assert provider._azure_endpoint == "https://my-resource.openai.azure.com"
+        assert provider._azure_deployment == "my-deployment"
+
+    @patch.dict(
+        "os.environ",
+        {
+            "AZURE_OPENAI_API_KEY": "test-azure-key",
+            "AZURE_OPENAI_ENDPOINT": "",
+        },
+    )
+    def test_azure_openai_missing_endpoint_raises(self):
+        from entropy.core.providers import _create_provider
+
+        with pytest.raises(ValueError, match="AZURE_OPENAI_ENDPOINT"):
+            _create_provider("azure_openai")

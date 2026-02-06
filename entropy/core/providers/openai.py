@@ -23,17 +23,50 @@ logger = logging.getLogger(__name__)
 
 
 class OpenAIProvider(LLMProvider):
-    """OpenAI LLM provider using the Responses API."""
+    """OpenAI LLM provider using the Responses API.
+
+    Supports both standard OpenAI and Azure OpenAI endpoints.
+    When azure_endpoint is provided, uses AzureOpenAI/AsyncAzureOpenAI clients.
+    """
 
     provider_name = "openai"
 
-    def __init__(self, api_key: str = "") -> None:
+    def __init__(
+        self,
+        api_key: str = "",
+        *,
+        azure_endpoint: str = "",
+        api_version: str = "",
+        azure_deployment: str = "",
+    ) -> None:
+        self._is_azure = bool(azure_endpoint)
+        self._azure_endpoint = azure_endpoint
+        self._api_version = api_version
+        self._azure_deployment = azure_deployment
+
         if not api_key:
-            raise ValueError(
-                "OPENAI_API_KEY not found. Set it as an environment variable.\n"
-                "  export OPENAI_API_KEY=sk-..."
-            )
+            if self._is_azure:
+                raise ValueError(
+                    "AZURE_OPENAI_API_KEY not found. Set it as an environment variable.\n"
+                    "  export AZURE_OPENAI_API_KEY=<your-subscription-key>"
+                )
+            else:
+                raise ValueError(
+                    "OPENAI_API_KEY not found. Set it as an environment variable.\n"
+                    "  export OPENAI_API_KEY=sk-..."
+                )
         super().__init__(api_key)
+
+        if self._is_azure:
+            self.provider_name = "azure_openai"
+
+    def _resolve_model(self, model: str | None, default: str) -> str:
+        """Resolve model name, using Azure deployment as fallback when applicable."""
+        if model:
+            return model
+        if self._is_azure and self._azure_deployment:
+            return self._azure_deployment
+        return default
 
     @staticmethod
     def _extract_output_text(response) -> str | None:
@@ -100,11 +133,28 @@ class OpenAIProvider(LLMProvider):
         return "gpt-5"
 
     def _get_client(self) -> OpenAI:
+        if self._is_azure:
+            from openai import AzureOpenAI
+
+            return AzureOpenAI(
+                api_key=self._api_key,
+                azure_endpoint=self._azure_endpoint,
+                api_version=self._api_version,
+            )
         return OpenAI(api_key=self._api_key)
 
     def _get_async_client(self) -> AsyncOpenAI:
         if self._cached_async_client is None:
-            self._cached_async_client = AsyncOpenAI(api_key=self._api_key)
+            if self._is_azure:
+                from openai import AsyncAzureOpenAI
+
+                self._cached_async_client = AsyncAzureOpenAI(
+                    api_key=self._api_key,
+                    azure_endpoint=self._azure_endpoint,
+                    api_version=self._api_version,
+                )
+            else:
+                self._cached_async_client = AsyncOpenAI(api_key=self._api_key)
         return self._cached_async_client
 
     def simple_call(
@@ -116,7 +166,7 @@ class OpenAIProvider(LLMProvider):
         log: bool = True,
         max_tokens: int | None = None,
     ) -> dict:
-        model = model or self.default_simple_model
+        model = self._resolve_model(model, self.default_simple_model)
         client = self._get_client()
 
         # Acquire rate limit capacity before making the call
@@ -169,7 +219,7 @@ class OpenAIProvider(LLMProvider):
         model: str | None = None,
         max_tokens: int | None = None,
     ) -> dict:
-        model = model or self.default_simple_model
+        model = self._resolve_model(model, self.default_simple_model)
         client = self._get_async_client()
 
         request_params = {
@@ -211,7 +261,7 @@ class OpenAIProvider(LLMProvider):
         max_retries: int = 2,
         on_retry: RetryCallback | None = None,
     ) -> dict:
-        model = model or self.default_reasoning_model
+        model = self._resolve_model(model, self.default_reasoning_model)
         client = self._get_client()
 
         effective_prompt = prompt
@@ -272,7 +322,7 @@ class OpenAIProvider(LLMProvider):
         max_retries: int = 2,
         on_retry: RetryCallback | None = None,
     ) -> tuple[dict, list[str]]:
-        model = model or self.default_research_model
+        model = self._resolve_model(model, self.default_research_model)
         client = self._get_client()
 
         effective_prompt = prompt
