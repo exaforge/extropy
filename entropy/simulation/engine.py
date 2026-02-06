@@ -457,10 +457,7 @@ class SimulationEngine:
 
         logger.info(f"[TIMESTEP {timestep}] Agents to reason: {len(agents_to_reason)}")
 
-        if not agents_to_reason:
-            return 0, 0, 0
-
-        # Update progress state for live display
+        # Update progress state for live display (even if 0 agents, so display updates)
         if self._progress:
             exposure_rate = self.state_manager.get_exposure_rate()
             self._progress.begin_timestep(
@@ -469,6 +466,9 @@ class SimulationEngine:
                 agents_total=len(agents_to_reason),
                 exposure_rate=exposure_rate,
             )
+
+        if not agents_to_reason:
+            return 0, 0, 0
 
         # Create on_agent_done closure for progress tracking
         def _on_agent_done(agent_id: str, result: Any) -> None:

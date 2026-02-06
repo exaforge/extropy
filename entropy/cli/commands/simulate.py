@@ -59,15 +59,17 @@ def _build_progress_display(snap: dict, elapsed: float) -> Text:
     counts = snap.get("position_counts", {})
     if counts:
         total = sum(counts.values()) or 1
-        # Find longest position name for alignment
-        max_name_len = max(len(name) for name in counts)
+        max_label = 40
+        # Find longest position name for alignment (capped)
+        max_name_len = min(max(len(name) for name in counts), max_label)
 
         for position, count in sorted(counts.items(), key=lambda x: -x[1]):
             pct = count / total * 100
             filled = round(pct / 100 * _BAR_WIDTH)
             bar = "\u2588" * filled + "\u2591" * (_BAR_WIDTH - filled)
+            label = position[:max_label] if len(position) > max_label else position
             text.append("\n")
-            text.append(f"\n  {position:<{max_name_len}}  {pct:>3.0f}% ", style="bold")
+            text.append(f"\n  {label:<{max_name_len}}  {pct:>3.0f}% ", style="bold")
             text.append(bar, style="cyan")
 
     return text

@@ -77,22 +77,6 @@ class SimulationProgress:
                 self._conviction_sum += conviction
                 self._conviction_count += 1
 
-    @property
-    def avg_sentiment(self) -> float | None:
-        """Average sentiment across all recorded agents."""
-        with self._lock:
-            if self._sentiment_count == 0:
-                return None
-            return self._sentiment_sum / self._sentiment_count
-
-    @property
-    def avg_conviction(self) -> float | None:
-        """Average conviction across all recorded agents."""
-        with self._lock:
-            if self._conviction_count == 0:
-                return None
-            return self._conviction_sum / self._conviction_count
-
     def snapshot(self) -> dict:
         """Return a thread-safe copy of all display-relevant fields.
 

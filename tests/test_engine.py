@@ -1208,3 +1208,36 @@ class TestProgressState:
             engine._reason_agents(0)
 
         assert received_kwargs.get("on_agent_done") is not None
+
+    def test_progress_updated_when_zero_agents(
+        self,
+        minimal_scenario,
+        simple_agents,
+        simple_network,
+        minimal_pop_spec,
+        tmp_path,
+    ):
+        """Progress should still update timestep/exposure even when 0 agents need reasoning."""
+        config = SimulationRunConfig(
+            scenario_path="test.yaml",
+            output_dir=str(tmp_path / "output"),
+        )
+        engine = SimulationEngine(
+            scenario=minimal_scenario,
+            population_spec=minimal_pop_spec,
+            agents=simple_agents,
+            network=simple_network,
+            config=config,
+        )
+
+        progress = SimulationProgress()
+        engine.set_progress_state(progress)
+
+        # Don't expose any agents — 0 agents will need reasoning
+        engine._reason_agents(0)
+
+        snap = progress.snapshot()
+        # begin_timestep should have been called even with 0 agents
+        assert snap["max_timesteps"] == minimal_scenario.simulation.max_timesteps
+        assert snap["agents_total"] == 0
+        assert snap["agents_done"] == 0
