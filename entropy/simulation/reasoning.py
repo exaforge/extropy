@@ -467,7 +467,7 @@ async def _reason_agent_two_pass_async(
                     schema_name="agent_reasoning",
                     model=main_model,
                 ),
-                timeout=90.0,
+                timeout=30.0,
             )
             call_elapsed = time.time() - call_start
 
@@ -479,7 +479,7 @@ async def _reason_agent_two_pass_async(
             break
         except asyncio.TimeoutError:
             logger.warning(
-                f"[PASS1] Agent {context.agent_id} - attempt {attempt + 1} timed out after 90s"
+                f"[PASS1] Agent {context.agent_id} - attempt {attempt + 1} timed out after 30s"
             )
             if attempt == config.max_retries - 1:
                 return None
@@ -530,7 +530,7 @@ async def _reason_agent_two_pass_async(
                         schema_name="classification",
                         model=classify_model,
                     ),
-                    timeout=60.0,
+                    timeout=20.0,
                 )
                 call_elapsed = time.time() - call_start
 
@@ -544,7 +544,7 @@ async def _reason_agent_two_pass_async(
                     break
             except asyncio.TimeoutError:
                 logger.warning(
-                    f"[PASS2] Agent {context.agent_id} - attempt {attempt + 1} timed out after 60s"
+                    f"[PASS2] Agent {context.agent_id} - attempt {attempt + 1} timed out after 20s"
                 )
                 if attempt == config.max_retries - 1:
                     logger.warning(
