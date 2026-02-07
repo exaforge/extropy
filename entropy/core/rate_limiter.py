@@ -514,11 +514,13 @@ class DualRateLimiter:
             return cls(pivotal=pivotal_limiter, routine=pivotal_limiter)
 
         # Different models — create separate limiter for routine
+        # Overrides apply to both (on Azure, limits are per-resource not per-model)
         routine_limiter = RateLimiter.for_provider(
             provider=provider,
             model=effective_routine,
             tier=tier,
-            # No overrides for routine — it uses its own model's defaults
+            rpm_override=rpm_override,
+            tpm_override=tpm_override,
         )
 
         return cls(pivotal=pivotal_limiter, routine=routine_limiter)
