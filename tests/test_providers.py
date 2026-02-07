@@ -4,7 +4,7 @@ Tests response extraction, retry on transient errors,
 validation-retry exhaustion, and source URL extraction.
 """
 
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch, MagicMock, AsyncMock
 
 import pytest
 
@@ -30,6 +30,7 @@ def _make_openai_provider(**overrides):
         "_azure_endpoint": "",
         "_api_version": "",
         "_azure_deployment": "",
+        "_api_format": "responses",
     }
     defaults.update(overrides)
     for k, v in defaults.items():
@@ -813,3 +814,176 @@ class TestProviderFactoryAzure:
 
         with pytest.raises(ValueError, match="AZURE_OPENAI_ENDPOINT"):
             _create_provider("azure_openai")
+
+
+# =============================================================================
+# Chat Completions API Tests
+# =============================================================================
+
+
+def _make_chat_completions_response(text: str = '{"key": "value"}'):
+    """Create a mock Chat Completions API response."""
+    message = MagicMock()
+    message.content = text
+
+    choice = MagicMock()
+    choice.message = message
+
+    response = MagicMock()
+    response.choices = [choice]
+
+    return response
+
+
+class TestOpenAIChatCompletions:
+    """Test Chat Completions API codepath."""
+
+    def test_extract_chat_completions_text(self):
+        provider = _make_openai_provider()
+        response = _make_chat_completions_response('{"hello": "world"}')
+        text = provider._extract_chat_completions_text(response)
+        assert text == '{"hello": "world"}'
+
+    def test_extract_chat_completions_text_empty(self):
+        provider = _make_openai_provider()
+        response = MagicMock()
+        response.choices = []
+        text = provider._extract_chat_completions_text(response)
+        assert text is None
+
+    def test_extract_chat_completions_text_none_content(self):
+        provider = _make_openai_provider()
+        message = MagicMock()
+        message.content = None
+        choice = MagicMock()
+        choice.message = message
+        response = MagicMock()
+        response.choices = [choice]
+        text = provider._extract_chat_completions_text(response)
+        assert text is None
+
+    @patch.object(OpenAIProvider, "_get_client")
+    def test_simple_call_chat_completions(self, mock_get_client):
+        """Chat Completions format uses client.chat.completions.create."""
+        provider = _make_openai_provider(_api_format="chat_completions")
+
+        mock_client = MagicMock()
+        mock_client.chat.completions.create.return_value = (
+            _make_chat_completions_response('{"result": "chat_ok"}')
+        )
+        mock_get_client.return_value = mock_client
+
+        result = provider.simple_call(
+            prompt="test prompt",
+            response_schema={"type": "object", "properties": {}},
+            log=False,
+        )
+
+        assert result == {"result": "chat_ok"}
+        mock_client.chat.completions.create.assert_called_once()
+        # Responses API should NOT have been called
+        mock_client.responses.create.assert_not_called()
+
+    @patch.object(OpenAIProvider, "_get_async_client")
+    def test_simple_call_async_chat_completions(self, mock_get_async_client):
+        """Async Chat Completions format uses client.chat.completions.create."""
+        import asyncio
+
+        provider = _make_openai_provider(_api_format="chat_completions")
+
+        mock_client = MagicMock()
+        mock_response = _make_chat_completions_response('{"result": "async_chat_ok"}')
+        mock_client.chat.completions.create = AsyncMock(return_value=mock_response)
+        mock_client.responses.create = AsyncMock()
+        mock_get_async_client.return_value = mock_client
+
+        result = asyncio.run(
+            provider.simple_call_async(
+                prompt="test prompt",
+                response_schema={"type": "object", "properties": {}},
+            )
+        )
+
+        assert result == {"result": "async_chat_ok"}
+        mock_client.chat.completions.create.assert_called_once()
+        mock_client.responses.create.assert_not_called()
+
+    @patch.object(OpenAIProvider, "_get_client")
+    def test_responses_format_unchanged(self, mock_get_client):
+        """Default (responses) format still uses client.responses.create."""
+        provider = _make_openai_provider(_api_format="responses")
+
+        mock_client = MagicMock()
+        mock_client.responses.create.return_value = _make_openai_response(
+            '{"result": "responses_ok"}'
+        )
+        mock_get_client.return_value = mock_client
+
+        result = provider.simple_call(
+            prompt="test prompt",
+            response_schema={"type": "object", "properties": {}},
+            log=False,
+        )
+
+        assert result == {"result": "responses_ok"}
+        mock_client.responses.create.assert_called_once()
+        mock_client.chat.completions.create.assert_not_called()
+
+    def test_build_chat_completions_params(self):
+        """Verify Chat Completions param structure."""
+        provider = _make_openai_provider()
+        params = provider._build_chat_completions_params(
+            model="DeepSeek-V3.2",
+            prompt="test prompt",
+            schema={"type": "object", "properties": {}},
+            schema_name="response",
+            max_tokens=1000,
+        )
+
+        assert params["model"] == "DeepSeek-V3.2"
+        assert params["messages"] == [{"role": "user", "content": "test prompt"}]
+        assert params["response_format"]["type"] == "json_schema"
+        assert params["response_format"]["json_schema"]["name"] == "response"
+        assert params["response_format"]["json_schema"]["strict"] is True
+        assert params["max_tokens"] == 1000
+
+    def test_build_chat_completions_params_no_max_tokens(self):
+        """Without max_tokens, the param should not be present."""
+        provider = _make_openai_provider()
+        params = provider._build_chat_completions_params(
+            model="gpt-5-mini",
+            prompt="test",
+            schema={"type": "object"},
+            schema_name="test",
+            max_tokens=None,
+        )
+        assert "max_tokens" not in params
+
+    def test_build_responses_params(self):
+        """Verify Responses API param structure."""
+        provider = _make_openai_provider()
+        params = provider._build_responses_params(
+            model="gpt-5-mini",
+            prompt="test prompt",
+            schema={"type": "object", "properties": {}},
+            schema_name="response",
+            max_tokens=2000,
+        )
+
+        assert params["model"] == "gpt-5-mini"
+        assert params["input"] == "test prompt"
+        assert params["text"]["format"]["type"] == "json_schema"
+        assert params["text"]["format"]["name"] == "response"
+        assert params["max_output_tokens"] == 2000
+
+    def test_build_responses_params_no_max_tokens(self):
+        """Without max_tokens, max_output_tokens should not be present."""
+        provider = _make_openai_provider()
+        params = provider._build_responses_params(
+            model="gpt-5-mini",
+            prompt="test",
+            schema={"type": "object"},
+            schema_name="test",
+            max_tokens=None,
+        )
+        assert "max_output_tokens" not in params

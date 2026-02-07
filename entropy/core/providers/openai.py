@@ -23,10 +23,17 @@ logger = logging.getLogger(__name__)
 
 
 class OpenAIProvider(LLMProvider):
-    """OpenAI LLM provider using the Responses API.
+    """OpenAI LLM provider supporting both Responses API and Chat Completions API.
 
     Supports both standard OpenAI and Azure OpenAI endpoints.
     When azure_endpoint is provided, uses AzureOpenAI/AsyncAzureOpenAI clients.
+
+    The api_format parameter controls which API is used for simple_call/simple_call_async:
+    - "responses" (default): Uses the Responses API (client.responses.create)
+    - "chat_completions": Uses the Chat Completions API (client.chat.completions.create)
+
+    Azure-hosted models (e.g. DeepSeek-V3.2, Kimi-K2.5) only support Chat Completions,
+    so Azure providers default to chat_completions when created via the factory.
     """
 
     provider_name = "openai"
@@ -38,11 +45,13 @@ class OpenAIProvider(LLMProvider):
         azure_endpoint: str = "",
         api_version: str = "",
         azure_deployment: str = "",
+        api_format: str = "responses",
     ) -> None:
         self._is_azure = bool(azure_endpoint)
         self._azure_endpoint = azure_endpoint
         self._api_version = api_version
         self._azure_deployment = azure_deployment
+        self._api_format = api_format
 
         if not api_key:
             if self._is_azure:
@@ -87,6 +96,69 @@ class OpenAIProvider(LLMProvider):
                         if hasattr(content_item, "text"):
                             return content_item.text
         return None
+
+    @staticmethod
+    def _extract_chat_completions_text(response) -> str | None:
+        """Extract text content from a Chat Completions API response.
+
+        Returns:
+            Raw text string, or None if not found.
+        """
+        if response.choices and len(response.choices) > 0:
+            content = response.choices[0].message.content
+            if content:
+                return content
+        return None
+
+    def _build_responses_params(
+        self,
+        model: str,
+        prompt: str,
+        schema: dict,
+        schema_name: str,
+        max_tokens: int | None,
+    ) -> dict:
+        """Build request parameters for the Responses API."""
+        params = {
+            "model": model,
+            "input": prompt,
+            "text": {
+                "format": {
+                    "type": "json_schema",
+                    "name": schema_name,
+                    "strict": True,
+                    "schema": schema,
+                }
+            },
+        }
+        if max_tokens is not None:
+            params["max_output_tokens"] = max_tokens
+        return params
+
+    def _build_chat_completions_params(
+        self,
+        model: str,
+        prompt: str,
+        schema: dict,
+        schema_name: str,
+        max_tokens: int | None,
+    ) -> dict:
+        """Build request parameters for the Chat Completions API."""
+        params: dict = {
+            "model": model,
+            "messages": [{"role": "user", "content": prompt}],
+            "response_format": {
+                "type": "json_schema",
+                "json_schema": {
+                    "name": schema_name,
+                    "strict": True,
+                    "schema": schema,
+                },
+            },
+        }
+        if max_tokens is not None:
+            params["max_tokens"] = max_tokens
+        return params
 
     def _with_retry(self, fn, max_retries: int = _MAX_API_RETRIES):
         """Retry a sync API call on transient errors with exponential backoff."""
@@ -172,33 +244,38 @@ class OpenAIProvider(LLMProvider):
         # Acquire rate limit capacity before making the call
         self._acquire_rate_limit(prompt, model, max_output=max_tokens or 4096)
 
-        request_params = {
-            "model": model,
-            "input": prompt,
-            "text": {
-                "format": {
-                    "type": "json_schema",
-                    "name": schema_name,
-                    "strict": True,
-                    "schema": response_schema,
-                }
-            },
-        }
+        use_chat = self._api_format == "chat_completions"
 
-        if max_tokens is not None:
-            request_params["max_output_tokens"] = max_tokens
+        if use_chat:
+            request_params = self._build_chat_completions_params(
+                model, prompt, response_schema, schema_name, max_tokens
+            )
+        else:
+            request_params = self._build_responses_params(
+                model, prompt, response_schema, schema_name, max_tokens
+            )
 
         logger.info(f"[LLM] simple_call starting - model={model}, schema={schema_name}")
         logger.info(f"[LLM] prompt length: {len(prompt)} chars")
 
         api_start = time.time()
-        response = self._with_retry(lambda: client.responses.create(**request_params))
+        if use_chat:
+            response = self._with_retry(
+                lambda: client.chat.completions.create(**request_params)
+            )
+        else:
+            response = self._with_retry(
+                lambda: client.responses.create(**request_params)
+            )
         api_elapsed = time.time() - api_start
 
         logger.info(f"[LLM] API response received in {api_elapsed:.2f}s")
 
         # Extract structured data
-        raw_text = self._extract_output_text(response)
+        if use_chat:
+            raw_text = self._extract_chat_completions_text(response)
+        else:
+            raw_text = self._extract_output_text(response)
         structured_data = json.loads(raw_text) if raw_text else None
 
         if log:
@@ -222,28 +299,31 @@ class OpenAIProvider(LLMProvider):
         model = self._resolve_model(model, self.default_simple_model)
         client = self._get_async_client()
 
-        request_params = {
-            "model": model,
-            "input": prompt,
-            "text": {
-                "format": {
-                    "type": "json_schema",
-                    "name": schema_name,
-                    "strict": True,
-                    "schema": response_schema,
-                }
-            },
-        }
+        use_chat = self._api_format == "chat_completions"
 
-        if max_tokens is not None:
-            request_params["max_output_tokens"] = max_tokens
+        if use_chat:
+            request_params = self._build_chat_completions_params(
+                model, prompt, response_schema, schema_name, max_tokens
+            )
+        else:
+            request_params = self._build_responses_params(
+                model, prompt, response_schema, schema_name, max_tokens
+            )
 
-        response = await self._with_retry_async(
-            lambda: client.responses.create(**request_params)
-        )
+        if use_chat:
+            response = await self._with_retry_async(
+                lambda: client.chat.completions.create(**request_params)
+            )
+        else:
+            response = await self._with_retry_async(
+                lambda: client.responses.create(**request_params)
+            )
 
         # Extract structured data
-        raw_text = self._extract_output_text(response)
+        if use_chat:
+            raw_text = self._extract_chat_completions_text(response)
+        else:
+            raw_text = self._extract_output_text(response)
         structured_data = json.loads(raw_text) if raw_text else None
 
         return structured_data or {}

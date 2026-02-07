@@ -10,6 +10,7 @@ This split fixes the central tendency problem where 83% of agents chose
 safe middle options when role-play and classification were combined.
 """
 
+import asyncio
 import logging
 import time
 from collections.abc import Callable
@@ -459,11 +460,14 @@ async def _reason_agent_two_pass_async(
                 )
 
             call_start = time.time()
-            pass1_response = await simple_call_async(
-                prompt=pass1_prompt,
-                response_schema=pass1_schema,
-                schema_name="agent_reasoning",
-                model=main_model,
+            pass1_response = await asyncio.wait_for(
+                simple_call_async(
+                    prompt=pass1_prompt,
+                    response_schema=pass1_schema,
+                    schema_name="agent_reasoning",
+                    model=main_model,
+                ),
+                timeout=30.0,
             )
             call_elapsed = time.time() - call_start
 
@@ -473,6 +477,12 @@ async def _reason_agent_two_pass_async(
                 continue
 
             break
+        except asyncio.TimeoutError:
+            logger.warning(
+                f"[PASS1] Agent {context.agent_id} - attempt {attempt + 1} timed out after 30s"
+            )
+            if attempt == config.max_retries - 1:
+                return None
         except Exception as e:
             logger.warning(
                 f"[PASS1] Agent {context.agent_id} - attempt {attempt + 1} failed: {e}"
@@ -487,6 +497,8 @@ async def _reason_agent_two_pass_async(
     public_statement = pass1_response.get("public_statement", "")
     reasoning_summary = pass1_response.get("reasoning_summary", "")
     sentiment = pass1_response.get("sentiment")
+    if sentiment is not None:
+        sentiment = max(-1.0, min(1.0, float(sentiment)))
     conviction_score = pass1_response.get("conviction")
     will_share = pass1_response.get("will_share", False)
 
@@ -513,11 +525,14 @@ async def _reason_agent_two_pass_async(
                     )
 
                 call_start = time.time()
-                pass2_response = await simple_call_async(
-                    prompt=pass2_prompt,
-                    response_schema=pass2_schema,
-                    schema_name="classification",
-                    model=classify_model,
+                pass2_response = await asyncio.wait_for(
+                    simple_call_async(
+                        prompt=pass2_prompt,
+                        response_schema=pass2_schema,
+                        schema_name="classification",
+                        model=classify_model,
+                    ),
+                    timeout=20.0,
                 )
                 call_elapsed = time.time() - call_start
 
@@ -529,6 +544,14 @@ async def _reason_agent_two_pass_async(
                     if position_outcome and position_outcome in pass2_response:
                         position = pass2_response[position_outcome]
                     break
+            except asyncio.TimeoutError:
+                logger.warning(
+                    f"[PASS2] Agent {context.agent_id} - attempt {attempt + 1} timed out after 20s"
+                )
+                if attempt == config.max_retries - 1:
+                    logger.warning(
+                        f"[PASS2] Agent {context.agent_id} - all retries exhausted, proceeding without classification"
+                    )
             except Exception as e:
                 logger.warning(
                     f"[PASS2] Agent {context.agent_id} - attempt {attempt + 1} failed: {e}"

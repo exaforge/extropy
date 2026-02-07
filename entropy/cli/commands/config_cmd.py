@@ -25,6 +25,7 @@ VALID_KEYS = {
     "simulation.rate_tier",
     "simulation.rpm_override",
     "simulation.tpm_override",
+    "simulation.api_format",
 }
 
 INT_FIELDS = {"max_concurrent", "rate_tier", "rpm_override", "tpm_override"}
@@ -107,6 +108,9 @@ def _show_config():
     )
     console.print(
         f"  routine_model   = {config.simulation.routine_model or '[dim](provider default)[/dim]'}"
+    )
+    console.print(
+        f"  api_format      = {config.simulation.api_format or '[dim](auto)[/dim]'}"
     )
     console.print(f"  max_concurrent  = {config.simulation.max_concurrent}")
     console.print(

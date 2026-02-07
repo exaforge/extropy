@@ -23,6 +23,9 @@ MODEL_PRICING: dict[str, ModelPricing] = {
     "gpt-5-mini": ModelPricing(input_per_mtok=0.30, output_per_mtok=1.50),
     "gpt-5-nano": ModelPricing(input_per_mtok=0.10, output_per_mtok=0.40),
     "gpt-5.2": ModelPricing(input_per_mtok=2.50, output_per_mtok=10.00),
+    # Azure-hosted models
+    "DeepSeek-V3.2": ModelPricing(input_per_mtok=0.80, output_per_mtok=2.00),
+    "Kimi-K2.5": ModelPricing(input_per_mtok=1.00, output_per_mtok=4.00),
     # Claude
     "claude-sonnet-4-5-20250929": ModelPricing(
         input_per_mtok=3.00, output_per_mtok=15.00
@@ -48,6 +51,10 @@ PROVIDER_DEFAULTS: dict[str, dict[str, str]] = {
     "claude": {
         "simple": "claude-haiku-4-5-20251001",
         "reasoning": "claude-sonnet-4-5-20250929",
+    },
+    "azure_openai": {
+        "simple": "gpt-5-mini",
+        "reasoning": "gpt-5",
     },
 }
 

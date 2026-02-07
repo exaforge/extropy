@@ -38,11 +38,15 @@ def _create_provider(provider_name: str) -> LLMProvider:
                 "AZURE_OPENAI_ENDPOINT not found. Set it as an environment variable.\n"
                 "  export AZURE_OPENAI_ENDPOINT=https://<resource>.cognitiveservices.azure.com/"
             )
+        # Resolve api_format: config value > auto-default (chat_completions for Azure)
+        config = get_config()
+        api_format = config.simulation.api_format or "chat_completions"
         return OpenAIProvider(
             api_key=api_key,
             azure_endpoint=azure_cfg["azure_endpoint"],
             api_version=azure_cfg.get("api_version", "2025-03-01-preview"),
             azure_deployment=azure_cfg.get("azure_deployment", ""),
+            api_format=api_format,
         )
     else:
         raise ValueError(

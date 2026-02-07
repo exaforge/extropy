@@ -61,6 +61,9 @@ class SimZoneConfig:
     rate_tier: int | None = None  # rate limit tier (1-4, None = Tier 1)
     rpm_override: int | None = None  # override RPM limit
     tpm_override: int | None = None  # override TPM limit
+    api_format: str = (
+        ""  # empty = auto (responses for openai, chat_completions for azure)
+    )
 
 
 @dataclass
@@ -135,6 +138,8 @@ class EntropyConfig:
             config.simulation.rpm_override = int(val)
         if val := os.environ.get("SIMULATION_TPM_OVERRIDE"):
             config.simulation.tpm_override = int(val)
+        if val := os.environ.get("SIMULATION_API_FORMAT"):
+            config.simulation.api_format = val
         if val := os.environ.get("DB_PATH"):
             config.db_path = val
         if val := os.environ.get("DEFAULT_POPULATION_SIZE"):

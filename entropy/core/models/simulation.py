@@ -82,7 +82,12 @@ def score_to_conviction_float(score: int | float | None) -> float | None:
     """
     if score is None:
         return None
-    score = int(score)
+    # Some models (e.g. DeepSeek) return conviction as 0-1 float instead of 0-100 int.
+    # Detect and rescale: any value in (0, 1] exclusive is almost certainly 0-1 scale.
+    if isinstance(score, float) and 0 < score <= 1.0:
+        score = int(score * 100)
+    else:
+        score = int(score)
     if score <= 15:
         return 0.1  # very_uncertain
     elif score <= 35:
