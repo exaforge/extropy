@@ -497,6 +497,8 @@ async def _reason_agent_two_pass_async(
     public_statement = pass1_response.get("public_statement", "")
     reasoning_summary = pass1_response.get("reasoning_summary", "")
     sentiment = pass1_response.get("sentiment")
+    if sentiment is not None:
+        sentiment = max(-1.0, min(1.0, float(sentiment)))
     conviction_score = pass1_response.get("conviction")
     will_share = pass1_response.get("will_share", False)
 
