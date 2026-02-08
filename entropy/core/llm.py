@@ -13,7 +13,7 @@ When validation fails, pass the error message back to let the LLM self-correct.
 """
 
 from .providers import get_pipeline_provider, get_simulation_provider
-from .providers.base import ValidatorCallback, RetryCallback
+from .providers.base import TokenUsage, ValidatorCallback, RetryCallback
 from ..config import get_config
 
 
@@ -22,6 +22,7 @@ __all__ = [
     "simple_call_async",
     "reasoning_call",
     "agentic_research",
+    "TokenUsage",
     "ValidatorCallback",
     "RetryCallback",
 ]
@@ -83,12 +84,13 @@ async def simple_call_async(
     schema_name: str = "response",
     model: str | None = None,
     max_tokens: int | None = None,
-) -> dict:
+) -> tuple[dict, TokenUsage]:
     """Async version of simple_call for concurrent API requests.
 
     Routed through the SIMULATION provider.
 
     Used for batch agent reasoning during simulation.
+    Returns (structured_data, token_usage) tuple.
     """
     provider = get_simulation_provider()
     effective_model = model or _get_simulation_model_override()

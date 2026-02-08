@@ -37,6 +37,7 @@ from entropy.core.models.scenario import (
     TimestepUnit,
 )
 from entropy.simulation.engine import SimulationEngine
+from entropy.simulation.reasoning import BatchTokenUsage
 
 
 @pytest.fixture
@@ -1146,7 +1147,7 @@ class TestProgressState:
                 results.append((ctx.agent_id, resp))
                 if on_agent_done:
                     on_agent_done(ctx.agent_id, resp)
-            return results
+            return results, BatchTokenUsage()
 
         # Expose all agents so they need reasoning
         for aid in ["a0", "a1", "a2"]:
@@ -1200,7 +1201,7 @@ class TestProgressState:
         def fake_batch(contexts, scenario, cfg, rate_limiter=None, on_agent_done=None):
             received_kwargs["on_agent_done"] = on_agent_done
             resp = _make_reasoning_response()
-            return [(ctx.agent_id, resp) for ctx in contexts]
+            return [(ctx.agent_id, resp) for ctx in contexts], BatchTokenUsage()
 
         with patch(
             "entropy.simulation.engine.batch_reason_agents", side_effect=fake_batch
@@ -1241,3 +1242,149 @@ class TestProgressState:
         assert snap["max_timesteps"] == minimal_scenario.simulation.max_timesteps
         assert snap["agents_total"] == 0
         assert snap["agents_done"] == 0
+
+
+class TestTokenAccumulation:
+    """Test that engine accumulates token usage from batch reasoning."""
+
+    def test_tokens_accumulate_across_chunks(
+        self,
+        minimal_scenario,
+        simple_agents,
+        simple_network,
+        minimal_pop_spec,
+        tmp_path,
+    ):
+        """Token usage should sum across reasoning chunks."""
+        config = SimulationRunConfig(
+            scenario_path="test.yaml",
+            output_dir=str(tmp_path / "output"),
+        )
+        engine = SimulationEngine(
+            scenario=minimal_scenario,
+            population_spec=minimal_pop_spec,
+            agents=simple_agents,
+            network=simple_network,
+            config=config,
+            chunk_size=2,
+        )
+
+        # Expose all agents so they need reasoning
+        for aid in ["a0", "a1", "a2"]:
+            exposure = ExposureRecord(
+                timestep=0, channel="broadcast", content="Test", credibility=0.9
+            )
+            engine.state_manager.record_exposure(aid, exposure)
+
+        call_count = [0]
+
+        def fake_batch(contexts, scenario, cfg, rate_limiter=None, on_agent_done=None):
+            call_count[0] += 1
+            resp = _make_reasoning_response()
+            results = [(ctx.agent_id, resp) for ctx in contexts]
+            usage = BatchTokenUsage(
+                pivotal_input_tokens=100 * len(contexts),
+                pivotal_output_tokens=50 * len(contexts),
+                routine_input_tokens=30 * len(contexts),
+                routine_output_tokens=10 * len(contexts),
+            )
+            return results, usage
+
+        with patch(
+            "entropy.simulation.engine.batch_reason_agents", side_effect=fake_batch
+        ):
+            engine._reason_agents(0)
+
+        # 3 agents, chunk_size=2 → 2 chunks (2 + 1)
+        assert call_count[0] == 2
+        assert engine.pivotal_input_tokens == 300  # 100 * 3
+        assert engine.pivotal_output_tokens == 150  # 50 * 3
+        assert engine.routine_input_tokens == 90  # 30 * 3
+        assert engine.routine_output_tokens == 30  # 10 * 3
+
+    def test_cost_in_meta_json(
+        self,
+        minimal_scenario,
+        simple_agents,
+        simple_network,
+        minimal_pop_spec,
+        tmp_path,
+    ):
+        """meta.json should contain cost block with token counts and estimated_usd."""
+        import json
+
+        config = SimulationRunConfig(
+            scenario_path="test.yaml",
+            output_dir=str(tmp_path / "output"),
+            model="gpt-5",
+            routine_model="gpt-5-mini",
+        )
+        engine = SimulationEngine(
+            scenario=minimal_scenario,
+            population_spec=minimal_pop_spec,
+            agents=simple_agents,
+            network=simple_network,
+            config=config,
+        )
+
+        # Set some token counts directly
+        engine.pivotal_input_tokens = 1_000_000
+        engine.pivotal_output_tokens = 500_000
+        engine.routine_input_tokens = 200_000
+        engine.routine_output_tokens = 100_000
+
+        # Run export (needs timeline to exist)
+        engine.timeline.flush()
+        engine.timeline.close()
+        engine._export_results()
+
+        with open(tmp_path / "output" / "meta.json") as f:
+            meta = json.load(f)
+
+        assert "cost" in meta
+        cost = meta["cost"]
+        assert cost["pivotal_input_tokens"] == 1_000_000
+        assert cost["pivotal_output_tokens"] == 500_000
+        assert cost["routine_input_tokens"] == 200_000
+        assert cost["routine_output_tokens"] == 100_000
+        assert cost["total_input_tokens"] == 1_200_000
+        assert cost["total_output_tokens"] == 600_000
+        assert cost["estimated_usd"] is not None
+        assert cost["estimated_usd"] > 0
+
+    def test_cost_unknown_model_returns_null_usd(
+        self,
+        minimal_scenario,
+        simple_agents,
+        simple_network,
+        minimal_pop_spec,
+        tmp_path,
+    ):
+        """When both models are unknown, estimated_usd should be null."""
+        import json
+
+        config = SimulationRunConfig(
+            scenario_path="test.yaml",
+            output_dir=str(tmp_path / "output"),
+            model="unknown-model-xyz",
+            routine_model="unknown-model-abc",
+        )
+        engine = SimulationEngine(
+            scenario=minimal_scenario,
+            population_spec=minimal_pop_spec,
+            agents=simple_agents,
+            network=simple_network,
+            config=config,
+        )
+
+        engine.pivotal_input_tokens = 1000
+        engine.pivotal_output_tokens = 500
+
+        engine.timeline.flush()
+        engine.timeline.close()
+        engine._export_results()
+
+        with open(tmp_path / "output" / "meta.json") as f:
+            meta = json.load(f)
+
+        assert meta["cost"]["estimated_usd"] is None

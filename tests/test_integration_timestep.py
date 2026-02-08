@@ -18,6 +18,7 @@ from entropy.core.models import (
     ReasoningResponse,
     SimulationRunConfig,
 )
+from entropy.simulation.reasoning import BatchTokenUsage
 from entropy.core.models.scenario import (
     Event,
     EventType,
@@ -205,7 +206,7 @@ def _mock_batch_reason(responses_map=None, default_response=None):
                 results.append((ctx.agent_id, responses_map[ctx.agent_id]))
             else:
                 results.append((ctx.agent_id, default_response))
-        return results
+        return results, BatchTokenUsage()
 
     return mock_fn
 

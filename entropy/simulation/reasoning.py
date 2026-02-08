@@ -14,9 +14,10 @@ import asyncio
 import logging
 import time
 from collections.abc import Callable
+from dataclasses import dataclass
 from typing import Any
 
-from ..core.llm import simple_call, simple_call_async
+from ..core.llm import simple_call, simple_call_async, TokenUsage
 from ..core.providers import close_simulation_provider
 from ..core.models import (
     ExposureRecord,
@@ -33,6 +34,16 @@ from ..core.models import (
 )
 
 logger = logging.getLogger(__name__)
+
+
+@dataclass
+class BatchTokenUsage:
+    """Accumulated token usage from a batch of two-pass reasoning calls."""
+
+    pivotal_input_tokens: int = 0
+    pivotal_output_tokens: int = 0
+    routine_input_tokens: int = 0
+    routine_output_tokens: int = 0
 
 
 # =============================================================================
@@ -448,6 +459,7 @@ async def _reason_agent_two_pass_async(
     classify_model = config.routine_model or None  # None = provider default (cheap)
 
     # === Pass 1: Role-play ===
+    pass1_usage = TokenUsage()
     for attempt in range(config.max_retries):
         try:
             if rate_limiter:
@@ -460,7 +472,7 @@ async def _reason_agent_two_pass_async(
                 )
 
             call_start = time.time()
-            pass1_response = await asyncio.wait_for(
+            pass1_response, pass1_usage = await asyncio.wait_for(
                 simple_call_async(
                     prompt=pass1_prompt,
                     response_schema=pass1_schema,
@@ -509,6 +521,7 @@ async def _reason_agent_two_pass_async(
     pass2_schema = build_pass2_schema(scenario.outcomes)
     position = None
     outcomes = {}
+    pass2_usage = TokenUsage()
 
     if pass2_schema:
         pass2_prompt = build_pass2_prompt(reasoning, scenario)
@@ -525,7 +538,7 @@ async def _reason_agent_two_pass_async(
                     )
 
                 call_start = time.time()
-                pass2_response = await asyncio.wait_for(
+                pass2_response, pass2_usage = await asyncio.wait_for(
                     simple_call_async(
                         prompt=pass2_prompt,
                         response_schema=pass2_schema,
@@ -576,6 +589,10 @@ async def _reason_agent_two_pass_async(
         will_share=will_share,
         reasoning=reasoning,
         outcomes=outcomes,
+        pass1_input_tokens=pass1_usage.input_tokens,
+        pass1_output_tokens=pass1_usage.output_tokens,
+        pass2_input_tokens=pass2_usage.input_tokens,
+        pass2_output_tokens=pass2_usage.output_tokens,
     )
 
 
@@ -735,7 +752,7 @@ def batch_reason_agents(
     max_concurrency: int = 50,
     rate_limiter: Any = None,
     on_agent_done: Callable[[str, ReasoningResponse | None], None] | None = None,
-) -> list[tuple[str, ReasoningResponse | None]]:
+) -> tuple[list[tuple[str, ReasoningResponse | None]], BatchTokenUsage]:
     """Reason multiple agents concurrently using asyncio with two-pass reasoning.
 
     Args:
@@ -747,12 +764,13 @@ def batch_reason_agents(
         on_agent_done: Optional callback(agent_id, response) called per agent after reasoning
 
     Returns:
-        List of (agent_id, response) tuples in original order
+        Tuple of (results, batch_token_usage) where results is a list of
+        (agent_id, response) tuples in original order.
     """
     import asyncio
 
     if not contexts:
-        return []
+        return [], BatchTokenUsage()
 
     total = len(contexts)
     logger.info(f"[BATCH] Starting two-pass async reasoning for {total} agents")
@@ -845,7 +863,16 @@ def batch_reason_agents(
             f"{total_wait:.2f}s total wait"
         )
 
-    return list(results)
+    # Accumulate token usage from all successful responses
+    batch_usage = BatchTokenUsage()
+    for _, response in results:
+        if response is not None:
+            batch_usage.pivotal_input_tokens += response.pass1_input_tokens
+            batch_usage.pivotal_output_tokens += response.pass1_output_tokens
+            batch_usage.routine_input_tokens += response.pass2_input_tokens
+            batch_usage.routine_output_tokens += response.pass2_output_tokens
+
+    return list(results), batch_usage
 
 
 # =============================================================================

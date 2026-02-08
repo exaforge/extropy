@@ -12,7 +12,7 @@ import time
 
 import anthropic
 
-from .base import LLMProvider, ValidatorCallback, RetryCallback
+from .base import LLMProvider, TokenUsage, ValidatorCallback, RetryCallback
 from .logging import log_request_response, extract_error_summary
 
 _TRANSIENT_ANTHROPIC_ERRORS = (
@@ -189,7 +189,7 @@ class ClaudeProvider(LLMProvider):
         schema_name: str = "response",
         model: str | None = None,
         max_tokens: int | None = None,
-    ) -> dict:
+    ) -> tuple[dict, TokenUsage]:
         model = model or self.default_simple_model
         client = self._get_async_client()
         tool = _make_structured_tool(schema_name, response_schema)
@@ -204,7 +204,15 @@ class ClaudeProvider(LLMProvider):
             )
         )
 
-        return _extract_tool_input(response) or {}
+        # Extract token usage
+        usage = TokenUsage()
+        if hasattr(response, "usage") and response.usage is not None:
+            usage = TokenUsage(
+                input_tokens=getattr(response.usage, "input_tokens", 0) or 0,
+                output_tokens=getattr(response.usage, "output_tokens", 0) or 0,
+            )
+
+        return _extract_tool_input(response) or {}, usage
 
     def reasoning_call(
         self,

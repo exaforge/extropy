@@ -200,6 +200,12 @@ class SimulationEngine:
         self.total_reasoning_calls = 0
         self.total_exposures = 0
 
+        # Token usage tracking
+        self.pivotal_input_tokens = 0
+        self.pivotal_output_tokens = 0
+        self.routine_input_tokens = 0
+        self.routine_output_tokens = 0
+
         # Progress callback
         self._on_progress: TimestepProgressCallback | None = None
 
@@ -505,7 +511,7 @@ class SimulationEngine:
             chunk_contexts = contexts[chunk_start : chunk_start + self.chunk_size]
 
             reasoning_start = time.time()
-            chunk_results = batch_reason_agents(
+            chunk_results, chunk_usage = batch_reason_agents(
                 chunk_contexts,
                 self.scenario,
                 self.config,
@@ -514,6 +520,12 @@ class SimulationEngine:
             )
             reasoning_elapsed = time.time() - reasoning_start
             self.total_reasoning_calls += len(chunk_results)
+
+            # Accumulate token usage
+            self.pivotal_input_tokens += chunk_usage.pivotal_input_tokens
+            self.pivotal_output_tokens += chunk_usage.pivotal_output_tokens
+            self.routine_input_tokens += chunk_usage.routine_input_tokens
+            self.routine_output_tokens += chunk_usage.routine_output_tokens
 
             logger.info(
                 f"[TIMESTEP {timestep}] Chunk {chunk_start // self.chunk_size + 1}: "
@@ -792,6 +804,80 @@ class SimulationEngine:
             completed_at=datetime.now(),
         )
 
+    def _compute_cost(self) -> dict[str, Any]:
+        """Compute cost from actual token usage using pricing data.
+
+        Returns:
+            Cost dictionary with token counts and estimated USD.
+        """
+        from ..core.pricing import get_pricing, resolve_default_model
+        from ..config import get_config
+
+        cost: dict[str, Any] = {
+            "pivotal_input_tokens": self.pivotal_input_tokens,
+            "pivotal_output_tokens": self.pivotal_output_tokens,
+            "routine_input_tokens": self.routine_input_tokens,
+            "routine_output_tokens": self.routine_output_tokens,
+            "total_input_tokens": self.pivotal_input_tokens + self.routine_input_tokens,
+            "total_output_tokens": self.pivotal_output_tokens
+            + self.routine_output_tokens,
+        }
+
+        # Resolve effective model names for pricing
+        config = get_config()
+        provider = config.simulation.provider
+        pivotal_model = (
+            self.config.pivotal_model
+            or self.config.model
+            or config.simulation.pivotal_model
+            or config.simulation.model
+            or resolve_default_model(provider, "reasoning")
+        )
+        routine_model = (
+            self.config.routine_model
+            or config.simulation.routine_model
+            or resolve_default_model(provider, "simple")
+        )
+
+        cost["pivotal_model"] = pivotal_model
+        cost["routine_model"] = routine_model
+
+        # Compute USD cost per pass
+        estimated_usd = 0.0
+        has_pricing = False
+
+        pivotal_pricing = get_pricing(pivotal_model)
+        if pivotal_pricing:
+            pivotal_cost = (
+                self.pivotal_input_tokens / 1_000_000
+            ) * pivotal_pricing.input_per_mtok + (
+                self.pivotal_output_tokens / 1_000_000
+            ) * pivotal_pricing.output_per_mtok
+            estimated_usd += pivotal_cost
+            has_pricing = True
+        else:
+            logger.warning(
+                f"[COST] Unknown pricing for pivotal model '{pivotal_model}'"
+            )
+
+        routine_pricing = get_pricing(routine_model)
+        if routine_pricing:
+            routine_cost = (
+                self.routine_input_tokens / 1_000_000
+            ) * routine_pricing.input_per_mtok + (
+                self.routine_output_tokens / 1_000_000
+            ) * routine_pricing.output_per_mtok
+            estimated_usd += routine_cost
+            has_pricing = True
+        else:
+            logger.warning(
+                f"[COST] Unknown pricing for routine model '{routine_model}'"
+            )
+
+        cost["estimated_usd"] = round(estimated_usd, 4) if has_pricing else None
+
+        return cost
+
     def _export_results(self) -> None:
         """Export all results to output directory."""
         # Export summary
@@ -850,6 +936,9 @@ class SimulationEngine:
 
         if self.rate_limiter:
             meta["rate_limiter_stats"] = self.rate_limiter.stats()
+
+        # Compute cost from actual token usage
+        meta["cost"] = self._compute_cost()
 
         with open(self.output_dir / "meta.json", "w") as f:
             json.dump(meta, f, indent=2)

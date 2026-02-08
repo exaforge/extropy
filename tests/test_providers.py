@@ -8,7 +8,7 @@ from unittest.mock import patch, MagicMock, AsyncMock
 
 import pytest
 
-from entropy.core.providers.base import LLMProvider
+from entropy.core.providers.base import LLMProvider, TokenUsage
 from entropy.core.providers.openai import OpenAIProvider
 from entropy.core.providers.claude import ClaudeProvider
 
@@ -53,7 +53,11 @@ def _make_claude_provider(**overrides):
 # =============================================================================
 
 
-def _make_openai_response(text: str = '{"key": "value"}'):
+def _make_openai_response(
+    text: str = '{"key": "value"}',
+    input_tokens: int = 100,
+    output_tokens: int = 50,
+):
     """Create a mock OpenAI Responses API response."""
     content_item = MagicMock()
     content_item.type = "output_text"
@@ -64,13 +68,22 @@ def _make_openai_response(text: str = '{"key": "value"}'):
     message.type = "message"
     message.content = [content_item]
 
+    usage = MagicMock()
+    usage.input_tokens = input_tokens
+    usage.output_tokens = output_tokens
+
     response = MagicMock()
     response.output = [message]
+    response.usage = usage
 
     return response
 
 
-def _make_claude_response(tool_input: dict | None = None):
+def _make_claude_response(
+    tool_input: dict | None = None,
+    input_tokens: int = 80,
+    output_tokens: int = 40,
+):
     """Create a mock Claude Messages API response with tool_use block."""
     blocks = []
 
@@ -81,8 +94,13 @@ def _make_claude_response(tool_input: dict | None = None):
         tool_block.input = tool_input
         blocks.append(tool_block)
 
+    usage = MagicMock()
+    usage.input_tokens = input_tokens
+    usage.output_tokens = output_tokens
+
     response = MagicMock()
     response.content = blocks
+    response.usage = usage
 
     return response
 
@@ -370,7 +388,7 @@ class TestBaseRetryWithValidation:
                 return {}
 
             async def simple_call_async(self, *a, **kw):
-                return {}
+                return {}, TokenUsage()
 
             def reasoning_call(self, *a, **kw):
                 return {}
@@ -411,7 +429,7 @@ class TestBaseRetryWithValidation:
                 return {}
 
             async def simple_call_async(self, *a, **kw):
-                return {}
+                return {}, TokenUsage()
 
             def reasoning_call(self, *a, **kw):
                 return {}
@@ -453,7 +471,7 @@ class TestBaseRetryWithValidation:
                 return {}
 
             async def simple_call_async(self, *a, **kw):
-                return {}
+                return {}, TokenUsage()
 
             def reasoning_call(self, *a, **kw):
                 return {}
@@ -518,7 +536,7 @@ class TestBaseRetryWithValidation:
                 return {}
 
             async def simple_call_async(self, *a, **kw):
-                return {}
+                return {}, TokenUsage()
 
             def reasoning_call(self, *a, **kw):
                 return {}
@@ -564,7 +582,7 @@ class TestBaseRetryWithValidation:
                 return {}
 
             async def simple_call_async(self, *a, **kw):
-                return {}
+                return {}, TokenUsage()
 
             def reasoning_call(self, *a, **kw):
                 return {}
@@ -630,7 +648,7 @@ class TestBaseRetryWithValidation:
                 return {}
 
             async def simple_call_async(self, *a, **kw):
-                return {}
+                return {}, TokenUsage()
 
             def reasoning_call(self, *a, **kw):
                 return {}
@@ -821,7 +839,11 @@ class TestProviderFactoryAzure:
 # =============================================================================
 
 
-def _make_chat_completions_response(text: str = '{"key": "value"}'):
+def _make_chat_completions_response(
+    text: str = '{"key": "value"}',
+    prompt_tokens: int = 120,
+    completion_tokens: int = 60,
+):
     """Create a mock Chat Completions API response."""
     message = MagicMock()
     message.content = text
@@ -829,8 +851,13 @@ def _make_chat_completions_response(text: str = '{"key": "value"}'):
     choice = MagicMock()
     choice.message = message
 
+    usage = MagicMock()
+    usage.prompt_tokens = prompt_tokens
+    usage.completion_tokens = completion_tokens
+
     response = MagicMock()
     response.choices = [choice]
+    response.usage = usage
 
     return response
 
@@ -897,7 +924,7 @@ class TestOpenAIChatCompletions:
         mock_client.responses.create = AsyncMock()
         mock_get_async_client.return_value = mock_client
 
-        result = asyncio.run(
+        result, usage = asyncio.run(
             provider.simple_call_async(
                 prompt="test prompt",
                 response_schema={"type": "object", "properties": {}},
@@ -905,6 +932,8 @@ class TestOpenAIChatCompletions:
         )
 
         assert result == {"result": "async_chat_ok"}
+        assert usage.input_tokens == 120
+        assert usage.output_tokens == 60
         mock_client.chat.completions.create.assert_called_once()
         mock_client.responses.create.assert_not_called()
 
@@ -987,3 +1016,129 @@ class TestOpenAIChatCompletions:
             max_tokens=None,
         )
         assert "max_output_tokens" not in params
+
+
+# =============================================================================
+# Token Usage Extraction Tests
+# =============================================================================
+
+
+class TestOpenAITokenExtraction:
+    """Test token usage extraction from OpenAI async responses."""
+
+    @patch.object(OpenAIProvider, "_get_async_client")
+    def test_responses_api_extracts_tokens(self, mock_get_async_client):
+        """Responses API extracts input_tokens/output_tokens."""
+        import asyncio
+
+        provider = _make_openai_provider(_api_format="responses")
+
+        mock_client = MagicMock()
+        mock_response = _make_openai_response(
+            '{"result": "ok"}', input_tokens=500, output_tokens=200
+        )
+        mock_client.responses.create = AsyncMock(return_value=mock_response)
+        mock_get_async_client.return_value = mock_client
+
+        result, usage = asyncio.run(
+            provider.simple_call_async(
+                prompt="test", response_schema={"type": "object", "properties": {}}
+            )
+        )
+
+        assert usage.input_tokens == 500
+        assert usage.output_tokens == 200
+
+    @patch.object(OpenAIProvider, "_get_async_client")
+    def test_chat_completions_extracts_tokens(self, mock_get_async_client):
+        """Chat Completions API extracts prompt_tokens/completion_tokens."""
+        import asyncio
+
+        provider = _make_openai_provider(_api_format="chat_completions")
+
+        mock_client = MagicMock()
+        mock_response = _make_chat_completions_response(
+            '{"result": "ok"}', prompt_tokens=300, completion_tokens=150
+        )
+        mock_client.chat.completions.create = AsyncMock(return_value=mock_response)
+        mock_get_async_client.return_value = mock_client
+
+        result, usage = asyncio.run(
+            provider.simple_call_async(
+                prompt="test", response_schema={"type": "object", "properties": {}}
+            )
+        )
+
+        assert usage.input_tokens == 300
+        assert usage.output_tokens == 150
+
+    @patch.object(OpenAIProvider, "_get_async_client")
+    def test_missing_usage_returns_zeros(self, mock_get_async_client):
+        """When response.usage is None, returns TokenUsage(0, 0)."""
+        import asyncio
+
+        provider = _make_openai_provider(_api_format="responses")
+
+        mock_client = MagicMock()
+        mock_response = _make_openai_response('{"result": "ok"}')
+        mock_response.usage = None
+        mock_client.responses.create = AsyncMock(return_value=mock_response)
+        mock_get_async_client.return_value = mock_client
+
+        result, usage = asyncio.run(
+            provider.simple_call_async(
+                prompt="test", response_schema={"type": "object", "properties": {}}
+            )
+        )
+
+        assert usage.input_tokens == 0
+        assert usage.output_tokens == 0
+
+
+class TestClaudeTokenExtraction:
+    """Test token usage extraction from Claude async responses."""
+
+    @patch.object(ClaudeProvider, "_get_async_client")
+    def test_extracts_tokens(self, mock_get_async_client):
+        """Claude extracts input_tokens/output_tokens from response.usage."""
+        import asyncio
+
+        provider = _make_claude_provider()
+
+        mock_client = MagicMock()
+        mock_response = _make_claude_response(
+            {"result": "ok"}, input_tokens=400, output_tokens=180
+        )
+        mock_client.messages.create = AsyncMock(return_value=mock_response)
+        mock_get_async_client.return_value = mock_client
+
+        result, usage = asyncio.run(
+            provider.simple_call_async(
+                prompt="test", response_schema={"type": "object", "properties": {}}
+            )
+        )
+
+        assert usage.input_tokens == 400
+        assert usage.output_tokens == 180
+
+    @patch.object(ClaudeProvider, "_get_async_client")
+    def test_missing_usage_returns_zeros(self, mock_get_async_client):
+        """When response.usage is None, returns TokenUsage(0, 0)."""
+        import asyncio
+
+        provider = _make_claude_provider()
+
+        mock_client = MagicMock()
+        mock_response = _make_claude_response({"result": "ok"})
+        mock_response.usage = None
+        mock_client.messages.create = AsyncMock(return_value=mock_response)
+        mock_get_async_client.return_value = mock_client
+
+        result, usage = asyncio.run(
+            provider.simple_call_async(
+                prompt="test", response_schema={"type": "object", "properties": {}}
+            )
+        )
+
+        assert usage.input_tokens == 0
+        assert usage.output_tokens == 0
