@@ -321,6 +321,12 @@ class ReasoningResponse(BaseModel):
         default_factory=dict, description="All structured outcomes (from Pass 2)"
     )
 
+    # Token usage tracking (populated by two-pass reasoning)
+    pass1_input_tokens: int = Field(default=0, description="Pass 1 input tokens")
+    pass1_output_tokens: int = Field(default=0, description="Pass 1 output tokens")
+    pass2_input_tokens: int = Field(default=0, description="Pass 2 input tokens")
+    pass2_output_tokens: int = Field(default=0, description="Pass 2 output tokens")
+
 
 # =============================================================================
 # Simulation Configuration

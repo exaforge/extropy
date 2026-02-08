@@ -8,7 +8,7 @@ import time
 import openai
 from openai import OpenAI, AsyncOpenAI
 
-from .base import LLMProvider, ValidatorCallback, RetryCallback
+from .base import LLMProvider, TokenUsage, ValidatorCallback, RetryCallback
 from .logging import log_request_response, extract_error_summary
 
 _TRANSIENT_OPENAI_ERRORS = (
@@ -295,7 +295,7 @@ class OpenAIProvider(LLMProvider):
         schema_name: str = "response",
         model: str | None = None,
         max_tokens: int | None = None,
-    ) -> dict:
+    ) -> tuple[dict, TokenUsage]:
         model = self._resolve_model(model, self.default_simple_model)
         client = self._get_async_client()
 
@@ -326,7 +326,21 @@ class OpenAIProvider(LLMProvider):
             raw_text = self._extract_output_text(response)
         structured_data = json.loads(raw_text) if raw_text else None
 
-        return structured_data or {}
+        # Extract token usage
+        usage = TokenUsage()
+        if hasattr(response, "usage") and response.usage is not None:
+            if use_chat:
+                usage = TokenUsage(
+                    input_tokens=getattr(response.usage, "prompt_tokens", 0) or 0,
+                    output_tokens=getattr(response.usage, "completion_tokens", 0) or 0,
+                )
+            else:
+                usage = TokenUsage(
+                    input_tokens=getattr(response.usage, "input_tokens", 0) or 0,
+                    output_tokens=getattr(response.usage, "output_tokens", 0) or 0,
+                )
+
+        return structured_data or {}, usage
 
     def reasoning_call(
         self,

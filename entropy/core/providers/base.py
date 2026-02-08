@@ -1,10 +1,19 @@
 """Abstract base class for LLM providers."""
 
 from abc import ABC, abstractmethod
+from dataclasses import dataclass
 from typing import Callable, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from ..rate_limiter import RateLimiter
+
+
+@dataclass
+class TokenUsage:
+    """Token usage from a single LLM API call."""
+
+    input_tokens: int = 0
+    output_tokens: int = 0
 
 
 # Type for validation callbacks: takes response data, returns (is_valid, error_message)
@@ -129,7 +138,7 @@ class LLMProvider(ABC):
         schema_name: str = "response",
         model: str | None = None,
         max_tokens: int | None = None,
-    ) -> dict:
+    ) -> tuple[dict, TokenUsage]:
         """Async version of simple_call for concurrent API requests."""
         ...
 
