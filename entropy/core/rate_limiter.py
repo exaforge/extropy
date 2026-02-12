@@ -228,13 +228,21 @@ class RateLimiter:
                     self.total_wait_time += total_wait
                     return total_wait
 
-                # Release what was acquired
+                # Release what was acquired (capped to capacity)
                 if rpm_wait == 0.0:
-                    self.rpm_bucket.tokens += 1.0
+                    self.rpm_bucket.tokens = min(
+                        self.rpm_bucket.capacity, self.rpm_bucket.tokens + 1.0
+                    )
                 if itpm_wait == 0.0:
-                    self.itpm_bucket.tokens += float(estimated_input_tokens)
+                    self.itpm_bucket.tokens = min(
+                        self.itpm_bucket.capacity,
+                        self.itpm_bucket.tokens + float(estimated_input_tokens),
+                    )
                 if otpm_wait == 0.0:
-                    self.otpm_bucket.tokens += float(estimated_output_tokens)
+                    self.otpm_bucket.tokens = min(
+                        self.otpm_bucket.capacity,
+                        self.otpm_bucket.tokens + float(estimated_output_tokens),
+                    )
 
                 wait_time = max(rpm_wait, itpm_wait, otpm_wait)
             else:
@@ -246,11 +254,16 @@ class RateLimiter:
                     self.total_wait_time += total_wait
                     return total_wait
 
-                # Release what was acquired
+                # Release what was acquired (capped to capacity)
                 if rpm_wait == 0.0:
-                    self.rpm_bucket.tokens += 1.0
+                    self.rpm_bucket.tokens = min(
+                        self.rpm_bucket.capacity, self.rpm_bucket.tokens + 1.0
+                    )
                 if tpm_wait == 0.0:
-                    self.tpm_bucket.tokens += float(estimated_total)
+                    self.tpm_bucket.tokens = min(
+                        self.tpm_bucket.capacity,
+                        self.tpm_bucket.tokens + float(estimated_total),
+                    )
 
                 wait_time = max(rpm_wait, tpm_wait)
 
@@ -317,13 +330,21 @@ class RateLimiter:
                     self.total_wait_time += total_wait
                     return total_wait
 
-                # Release what was acquired
+                # Release what was acquired (capped to capacity)
                 if rpm_wait == 0.0:
-                    self.rpm_bucket.tokens += 1.0
+                    self.rpm_bucket.tokens = min(
+                        self.rpm_bucket.capacity, self.rpm_bucket.tokens + 1.0
+                    )
                 if itpm_wait == 0.0:
-                    self.itpm_bucket.tokens += float(estimated_input_tokens)
+                    self.itpm_bucket.tokens = min(
+                        self.itpm_bucket.capacity,
+                        self.itpm_bucket.tokens + float(estimated_input_tokens),
+                    )
                 if otpm_wait == 0.0:
-                    self.otpm_bucket.tokens += float(estimated_output_tokens)
+                    self.otpm_bucket.tokens = min(
+                        self.otpm_bucket.capacity,
+                        self.otpm_bucket.tokens + float(estimated_output_tokens),
+                    )
 
                 wait_time = max(rpm_wait, itpm_wait, otpm_wait)
             else:
@@ -335,11 +356,16 @@ class RateLimiter:
                     self.total_wait_time += total_wait
                     return total_wait
 
-                # Release what was acquired
+                # Release what was acquired (capped to capacity)
                 if rpm_wait == 0.0:
-                    self.rpm_bucket.tokens += 1.0
+                    self.rpm_bucket.tokens = min(
+                        self.rpm_bucket.capacity, self.rpm_bucket.tokens + 1.0
+                    )
                 if tpm_wait == 0.0:
-                    self.tpm_bucket.tokens += float(estimated_total)
+                    self.tpm_bucket.tokens = min(
+                        self.tpm_bucket.capacity,
+                        self.tpm_bucket.tokens + float(estimated_total),
+                    )
 
                 wait_time = max(rpm_wait, tpm_wait)
 

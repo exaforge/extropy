@@ -368,9 +368,11 @@ class SimulationEngine:
 
         # Finalize and export
         runtime = time.time() - start_time
-        summary = self._finalize(final_timestep, stopped_reason, runtime)
-        self._export_results()
-        self.state_manager.close()
+        try:
+            summary = self._finalize(final_timestep, stopped_reason, runtime)
+            self._export_results()
+        finally:
+            self.state_manager.close()
 
         return summary
 
@@ -638,7 +640,9 @@ class SimulationEngine:
                     and response.position is not None
                     and old_public_position != response.position
                 ):
-                    new_conviction = public_conviction or 0.0
+                    new_conviction = (
+                        public_conviction if public_conviction is not None else 0.0
+                    )
                     if new_conviction < _MODERATE_CONVICTION:
                         logger.info(
                             f"[CONVICTION] Agent {agent_id}: public flip from {old_public_position} "
@@ -702,7 +706,8 @@ class SimulationEngine:
                     self._private_anchor_position is not None
                     and public_position is not None
                     and public_friction >= 0.65
-                    and (public_conviction or 0.0) < 0.90
+                    and (public_conviction if public_conviction is not None else 0.0)
+                    < 0.90
                 ):
                     private_position = self._private_anchor_position
                 else:
@@ -721,7 +726,7 @@ class SimulationEngine:
                 )
                 required_sources = 2 if public_friction >= 0.65 else 1
                 if (
-                    public_conviction or 0.0
+                    public_conviction if public_conviction is not None else 0.0
                 ) >= required_conviction and recent_source_count >= required_sources:
                     private_position = public_position
 

@@ -174,6 +174,13 @@ def _sample_lognormal(
         else mean * 0.5
     )
 
+    # Lognormal requires mean > 0
+    if mean <= 0:
+        raise ValueError(
+            f"Lognormal distribution requires mean > 0, got {mean}. "
+            "Check the distribution parameters or formula."
+        )
+
     # Convert from actual mean/std to log-space mu/sigma
     # mu = log(mean^2 / sqrt(mean^2 + std^2))
     # sigma = sqrt(log(1 + std^2/mean^2))
@@ -259,6 +266,14 @@ def _sample_categorical(
         Selected option string
     """
     use_weights = weights if weights is not None else dist.weights
+
+    # Validate weights are usable (rng.choices crashes if sum <= 0 or any negative)
+    if not use_weights or sum(use_weights) <= 0:
+        raise ValueError(
+            f"Categorical weights must sum to > 0, got {use_weights}. "
+            "Modifiers may have zeroed all options."
+        )
+
     return rng.choices(dist.options, weights=use_weights, k=1)[0]
 
 

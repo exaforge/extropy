@@ -133,17 +133,29 @@ class EntropyConfig:
         if val := os.environ.get("SIMULATION_ROUTINE_MODEL"):
             config.simulation.routine_model = val
         if val := os.environ.get("SIMULATION_RATE_TIER"):
-            config.simulation.rate_tier = int(val)
+            try:
+                config.simulation.rate_tier = int(val)
+            except ValueError:
+                logger.warning("Invalid SIMULATION_RATE_TIER=%r, ignoring", val)
         if val := os.environ.get("SIMULATION_RPM_OVERRIDE"):
-            config.simulation.rpm_override = int(val)
+            try:
+                config.simulation.rpm_override = int(val)
+            except ValueError:
+                logger.warning("Invalid SIMULATION_RPM_OVERRIDE=%r, ignoring", val)
         if val := os.environ.get("SIMULATION_TPM_OVERRIDE"):
-            config.simulation.tpm_override = int(val)
+            try:
+                config.simulation.tpm_override = int(val)
+            except ValueError:
+                logger.warning("Invalid SIMULATION_TPM_OVERRIDE=%r, ignoring", val)
         if val := os.environ.get("SIMULATION_API_FORMAT"):
             config.simulation.api_format = val
         if val := os.environ.get("DB_PATH"):
             config.db_path = val
         if val := os.environ.get("DEFAULT_POPULATION_SIZE"):
-            config.default_population_size = int(val)
+            try:
+                config.default_population_size = int(val)
+            except ValueError:
+                logger.warning("Invalid DEFAULT_POPULATION_SIZE=%r, ignoring", val)
 
         return config
 
