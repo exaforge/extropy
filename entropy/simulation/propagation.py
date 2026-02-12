@@ -6,6 +6,7 @@ Handles how agents become exposed to the event through:
 """
 
 import logging
+import math
 import random
 from typing import Any
 
@@ -21,6 +22,22 @@ from ..population.sampler import eval_condition, ConditionError
 from .state import StateManager
 
 logger = logging.getLogger(__name__)
+
+_SOFT_SATURATION_MAX = 0.97
+
+
+def _soft_saturate_probability(raw_probability: float) -> float:
+    """Apply smooth saturation for high probabilities.
+
+    Keeps low-mid probabilities unchanged while compressing extreme values
+    so stacked modifiers don't collapse to near-deterministic sharing.
+    """
+    if raw_probability <= 1.0:
+        return raw_probability
+
+    # For overflow above 1.0, smoothly compress toward a high but non-deterministic ceiling.
+    overflow = raw_probability - 1.0
+    return 1.0 - (1.0 - _SOFT_SATURATION_MAX) * (1.0 - math.exp(-overflow))
 
 
 def evaluate_exposure_rule(
@@ -165,6 +182,7 @@ def calculate_share_probability(
     edge_data: dict[str, Any],
     spread_config: SpreadConfig,
     rng: random.Random,
+    hop_depth: int = 0,
 ) -> float:
     """Calculate probability that an agent shares to a specific neighbor.
 
@@ -173,6 +191,7 @@ def calculate_share_probability(
         edge_data: Edge attributes
         spread_config: Spread configuration from scenario
         rng: Random number generator (unused, but available for stochastic modifiers)
+        hop_depth: Current propagation depth from seed exposure
 
     Returns:
         Share probability (0-1)
@@ -193,8 +212,16 @@ def calculate_share_probability(
             # Skip modifier if condition fails
             pass
 
-    # Clamp to valid range
-    return max(0.0, min(1.0, base_prob))
+    # Apply per-hop decay after modifiers.
+    if hop_depth > 0 and spread_config.decay_per_hop > 0:
+        decay_factor = (1.0 - spread_config.decay_per_hop) ** hop_depth
+        base_prob *= decay_factor
+
+    # Clamp negatives, then softly saturate high values.
+    base_prob = max(0.0, base_prob)
+    softened = _soft_saturate_probability(base_prob)
+
+    return max(0.0, min(1.0, softened))
 
 
 def propagate_through_network(
@@ -235,6 +262,14 @@ def propagate_through_network(
         sharer_agent = agent_map.get(sharer_id)
         if not sharer_agent:
             continue
+        sharer_hop = state_manager.get_network_hop_depth(sharer_id)
+        next_hop = (sharer_hop + 1) if sharer_hop is not None else 1
+
+        if (
+            scenario.spread.max_hops is not None
+            and next_hop > scenario.spread.max_hops
+        ):
+            continue
 
         # Get neighbors from network (use adjacency list if available)
         if adjacency is not None:
@@ -246,9 +281,10 @@ def propagate_through_network(
         # (or shared to with a different position — allows re-share on position change)
         neighbor_ids = [nid for nid, _ in neighbors]
         sharer_state = state_manager.get_agent_state(sharer_id)
+        sharer_public_position = sharer_state.public_position or sharer_state.position
         eligible_ids = set(
             state_manager.get_unshared_neighbors(
-                sharer_id, neighbor_ids, sharer_state.position
+                sharer_id, neighbor_ids, sharer_public_position
             )
         )
 
@@ -268,24 +304,30 @@ def propagate_through_network(
                 edge_data,
                 scenario.spread,
                 rng,
+                hop_depth=next_hop,
             )
 
             # Record the share attempt regardless of probability outcome
             # (prevents retrying the same neighbor every timestep)
             state_manager.record_share(
-                sharer_id, neighbor_id, timestep, sharer_state.position
+                sharer_id, neighbor_id, timestep, sharer_public_position
             )
 
             if rng.random() > prob:
                 continue
 
             # Record exposure (even if already aware - for multi-touch)
+            decay_factor = (
+                (1.0 - scenario.spread.decay_per_hop) ** next_hop
+                if scenario.spread.decay_per_hop > 0
+                else 1.0
+            )
             exposure = ExposureRecord(
                 timestep=timestep,
                 channel="network",
                 source_agent_id=sharer_id,
                 content=scenario.event.content,
-                credibility=0.85,  # Peer credibility
+                credibility=max(0.05, min(1.0, 0.85 * decay_factor)),
             )
 
             state_manager.record_exposure(neighbor_id, exposure)

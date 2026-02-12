@@ -198,6 +198,14 @@ class OutcomeDefinition(BaseModel):
     required: bool = Field(
         default=True, description="Whether this outcome must be extracted"
     )
+    option_friction: dict[str, float] | None = Field(
+        default=None,
+        description=(
+            "Optional per-option behavior friction scores in [0,1] where higher "
+            "means harder to sustain in real behavior. Used by engine dynamics for "
+            "categorical outcomes."
+        ),
+    )
 
 
 class OutcomeConfig(BaseModel):

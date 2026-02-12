@@ -257,7 +257,7 @@ class TestFlipResistance:
         minimal_pop_spec,
         tmp_path,
     ):
-        """A firm-conviction agent should accept a flip when new conviction >= moderate."""
+        """Public stance can flip while private behavior remains anchored."""
         config = SimulationRunConfig(
             scenario_path="test.yaml",
             output_dir=str(tmp_path / "output"),
@@ -289,7 +289,8 @@ class TestFlipResistance:
         )
 
         final_state = engine.state_manager.get_agent_state("a0")
-        assert final_state.position == "reject"  # flip accepted
+        assert final_state.public_position == "reject"
+        assert final_state.position == "adopt"
 
 
 class TestConvictionGatedSharing:
@@ -1241,3 +1242,112 @@ class TestProgressState:
         assert snap["max_timesteps"] == minimal_scenario.simulation.max_timesteps
         assert snap["agents_total"] == 0
         assert snap["agents_done"] == 0
+
+
+class TestDynamicsUpdates:
+    """Test bounded-confidence and conviction-decay dynamics."""
+
+    def test_bounded_confidence_dampens_state_shift(
+        self,
+        minimal_scenario,
+        simple_agents,
+        simple_network,
+        minimal_pop_spec,
+        tmp_path,
+    ):
+        config = SimulationRunConfig(
+            scenario_path="test.yaml",
+            output_dir=str(tmp_path / "output"),
+        )
+        engine = SimulationEngine(
+            scenario=minimal_scenario,
+            population_spec=minimal_pop_spec,
+            agents=simple_agents,
+            network=simple_network,
+            config=config,
+        )
+
+        old_state = AgentState(
+            agent_id="a0",
+            aware=True,
+            position="adopt",
+            sentiment=0.0,
+            conviction=0.9,
+            will_share=True,
+        )
+        response = _make_reasoning_response(
+            position="reject",
+            sentiment=-1.0,
+            conviction=0.1,
+            will_share=True,
+        )
+
+        engine._process_reasoning_chunk(
+            timestep=1,
+            results=[("a0", response)],
+            old_states={"a0": old_state},
+        )
+
+        final_state = engine.state_manager.get_agent_state("a0")
+        # Public uses rho=0.35, private uses rho=0.12 toward public.
+        assert final_state.public_sentiment == pytest.approx(-0.35)
+        assert final_state.public_conviction == pytest.approx(0.62)
+        assert final_state.sentiment == pytest.approx(-0.042)
+        assert final_state.conviction == pytest.approx(0.8664)
+
+    def test_conviction_decay_updates_non_reasoning_agents(
+        self,
+        minimal_scenario,
+        simple_agents,
+        simple_network,
+        minimal_pop_spec,
+        tmp_path,
+    ):
+        config = SimulationRunConfig(
+            scenario_path="test.yaml",
+            output_dir=str(tmp_path / "output"),
+        )
+        engine = SimulationEngine(
+            scenario=minimal_scenario,
+            population_spec=minimal_pop_spec,
+            agents=simple_agents,
+            network=simple_network,
+            config=config,
+        )
+
+        # Agent has prior state at t=0 and does not reason at t=1.
+        engine.state_manager.record_exposure(
+            "a0",
+            ExposureRecord(
+                timestep=0,
+                channel="broadcast",
+                content="seed",
+                credibility=0.9,
+            ),
+        )
+        engine.state_manager.update_agent_state(
+            "a0",
+            AgentState(
+                agent_id="a0",
+                aware=True,
+                position="adopt",
+                conviction=0.7,
+                sentiment=0.4,
+                will_share=True,
+                committed=True,
+            ),
+            timestep=0,
+        )
+
+        with engine.state_manager.transaction():
+            changed = engine.state_manager.apply_conviction_decay(
+                timestep=1,
+                decay_rate=0.05,
+                sharing_threshold=CONVICTION_MAP[ConvictionLevel.VERY_UNCERTAIN],
+                firm_threshold=CONVICTION_MAP[ConvictionLevel.FIRM],
+            )
+
+        assert changed == 1
+        final_state = engine.state_manager.get_agent_state("a0")
+        assert final_state.conviction == pytest.approx(0.665)
+        assert final_state.committed is False

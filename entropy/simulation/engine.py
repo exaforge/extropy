@@ -59,6 +59,10 @@ logger = logging.getLogger(__name__)
 _FIRM_CONVICTION = CONVICTION_MAP[ConvictionLevel.FIRM]
 _MODERATE_CONVICTION = CONVICTION_MAP[ConvictionLevel.MODERATE]
 _SHARING_CONVICTION_THRESHOLD = CONVICTION_MAP[ConvictionLevel.VERY_UNCERTAIN]
+_CONVICTION_DECAY_RATE = 0.05
+_BOUNDED_CONFIDENCE_RHO = 0.35
+_PRIVATE_ADJUSTMENT_RHO = 0.12
+_PRIVATE_FLIP_CONVICTION = CONVICTION_MAP[ConvictionLevel.FIRM]
 
 
 class SimulationSummary:
@@ -194,6 +198,29 @@ class SimulationEngine:
                 persona_config=persona_config,
                 decision_relevant_attributes=decision_attrs or None,
             )
+
+        # Main categorical outcome used as the canonical behavioral position.
+        categorical = [
+            o
+            for o in scenario.outcomes.suggested_outcomes
+            if getattr(o.type, "value", str(o.type)) == "categorical"
+        ]
+        required = [o for o in categorical if o.required]
+        primary = required[0] if required else (categorical[0] if categorical else None)
+        self._primary_position_outcome = primary.name if primary else None
+        self._primary_position_options = primary.options if primary and primary.options else []
+        self._primary_option_friction: dict[str, float] = {}
+        if primary and getattr(primary, "option_friction", None):
+            for option, score in primary.option_friction.items():
+                try:
+                    self._primary_option_friction[str(option)] = max(
+                        0.0, min(1.0, float(score))
+                    )
+                except (TypeError, ValueError):
+                    continue
+        self._private_anchor_position = self._infer_private_anchor_position(
+            self._primary_position_options
+        )
 
         # Tracking variables
         self.recent_summaries: list[TimestepSummary] = []
@@ -381,6 +408,18 @@ class SimulationEngine:
         # 2. Chunked reasoning — each chunk has its own transaction
         agents_reasoned, state_changes, shares_occurred = self._reason_agents(timestep)
 
+        # 2b. Decay conviction for agents that did not reason this timestep.
+        # This adds attention-fade dynamics without forcing additional LLM calls.
+        with self.state_manager.transaction():
+            decayed = self.state_manager.apply_conviction_decay(
+                timestep=timestep,
+                decay_rate=_CONVICTION_DECAY_RATE,
+                sharing_threshold=_SHARING_CONVICTION_THRESHOLD,
+                firm_threshold=_FIRM_CONVICTION,
+            )
+        if decayed:
+            logger.info(f"[TIMESTEP {timestep}] Conviction decay applied to {decayed} agents")
+
         # 3. Compute and save timestep summary — own transaction
         with self.state_manager.transaction():
             summary = compute_timestep_summary(
@@ -556,40 +595,146 @@ class SimulationEngine:
 
             old_state = old_states[agent_id]
 
-            # Apply conviction-based flip resistance
-            effective_will_share = response.will_share
-            effective_position = response.position
+            old_public_sentiment = (
+                old_state.public_sentiment
+                if old_state.public_sentiment is not None
+                else old_state.sentiment
+            )
+            old_public_conviction = (
+                old_state.public_conviction
+                if old_state.public_conviction is not None
+                else old_state.conviction
+            )
+            old_public_position = old_state.public_position or old_state.position
 
-            if (
-                old_state.conviction is not None
-                and old_state.conviction >= _FIRM_CONVICTION
-            ):
-                # High-conviction agent: resist position flip
+            # Public state: what the agent says and propagates.
+            public_sentiment = response.sentiment
+            if old_public_sentiment is not None and response.sentiment is not None:
+                public_sentiment = old_public_sentiment + _BOUNDED_CONFIDENCE_RHO * (
+                    response.sentiment - old_public_sentiment
+                )
+                public_sentiment = max(-1.0, min(1.0, public_sentiment))
+
+            public_conviction = response.conviction
+            if old_public_conviction is not None and response.conviction is not None:
+                public_conviction = old_public_conviction + _BOUNDED_CONFIDENCE_RHO * (
+                    response.conviction - old_public_conviction
+                )
+                public_conviction = max(0.0, min(1.0, public_conviction))
+
+            public_will_share = response.will_share
+            public_position = response.position
+
+            if old_public_conviction is not None and old_public_conviction >= _FIRM_CONVICTION:
                 if (
-                    old_state.position is not None
+                    old_public_position is not None
                     and response.position is not None
-                    and old_state.position != response.position
+                    and old_public_position != response.position
                 ):
-                    new_conviction = response.conviction or 0.0
+                    new_conviction = public_conviction or 0.0
                     if new_conviction < _MODERATE_CONVICTION:
                         logger.info(
-                            f"[CONVICTION] Agent {agent_id}: flip from {old_state.position} "
-                            f"to {response.position} rejected (old conviction={float_to_conviction(old_state.conviction)}, "
-                            f"new conviction={float_to_conviction(response.conviction)})"
+                            f"[CONVICTION] Agent {agent_id}: public flip from {old_public_position} "
+                            f"to {response.position} rejected (old conviction={float_to_conviction(old_public_conviction)}, "
+                            f"new conviction={float_to_conviction(public_conviction)})"
                         )
-                        effective_position = old_state.position
+                        public_position = old_public_position
 
-            # Apply conviction-gated sharing
             if (
-                response.conviction is not None
-                and response.conviction <= _SHARING_CONVICTION_THRESHOLD
+                (
+                    response.conviction is not None
+                    and response.conviction <= _SHARING_CONVICTION_THRESHOLD
+                )
+                or (
+                    public_conviction is not None
+                    and public_conviction <= _SHARING_CONVICTION_THRESHOLD
+                )
             ):
-                effective_will_share = False
+                public_will_share = False
 
-            # Commitment: agents with conviction >= FIRM are committed
+            # Private state: what the agent is likely to actually do.
+            old_private_position = old_state.private_position or old_state.position
+            old_private_sentiment = (
+                old_state.private_sentiment
+                if old_state.private_sentiment is not None
+                else old_state.sentiment
+            )
+            old_private_conviction = (
+                old_state.private_conviction
+                if old_state.private_conviction is not None
+                else old_state.conviction
+            )
+
+            private_sentiment = public_sentiment
+            if old_private_sentiment is not None and public_sentiment is not None:
+                private_sentiment = old_private_sentiment + _PRIVATE_ADJUSTMENT_RHO * (
+                    public_sentiment - old_private_sentiment
+                )
+                private_sentiment = max(-1.0, min(1.0, private_sentiment))
+
+            private_conviction = public_conviction
+            if old_private_conviction is not None and public_conviction is not None:
+                private_conviction = old_private_conviction + _PRIVATE_ADJUSTMENT_RHO * (
+                    public_conviction - old_private_conviction
+                )
+                private_conviction = max(0.0, min(1.0, private_conviction))
+
+            recent_sources = {
+                exp.source_agent_id
+                for exp in old_state.exposures
+                if (
+                    exp.source_agent_id
+                    and exp.timestep > old_state.last_reasoning_timestep
+                )
+            }
+            recent_source_count = len(recent_sources)
+
+            private_position = old_private_position
+            if private_position is None:
+                public_friction = self._position_action_friction(public_position)
+                if (
+                    self._private_anchor_position is not None
+                    and public_position is not None
+                    and public_friction >= 0.65
+                    and (public_conviction or 0.0) < 0.90
+                ):
+                    private_position = self._private_anchor_position
+                else:
+                    private_position = public_position
+            elif (
+                public_position is not None
+                and public_position != private_position
+                and (
+                    old_private_conviction is None
+                    or old_private_conviction < _FIRM_CONVICTION
+                )
+            ):
+                public_friction = self._position_action_friction(public_position)
+                required_conviction = (
+                    0.90
+                    if public_friction >= 0.65
+                    else _PRIVATE_FLIP_CONVICTION
+                )
+                required_sources = 2 if public_friction >= 0.65 else 1
+                if (
+                    (public_conviction or 0.0) >= required_conviction
+                    and recent_source_count >= required_sources
+                ):
+                    private_position = public_position
+
+            private_outcomes = (
+                dict(response.outcomes)
+                if response.outcomes
+                else dict(old_state.private_outcomes or old_state.outcomes or {})
+            )
+            if self._primary_position_outcome and private_position is not None:
+                private_outcomes[self._primary_position_outcome] = private_position
+            if private_sentiment is not None:
+                private_outcomes["sentiment"] = private_sentiment
+
             is_committed = (
-                response.conviction is not None
-                and response.conviction >= _FIRM_CONVICTION
+                private_conviction is not None
+                and private_conviction >= _FIRM_CONVICTION
             )
 
             new_state = AgentState(
@@ -598,14 +743,21 @@ class SimulationEngine:
                 exposure_count=old_state.exposure_count,
                 exposures=old_state.exposures,
                 last_reasoning_timestep=timestep,
-                position=effective_position,
-                sentiment=response.sentiment,
-                conviction=response.conviction,
+                position=private_position,
+                sentiment=private_sentiment,
+                conviction=private_conviction,
                 public_statement=response.public_statement,
                 action_intent=response.action_intent,
-                will_share=effective_will_share,
+                will_share=public_will_share,
+                public_position=public_position,
+                public_sentiment=public_sentiment,
+                public_conviction=public_conviction,
+                private_position=private_position,
+                private_sentiment=private_sentiment,
+                private_conviction=private_conviction,
+                private_outcomes=private_outcomes,
                 committed=is_committed,
-                outcomes=response.outcomes,
+                outcomes=private_outcomes,
                 raw_reasoning=response.reasoning,
                 updated_at=timestep,
             )
@@ -622,8 +774,8 @@ class SimulationEngine:
             if response.reasoning_summary:
                 memory_entry = MemoryEntry(
                     timestep=timestep,
-                    sentiment=response.sentiment,
-                    conviction=response.conviction,
+                    sentiment=private_sentiment,
+                    conviction=private_conviction,
                     summary=response.reasoning_summary,
                 )
                 self.state_manager.save_memory_entry(agent_id, memory_entry)
@@ -634,9 +786,12 @@ class SimulationEngine:
                     event_type=SimulationEventType.AGENT_REASONED,
                     agent_id=agent_id,
                     details={
-                        "position": new_state.position,
-                        "sentiment": new_state.sentiment,
-                        "conviction": new_state.conviction,
+                        "public_position": new_state.public_position,
+                        "private_position": new_state.private_position,
+                        "public_sentiment": new_state.public_sentiment,
+                        "private_sentiment": new_state.private_sentiment,
+                        "public_conviction": new_state.public_conviction,
+                        "private_conviction": new_state.private_conviction,
                         "will_share": new_state.will_share,
                     },
                 )
@@ -646,6 +801,40 @@ class SimulationEngine:
             self.state_manager.batch_update_states(state_updates, timestep)
 
         return agents_reasoned, state_changes, shares_occurred
+
+    def _position_action_friction(self, position: str | None) -> float:
+        """Estimate behavior-change friction from a position label."""
+        if not position:
+            return 0.5
+        if position in self._primary_option_friction:
+            return self._primary_option_friction[position]
+
+        token = position.lower()
+        low = (
+            "maintain",
+            "continue",
+            "keep",
+            "stay",
+            "deny",
+            "remove_shared_access",
+            "no_change",
+        )
+        medium = ("reduce", "abandon", "pause")
+        high = ("switch", "migrate", "cancel", "subscribe", "purchase", "buy", "upgrade")
+
+        if any(k in token for k in low):
+            return 0.2
+        if any(k in token for k in medium):
+            return 0.4
+        if any(k in token for k in high):
+            return 0.75
+        return 0.5
+
+    def _infer_private_anchor_position(self, options: list[str]) -> str | None:
+        """Pick the lowest-friction option as the private default anchor."""
+        if not options:
+            return None
+        return min(options, key=self._position_action_friction)
 
     def _build_reasoning_context(
         self, agent_id: str, state: AgentState
@@ -697,14 +886,21 @@ class SimulationEngine:
         for neighbor_id, edge_data in neighbors[:5]:  # Limit to 5 peers
             neighbor_state = self.state_manager.get_agent_state(neighbor_id)
 
-            # Include peer if they have formed any opinion (sentiment or statement)
-            if neighbor_state.sentiment is not None or neighbor_state.public_statement:
+            peer_sentiment = (
+                neighbor_state.public_sentiment
+                if neighbor_state.public_sentiment is not None
+                else neighbor_state.sentiment
+            )
+            peer_position = neighbor_state.public_position or neighbor_state.position
+
+            # Include peer if they have formed any public opinion.
+            if peer_sentiment is not None or neighbor_state.public_statement:
                 opinions.append(
                     PeerOpinion(
                         agent_id=neighbor_id,
                         relationship=edge_data.get("type", "contact"),
-                        position=neighbor_state.position,  # kept for backwards compat
-                        sentiment=neighbor_state.sentiment,
+                        position=peer_position,  # kept for backwards compat
+                        sentiment=peer_sentiment,
                         public_statement=neighbor_state.public_statement,
                         credibility=0.85,  # Phase 2 will make this dynamic
                     )
@@ -725,18 +921,52 @@ class SimulationEngine:
         Returns:
             True if state changed
         """
-        # Sentiment shift
-        if old.sentiment is not None and new.sentiment is not None:
-            if abs(old.sentiment - new.sentiment) > 0.1:
+        old_private_sentiment = (
+            old.private_sentiment if old.private_sentiment is not None else old.sentiment
+        )
+        new_private_sentiment = (
+            new.private_sentiment if new.private_sentiment is not None else new.sentiment
+        )
+        old_public_sentiment = (
+            old.public_sentiment if old.public_sentiment is not None else old.sentiment
+        )
+        new_public_sentiment = (
+            new.public_sentiment if new.public_sentiment is not None else new.sentiment
+        )
+
+        # Sentiment shift (private or public).
+        if old_private_sentiment is not None and new_private_sentiment is not None:
+            if abs(old_private_sentiment - new_private_sentiment) > 0.1:
+                return True
+        if old_public_sentiment is not None and new_public_sentiment is not None:
+            if abs(old_public_sentiment - new_public_sentiment) > 0.1:
                 return True
 
-        # Conviction shift
-        if old.conviction is not None and new.conviction is not None:
-            if abs(old.conviction - new.conviction) > 0.15:
+        old_private_conviction = (
+            old.private_conviction if old.private_conviction is not None else old.conviction
+        )
+        new_private_conviction = (
+            new.private_conviction if new.private_conviction is not None else new.conviction
+        )
+        old_public_conviction = (
+            old.public_conviction if old.public_conviction is not None else old.conviction
+        )
+        new_public_conviction = (
+            new.public_conviction if new.public_conviction is not None else new.conviction
+        )
+
+        # Conviction shift (private or public).
+        if old_private_conviction is not None and new_private_conviction is not None:
+            if abs(old_private_conviction - new_private_conviction) > 0.15:
+                return True
+        if old_public_conviction is not None and new_public_conviction is not None:
+            if abs(old_public_conviction - new_public_conviction) > 0.15:
                 return True
 
-        # Position change (still tracked for output purposes)
-        if old.position != new.position:
+        # Position change on either track.
+        if (old.private_position or old.position) != (new.private_position or new.position):
+            return True
+        if (old.public_position or old.position) != (new.public_position or new.position):
             return True
 
         # Sharing intent change

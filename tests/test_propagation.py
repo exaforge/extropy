@@ -391,7 +391,7 @@ class TestCalculateShareProbability:
         assert prob == pytest.approx(0.4)
 
     def test_clamp_upper(self):
-        """Modifier pushing probability above 1.0 gets clamped."""
+        """Modifier overflow above 1.0 is softly saturated."""
         config = SpreadConfig(
             share_probability=0.8,
             share_modifiers=[SpreadModifier(when="True", multiply=2.0, add=0.0)],
@@ -401,7 +401,7 @@ class TestCalculateShareProbability:
         rng = random.Random(42)
 
         prob = calculate_share_probability(agent, edge, config, rng)
-        assert prob == 1.0
+        assert 0.95 < prob < 1.0
 
     def test_clamp_lower(self):
         """Modifier pushing probability below 0 gets clamped."""
@@ -446,6 +446,19 @@ class TestCalculateShareProbability:
 
         assert prob_mentor == pytest.approx(0.6)
         assert prob_colleague == 0.3  # condition not met
+
+    def test_hop_decay_lowers_probability(self):
+        """Higher hop depth should reduce probability when decay_per_hop > 0."""
+        config = SpreadConfig(share_probability=0.6, decay_per_hop=0.1)
+        agent = {"_id": "a0"}
+        edge = {"type": "colleague"}
+        rng = random.Random(42)
+
+        p_hop0 = calculate_share_probability(agent, edge, config, rng, hop_depth=0)
+        p_hop2 = calculate_share_probability(agent, edge, config, rng, hop_depth=2)
+
+        assert p_hop0 == pytest.approx(0.6)
+        assert p_hop2 == pytest.approx(0.6 * 0.9 * 0.9)
 
 
 # ============================================================================
@@ -576,3 +589,35 @@ class TestPropagateNetwork:
 
         # With prob=0.5 and 9 neighbors, expect some but not all
         assert 0 < count < 9
+
+    def test_max_hops_blocks_deeper_reshares(
+        self, tmp_path, ten_agents, linear_network
+    ):
+        """Agents beyond max_hops should not receive propagated exposures."""
+        scenario = _make_scenario(share_probability=1.0)
+        scenario.spread.max_hops = 1
+        sm = StateManager(tmp_path / "test.db", agents=ten_agents)
+        rng = random.Random(42)
+
+        # Seed a0, then allow only a0 to share.
+        self._setup_sharer(sm, "a0", timestep=0)
+        first = propagate_through_network(1, scenario, ten_agents, linear_network, sm, rng)
+        assert first == 1  # a0 -> a1
+
+        # Make a1 a sharer, stop a0 from sharing again.
+        sm.update_agent_state(
+            "a0",
+            AgentState(agent_id="a0", aware=True, will_share=False, position="adopt"),
+            timestep=1,
+        )
+        sm.update_agent_state(
+            "a1",
+            AgentState(agent_id="a1", aware=True, will_share=True, position="adopt"),
+            timestep=1,
+        )
+
+        second = propagate_through_network(
+            2, scenario, ten_agents, linear_network, sm, rng
+        )
+        assert second == 0
+        assert sm.get_agent_state("a2").aware is False

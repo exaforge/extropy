@@ -9,6 +9,7 @@ Usage:
     config.to_yaml("network-config.yaml")
 """
 
+import json
 import logging
 
 from ...core.llm import reasoning_call, ValidatorCallback
@@ -66,20 +67,20 @@ NETWORK_CONFIG_SCHEMA = {
                         ),
                     },
                     "range_value": {
-                        "type": "number",
-                        "description": "For numeric_range: normalization range. For within_n: allowed level distance.",
+                        "type": ["number", "null"],
+                        "description": "For numeric_range: normalization range. For within_n: allowed level distance. null if not applicable.",
                     },
                     "ordinal_levels": {
-                        "type": "object",
+                        "type": ["string", "null"],
                         "description": (
-                            "For within_n only: maps option values to ordinal integers. "
-                            'E.g., {"junior": 1, "mid": 2, "senior": 3}. '
-                            "Omit for exact/numeric_range."
+                            "For within_n only: JSON string mapping option values to ordinal integers. "
+                            'E.g., \'{"junior": 1, "mid": 2, "senior": 3}\'. '
+                            "null for exact/numeric_range."
                         ),
-                        "additionalProperties": {"type": "integer"},
                     },
                 },
-                "required": ["attribute", "weight", "match_type"],
+                "required": ["attribute", "weight", "match_type", "range_value", "ordinal_levels"],
+                "additionalProperties": False,
             },
             "description": "6-12 attributes that drive social connections. Pick the most socially relevant ones.",
         },
@@ -106,6 +107,7 @@ NETWORK_CONFIG_SCHEMA = {
                     },
                 },
                 "required": ["attribute", "condition_value", "multiplier", "rationale"],
+                "additionalProperties": False,
             },
             "description": "3-8 conditions that make certain people more connected (hubs).",
         },
@@ -136,6 +138,7 @@ NETWORK_CONFIG_SCHEMA = {
                     },
                 },
                 "required": ["name", "condition", "priority", "description"],
+                "additionalProperties": False,
             },
             "description": "3-6 edge type rules, from most specific (high priority) to most general (low priority).",
         },
@@ -158,9 +161,12 @@ NETWORK_CONFIG_SCHEMA = {
                         ),
                     },
                     "levels": {
-                        "type": "object",
-                        "description": "For ordinal type: maps values to rank integers. Higher = more influence.",
-                        "additionalProperties": {"type": "integer"},
+                        "type": ["string", "null"],
+                        "description": (
+                            "For ordinal type: JSON string mapping values to rank integers. Higher = more influence. "
+                            'E.g., \'{"low": 1, "medium": 2, "high": 3}\'. '
+                            "null for boolean/numeric types."
+                        ),
                     },
                     "weight": {
                         "type": "number",
@@ -171,7 +177,8 @@ NETWORK_CONFIG_SCHEMA = {
                         "description": "Why this attribute creates influence asymmetry",
                     },
                 },
-                "required": ["attribute", "type", "weight", "description"],
+                "required": ["attribute", "type", "levels", "weight", "description"],
+                "additionalProperties": False,
             },
             "description": "2-4 factors that create asymmetric influence (A influences B more than B influences A).",
         },
@@ -301,10 +308,21 @@ def _validate_config(data: dict, population_spec: PopulationSpec) -> list[str]:
             errors.append(f"attribute_weights references unknown attribute: '{attr}'")
         if w.get("weight", 0) <= 0:
             errors.append(f"attribute_weights '{attr}' has zero or negative weight")
-        if w.get("match_type") == "within_n" and not w.get("ordinal_levels"):
-            errors.append(
-                f"attribute_weights '{attr}' uses within_n but has no ordinal_levels"
-            )
+        if w.get("match_type") == "within_n":
+            raw_ordinal = w.get("ordinal_levels")
+            has_ordinal = False
+            if isinstance(raw_ordinal, dict) and raw_ordinal:
+                has_ordinal = True
+            elif isinstance(raw_ordinal, str) and raw_ordinal:
+                try:
+                    parsed = json.loads(raw_ordinal)
+                    has_ordinal = isinstance(parsed, dict) and len(parsed) > 0
+                except (json.JSONDecodeError, TypeError):
+                    pass
+            if not has_ordinal:
+                errors.append(
+                    f"attribute_weights '{attr}' uses within_n but has no ordinal_levels"
+                )
 
     # Check degree multipliers reference valid attributes
     for dm in data.get("degree_multipliers", []):
@@ -364,7 +382,16 @@ def _convert_to_network_config(
 
     for w in data.get("attribute_weights", []):
         attr_name = w["attribute"]
-        attr_ordinal = w.get("ordinal_levels")
+        # Parse ordinal_levels from JSON string if present
+        raw_ordinal = w.get("ordinal_levels")
+        attr_ordinal = None
+        if isinstance(raw_ordinal, str):
+            try:
+                attr_ordinal = json.loads(raw_ordinal)
+            except (json.JSONDecodeError, TypeError):
+                pass
+        elif isinstance(raw_ordinal, dict):
+            attr_ordinal = raw_ordinal
         attribute_weights[attr_name] = AttributeWeightConfig(
             weight=w["weight"],
             match_type=w["match_type"],
@@ -397,16 +424,27 @@ def _convert_to_network_config(
     ]
 
     # Build influence factors
-    influence_factors = [
-        InfluenceFactorConfig(
-            attribute=f["attribute"],
-            type=f["type"],
-            levels=f.get("levels"),
-            weight=f["weight"],
-            description=f.get("description", ""),
+    influence_factors = []
+    for f in data.get("influence_factors", []):
+        # Parse levels from JSON string if present
+        raw_levels = f.get("levels")
+        parsed_levels = None
+        if isinstance(raw_levels, str):
+            try:
+                parsed_levels = json.loads(raw_levels)
+            except (json.JSONDecodeError, TypeError):
+                pass
+        elif isinstance(raw_levels, dict):
+            parsed_levels = raw_levels
+        influence_factors.append(
+            InfluenceFactorConfig(
+                attribute=f["attribute"],
+                type=f["type"],
+                levels=parsed_levels,
+                weight=f["weight"],
+                description=f.get("description", ""),
+            )
         )
-        for f in data.get("influence_factors", [])
-    ]
 
     return NetworkConfig(
         avg_degree=data.get("avg_degree", 20.0),

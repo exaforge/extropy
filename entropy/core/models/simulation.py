@@ -187,6 +187,27 @@ class AgentState(BaseModel):
         default=None, description="What they intend to do"
     )
     will_share: bool = Field(default=False, description="Will they propagate")
+    public_position: str | None = Field(
+        default=None, description="Publicly expressed position"
+    )
+    public_sentiment: float | None = Field(
+        default=None, description="Publicly expressed sentiment (-1 to 1)"
+    )
+    public_conviction: float | None = Field(
+        default=None, description="Publicly expressed conviction"
+    )
+    private_position: str | None = Field(
+        default=None, description="Private behavioral position"
+    )
+    private_sentiment: float | None = Field(
+        default=None, description="Private sentiment (-1 to 1)"
+    )
+    private_conviction: float | None = Field(
+        default=None, description="Private conviction"
+    )
+    private_outcomes: dict[str, Any] = Field(
+        default_factory=dict, description="Private outcome values used for evaluation"
+    )
     committed: bool = Field(
         default=False,
         description="Conviction >= firm; won't re-reason from repeated network exposure",

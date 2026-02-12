@@ -65,6 +65,13 @@ class StateManager:
                 action_intent TEXT,
                 will_share INTEGER DEFAULT 0,
                 outcomes_json TEXT,
+                public_position TEXT,
+                public_sentiment REAL,
+                public_conviction REAL,
+                private_position TEXT,
+                private_sentiment REAL,
+                private_conviction REAL,
+                private_outcomes_json TEXT,
                 raw_reasoning TEXT,
                 updated_at INTEGER DEFAULT 0
             )
@@ -213,6 +220,14 @@ class StateManager:
             ("timestep_summaries", "average_conviction", "REAL"),
             ("timestep_summaries", "sentiment_variance", "REAL"),
             ("agent_states", "committed", "INTEGER DEFAULT 0"),
+            ("agent_states", "network_hop_depth", "INTEGER"),
+            ("agent_states", "public_position", "TEXT"),
+            ("agent_states", "public_sentiment", "REAL"),
+            ("agent_states", "public_conviction", "REAL"),
+            ("agent_states", "private_position", "TEXT"),
+            ("agent_states", "private_sentiment", "REAL"),
+            ("agent_states", "private_conviction", "REAL"),
+            ("agent_states", "private_outcomes_json", "TEXT"),
         ]
 
         for table, column, col_type in migrations:
@@ -308,6 +323,15 @@ class StateManager:
             except json.JSONDecodeError:
                 pass
 
+        private_outcomes = {}
+        if row["private_outcomes_json"]:
+            try:
+                private_outcomes = json.loads(row["private_outcomes_json"])
+            except json.JSONDecodeError:
+                pass
+        if not private_outcomes:
+            private_outcomes = outcomes
+
         # committed column may not exist in older databases
         try:
             committed = bool(row["committed"])
@@ -320,14 +344,37 @@ class StateManager:
             exposure_count=row["exposure_count"],
             exposures=exposures,
             last_reasoning_timestep=row["last_reasoning_timestep"],
-            position=row["position"],
-            sentiment=row["sentiment"],
-            conviction=row["conviction"],
+            position=row["private_position"] or row["position"],
+            sentiment=row["private_sentiment"] if row["private_sentiment"] is not None else row["sentiment"],
+            conviction=row["private_conviction"] if row["private_conviction"] is not None else row["conviction"],
             public_statement=row["public_statement"],
             action_intent=row["action_intent"],
             will_share=bool(row["will_share"]),
+            public_position=row["public_position"] or row["position"],
+            public_sentiment=(
+                row["public_sentiment"]
+                if row["public_sentiment"] is not None
+                else row["sentiment"]
+            ),
+            public_conviction=(
+                row["public_conviction"]
+                if row["public_conviction"] is not None
+                else row["conviction"]
+            ),
+            private_position=row["private_position"] or row["position"],
+            private_sentiment=(
+                row["private_sentiment"]
+                if row["private_sentiment"] is not None
+                else row["sentiment"]
+            ),
+            private_conviction=(
+                row["private_conviction"]
+                if row["private_conviction"] is not None
+                else row["conviction"]
+            ),
+            private_outcomes=private_outcomes,
             committed=committed,
-            outcomes=outcomes,
+            outcomes=private_outcomes,
             raw_reasoning=row["raw_reasoning"],
             updated_at=row["updated_at"],
         )
@@ -357,6 +404,19 @@ class StateManager:
         cursor = self.conn.cursor()
         cursor.execute("SELECT agent_id FROM agent_states")
         return [row["agent_id"] for row in cursor.fetchall()]
+
+    def get_network_hop_depth(self, agent_id: str) -> int | None:
+        """Get the minimum network hop depth from a seed exposure for an agent."""
+        cursor = self.conn.cursor()
+        cursor.execute(
+            "SELECT network_hop_depth FROM agent_states WHERE agent_id = ?",
+            (agent_id,),
+        )
+        row = cursor.fetchone()
+        if not row:
+            return None
+        value = row["network_hop_depth"]
+        return int(value) if value is not None else None
 
     def get_agents_to_reason(self, timestep: int, threshold: int) -> list[str]:
         """Get agents who should reason this timestep.
@@ -591,15 +651,94 @@ class StateManager:
             ),
         )
 
+        # Estimate minimum hop depth (seed exposure = 0, network = source + 1).
+        new_hop_depth: int | None
+        if exposure.source_agent_id is None:
+            new_hop_depth = 0
+        else:
+            source_hop = self.get_network_hop_depth(exposure.source_agent_id)
+            new_hop_depth = 1 if source_hop is None else source_hop + 1
+
         # Update agent state
         cursor.execute(
             """
             UPDATE agent_states
-            SET aware = 1, exposure_count = exposure_count + 1, updated_at = ?
+            SET aware = 1,
+                exposure_count = exposure_count + 1,
+                network_hop_depth = CASE
+                    WHEN network_hop_depth IS NULL THEN ?
+                    WHEN ? IS NULL THEN network_hop_depth
+                    ELSE MIN(network_hop_depth, ?)
+                END,
+                updated_at = ?
             WHERE agent_id = ?
         """,
-            (exposure.timestep, agent_id),
+            (
+                new_hop_depth,
+                new_hop_depth,
+                new_hop_depth,
+                exposure.timestep,
+                agent_id,
+            ),
         )
+
+    def apply_conviction_decay(
+        self,
+        timestep: int,
+        decay_rate: float,
+        sharing_threshold: float,
+        firm_threshold: float,
+    ) -> int:
+        """Decay conviction for agents that did not reason this timestep.
+
+        The decay only applies above sharing_threshold to avoid infinitesimal
+        long-tail updates that prevent practical convergence.
+        """
+        if decay_rate <= 0:
+            return 0
+
+        decay_multiplier = 1.0 - decay_rate
+        cursor = self.conn.cursor()
+        cursor.execute(
+            """
+            UPDATE agent_states
+            SET conviction = conviction * ?,
+                private_conviction = CASE
+                    WHEN private_conviction IS NOT NULL THEN private_conviction * ?
+                    ELSE NULL
+                END,
+                public_conviction = CASE
+                    WHEN public_conviction IS NOT NULL THEN public_conviction * ?
+                    ELSE NULL
+                END,
+                committed = CASE
+                    WHEN conviction * ? >= ? THEN committed
+                    ELSE 0
+                END,
+                will_share = CASE
+                    WHEN COALESCE(public_conviction, conviction) * ? <= ? THEN 0
+                    ELSE will_share
+                END,
+                updated_at = ?
+            WHERE aware = 1
+              AND conviction IS NOT NULL
+              AND conviction > ?
+              AND last_reasoning_timestep < ?
+        """,
+            (
+                decay_multiplier,
+                decay_multiplier,
+                decay_multiplier,
+                decay_multiplier,
+                firm_threshold,
+                decay_multiplier,
+                sharing_threshold,
+                timestep,
+                sharing_threshold,
+                timestep,
+            ),
+        )
+        return cursor.rowcount
 
     def update_agent_state(
         self, agent_id: str, state: AgentState, timestep: int
@@ -613,7 +752,11 @@ class StateManager:
         """
         cursor = self.conn.cursor()
 
-        outcomes_json = json.dumps(state.outcomes) if state.outcomes else None
+        private_outcomes = state.private_outcomes or state.outcomes
+        outcomes_json = json.dumps(private_outcomes) if private_outcomes else None
+        private_outcomes_json = (
+            json.dumps(private_outcomes) if private_outcomes else None
+        )
 
         cursor.execute(
             """
@@ -624,8 +767,15 @@ class StateManager:
                 public_statement = ?,
                 action_intent = ?,
                 will_share = ?,
+                public_position = ?,
+                public_sentiment = ?,
+                public_conviction = ?,
+                private_position = ?,
+                private_sentiment = ?,
+                private_conviction = ?,
                 committed = ?,
                 outcomes_json = ?,
+                private_outcomes_json = ?,
                 raw_reasoning = ?,
                 last_reasoning_timestep = ?,
                 updated_at = ?
@@ -638,8 +788,15 @@ class StateManager:
                 state.public_statement,
                 state.action_intent,
                 1 if state.will_share else 0,
+                state.public_position,
+                state.public_sentiment,
+                state.public_conviction,
+                state.private_position or state.position,
+                state.private_sentiment if state.private_sentiment is not None else state.sentiment,
+                state.private_conviction if state.private_conviction is not None else state.conviction,
                 1 if state.committed else 0,
                 outcomes_json,
+                private_outcomes_json,
                 state.raw_reasoning,
                 timestep,
                 timestep,
@@ -659,7 +816,11 @@ class StateManager:
         cursor = self.conn.cursor()
 
         for agent_id, state in updates:
-            outcomes_json = json.dumps(state.outcomes) if state.outcomes else None
+            private_outcomes = state.private_outcomes or state.outcomes
+            outcomes_json = json.dumps(private_outcomes) if private_outcomes else None
+            private_outcomes_json = (
+                json.dumps(private_outcomes) if private_outcomes else None
+            )
 
             cursor.execute(
                 """
@@ -670,8 +831,15 @@ class StateManager:
                     public_statement = ?,
                     action_intent = ?,
                     will_share = ?,
+                    public_position = ?,
+                    public_sentiment = ?,
+                    public_conviction = ?,
+                    private_position = ?,
+                    private_sentiment = ?,
+                    private_conviction = ?,
                     committed = ?,
                     outcomes_json = ?,
+                    private_outcomes_json = ?,
                     raw_reasoning = ?,
                     last_reasoning_timestep = ?,
                     updated_at = ?
@@ -684,8 +852,15 @@ class StateManager:
                     state.public_statement,
                     state.action_intent,
                     1 if state.will_share else 0,
+                    state.public_position,
+                    state.public_sentiment,
+                    state.public_conviction,
+                    state.private_position or state.position,
+                    state.private_sentiment if state.private_sentiment is not None else state.sentiment,
+                    state.private_conviction if state.private_conviction is not None else state.conviction,
                     1 if state.committed else 0,
                     outcomes_json,
+                    private_outcomes_json,
                     state.raw_reasoning,
                     timestep,
                     timestep,
@@ -806,10 +981,10 @@ class StateManager:
 
         cursor.execute(
             """
-            SELECT position, COUNT(*) as cnt
+            SELECT COALESCE(private_position, position) as position, COUNT(*) as cnt
             FROM agent_states
-            WHERE position IS NOT NULL
-            GROUP BY position
+            WHERE COALESCE(private_position, position) IS NOT NULL
+            GROUP BY COALESCE(private_position, position)
         """
         )
 
@@ -821,9 +996,9 @@ class StateManager:
 
         cursor.execute(
             """
-            SELECT AVG(sentiment) as avg_sentiment
+            SELECT AVG(COALESCE(private_sentiment, sentiment)) as avg_sentiment
             FROM agent_states
-            WHERE sentiment IS NOT NULL
+            WHERE COALESCE(private_sentiment, sentiment) IS NOT NULL
         """
         )
         row = cursor.fetchone()
@@ -836,9 +1011,9 @@ class StateManager:
 
         cursor.execute(
             """
-            SELECT AVG(conviction) as avg_conviction
+            SELECT AVG(COALESCE(private_conviction, conviction)) as avg_conviction
             FROM agent_states
-            WHERE conviction IS NOT NULL
+            WHERE COALESCE(private_conviction, conviction) IS NOT NULL
         """
         )
         row = cursor.fetchone()
@@ -851,9 +1026,9 @@ class StateManager:
 
         cursor.execute(
             """
-            SELECT AVG(sentiment) as mean_s, COUNT(*) as cnt
+            SELECT AVG(COALESCE(private_sentiment, sentiment)) as mean_s, COUNT(*) as cnt
             FROM agent_states
-            WHERE sentiment IS NOT NULL
+            WHERE COALESCE(private_sentiment, sentiment) IS NOT NULL
         """
         )
         row = cursor.fetchone()
@@ -864,9 +1039,12 @@ class StateManager:
         mean = row["mean_s"]
         cursor.execute(
             """
-            SELECT AVG((sentiment - ?) * (sentiment - ?)) as variance
+            SELECT AVG(
+                (COALESCE(private_sentiment, sentiment) - ?)
+                * (COALESCE(private_sentiment, sentiment) - ?)
+            ) as variance
             FROM agent_states
-            WHERE sentiment IS NOT NULL
+            WHERE COALESCE(private_sentiment, sentiment) IS NOT NULL
         """,
             (mean, mean),
         )
@@ -970,19 +1148,59 @@ class StateManager:
                 except json.JSONDecodeError:
                     pass
 
+            private_outcomes = {}
+            if row["private_outcomes_json"]:
+                try:
+                    private_outcomes = json.loads(row["private_outcomes_json"])
+                except json.JSONDecodeError:
+                    pass
+            if not private_outcomes:
+                private_outcomes = outcomes
+
             states.append(
                 {
                     "agent_id": row["agent_id"],
                     "aware": bool(row["aware"]),
                     "exposure_count": exposure_count,
                     "last_reasoning_timestep": row["last_reasoning_timestep"],
-                    "position": row["position"],
-                    "sentiment": row["sentiment"],
-                    "conviction": row["conviction"],
+                    "position": row["private_position"] or row["position"],
+                    "sentiment": (
+                        row["private_sentiment"]
+                        if row["private_sentiment"] is not None
+                        else row["sentiment"]
+                    ),
+                    "conviction": (
+                        row["private_conviction"]
+                        if row["private_conviction"] is not None
+                        else row["conviction"]
+                    ),
+                    "public_position": row["public_position"] or row["position"],
+                    "public_sentiment": (
+                        row["public_sentiment"]
+                        if row["public_sentiment"] is not None
+                        else row["sentiment"]
+                    ),
+                    "public_conviction": (
+                        row["public_conviction"]
+                        if row["public_conviction"] is not None
+                        else row["conviction"]
+                    ),
+                    "private_position": row["private_position"] or row["position"],
+                    "private_sentiment": (
+                        row["private_sentiment"]
+                        if row["private_sentiment"] is not None
+                        else row["sentiment"]
+                    ),
+                    "private_conviction": (
+                        row["private_conviction"]
+                        if row["private_conviction"] is not None
+                        else row["conviction"]
+                    ),
                     "public_statement": row["public_statement"],
                     "action_intent": row["action_intent"],
                     "will_share": bool(row["will_share"]),
-                    "outcomes": outcomes,
+                    "outcomes": private_outcomes,
+                    "private_outcomes": private_outcomes,
                     "raw_reasoning": row["raw_reasoning"],
                 }
             )
