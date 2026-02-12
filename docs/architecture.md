@@ -68,13 +68,15 @@ Per-timestep loop, decomposed into sub-functions:
 
 1. **`_apply_exposures(timestep)`** — Apply seed exposures from scenario rules (`propagation.py`), then propagate through network via conviction-gated sharing (very_uncertain agents don't share). Uses pre-built adjacency list for O(1) neighbor lookups.
 
-2. **`_reason_agents(timestep)`** — Select agents to reason (first exposure OR multi-touch threshold exceeded, default: 3 new exposures since last reasoning), build reasoning contexts, run two-pass async LLM reasoning (`reasoning.py`, rate-limiter-controlled):
+2. **`_reason_agents(timestep)`** — Select agents to reason (first exposure OR multi-touch threshold exceeded, default: 3 new exposures since last reasoning), filter out already-processed agents (resume support), split into chunks of `chunk_size` (default 50), run two-pass async LLM reasoning per chunk (`reasoning.py`, rate-limiter-controlled), commit per chunk:
    - **Pass 1** (pivotal model): Agent role-plays in first person with no categorical enums. Produces reasoning, public_statement, sentiment, conviction (0-100 integer, bucketed post-hoc), will_share. Memory trace (last 3 reasoning summaries) is fed back for re-reasoning agents.
    - **Pass 2** (routine model): A cheap model classifies the free-text reasoning into scenario-defined categorical/boolean/float outcomes. Position is extracted here — it is output-only, never used in peer influence.
 
-3. **`_apply_state_updates(timestep, results, old_states)`** — Process reasoning results: conviction-based flip resistance (firm+ agents reject flips unless new conviction is moderate+), conviction-gated sharing, state persistence. State updates are batched via `batch_update_states()`.
+3. **`_process_reasoning_chunk(timestep, results, old_states)`** — Process a chunk of reasoning results: bounded confidence opinion update (public sentiment/conviction adjusted toward peer averages via `_BOUNDED_CONFIDENCE_RHO`), conviction-based flip resistance (firm+ agents reject flips unless new conviction is moderate+), private opinion tracking (separate private sentiment/conviction with slower `_PRIVATE_ADJUSTMENT_RHO` adjustment), conviction-gated sharing, state persistence. State updates are batched via `batch_update_states()`.
 
-4. Compute timestep summary, check stopping conditions (`stopping.py`) — Compound conditions like `"exposure_rate > 0.95 and no_state_changes_for > 10"`, convergence detection via sentiment variance.
+4. **Conviction decay** — Non-reasoning agents experience gradual conviction decay (`_CONVICTION_DECAY_RATE = 0.05`) via `state_manager.apply_conviction_decay()`, preventing stale high-conviction states from persisting indefinitely.
+
+5. Compute timestep summary, check stopping conditions (`stopping.py`) — Compound conditions like `"exposure_rate > 0.95 and no_state_changes_for > 10"`, convergence detection via sentiment variance.
 
 ### Two-Pass Reasoning
 
@@ -110,13 +112,17 @@ Relative attributes (personality, attitudes) are positioned against population s
 
 **Trait salience**: When the scenario defines `decision_relevant_attributes`, those traits are grouped first in the persona under "Most Relevant to This Decision", ensuring the LLM focuses on what matters.
 
-### Transaction Batching (`state.py`)
+### Checkpointing & Resume (`state.py`, `engine.py`)
 
-All writes within a timestep are wrapped in a single SQLite transaction via `state_manager.transaction()` context manager. Commits on success, rolls back on exception. Individual state methods (`record_exposure`, `update_agent_state`, `save_memory_entry`, `log_event`, `save_timestep_summary`) rely on the transaction boundary rather than committing individually.
+Each timestep phase has its own transaction — exposures, each reasoning chunk, and summary are committed separately. The `simulation_metadata` table stores checkpoint state: `mark_timestep_started()` records which timestep is in progress, `mark_timestep_completed()` clears it. On resume (`_get_resume_timestep()` in the engine), the engine detects crashed-mid-timestep (checkpoint set) or last-completed-timestep and picks up from there. Already-processed agents within a partial timestep are skipped via `get_agents_already_reasoned_this_timestep()`. Metadata uses immediate commits (not wrapped in outer transactions). Setup methods (`_create_schema`, `initialize_agents`) also retain their own commits. CLI: `--chunk-size` (default 50).
 
 ### Rate Limiting (`core/rate_limiter.py`)
 
 Token bucket rate limiter with dual RPM + TPM buckets. Provider-aware defaults auto-configured from `core/rate_limits.py` (Anthropic/OpenAI, tiers 1-4). Supports tier overrides via config or CLI flags.
+
+### Aggregation & Results (`simulation/aggregation.py`, `simulation/timeline.py`)
+
+`compute_timestep_summary()` aggregates per-timestep metrics (exposure rate, position distributions, sentiment/conviction averages). `compute_final_aggregates()` produces simulation-wide summaries. `compute_outcome_distributions()` builds per-outcome histograms. `compute_timeline_aggregates()` creates time-series data for visualization. `TimelineManager` handles crash-safe JSONL event streaming.
 
 ### Cost Estimation (`simulation/estimator.py`)
 
@@ -151,7 +157,7 @@ Two-pass model routing: Pass 1 uses `simulation.model` or `simulation.pivotal_mo
 
 ### Provider Abstraction (`entropy/core/providers/`)
 
-`LLMProvider` base class with `OpenAIProvider` and `ClaudeProvider` implementations. Factory functions `get_pipeline_provider()` and `get_simulation_provider()` read from `EntropyConfig`.
+`LLMProvider` base class with `OpenAIProvider`, `ClaudeProvider`, and Azure OpenAI support (via `api_format` config). Factory functions `get_pipeline_provider()` and `get_simulation_provider()` read from `EntropyConfig`.
 
 Base class provides `_retry_with_validation()` — shared validation-retry loop used by both providers' `reasoning_call()` and `agentic_research()`. Both providers implement `_with_retry()` / `_with_retry_async()` for transient API errors with exponential backoff (`2^attempt + random(0,1)` seconds, max 3 retries).
 
@@ -163,11 +169,13 @@ All calls use structured output (`response_format: json_schema`). Failed validat
 
 All Pydantic v2. Key hierarchy:
 
-- `population.py`: `PopulationSpec` -> `AttributeSpec` -> `SamplingConfig` -> `Distribution` / `Modifier` / `Constraint`
-- `scenario.py`: `ScenarioSpec` -> `Event`, `SeedExposure` (channels + rules), `InteractionConfig`, `SpreadConfig`, `OutcomeConfig`
-- `simulation.py`: `AgentState`, `ConvictionLevel`, `CONVICTION_MAP`, `MemoryEntry`, `ReasoningContext` (memory_trace, peer opinions), `ReasoningResponse` (reasoning, public_statement, sentiment, conviction, will_share, outcomes), `SimulationRunConfig`, `TimestepSummary`
+- `population.py`: `PopulationSpec` -> `AttributeSpec` -> `SamplingConfig` -> `Distribution` (Normal/Lognormal/Uniform/Beta/Categorical/Boolean) / `Modifier` / `GroundingInfo`, `SpecMeta`, `GroundingSummary`
+- `scenario.py`: `ScenarioSpec` -> `Event` (`EventType`), `SeedExposure` (channels + rules), `InteractionConfig` (`InteractionType`), `SpreadConfig` (`SpreadModifier`), `OutcomeConfig` (`OutcomeDefinition`, `OutcomeType`), `SimulationConfig` (`TimestepUnit`), `ScenarioMeta`
+- `simulation.py`: `AgentState` (with public/private position/sentiment/conviction), `ConvictionLevel`, `CONVICTION_MAP`, `ExposureRecord`, `MemoryEntry`, `PeerOpinion`, `ReasoningContext` (memory_trace, peer opinions), `ReasoningResponse` (reasoning, public_statement, sentiment, conviction, will_share, outcomes), `SimulationEvent` (`SimulationEventType`), `SimulationRunConfig`, `TimestepSummary`
 - `network.py`: `Edge`, `NodeMetrics`, `NetworkMetrics`, `NetworkConfig`
-- `validation.py`: `ValidationIssue`, `ValidationResult`
+- `sampling.py`: `SamplingStats`, `SamplingResult`
+- `results.py`: `SimulationSummary`, `AgentFinalState`, `SegmentAggregate`, `TimelinePoint`, `RunMeta`, `SimulationResults`
+- `validation.py`: `Severity`, `ValidationIssue`, `ValidationResult`
 
 YAML serialization via `to_yaml()`/`from_yaml()` on `PopulationSpec`, `ScenarioSpec`, and `NetworkConfig`.
 
@@ -185,11 +193,17 @@ Scenario validation (`entropy/scenario/validator.py`): attribute reference valid
 
 ## Config (`entropy/config.py`)
 
-`EntropyConfig` with `PipelineConfig` and `SimZoneConfig` zones. Resolution order: CLI flags > env vars > config file (`~/.config/entropy/config.json`) > defaults.
+`EntropyConfig` with `PipelineConfig` and `SimZoneConfig` zones. Resolution order: programmatic > env vars > config file (`~/.config/entropy/config.json`) > defaults. CLI flags override at command level before reaching config.
 
-API keys always from env vars (`OPENAI_API_KEY`, `ANTHROPIC_API_KEY`).
+**`PipelineConfig`** fields: `provider` (default: `"openai"`), `model_simple`, `model_reasoning`, `model_research` (all default: `""` = provider default).
 
-`SimZoneConfig` fields: `provider`, `model`, `pivotal_model`, `routine_model`, `max_concurrent`, `rate_tier`, `rpm_override`, `tpm_override`.
+**`SimZoneConfig`** fields: `provider` (default: `"openai"`), `model`, `pivotal_model`, `routine_model` (all default: `""` = provider default), `max_concurrent` (default: `50`), `rate_tier` (default: `None` = Tier 1), `rpm_override`, `tpm_override` (default: `None`), `api_format` (default: `""` = auto, supports `"responses"` for OpenAI or `"chat_completions"` for Azure).
+
+**`EntropyConfig`** non-zone fields: `db_path` (default: `"./storage/entropy.db"`), `default_population_size` (default: `1000`).
+
+API keys always from env vars: `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `AZURE_OPENAI_API_KEY`. Azure also requires `AZURE_OPENAI_ENDPOINT`, `AZURE_OPENAI_API_VERSION` (default: `"2025-03-01-preview"`), `AZURE_OPENAI_DEPLOYMENT`.
+
+Three providers supported: `openai`, `claude`, `azure_openai`.
 
 For package use: `from entropy.config import configure, EntropyConfig`.
 
@@ -201,13 +215,31 @@ For package use: `from entropy.config import configure, EntropyConfig`.
 |--------|-------|-------|
 | YAML | Population specs, scenario specs, persona configs, network configs | Human-readable, version-controllable |
 | JSON | Agents, networks, simulation results | Array of objects (`_id` field), streaming-friendly |
-| SQLite | Simulation state | Indexed tables for agent_states, exposures, timeline |
+| SQLite | Simulation state | Tables: `agent_states`, `exposures`, `memory_traces`, `timeline`, `timestep_summaries`, `shared_to`, `simulation_metadata` |
 | JSONL | Timeline | Streaming, crash-safe event log |
 
 ---
 
 ## Tests
 
-pytest + pytest-asyncio. Fixtures in `tests/conftest.py` include seeded RNG (`Random(42)`), minimal/complex population specs, and sample agents. Twelve test files covering core logic, engine integration, scenario compiler, providers, rate limiter, CLI, and cost estimation.
+pytest + pytest-asyncio. Fixtures in `tests/conftest.py` include seeded RNG (`Random(42)`), minimal/complex population specs, sample agents, network topologies (linear chain, star graph), and distribution fixtures. 580+ tests across 24 test files:
 
-CI: `.github/workflows/test.yml` — lint (ruff check + format) and test (pytest, matrix: Python 3.11/3.12/3.13) via `astral-sh/setup-uv@v4`.
+- `test_models.py`, `test_network.py`, `test_sampler.py`, `test_scenario.py`, `test_simulation.py`, `test_validator.py` — core logic
+- `test_engine.py` — mock-based engine integration (seed exposure, flip resistance, conviction-gated sharing, chunked reasoning, checkpointing, resume logic, metadata lifecycle, progress state wiring)
+- `test_conviction.py` — conviction bucketing, level mapping, map consistency
+- `test_propagation.py` — seed exposure, network propagation, share probability, channel credibility
+- `test_stopping.py` — stopping condition parsing, evaluation, convergence detection, compound conditions
+- `test_memory_traces.py` — memory trace sliding window, multi-touch reasoning triggers, state aggregations
+- `test_reasoning_prompts.py` — prompt construction, schema generation, sentiment tone mapping
+- `test_integration_timestep.py` — full timestep loop with mocked LLM, multi-timestep dynamics
+- `test_progress.py` — SimulationProgress thread-safe state (begin_timestep, record_agent_done, position counts, snapshot isolation)
+- `test_compiler.py` — scenario compiler pipeline with mocked LLM calls, auto-configuration
+- `test_providers.py` — provider response extraction, transient error retry, validation-retry exhaustion, source URL extraction (mocked HTTP)
+- `test_rate_limiter.py` — token bucket, dual-bucket rate limiter, `for_provider` factory
+- `test_estimator.py` — cost estimation, pricing lookup, token estimation
+- `test_cli.py` — CLI smoke tests (`config show/set`, `validate`, `--version`)
+- `test_scenario_validator.py` — scenario-specific validation rules
+- `test_network_config_generator.py` — LLM-generated network config
+- `test_paths.py` — path utilities
+
+CI: `.github/workflows/test.yml` — lint (ruff check + format) and test (pytest, matrix: Python 3.11/3.12/3.13) via `astral-sh/setup-uv@v4`. Triggers on push/PR to `main`/`dev`.

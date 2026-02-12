@@ -330,6 +330,7 @@ The persona config is generated **once per population** via LLM, then applied to
 | **Opt** | `--preview` / `--no-preview` | Show sample persona before saving (default: on) |
 | **Opt** | `--agent` | Which agent to preview (default: `0`) |
 | **Opt** | `--yes` / `-y` | Skip confirmation prompts |
+| **Opt** | `--show` / `-s` | Preview existing persona config without regenerating |
 
 ### Output
 
@@ -520,14 +521,14 @@ entropy validate austin/scenario.yaml           # scenario spec (auto-detected)
 entropy validate austin/population.yaml --strict  # treat warnings as errors
 ```
 
-Validate a spec file at any point in the pipeline. Checks for structural issues, distribution validity, formula syntax, dependency cycles, and scenario-specific rules.
+Validate a spec file at any point in the pipeline. Auto-detects file type based on naming: `*.scenario.yaml` runs scenario spec validation, `*.yaml` runs population spec validation. Checks for structural issues, distribution validity, formula syntax, dependency cycles, and scenario-specific rules.
 
 ### Arguments & options
 
 | | Name | Description |
 |---|---|---|
-| **Arg** | `spec_file` | Spec file to validate |
-| **Opt** | `--strict` | Treat warnings as errors |
+| **Arg** | `spec_file` | Spec file to validate (`.yaml` or `.scenario.yaml`) |
+| **Opt** | `--strict` | Treat warnings as errors (population specs only) |
 
 ---
 
@@ -595,17 +596,19 @@ entropy config reset
 
 Entropy uses a **two-zone configuration** system. The **pipeline** zone controls which provider and models are used for population and scenario building (steps 1-6). The **simulation** zone controls agent reasoning (step 7). This lets you use a powerful model for building (e.g., Claude) and a fast/cheap model for simulation (e.g., GPT-5-mini).
 
+Three providers are supported: `openai`, `claude`, and `azure_openai`.
+
 Config is stored at `~/.config/entropy/config.json` and managed exclusively through this command.
 
 ### Available Keys
 
 | Key | Description | Default |
 |-----|-------------|---------|
-| `pipeline.provider` | LLM provider for steps 1-6 (`openai` or `claude`) | `openai` |
+| `pipeline.provider` | LLM provider for steps 1-6 (`openai`, `claude`, or `azure_openai`) | `openai` |
 | `pipeline.model_simple` | Model for simple calls (sufficiency checks) | provider default |
 | `pipeline.model_reasoning` | Model for reasoning calls (attribute selection, hydration) | provider default |
 | `pipeline.model_research` | Model for research calls (web search + reasoning) | provider default |
-| `simulation.provider` | LLM provider for step 7 (`openai` or `claude`) | `openai` |
+| `simulation.provider` | LLM provider for step 7 (`openai`, `claude`, or `azure_openai`) | `openai` |
 | `simulation.model` | Model for agent reasoning | provider default |
 | `simulation.pivotal_model` | Model for Pass 1 (role-play reasoning) | provider default |
 | `simulation.routine_model` | Model for Pass 2 (classification) | provider default |
@@ -613,15 +616,16 @@ Config is stored at `~/.config/entropy/config.json` and managed exclusively thro
 | `simulation.rate_tier` | Rate limit tier (1-4, higher = more generous limits) | `None` (Tier 1) |
 | `simulation.rpm_override` | Override requests per minute limit | `None` |
 | `simulation.tpm_override` | Override tokens per minute limit | `None` |
+| `simulation.api_format` | API format override (`responses` for OpenAI, `chat_completions` for Azure) | `""` (auto) |
 
 ### Resolution Order
 
 Config values are resolved in this order (first wins):
 
-1. CLI flag (e.g., `--model gpt-5-mini` on `entropy simulate`)
+1. Programmatic (`EntropyConfig` constructed in code / CLI flag overrides)
 2. Environment variable (e.g., `SIMULATION_MODEL`, `PIPELINE_PROVIDER`)
 3. Config file (`~/.config/entropy/config.json`)
-4. Provider default
+4. Hardcoded defaults
 
 ### Environment Variables
 
@@ -630,10 +634,31 @@ API keys are always read from environment variables (never stored in config):
 | Variable | Purpose |
 |----------|---------|
 | `OPENAI_API_KEY` | OpenAI API key |
-| `ANTHROPIC_API_KEY` | Anthropic API key |
+| `ANTHROPIC_API_KEY` | Anthropic (Claude) API key |
+| `AZURE_OPENAI_API_KEY` | Azure OpenAI API key |
+| `AZURE_OPENAI_ENDPOINT` | Azure OpenAI endpoint URL |
+| `AZURE_OPENAI_API_VERSION` | Azure API version (default: `2025-03-01-preview`) |
+| `AZURE_OPENAI_DEPLOYMENT` | Azure OpenAI deployment name |
+
+Other environment variable overrides:
+
+| Variable | Purpose |
+|----------|---------|
+| `LLM_PROVIDER` | Legacy: override both pipeline and simulation provider |
 | `PIPELINE_PROVIDER` | Override pipeline provider |
 | `SIMULATION_PROVIDER` | Override simulation provider |
+| `MODEL_SIMPLE` | Override pipeline simple model |
+| `MODEL_REASONING` | Override pipeline reasoning model |
+| `MODEL_RESEARCH` | Override pipeline research model |
 | `SIMULATION_MODEL` | Override simulation model |
+| `SIMULATION_PIVOTAL_MODEL` | Override Pass 1 model |
+| `SIMULATION_ROUTINE_MODEL` | Override Pass 2 model |
+| `SIMULATION_RATE_TIER` | Override rate limit tier |
+| `SIMULATION_RPM_OVERRIDE` | Override RPM limit |
+| `SIMULATION_TPM_OVERRIDE` | Override TPM limit |
+| `SIMULATION_API_FORMAT` | Override API format |
+| `DB_PATH` | Override database path |
+| `DEFAULT_POPULATION_SIZE` | Override default population size |
 
 ---
 

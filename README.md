@@ -40,7 +40,12 @@ pip install -e ".[dev]"
 export OPENAI_API_KEY=sk-...
 export ANTHROPIC_API_KEY=sk-ant-...
 
-# Configure providers
+# Or for Azure OpenAI:
+# export AZURE_OPENAI_API_KEY=...
+# export AZURE_OPENAI_ENDPOINT=https://your-resource.openai.azure.com
+# export AZURE_OPENAI_DEPLOYMENT=your-deployment-name
+
+# Configure providers (openai, claude, or azure_openai)
 entropy config set pipeline.provider claude      # Claude for population/scenario building
 entropy config set simulation.provider openai    # OpenAI for agent reasoning
 entropy config show
