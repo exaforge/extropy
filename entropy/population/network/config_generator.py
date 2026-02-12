@@ -2,7 +2,7 @@
 
 Given a PopulationSpec (and optionally sample agents), generates a NetworkConfig
 that defines meaningful social structure for the population. This replaces the
-need for hardcoded domain-specific configs like the German surgeon defaults.
+need for hardcoded domain-specific presets.
 
 Usage:
     config = generate_network_config(population_spec)

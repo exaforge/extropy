@@ -18,10 +18,6 @@ Usage:
     config = NetworkConfig.from_yaml("network-config.yaml")
     result = generate_network_with_metrics(agents, config)
 
-    # Use the German surgeon reference config for backward compat
-    from entropy.population.network.config import GERMAN_SURGEON_CONFIG
-    result = generate_network(agents, GERMAN_SURGEON_CONFIG)
-
 Key Concepts:
     - Homophily: People preferentially connect with similar others
     - Small-World: High clustering + short path lengths
@@ -46,7 +42,6 @@ from .config import (
     DegreeMultiplierConfig,
     EdgeTypeRule,
     InfluenceFactorConfig,
-    GERMAN_SURGEON_CONFIG,
 )
 from .similarity import (
     compute_similarity,
@@ -80,7 +75,6 @@ __all__ = [
     "DegreeMultiplierConfig",
     "EdgeTypeRule",
     "InfluenceFactorConfig",
-    "GERMAN_SURGEON_CONFIG",
     # Result types
     "Edge",
     "NetworkResult",

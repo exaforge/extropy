@@ -68,7 +68,7 @@ Three phases, each mapping to a package under `entropy/`:
 
 5. **Sampling** (`sampler/core.py`) — Iterates through `sampling_order`, routing each attribute by strategy. Supports 6 distribution types: normal, lognormal, uniform, beta, categorical, boolean. Hard constraints (min/max) are clamped post-sampling. Formula parameters evaluated via `utils/eval_safe.py` (restricted Python eval, whitelisted builtins only).
 
-6. **Network generation** (`network/`) — Hybrid algorithm: similarity-based edge probability with degree correction, calibrated via binary search to hit target avg_degree, then Watts-Strogatz rewiring (5%) for small-world properties. Edge probability: `base_rate * sigmoid(similarity) * degree_factor_a * degree_factor_b`. All network behavior is data-driven via `NetworkConfig`: attribute weights, edge type rules (evaluated by priority via `_eval_edge_condition()`), influence factors (ordinal/boolean/numeric), and degree multipliers. `NetworkConfig` can be generated from a `PopulationSpec` via LLM (`config_generator.py`), loaded from YAML (`--network-config`), or auto-detected as `{population_stem}.network-config.yaml`. Empty config (no `-p` or `-c`) produces a flat network. `GERMAN_SURGEON_CONFIG` preserves the original hardcoded German surgeon defaults as a reference.
+6. **Network generation** (`network/`) — Hybrid algorithm: similarity-based edge probability with degree correction, calibrated via binary search to hit target avg_degree, then Watts-Strogatz rewiring (5%) for small-world properties. Edge probability: `base_rate * sigmoid(similarity) * degree_factor_a * degree_factor_b`. All network behavior is data-driven via `NetworkConfig`: attribute weights, edge type rules (evaluated by priority via `_eval_edge_condition()`), influence factors (ordinal/boolean/numeric), and degree multipliers. `NetworkConfig` can be generated from a `PopulationSpec` via LLM (`config_generator.py`), loaded from YAML (`--network-config`), or auto-detected as `{population_stem}.network-config.yaml`. Empty config (no `-p` or `-c`) produces a flat network.
 
 ### Phase 2: Scenario Compilation (`entropy/scenario/`)
 
@@ -168,7 +168,7 @@ Scenario validation (`entropy/scenario/validator.py`): attribute reference valid
 - Progress callbacks use typed `Protocol` classes from `entropy/utils/callbacks.py` (`StepProgressCallback`, `TimestepProgressCallback`, `ItemProgressCallback`, `HydrationProgressCallback`, `NetworkProgressCallback`) — structurally compatible with plain callables via duck typing
 - The `persona` command generates detailed persona configs; `extend` still generates a simpler `persona_template` for backwards compatibility
 - Simulation auto-detects `{population_stem}.persona.yaml` and uses the new rendering if present
-- Network config is data-driven via `NetworkConfig` (YAML-serializable). `GERMAN_SURGEON_CONFIG` is the reference example. CLI: `entropy network -p population.yaml` (LLM-generated), `-c config.yaml` (manual), `--save-config` (export)
+- Network config is data-driven via `NetworkConfig` (YAML-serializable). No built-in reference preset is shipped. CLI: `entropy network -p population.yaml` (LLM-generated), `-c config.yaml` (manual), `--save-config` (export)
 
 ## Tests
 

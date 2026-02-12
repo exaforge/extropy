@@ -40,7 +40,7 @@ Track and validate every phase of the system. Each item is a question we need to
 **Question:** Does the network produce realistic social structure for arbitrary populations?
 
 - [ ] ~~Explore how network command works~~ DONE
-- [ ] ~~Generalize away from hardcoded German surgeon config~~ DONE
+- [ ] ~~Generalize away from domain-specific preset network configs~~ DONE
 - [ ] Run LLM-generated network config for 2-3 different populations, inspect the YAML output
 - [ ] Validate: do the generated edge type rules make sense? Are influence factors reasonable?
 - [ ] Compare metrics (clustering, path length, modularity) between LLM-configured and flat networks

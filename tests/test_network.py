@@ -8,7 +8,9 @@ import pytest
 from entropy.population.network.config import (
     NetworkConfig,
     AttributeWeightConfig,
-    GERMAN_SURGEON_CONFIG,
+    DegreeMultiplierConfig,
+    EdgeTypeRule,
+    InfluenceFactorConfig,
 )
 from entropy.population.network.similarity import (
     compute_match_score,
@@ -23,6 +25,123 @@ from entropy.population.network.generator import (
     load_agents_json,
     Edge,
     NetworkResult,
+)
+
+_REFERENCE_SENIORITY_LEVELS = {
+    "resident": 1,
+    "specialist_attending": 2,
+    "senior_physician_Oberarzt": 3,
+    "chief_physician_Chefarzt": 4,
+}
+
+REFERENCE_NETWORK_CONFIG = NetworkConfig(
+    avg_degree=20.0,
+    rewire_prob=0.05,
+    similarity_threshold=0.3,
+    similarity_steepness=10.0,
+    attribute_weights={
+        "employer_type": AttributeWeightConfig(weight=3.0, match_type="exact"),
+        "surgical_specialty": AttributeWeightConfig(weight=2.5, match_type="exact"),
+        "federal_state": AttributeWeightConfig(weight=2.0, match_type="exact"),
+        "role_seniority": AttributeWeightConfig(
+            weight=1.5,
+            match_type="within_n",
+            range_value=1,
+        ),
+        "care_level": AttributeWeightConfig(weight=1.0, match_type="exact"),
+        "age": AttributeWeightConfig(weight=1.0, match_type="numeric_range", range_value=10),
+        "participation_in_research": AttributeWeightConfig(weight=0.5, match_type="exact"),
+        "professional_society_membership": AttributeWeightConfig(
+            weight=0.5, match_type="exact"
+        ),
+    },
+    degree_multipliers=[
+        DegreeMultiplierConfig(
+            attribute="role_seniority",
+            condition="chief_physician_Chefarzt",
+            multiplier=2.0,
+            rationale="Department heads know everyone",
+        ),
+        DegreeMultiplierConfig(
+            attribute="role_seniority",
+            condition="senior_physician_Oberarzt",
+            multiplier=1.3,
+            rationale="Mid-level leadership",
+        ),
+        DegreeMultiplierConfig(
+            attribute="teaching_responsibility",
+            condition=True,
+            multiplier=1.4,
+            rationale="Mentors many residents",
+        ),
+        DegreeMultiplierConfig(
+            attribute="participation_in_research",
+            condition=True,
+            multiplier=1.3,
+            rationale="Collaborations, publications",
+        ),
+        DegreeMultiplierConfig(
+            attribute="professional_society_membership",
+            condition=True,
+            multiplier=1.2,
+            rationale="Committee work, conferences",
+        ),
+        DegreeMultiplierConfig(
+            attribute="employer_type",
+            condition="university_hospital",
+            multiplier=1.2,
+            rationale="Larger institutions, more colleagues",
+        ),
+    ],
+    edge_type_rules=[
+        EdgeTypeRule(
+            name="mentor_mentee",
+            condition="a_employer_type == b_employer_type and a_role_seniority != b_role_seniority",
+            priority=50,
+            description="Same hospital, different seniority — training relationship",
+        ),
+        EdgeTypeRule(
+            name="colleague",
+            condition="a_employer_type == b_employer_type",
+            priority=40,
+            description="Same hospital — daily coworkers",
+        ),
+        EdgeTypeRule(
+            name="specialty_peer",
+            condition="a_surgical_specialty == b_surgical_specialty",
+            priority=30,
+            description="Same specialty — conferences, society meetings",
+        ),
+        EdgeTypeRule(
+            name="regional",
+            condition="a_federal_state == b_federal_state",
+            priority=20,
+            description="Same state — regional referral network",
+        ),
+    ],
+    influence_factors=[
+        InfluenceFactorConfig(
+            attribute="role_seniority",
+            type="ordinal",
+            levels=_REFERENCE_SENIORITY_LEVELS,
+            weight=0.3,
+            description="Senior surgeons influence junior ones more",
+        ),
+        InfluenceFactorConfig(
+            attribute="participation_in_research",
+            type="boolean",
+            weight=0.2,
+            description="Researchers carry academic credibility",
+        ),
+        InfluenceFactorConfig(
+            attribute="teaching_responsibility",
+            type="boolean",
+            weight=0.1,
+            description="Teachers influence through mentorship",
+        ),
+    ],
+    default_edge_type="weak_tie",
+    ordinal_levels={"role_seniority": _REFERENCE_SENIORITY_LEVELS},
 )
 
 
@@ -59,9 +178,9 @@ class TestNetworkConfig:
         assert len(config.degree_multipliers) == 0
         assert config.default_edge_type == "peer"
 
-    def test_german_surgeon_config_has_weights(self):
-        """Test that German surgeon reference config has full weights."""
-        config = GERMAN_SURGEON_CONFIG
+    def test_reference_network_config_has_weights(self):
+        """Test that reference config has expected weights/rules."""
+        config = REFERENCE_NETWORK_CONFIG
 
         assert len(config.attribute_weights) > 0
         assert "employer_type" in config.attribute_weights
@@ -71,7 +190,7 @@ class TestNetworkConfig:
 
     def test_get_total_weight(self):
         """Test calculating total weight."""
-        config = GERMAN_SURGEON_CONFIG
+        config = REFERENCE_NETWORK_CONFIG
         total = config.get_total_weight()
 
         assert total > 0
@@ -232,7 +351,7 @@ class TestComputeSimilarity:
     def test_identical_agents(self, sample_agents):
         """Test similarity between identical agents."""
         agent = sample_agents[0]
-        config = GERMAN_SURGEON_CONFIG
+        config = REFERENCE_NETWORK_CONFIG
         sim = compute_similarity(
             agent, agent, config.attribute_weights, config.ordinal_levels
         )
@@ -240,7 +359,7 @@ class TestComputeSimilarity:
 
     def test_similar_agents(self, sample_agents):
         """Test similarity between similar agents."""
-        config = GERMAN_SURGEON_CONFIG
+        config = REFERENCE_NETWORK_CONFIG
         # Agents 0 and 1 share employer_type, specialty, federal_state
         sim = compute_similarity(
             sample_agents[0],
@@ -252,7 +371,7 @@ class TestComputeSimilarity:
 
     def test_dissimilar_agents(self, sample_agents):
         """Test similarity between dissimilar agents."""
-        config = GERMAN_SURGEON_CONFIG
+        config = REFERENCE_NETWORK_CONFIG
         # Agents 0 and 4 differ in most attributes
         sim = compute_similarity(
             sample_agents[0],
@@ -264,7 +383,7 @@ class TestComputeSimilarity:
 
     def test_similarity_is_symmetric(self, sample_agents):
         """Test that similarity is symmetric."""
-        config = GERMAN_SURGEON_CONFIG
+        config = REFERENCE_NETWORK_CONFIG
         sim_ab = compute_similarity(
             sample_agents[0],
             sample_agents[1],
@@ -281,7 +400,7 @@ class TestComputeSimilarity:
 
     def test_similarity_normalized_to_0_1(self, sample_agents):
         """Test that similarity is always in [0, 1]."""
-        config = GERMAN_SURGEON_CONFIG
+        config = REFERENCE_NETWORK_CONFIG
         for i, agent_a in enumerate(sample_agents):
             for j, agent_b in enumerate(sample_agents):
                 sim = compute_similarity(
@@ -304,7 +423,7 @@ class TestComputeDegreeFactor:
 
     def test_chief_physician_factor(self, sample_agents):
         """Test degree factor for chief physician."""
-        config = GERMAN_SURGEON_CONFIG
+        config = REFERENCE_NETWORK_CONFIG
         factor = compute_degree_factor(sample_agents[0], config)
 
         # Agent 0 is chief, teaching, research, society, university
@@ -313,7 +432,7 @@ class TestComputeDegreeFactor:
 
     def test_resident_factor(self, sample_agents):
         """Test degree factor for resident."""
-        config = GERMAN_SURGEON_CONFIG
+        config = REFERENCE_NETWORK_CONFIG
         factor = compute_degree_factor(sample_agents[2], config)
 
         # Agent 2 is resident at university (1.2)
@@ -321,7 +440,7 @@ class TestComputeDegreeFactor:
 
     def test_factor_always_positive(self, sample_agents):
         """Test that degree factor is always >= 1.0."""
-        config = GERMAN_SURGEON_CONFIG
+        config = REFERENCE_NETWORK_CONFIG
         for agent in sample_agents:
             factor = compute_degree_factor(agent, config)
             assert factor >= 1.0
@@ -533,18 +652,17 @@ class TestGenerateNetwork:
             assert edge.edge_type == "peer"
 
     def test_generate_network_edge_types_with_rules(self, sample_agents):
-        """Test that edges have rule-derived types with German surgeon config."""
-        from entropy.population.network.config import GERMAN_SURGEON_CONFIG
+        """Test that edges have rule-derived types with reference config."""
 
         config = NetworkConfig(
             avg_degree=4.0,
             seed=42,
-            attribute_weights=GERMAN_SURGEON_CONFIG.attribute_weights,
-            degree_multipliers=GERMAN_SURGEON_CONFIG.degree_multipliers,
-            edge_type_rules=GERMAN_SURGEON_CONFIG.edge_type_rules,
-            influence_factors=GERMAN_SURGEON_CONFIG.influence_factors,
-            default_edge_type=GERMAN_SURGEON_CONFIG.default_edge_type,
-            ordinal_levels=GERMAN_SURGEON_CONFIG.ordinal_levels,
+            attribute_weights=REFERENCE_NETWORK_CONFIG.attribute_weights,
+            degree_multipliers=REFERENCE_NETWORK_CONFIG.degree_multipliers,
+            edge_type_rules=REFERENCE_NETWORK_CONFIG.edge_type_rules,
+            influence_factors=REFERENCE_NETWORK_CONFIG.influence_factors,
+            default_edge_type=REFERENCE_NETWORK_CONFIG.default_edge_type,
+            ordinal_levels=REFERENCE_NETWORK_CONFIG.ordinal_levels,
         )
         result = generate_network(sample_agents, config)
 
@@ -657,8 +775,8 @@ class TestLoadAgentsJson:
 class TestEdgeTypeInference:
     """Tests for edge type inference with data-driven rules."""
 
-    def test_colleague_with_german_config(self):
-        """Test colleague edge type with German surgeon config rules."""
+    def test_colleague_with_reference_config(self):
+        """Test colleague edge type with reference config rules."""
         from entropy.population.network.generator import _infer_edge_type
 
         agent_a = {
@@ -674,11 +792,11 @@ class TestEdgeTypeInference:
             "federal_state": "Bayern",
         }
 
-        edge_type = _infer_edge_type(agent_a, agent_b, GERMAN_SURGEON_CONFIG)
+        edge_type = _infer_edge_type(agent_a, agent_b, REFERENCE_NETWORK_CONFIG)
         assert edge_type == "colleague"
 
-    def test_mentor_mentee_with_german_config(self):
-        """Test mentor_mentee edge type with German surgeon config rules."""
+    def test_mentor_mentee_with_reference_config(self):
+        """Test mentor_mentee edge type with reference config rules."""
         from entropy.population.network.generator import _infer_edge_type
 
         agent_a = {
@@ -694,11 +812,11 @@ class TestEdgeTypeInference:
             "federal_state": "Bayern",
         }
 
-        edge_type = _infer_edge_type(agent_a, agent_b, GERMAN_SURGEON_CONFIG)
+        edge_type = _infer_edge_type(agent_a, agent_b, REFERENCE_NETWORK_CONFIG)
         assert edge_type == "mentor_mentee"
 
-    def test_specialty_peer_with_german_config(self):
-        """Test specialty_peer edge type with German surgeon config rules."""
+    def test_specialty_peer_with_reference_config(self):
+        """Test specialty_peer edge type with reference config rules."""
         from entropy.population.network.generator import _infer_edge_type
 
         agent_a = {
@@ -712,11 +830,11 @@ class TestEdgeTypeInference:
             "federal_state": "Berlin",
         }
 
-        edge_type = _infer_edge_type(agent_a, agent_b, GERMAN_SURGEON_CONFIG)
+        edge_type = _infer_edge_type(agent_a, agent_b, REFERENCE_NETWORK_CONFIG)
         assert edge_type == "specialty_peer"
 
-    def test_regional_with_german_config(self):
-        """Test regional edge type with German surgeon config rules."""
+    def test_regional_with_reference_config(self):
+        """Test regional edge type with reference config rules."""
         from entropy.population.network.generator import _infer_edge_type
 
         agent_a = {
@@ -730,7 +848,7 @@ class TestEdgeTypeInference:
             "federal_state": "Bayern",
         }
 
-        edge_type = _infer_edge_type(agent_a, agent_b, GERMAN_SURGEON_CONFIG)
+        edge_type = _infer_edge_type(agent_a, agent_b, REFERENCE_NETWORK_CONFIG)
         assert edge_type == "regional"
 
     def test_default_edge_type_rewired(self):
@@ -741,9 +859,9 @@ class TestEdgeTypeInference:
         agent_b = {"employer_type": "B"}
 
         edge_type = _infer_edge_type(
-            agent_a, agent_b, GERMAN_SURGEON_CONFIG, is_rewired=True
+            agent_a, agent_b, REFERENCE_NETWORK_CONFIG, is_rewired=True
         )
-        assert edge_type == "weak_tie"  # German config default_edge_type
+        assert edge_type == "weak_tie"  # Reference config default_edge_type
 
     def test_default_edge_type_no_rules(self):
         """Test that empty config returns 'peer' as default."""
@@ -772,5 +890,5 @@ class TestEdgeTypeInference:
             "role_seniority": "resident",
         }
 
-        edge_type = _infer_edge_type(agent_a, agent_b, GERMAN_SURGEON_CONFIG)
+        edge_type = _infer_edge_type(agent_a, agent_b, REFERENCE_NETWORK_CONFIG)
         assert edge_type == "weak_tie"  # Falls through all rules to default
