@@ -96,7 +96,7 @@ wheels = [
 ]
 
 [[package]]
-name = "entropy-predict"
+name = "extropy-run"
 source = { editable = "." }
 dependencies = [
     { name = "anthropic" },

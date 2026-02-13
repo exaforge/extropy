@@ -8,31 +8,31 @@ A hands-on walkthrough of every command in order, using a single example from st
 
 A city council in Austin, TX announces a **$15/day congestion tax** for driving into the downtown core during peak hours (7-10am, 4-7pm). The goal is to reduce traffic and fund public transit expansion. We want to simulate how 500 Austin commuters respond — who complies, who switches to transit, who protests, and who just pays and moves on.
 
-This is the kind of question Entropy was built for: a heterogeneous population with different incomes, commute methods, values, and trust levels — all reacting to the same policy change.
+This is the kind of question Extropy was built for: a heterogeneous population with different incomes, commute methods, values, and trust levels — all reacting to the same policy change.
 
 ---
 
 ## Pipeline Overview
 
 ```
-entropy spec ──> entropy extend ──> entropy sample ──> entropy network ──> entropy persona ──> entropy scenario ──> entropy simulate
+extropy spec ──> extropy extend ──> extropy sample ──> extropy network ──> extropy persona ──> extropy scenario ──> extropy simulate
                                                                                                                      │              │
-                                                                                                              entropy estimate    entropy results
+                                                                                                              extropy estimate    extropy results
 ```
 
 Each step produces a file that feeds into the next:
 
 | Step | Command | Input | Output |
 |------|---------|-------|--------|
-| 1 | `entropy spec` | Natural language description | `base.yaml` (population spec) |
-| 2 | `entropy extend` | `base.yaml` + scenario description | `population.yaml` (merged spec) |
-| 3 | `entropy sample` | `population.yaml` | `agents.json` (concrete agents) |
-| 4 | `entropy network` | `agents.json` | `network.json` (social graph) |
-| 5 | `entropy persona` | `population.yaml` + `agents.json` | `population.persona.yaml` (persona config) |
-| 6 | `entropy scenario` | `population.yaml` + `agents.json` + `network.json` | `scenario.yaml` (executable spec) |
-| 7 | `entropy simulate` | `scenario.yaml` | `results/` (simulation output) |
+| 1 | `extropy spec` | Natural language description | `base.yaml` (population spec) |
+| 2 | `extropy extend` | `base.yaml` + scenario description | `population.yaml` (merged spec) |
+| 3 | `extropy sample` | `population.yaml` | `agents.json` (concrete agents) |
+| 4 | `extropy network` | `agents.json` | `network.json` (social graph) |
+| 5 | `extropy persona` | `population.yaml` + `agents.json` | `population.persona.yaml` (persona config) |
+| 6 | `extropy scenario` | `population.yaml` + `agents.json` + `network.json` | `scenario.yaml` (executable spec) |
+| 7 | `extropy simulate` | `scenario.yaml` | `results/` (simulation output) |
 
-You can also run `entropy validate` at any point to check a spec file, `entropy estimate` to preview simulation cost, and `entropy results` to inspect simulation output.
+You can also run `extropy validate` at any point to check a spec file, `extropy estimate` to preview simulation cost, and `extropy results` to inspect simulation output.
 
 ---
 
@@ -42,16 +42,16 @@ Before starting, configure your providers and models. You can mix and match prov
 
 ```bash
 # Set pipeline (steps 1-6) to use Claude
-entropy config set pipeline.provider claude
+extropy config set pipeline.provider claude
 
 # Set simulation (step 7) to use OpenAI
-entropy config set simulation.provider openai
+extropy config set simulation.provider openai
 
 # Optionally override the simulation model
-entropy config set simulation.model gpt-5-mini
+extropy config set simulation.model gpt-5-mini
 
 # View current config
-entropy config show
+extropy config show
 ```
 
 ### API Keys
@@ -65,12 +65,12 @@ export OPENAI_API_KEY=sk-...              # For OpenAI
 
 ### Programmatic Configuration (Package Use)
 
-When using entropy as a library, configure programmatically — no files needed:
+When using extropy as a library, configure programmatically — no files needed:
 
 ```python
-from entropy.config import configure, EntropyConfig, PipelineConfig, SimZoneConfig
+from extropy.config import configure, ExtropyConfig, PipelineConfig, SimZoneConfig
 
-configure(EntropyConfig(
+configure(ExtropyConfig(
     pipeline=PipelineConfig(provider="claude"),
     simulation=SimZoneConfig(provider="openai", model="gpt-5-mini"),
 ))
@@ -81,7 +81,7 @@ configure(EntropyConfig(
 ## Step 1: Define the Base Population
 
 ```bash
-entropy spec "500 Austin TX commuters who drive into downtown for work" \
+extropy spec "500 Austin TX commuters who drive into downtown for work" \
   -o austin/base.yaml
 ```
 
@@ -123,7 +123,7 @@ A YAML file (`base.yaml`) with:
 ## Step 2: Extend with Scenario Attributes
 
 ```bash
-entropy extend austin/base.yaml \
+extropy extend austin/base.yaml \
   -s "Response to a new $15/day downtown congestion tax during peak hours" \
   -o austin/population.yaml
 ```
@@ -167,7 +167,7 @@ A merged YAML file (`population.yaml`) containing all base attributes + new scen
 ## Step 3: Sample Concrete Agents
 
 ```bash
-entropy sample austin/population.yaml \
+extropy sample austin/population.yaml \
   -o austin/agents.json \
   -n 500 \
   --seed 42
@@ -181,7 +181,7 @@ Each agent is a dictionary of concrete values:
 
 ```json
 {
-  "agent_id": "agent_001",
+  "_id": "agent_001",
   "age": 34,
   "income": 62000,
   "zip_code": "78745",
@@ -221,7 +221,7 @@ A JSON file (`agents.json`) or SQLite database (`agents.db`) containing all samp
 ## Step 4: Build the Social Network
 
 ```bash
-entropy network austin/agents.json \
+extropy network austin/agents.json \
   -o austin/network.json \
   -p austin/population.yaml \
   --seed 42
@@ -242,7 +242,7 @@ Auto-detection: if `{population_stem}.network-config.yaml` exists alongside the 
 Save a generated config for inspection/editing with `--save-config`:
 
 ```bash
-entropy network austin/agents.json -o austin/network.json \
+extropy network austin/agents.json -o austin/network.json \
   -p austin/population.yaml --save-config austin/network-config.yaml
 ```
 
@@ -260,7 +260,7 @@ The network uses a **Watts-Strogatz small-world model** with attribute-based sim
 Add `-v` to print network quality metrics:
 
 ```bash
-entropy network austin/agents.json -o austin/network.json -p austin/population.yaml --validate
+extropy network austin/agents.json -o austin/network.json -p austin/population.yaml --validate
 ```
 
 This shows clustering coefficient, average path length, modularity, and flags anything outside expected ranges for a realistic social network.
@@ -289,7 +289,7 @@ A JSON file (`network.json`) containing nodes (agent IDs) and weighted, typed ed
 ## Step 5: Generate Persona Configuration
 
 ```bash
-entropy persona austin/population.yaml \
+extropy persona austin/population.yaml \
   --agents austin/agents.json \
   -o austin/population.persona.yaml
 ```
@@ -348,7 +348,7 @@ The simulation engine auto-detects this file when running — no need to pass it
 ## Step 6: Compile the Scenario
 
 ```bash
-entropy scenario \
+extropy scenario \
   -p austin/population.yaml \
   -a austin/agents.json \
   -n austin/network.json \
@@ -394,7 +394,7 @@ A YAML file (`scenario.yaml`) containing the complete scenario specification: ev
 ## Step 7: Run the Simulation
 
 ```bash
-entropy simulate austin/scenario.yaml \
+extropy simulate austin/scenario.yaml \
   -o austin/results/ \
   --seed 42
 ```
@@ -444,7 +444,7 @@ These aren't scripted responses. They emerge from each agent's unique combinatio
 |---|---|---|
 | **Arg** | `scenario_file` | Scenario spec YAML |
 | **Opt** | `--output` / `-o` | Output results directory **(required)** |
-| **Opt** | `--model` / `-m` | LLM model for both passes (default: from `entropy config`) |
+| **Opt** | `--model` / `-m` | LLM model for both passes (default: from `extropy config`) |
 | **Opt** | `--pivotal-model` | Model override for Pass 1 reasoning |
 | **Opt** | `--routine-model` | Model override for Pass 2 classification |
 | **Opt** | `--threshold` / `-t` | Multi-touch threshold for re-reasoning (default: `3`) |
@@ -473,7 +473,7 @@ A results directory containing:
 ## Viewing Results
 
 ```bash
-entropy results austin/results/
+extropy results austin/results/
 ```
 
 Display a summary of simulation outcomes — exposure rates, outcome distributions, and convergence information.
@@ -481,7 +481,7 @@ Display a summary of simulation outcomes — exposure rates, outcome distributio
 ### Segment by attribute
 
 ```bash
-entropy results austin/results/ --segment income
+extropy results austin/results/ --segment income
 ```
 
 Break down outcomes by an attribute. This is where the insights live: *"Low-income commuters (<$50k) are 4x more likely to protest than high-income commuters (>$100k), who mostly comply or switch to transit."*
@@ -489,7 +489,7 @@ Break down outcomes by an attribute. This is where the insights live: *"Low-inco
 ### Timeline view
 
 ```bash
-entropy results austin/results/ --timeline
+extropy results austin/results/ --timeline
 ```
 
 See how opinions evolved over time — when protest sentiment peaked, when transit-switching accelerated, etc.
@@ -497,7 +497,7 @@ See how opinions evolved over time — when protest sentiment peaked, when trans
 ### Single agent deep-dive
 
 ```bash
-entropy results austin/results/ --agent agent_001
+extropy results austin/results/ --agent agent_001
 ```
 
 Inspect one agent's full reasoning chain: what they heard, from whom, when, and how their position evolved.
@@ -516,9 +516,9 @@ Inspect one agent's full reasoning chain: what they heard, from whom, when, and 
 ## Utility: Validate Specs
 
 ```bash
-entropy validate austin/population.yaml        # population spec
-entropy validate austin/scenario.yaml           # scenario spec (auto-detected)
-entropy validate austin/population.yaml --strict  # treat warnings as errors
+extropy validate austin/population.yaml        # population spec
+extropy validate austin/scenario.yaml           # scenario spec (auto-detected)
+extropy validate austin/population.yaml --strict  # treat warnings as errors
 ```
 
 Validate a spec file at any point in the pipeline. Auto-detects file type based on naming: `*.scenario.yaml` runs scenario spec validation, `*.yaml` runs population spec validation. Checks for structural issues, distribution validity, formula syntax, dependency cycles, and scenario-specific rules.
@@ -535,9 +535,9 @@ Validate a spec file at any point in the pipeline. Auto-detects file type based 
 ## Estimate Simulation Cost
 
 ```bash
-entropy estimate austin/scenario.yaml
-entropy estimate austin/scenario.yaml --verbose
-entropy estimate austin/scenario.yaml --pivotal-model gpt-5 --routine-model gpt-5-mini
+extropy estimate austin/scenario.yaml
+extropy estimate austin/scenario.yaml --verbose
+extropy estimate austin/scenario.yaml --pivotal-model gpt-5 --routine-model gpt-5-mini
 ```
 
 Predict the cost of a simulation run without making any API calls. Uses a simplified SIR-like propagation model to estimate how many agents reason per timestep, then calculates token counts and USD costs from the model pricing database.
@@ -588,17 +588,17 @@ Shows a per-timestep breakdown: how many agents are newly exposed, how many reas
 ## Managing Configuration
 
 ```bash
-entropy config show
-entropy config set pipeline.provider claude
-entropy config set simulation.model gpt-5-mini
-entropy config reset
+extropy config show
+extropy config set pipeline.provider claude
+extropy config set simulation.model gpt-5-mini
+extropy config reset
 ```
 
-Entropy uses a **two-zone configuration** system. The **pipeline** zone controls which provider and models are used for population and scenario building (steps 1-6). The **simulation** zone controls agent reasoning (step 7). This lets you use a powerful model for building (e.g., Claude) and a fast/cheap model for simulation (e.g., GPT-5-mini).
+Extropy uses a **two-zone configuration** system. The **pipeline** zone controls which provider and models are used for population and scenario building (steps 1-6). The **simulation** zone controls agent reasoning (step 7). This lets you use a powerful model for building (e.g., Claude) and a fast/cheap model for simulation (e.g., GPT-5-mini).
 
 Three providers are supported: `openai`, `claude`, and `azure_openai`.
 
-Config is stored at `~/.config/entropy/config.json` and managed exclusively through this command.
+Config is stored at `~/.config/extropy/config.json` and managed exclusively through this command.
 
 ### Available Keys
 
@@ -622,9 +622,9 @@ Config is stored at `~/.config/entropy/config.json` and managed exclusively thro
 
 Config values are resolved in this order (first wins):
 
-1. Programmatic (`EntropyConfig` constructed in code / CLI flag overrides)
+1. Programmatic (`ExtropyConfig` constructed in code / CLI flag overrides)
 2. Environment variable (e.g., `SIMULATION_MODEL`, `PIPELINE_PROVIDER`)
-3. Config file (`~/.config/entropy/config.json`)
+3. Config file (`~/.config/extropy/config.json`)
 4. Hardcoded defaults
 
 ### Environment Variables
@@ -666,25 +666,25 @@ Other environment variable overrides:
 
 ```bash
 # Full pipeline
-entropy spec "500 Austin TX commuters who drive into downtown for work" -o austin/base.yaml
-entropy extend austin/base.yaml -s "Response to a $15/day downtown congestion tax" -o austin/population.yaml
-entropy sample austin/population.yaml -o austin/agents.json --seed 42
-entropy network austin/agents.json -o austin/network.json -p austin/population.yaml --seed 42
-entropy persona austin/population.yaml --agents austin/agents.json
-entropy scenario -p austin/population.yaml -a austin/agents.json -n austin/network.json -o austin/scenario.yaml
+extropy spec "500 Austin TX commuters who drive into downtown for work" -o austin/base.yaml
+extropy extend austin/base.yaml -s "Response to a $15/day downtown congestion tax" -o austin/population.yaml
+extropy sample austin/population.yaml -o austin/agents.json --seed 42
+extropy network austin/agents.json -o austin/network.json -p austin/population.yaml --seed 42
+extropy persona austin/population.yaml --agents austin/agents.json
+extropy scenario -p austin/population.yaml -a austin/agents.json -n austin/network.json -o austin/scenario.yaml
 
 # Estimate cost before running
-entropy estimate austin/scenario.yaml
+extropy estimate austin/scenario.yaml
 
 # Run simulation
-entropy simulate austin/scenario.yaml -o austin/results/ --seed 42
+extropy simulate austin/scenario.yaml -o austin/results/ --seed 42
 
 # View results
-entropy results austin/results/
-entropy results austin/results/ --segment income
-entropy results austin/results/ --timeline
+extropy results austin/results/
+extropy results austin/results/ --segment income
+extropy results austin/results/ --timeline
 
 # Validate at any point
-entropy validate austin/population.yaml
-entropy validate austin/scenario.yaml
+extropy validate austin/population.yaml
+extropy validate austin/scenario.yaml
 ```

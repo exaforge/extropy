@@ -1,11 +1,11 @@
-"""Shared fixtures and configuration for Entropy tests."""
+"""Shared fixtures and configuration for Extropy tests."""
 
 import random
 from datetime import datetime
 
 import pytest
 
-from entropy.core.models.population import (
+from extropy.core.models.population import (
     PopulationSpec,
     SpecMeta,
     GroundingSummary,

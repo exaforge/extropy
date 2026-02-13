@@ -4,8 +4,8 @@ from pathlib import Path
 
 from typer.testing import CliRunner
 
-from entropy.cli.app import app
-from entropy.cli.commands.validate import _is_scenario_file
+from extropy.cli.app import app
+from extropy.cli.commands.validate import _is_scenario_file
 
 runner = CliRunner()
 
@@ -58,4 +58,4 @@ class TestVersionFlag:
     def test_version_output(self):
         result = runner.invoke(app, ["--version"])
         assert result.exit_code == 0
-        assert "entropy" in result.output
+        assert "extropy" in result.output

@@ -1,1 +1,1 @@
-# Entropy test suite
+# Extropy test suite

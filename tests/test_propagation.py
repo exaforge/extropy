@@ -2,7 +2,7 @@
 
 Tests seed exposure application, network propagation, share probability
 calculation, and credibility assignments.
-Functions under test in entropy/simulation/propagation.py.
+Functions under test in extropy/simulation/propagation.py.
 """
 
 import random
@@ -10,8 +10,8 @@ from datetime import datetime
 
 import pytest
 
-from entropy.core.models import AgentState, ExposureRecord
-from entropy.core.models.scenario import (
+from extropy.core.models import AgentState, ExposureRecord
+from extropy.core.models.scenario import (
     Event,
     EventType,
     ExposureChannel,
@@ -29,7 +29,7 @@ from entropy.core.models.scenario import (
     SpreadModifier,
     TimestepUnit,
 )
-from entropy.simulation.propagation import (
+from extropy.simulation.propagation import (
     apply_seed_exposures,
     calculate_share_probability,
     evaluate_exposure_rule,
@@ -37,7 +37,7 @@ from entropy.simulation.propagation import (
     get_neighbors,
     propagate_through_network,
 )
-from entropy.simulation.state import StateManager
+from extropy.simulation.state import StateManager
 
 
 def _make_scenario(

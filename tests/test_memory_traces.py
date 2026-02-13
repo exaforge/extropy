@@ -2,17 +2,17 @@
 
 Tests the sliding window memory trace (max 3 entries per agent),
 the get_agents_to_reason multi-touch logic, and aggregation queries.
-Functions under test in entropy/simulation/state.py.
+Functions under test in extropy/simulation/state.py.
 """
 
 import pytest
 
-from entropy.core.models import (
+from extropy.core.models import (
     AgentState,
     ExposureRecord,
     MemoryEntry,
 )
-from entropy.simulation.state import StateManager
+from extropy.simulation.state import StateManager
 
 
 def _make_exposure(timestep=0, channel="broadcast", source_agent_id=None):

@@ -1,7 +1,7 @@
 """Tests for persona categorical rendering behavior."""
 
-from entropy.population.persona.config import CategoricalPhrasing
-from entropy.population.persona.renderer import _format_categorical_value
+from extropy.population.persona.config import CategoricalPhrasing
+from extropy.population.persona.renderer import _format_categorical_value
 
 
 def test_categorical_null_option_prefers_null_phrase():

@@ -1,13 +1,13 @@
 """Tests for network config generation conversions."""
 
-from entropy.core.models.population import (
+from extropy.core.models.population import (
     AttributeSpec,
     BooleanDistribution,
     GroundingInfo,
     NormalDistribution,
     SamplingConfig,
 )
-from entropy.population.network.config_generator import _convert_to_network_config
+from extropy.population.network.config_generator import _convert_to_network_config
 
 
 def test_convert_network_config_coerces_degree_multiplier_condition_types(
