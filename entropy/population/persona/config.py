@@ -74,6 +74,18 @@ class CategoricalPhrasing(BaseModel):
     phrases: dict[str, str] = Field(
         description="Map from option value to first-person phrase"
     )
+    null_options: list[str] = Field(
+        description=(
+            "Options that represent explicit absence/not-applicable/no-preference "
+            "states for this attribute"
+        ),
+    )
+    null_phrase: str | None = Field(
+        description=(
+            "Natural first-person phrase for null_options values; used instead of "
+            "raw option token phrasing"
+        ),
+    )
     fallback: str | None = Field(
         default=None, description="Fallback phrase if value not in phrases"
     )

@@ -293,8 +293,18 @@ CATEGORICAL_SCHEMA = {
                             "additionalProperties": False,
                         },
                     },
+                    "null_options": {
+                        "type": "array",
+                        "items": {"type": "string"},
+                    },
+                    "null_phrase": {"type": "string"},
                 },
-                "required": ["attribute", "option_phrases"],
+                "required": [
+                    "attribute",
+                    "option_phrases",
+                    "null_options",
+                    "null_phrase",
+                ],
                 "additionalProperties": False,
             },
         }
@@ -343,6 +353,16 @@ For each attribute, provide option_phrases - an array with one entry per option:
 - option: The option value (e.g., "cannot_shift")
 - phrase: First-person phrase (e.g., "My schedule is fixed — I can't easily avoid peak hours")
 
+Also provide:
+- null_options: option values that represent explicit absence/not-applicable/no-preference states for THIS attribute (subset of options, or [] if none)
+- null_phrase: natural first-person phrase to use whenever value is in null_options.
+  If null_options is [], return an empty string for null_phrase.
+
+Rules:
+- Every option must appear exactly once in option_phrases.
+- Keep phrases natural and conversational; never repeat raw option tokens verbatim as standalone wording.
+- null_phrase must be natural language, not a copied enum token.
+
 All phrases must be first-person ("I", "my", "me") and sound natural."""
 
     response = reasoning_call(
@@ -355,13 +375,54 @@ All phrases must be first-person ("I", "my", "me") and sound natural."""
     if not response:
         raise PersonaConfigError("Empty response for categorical phrasings")
 
+    option_map = {attr.name: set(options) for attr, options in cat_attrs}
     phrasings = []
     for p in response.get("phrasings", []):
+        attr_name = p["attribute"]
+        valid_options = option_map.get(attr_name)
+        if valid_options is None:
+            raise PersonaConfigError(
+                f"Unknown categorical attribute in persona phrasing output: {attr_name}"
+            )
+
         phrases_dict = {}
         for op in p.get("option_phrases", []):
             phrases_dict[op["option"]] = op["phrase"]
+
+        actual_options = set(phrases_dict.keys())
+        missing = valid_options - actual_options
+        extras = actual_options - valid_options
+        if missing or extras:
+            parts = []
+            if missing:
+                parts.append(f"missing options: {sorted(missing)}")
+            if extras:
+                parts.append(f"unknown options: {sorted(extras)}")
+            raise PersonaConfigError(
+                f"Invalid categorical phrasing coverage for {attr_name} ({'; '.join(parts)})"
+            )
+
+        null_options = list(p.get("null_options", []))
+        unknown_null_options = set(null_options) - valid_options
+        if unknown_null_options:
+            raise PersonaConfigError(
+                f"Invalid null_options for {attr_name}: {sorted(unknown_null_options)}"
+            )
+
+        null_phrase_raw = (p.get("null_phrase") or "").strip()
+        null_phrase = null_phrase_raw if null_phrase_raw else None
+        if null_options and not null_phrase:
+            raise PersonaConfigError(
+                f"Missing null_phrase for {attr_name} with null_options={null_options}"
+            )
+
         phrasings.append(
-            CategoricalPhrasing(attribute=p["attribute"], phrases=phrases_dict)
+            CategoricalPhrasing(
+                attribute=attr_name,
+                phrases=phrases_dict,
+                null_options=null_options,
+                null_phrase=null_phrase,
+            )
         )
 
     if on_progress:
