@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 import pytest
 
-from entropy.core.rate_limiter import TokenBucket, RateLimiter
+from extropy.core.rate_limiter import TokenBucket, RateLimiter
 
 
 class TestTokenBucket:

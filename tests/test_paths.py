@@ -4,7 +4,7 @@ from pathlib import Path
 import tempfile
 import os
 
-from entropy.utils import resolve_relative_to, make_relative_to
+from extropy.utils import resolve_relative_to, make_relative_to
 
 
 class TestResolveRelativeTo:

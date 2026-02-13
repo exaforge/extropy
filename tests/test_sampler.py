@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 
-from entropy.core.models.population import (
+from extropy.core.models.population import (
     PopulationSpec,
     SpecMeta,
     GroundingSummary,
@@ -19,18 +19,18 @@ from entropy.core.models.population import (
     Modifier,
     Constraint,
 )
-from entropy.population.sampler.core import (
+from extropy.population.sampler.core import (
     sample_population,
     save_json,
     save_sqlite,
     SamplingResult,
     SamplingError,
 )
-from entropy.population.sampler.distributions import (
+from extropy.population.sampler.distributions import (
     sample_distribution,
     coerce_to_type,
 )
-from entropy.utils.eval_safe import (
+from extropy.utils.eval_safe import (
     eval_safe,
     eval_formula,
     eval_condition,
@@ -810,7 +810,7 @@ class TestDynamicBounds:
 
     def test_lognormal_with_max_formula(self, rng):
         """max_formula should work with lognormal distribution."""
-        from entropy.core.models.population import LognormalDistribution
+        from extropy.core.models.population import LognormalDistribution
 
         dist = LognormalDistribution(
             mean=100.0,
@@ -826,7 +826,7 @@ class TestDynamicBounds:
 
     def test_beta_with_formula_bounds(self, rng):
         """Formula bounds should work with beta distribution scaling."""
-        from entropy.core.models.population import BetaDistribution
+        from extropy.core.models.population import BetaDistribution
 
         dist = BetaDistribution(
             alpha=2.0,
@@ -981,28 +981,28 @@ class TestConstraintValidation:
 
     def test_is_spec_level_constraint_sum_weights(self):
         """Test detection of sum(weights) as spec-level constraint."""
-        from entropy.population.validator import is_spec_level_constraint
+        from extropy.population.validator import is_spec_level_constraint
 
         assert is_spec_level_constraint("sum(weights)==1") is True
         assert is_spec_level_constraint("sum(weights) == 1.0") is True
 
     def test_is_spec_level_constraint_weights_index(self):
         """Test detection of weights[i] as spec-level constraint."""
-        from entropy.population.validator import is_spec_level_constraint
+        from extropy.population.validator import is_spec_level_constraint
 
         assert is_spec_level_constraint("weights[0]+weights[1]==1") is True
         assert is_spec_level_constraint("weights[0] >= 0") is True
 
     def test_is_spec_level_constraint_options(self):
         """Test detection of options as spec-level constraint."""
-        from entropy.population.validator import is_spec_level_constraint
+        from extropy.population.validator import is_spec_level_constraint
 
         assert is_spec_level_constraint("len(options) > 0") is True
         assert is_spec_level_constraint("options[0] != ''") is True
 
     def test_is_spec_level_constraint_agent_expression(self):
         """Test that agent-level expressions are not flagged as spec-level."""
-        from entropy.population.validator import is_spec_level_constraint
+        from extropy.population.validator import is_spec_level_constraint
 
         assert is_spec_level_constraint("children_count <= household_size - 1") is False
         assert is_spec_level_constraint("years_experience <= age - 23") is False
@@ -1010,7 +1010,7 @@ class TestConstraintValidation:
 
     def test_extract_bound_upper_bound(self):
         """Test extraction of upper bound from constraint."""
-        from entropy.population.validator import extract_bound_from_constraint
+        from extropy.population.validator import extract_bound_from_constraint
 
         bound_type, bound_expr, is_strict = extract_bound_from_constraint(
             "children_count <= household_size - 1", "children_count"
@@ -1021,7 +1021,7 @@ class TestConstraintValidation:
 
     def test_extract_bound_strict_upper_bound(self):
         """Test extraction of strict upper bound."""
-        from entropy.population.validator import extract_bound_from_constraint
+        from extropy.population.validator import extract_bound_from_constraint
 
         bound_type, bound_expr, is_strict = extract_bound_from_constraint("x < y", "x")
         assert bound_type == "max"
@@ -1030,7 +1030,7 @@ class TestConstraintValidation:
 
     def test_extract_bound_lower_bound(self):
         """Test extraction of lower bound from constraint."""
-        from entropy.population.validator import extract_bound_from_constraint
+        from extropy.population.validator import extract_bound_from_constraint
 
         bound_type, bound_expr, is_strict = extract_bound_from_constraint(
             "x >= min_value + 5", "x"
@@ -1041,7 +1041,7 @@ class TestConstraintValidation:
 
     def test_extract_bound_reversed_form(self):
         """Test extraction when attr is on the right side."""
-        from entropy.population.validator import extract_bound_from_constraint
+        from extropy.population.validator import extract_bound_from_constraint
 
         bound_type, bound_expr, is_strict = extract_bound_from_constraint(
             "household_size - 1 >= children_count", "children_count"
@@ -1051,7 +1051,7 @@ class TestConstraintValidation:
 
     def test_extract_bound_complex_expression(self):
         """Test extraction with complex bound expression."""
-        from entropy.population.validator import extract_bound_from_constraint
+        from extropy.population.validator import extract_bound_from_constraint
 
         bound_type, bound_expr, is_strict = extract_bound_from_constraint(
             "children_count <= max(0, household_size - 1)", "children_count"
@@ -1061,7 +1061,7 @@ class TestConstraintValidation:
 
     def test_extract_bound_no_match(self):
         """Test extraction returns None for non-bound constraints."""
-        from entropy.population.validator import extract_bound_from_constraint
+        from extropy.population.validator import extract_bound_from_constraint
 
         bound_type, bound_expr, is_strict = extract_bound_from_constraint(
             "a + b == c", "a"
@@ -1075,7 +1075,7 @@ class TestQuickValidation:
 
     def test_quick_validate_catches_spec_level_constraint(self):
         """validate_independent_response should catch spec-level constraints with wrong type."""
-        from entropy.population.validator import (
+        from extropy.population.validator import (
             validate_independent_response,
         )
 
@@ -1105,7 +1105,7 @@ class TestQuickValidation:
 
     def test_quick_validate_conditional_catches_missing_max_formula(self):
         """validate_conditional_base_response should catch missing max_formula."""
-        from entropy.population.validator import (
+        from extropy.population.validator import (
             validate_conditional_base_response,
         )
 
@@ -1141,7 +1141,7 @@ class TestQuickValidation:
 
     def test_quick_validate_conditional_passes_with_max_formula(self):
         """validate_conditional_base_response should pass when max_formula is present."""
-        from entropy.population.validator import (
+        from extropy.population.validator import (
             validate_conditional_base_response,
         )
 
@@ -1176,7 +1176,7 @@ class TestQuickValidation:
 
     def test_quick_validate_error_message_is_prescriptive(self):
         """Error messages should tell LLM exactly what to fix."""
-        from entropy.population.validator import (
+        from extropy.population.validator import (
             validate_conditional_base_response,
         )
 
@@ -1214,7 +1214,7 @@ class TestQuickValidation:
 
     def test_quick_validate_accepts_static_max_for_constraint(self):
         """Static max should satisfy max bound requirement (not just max_formula)."""
-        from entropy.population.validator import (
+        from extropy.population.validator import (
             validate_conditional_base_response,
         )
 

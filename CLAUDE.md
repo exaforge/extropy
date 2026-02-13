@@ -2,11 +2,11 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## What Entropy Is
+## What Extropy Is
 
-Entropy is a predictive intelligence framework that simulates how real human populations respond to scenarios. It creates synthetic populations grounded in real-world statistical data, enriches them with LLM-extrapolated psychographic attributes, connects them via social networks, and runs agent-based simulations where each agent reasons individually via LLM calls. The output is not a poll — it's a simulation of emergent collective behavior.
+Extropy is a predictive intelligence framework that simulates how real human populations respond to scenarios. It creates synthetic populations grounded in real-world statistical data, enriches them with LLM-extrapolated psychographic attributes, connects them via social networks, and runs agent-based simulations where each agent reasons individually via LLM calls. The output is not a poll — it's a simulation of emergent collective behavior.
 
-Competitor reference: [Aaru](https://aaru.com) operates in the same space (multi-agent population simulation for predictive intelligence). Entropy differentiates through its grounding pipeline — every attribute distribution is researched from real-world sources with citations, not just LLM-generated.
+Competitor reference: [Aaru](https://aaru.com) operates in the same space (multi-agent population simulation for predictive intelligence). Extropy differentiates through its grounding pipeline — every attribute distribution is researched from real-world sources with citations, not just LLM-generated.
 
 ## Commands
 
@@ -18,12 +18,12 @@ export ANTHROPIC_API_KEY=sk-ant-...
 export OPENAI_API_KEY=sk-...
 
 # Configure providers and models
-entropy config set pipeline.provider claude        # Use Claude for population/scenario building
-entropy config set simulation.provider openai      # Use OpenAI for agent reasoning
-entropy config set simulation.model gpt-5-mini     # Override simulation model
-entropy config set simulation.routine_model gpt-5-mini  # Cheap model for Pass 2 classification
-entropy config set simulation.rate_tier 2          # Rate limit tier (1-4)
-entropy config show                                # View current config
+extropy config set pipeline.provider claude        # Use Claude for population/scenario building
+extropy config set simulation.provider openai      # Use OpenAI for agent reasoning
+extropy config set simulation.model gpt-5-mini     # Override simulation model
+extropy config set simulation.routine_model gpt-5-mini  # Cheap model for Pass 2 classification
+extropy config set simulation.rate_tier 2          # Rate limit tier (1-4)
+extropy config show                                # View current config
 
 pytest                       # Run all tests
 pytest tests/test_sampler.py # Single test file
@@ -33,24 +33,24 @@ ruff check .                 # Lint
 ruff format .                # Format
 ```
 
-CLI entry point: `entropy` (defined in `pyproject.toml` → `entropy.cli:app`). Python >=3.11.
+CLI entry point: `extropy` (defined in `pyproject.toml` → `extropy.cli:app`). Python >=3.11.
 
 ## Pipeline (7 sequential commands)
 
 ```
-entropy spec → entropy extend → entropy sample → entropy network → entropy persona → entropy scenario → entropy simulate
+extropy spec → extropy extend → extropy sample → extropy network → extropy persona → extropy scenario → extropy simulate
  │
- entropy results
- entropy estimate
+ extropy results
+ extropy estimate
 ```
 
-Each command produces a file consumed by the next. `entropy validate` is a utility runnable at any point. `entropy results` is a viewer for simulation output. `entropy estimate` predicts simulation cost (LLM calls, tokens, USD) without requiring API keys.
+Each command produces a file consumed by the next. `extropy validate` is a utility runnable at any point. `extropy results` is a viewer for simulation output. `extropy estimate` predicts simulation cost (LLM calls, tokens, USD) without requiring API keys.
 
 ## Architecture
 
-Three phases, each mapping to a package under `entropy/`:
+Three phases, each mapping to a package under `extropy/`:
 
-### Phase 1: Population Creation (`entropy/population/`)
+### Phase 1: Population Creation (`extropy/population/`)
 
 **The validity pipeline.** This is where predictive accuracy is won or lost.
 
@@ -70,7 +70,7 @@ Three phases, each mapping to a package under `entropy/`:
 
 6. **Network generation** (`network/`) — Hybrid algorithm: similarity-based edge probability with degree correction, calibrated via binary search to hit target avg_degree, then Watts-Strogatz rewiring (5%) for small-world properties. Edge probability: `base_rate * sigmoid(similarity) * degree_factor_a * degree_factor_b`. All network behavior is data-driven via `NetworkConfig`: attribute weights, edge type rules (evaluated by priority via `_eval_edge_condition()`), influence factors (ordinal/boolean/numeric), and degree multipliers. `NetworkConfig` can be generated from a `PopulationSpec` via LLM (`config_generator.py`), loaded from YAML (`--network-config`), or auto-detected as `{population_stem}.network-config.yaml`. Empty config (no `-p` or `-c`) produces a flat network.
 
-### Phase 2: Scenario Compilation (`entropy/scenario/`)
+### Phase 2: Scenario Compilation (`extropy/scenario/`)
 
 **Compiler** (`compiler.py`) orchestrates 5 steps: parse event → generate exposure rules → determine interaction model → define outcomes → assemble spec.
 
@@ -79,7 +79,7 @@ Three phases, each mapping to a package under `entropy/`:
 - **Outcomes**: categorical (enum options), boolean, float (with range), open_ended
 - Auto-configures simulation parameters based on population size (<500: 50 timesteps, ≤5000: 100, >5000: 168)
 
-### Phase 3: Simulation (`entropy/simulation/`)
+### Phase 3: Simulation (`extropy/simulation/`)
 
 **Engine** (`engine.py`) runs per-timestep loop, decomposed into sub-functions:
 1. **`_apply_exposures(timestep)`** — Apply seed exposures from scenario rules (`propagation.py`), then propagate through network via conviction-gated sharing (very_uncertain agents don't share). Uses pre-built adjacency list for O(1) neighbor lookups.
@@ -101,17 +101,17 @@ Three phases, each mapping to a package under `entropy/`:
 
 **Conviction system**: Agents output a 0-100 integer score on a free scale (with descriptive anchors: 0=no idea, 25=leaning, 50=clear opinion, 75=quite sure, 100=certain). `score_to_conviction_float()` buckets it immediately: 0-15→0.1 (very_uncertain), 16-35→0.3 (leaning), 36-60→0.5 (moderate), 61-85→0.7 (firm), 86-100→0.9 (absolute). Agents never see categorical labels or float values — only the 0-100 scale. On re-reasoning, memory traces show the bucketed label (e.g. "you felt *moderate* about this") via `float_to_conviction()`. Engine conviction thresholds reference `CONVICTION_MAP[ConvictionLevel.*]` constants, not hardcoded floats.
 
-**Cost estimation** (`simulation/estimator.py`): `entropy estimate` runs a simplified SIR-like propagation model to predict LLM calls per timestep without making any API calls. Token counts estimated from persona size + scenario content. Pricing from `core/pricing.py` model database. Supports `--verbose` for per-timestep breakdown.
+**Cost estimation** (`simulation/estimator.py`): `extropy estimate` runs a simplified SIR-like propagation model to predict LLM calls per timestep without making any API calls. Token counts estimated from persona size + scenario content. Pricing from `core/pricing.py` model database. Supports `--verbose` for per-timestep breakdown.
 
 **Rate limiter** (`core/rate_limiter.py`): Token bucket with dual RPM + TPM buckets. Provider-aware defaults from `core/rate_limits.py` (Anthropic/OpenAI, tiers 1-4). Replaces the old hardcoded `Semaphore(50)`. CLI flags: `--rate-tier`, config: `simulation.rate_tier`, `simulation.rpm_override`, `simulation.tpm_override`.
 
-**Persona system** (`population/persona/` + `simulation/persona.py`): The `entropy persona` command generates a `PersonaConfig` via 5-step LLM pipeline (structure → boolean → categorical → relative → concrete phrasings). At simulation time, agents are rendered computationally using this config — no per-agent LLM calls. Relative attributes (personality, attitudes) are positioned against population stats via z-scores ("I'm much more price-sensitive than most people"). Concrete attributes use format specs for proper number/time rendering. **Trait salience**: If `decision_relevant_attributes` is set on `OutcomeConfig`, those attributes are grouped first under "Most Relevant to This Decision" in the persona.
+**Persona system** (`population/persona/` + `simulation/persona.py`): The `extropy persona` command generates a `PersonaConfig` via 5-step LLM pipeline (structure → boolean → categorical → relative → concrete phrasings). At simulation time, agents are rendered computationally using this config — no per-agent LLM calls. Relative attributes (personality, attitudes) are positioned against population stats via z-scores ("I'm much more price-sensitive than most people"). Concrete attributes use format specs for proper number/time rendering. **Trait salience**: If `decision_relevant_attributes` is set on `OutcomeConfig`, those attributes are grouped first under "Most Relevant to This Decision" in the persona.
 
-## LLM Integration (`entropy/core/llm.py`)
+## LLM Integration (`extropy/core/llm.py`)
 
 All LLM calls go through this file — never call providers directly elsewhere. Two-zone routing:
 
-**Pipeline zone** (phases 1-2: spec, extend, persona, scenario) — configured via `entropy config set pipeline.*`:
+**Pipeline zone** (phases 1-2: spec, extend, persona, scenario) — configured via `extropy config set pipeline.*`:
 
 | Function | Default Model | Tools | Use |
 |----------|--------------|-------|-----|
@@ -119,7 +119,7 @@ All LLM calls go through this file — never call providers directly elsewhere. 
 | `reasoning_call()` | provider default (sonnet/gpt-5) | none | Attribute selection, hydration, scenario compilation. Supports validator callback + retry |
 | `agentic_research()` | provider default (sonnet/gpt-5) | web_search | Distribution hydration with real-world data. Extracts source URLs |
 
-**Simulation zone** (phase 3: agent reasoning) — configured via `entropy config set simulation.*`:
+**Simulation zone** (phase 3: agent reasoning) — configured via `extropy config set simulation.*`:
 
 | Function | Default Model | Tools | Use |
 |----------|--------------|-------|-----|
@@ -127,15 +127,15 @@ All LLM calls go through this file — never call providers directly elsewhere. 
 
 Two-pass model routing: Pass 1 uses `simulation.model` (pivotal reasoning). Pass 2 uses `simulation.routine_model` (cheap classification). Both default to provider default if not set. CLI: `--model`, `--pivotal-model`, `--routine-model`. Standard inference only — no thinking/extended models (no o1, o3, extended thinking).
 
-**Provider abstraction** (`entropy/core/providers/`): `LLMProvider` base class with `OpenAIProvider` and `ClaudeProvider` implementations. Factory functions `get_pipeline_provider()` and `get_simulation_provider()` read from `EntropyConfig`. Base class provides `_retry_with_validation()` — shared validation-retry loop used by both providers' `reasoning_call()` and `agentic_research()`. Both providers implement `_with_retry()` / `_with_retry_async()` for transient API errors (APIConnectionError, InternalServerError, RateLimitError) with exponential backoff (`2^attempt + random(0,1)` seconds, max 3 retries).
+**Provider abstraction** (`extropy/core/providers/`): `LLMProvider` base class with `OpenAIProvider` and `ClaudeProvider` implementations. Factory functions `get_pipeline_provider()` and `get_simulation_provider()` read from `ExtropyConfig`. Base class provides `_retry_with_validation()` — shared validation-retry loop used by both providers' `reasoning_call()` and `agentic_research()`. Both providers implement `_with_retry()` / `_with_retry_async()` for transient API errors (APIConnectionError, InternalServerError, RateLimitError) with exponential backoff (`2^attempt + random(0,1)` seconds, max 3 retries).
 
-**Config** (`entropy/config.py`): `EntropyConfig` with `PipelineConfig` and `SimZoneConfig` zones. Resolution order: env vars > config file (`~/.config/entropy/config.json`) > defaults. API keys always from env vars (`OPENAI_API_KEY`, `ANTHROPIC_API_KEY`). For package use: `from entropy.config import configure, EntropyConfig`.
+**Config** (`extropy/config.py`): `ExtropyConfig` with `PipelineConfig` and `SimZoneConfig` zones. Resolution order: env vars > config file (`~/.config/extropy/config.json`) > defaults. API keys always from env vars (`OPENAI_API_KEY`, `ANTHROPIC_API_KEY`). For package use: `from extropy.config import configure, ExtropyConfig`.
 
 **Default zones**: Pipeline = Claude (population/scenario building). Simulation = OpenAI (agent reasoning). `SimZoneConfig` fields: `provider`, `model`, `pivotal_model`, `routine_model`, `max_concurrent`, `rate_tier`, `rpm_override`, `tpm_override`.
 
 All calls use structured output (`response_format: json_schema`). Failed validations are fed back as "PREVIOUS ATTEMPT FAILED" prompts for self-correction.
 
-## Data Models (`entropy/core/models/`)
+## Data Models (`extropy/core/models/`)
 
 All Pydantic v2. Key hierarchy:
 
@@ -147,13 +147,13 @@ All Pydantic v2. Key hierarchy:
 
 YAML serialization via `to_yaml()`/`from_yaml()` on `PopulationSpec` and `ScenarioSpec`.
 
-## Validation (`entropy/population/validator/`)
+## Validation (`extropy/population/validator/`)
 
 Two layers for population specs:
 - **Structural** (`structural.py`): ERROR-level — type/modifier compatibility, range violations, distribution params, dependency cycles, condition syntax, formula references, duplicates, strategy consistency
 - **Semantic** (`semantic.py`): WARNING-level — no-op detection, modifier stacking, categorical option reference validity
 
-Scenario validation (`entropy/scenario/validator.py`): attribute reference validity, edge type references, probability ranges.
+Scenario validation (`extropy/scenario/validator.py`): attribute reference validity, edge type references, probability ranges.
 
 ## Key Conventions
 
@@ -165,10 +165,10 @@ Scenario validation (`entropy/scenario/validator.py`): attribute reference valid
 - Peer influence is semantic: agents see neighbors' `public_statement` + sentiment tone, not position labels
 - Conviction: agents output 0-100 integer, bucketed to 5 float levels (0.1/0.3/0.5/0.7/0.9) via `score_to_conviction_float()`. Agents see only the 0-100 scale; memory traces show categorical labels. Engine thresholds reference `CONVICTION_MAP[ConvictionLevel.*]`
 - Memory traces: 3-entry sliding window per agent, fed back into reasoning prompts for re-reasoning
-- Progress callbacks use typed `Protocol` classes from `entropy/utils/callbacks.py` (`StepProgressCallback`, `TimestepProgressCallback`, `ItemProgressCallback`, `HydrationProgressCallback`, `NetworkProgressCallback`) — structurally compatible with plain callables via duck typing
+- Progress callbacks use typed `Protocol` classes from `extropy/utils/callbacks.py` (`StepProgressCallback`, `TimestepProgressCallback`, `ItemProgressCallback`, `HydrationProgressCallback`, `NetworkProgressCallback`) — structurally compatible with plain callables via duck typing
 - The `persona` command generates detailed persona configs; `extend` still generates a simpler `persona_template` for backwards compatibility
 - Simulation auto-detects `{population_stem}.persona.yaml` and uses the new rendering if present
-- Network config is data-driven via `NetworkConfig` (YAML-serializable). No built-in reference preset is shipped. CLI: `entropy network -p population.yaml` (LLM-generated), `-c config.yaml` (manual), `--save-config` (export)
+- Network config is data-driven via `NetworkConfig` (YAML-serializable). No built-in reference preset is shipped. CLI: `extropy network -p population.yaml` (LLM-generated), `-c config.yaml` (manual), `--save-config` (export)
 
 ## Tests
 

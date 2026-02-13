@@ -6,7 +6,7 @@ Functions under test: conviction_to_float, float_to_conviction, CONVICTION_MAP.
 
 import pytest
 
-from entropy.core.models import (
+from extropy.core.models import (
     ConvictionLevel,
     CONVICTION_MAP,
     CONVICTION_REVERSE_MAP,

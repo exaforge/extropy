@@ -2,7 +2,7 @@
 
 import pytest
 
-from entropy.simulation.progress import SimulationProgress
+from extropy.simulation.progress import SimulationProgress
 
 
 class TestSimulationProgress:
@@ -132,7 +132,7 @@ class TestBuildProgressDisplay:
 
     def test_empty_snapshot_shows_starting(self):
         """Empty snapshot (no timesteps yet) shows 'Starting...' header."""
-        from entropy.cli.commands.simulate import _build_progress_display
+        from extropy.cli.commands.simulate import _build_progress_display
 
         snap = SimulationProgress().snapshot()
         display = _build_progress_display(snap, elapsed=0.0)
@@ -140,7 +140,7 @@ class TestBuildProgressDisplay:
 
     def test_active_snapshot_shows_timestep_and_agents(self):
         """Active snapshot shows timestep, agent count, and exposure."""
-        from entropy.cli.commands.simulate import _build_progress_display
+        from extropy.cli.commands.simulate import _build_progress_display
 
         p = SimulationProgress()
         p.begin_timestep(
@@ -157,7 +157,7 @@ class TestBuildProgressDisplay:
 
     def test_no_agents_total_shows_timestep_only(self):
         """When agents_total=0 but max_ts>0, shows timestep without agent progress."""
-        from entropy.cli.commands.simulate import _build_progress_display
+        from extropy.cli.commands.simulate import _build_progress_display
 
         snap = {
             "timestep": 0,
@@ -176,7 +176,7 @@ class TestBuildProgressDisplay:
 
     def test_long_position_names_truncated(self):
         """Position names longer than 40 chars are truncated in display."""
-        from entropy.cli.commands.simulate import _build_progress_display
+        from extropy.cli.commands.simulate import _build_progress_display
 
         long_name = "a" * 60
         snap = {
@@ -198,7 +198,7 @@ class TestBuildProgressDisplay:
 
     def test_distribution_bars_sorted_by_count(self):
         """Positions are sorted by count descending in display."""
-        from entropy.cli.commands.simulate import _build_progress_display
+        from extropy.cli.commands.simulate import _build_progress_display
 
         snap = {
             "timestep": 0,

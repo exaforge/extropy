@@ -8,9 +8,9 @@ from unittest.mock import patch, MagicMock, AsyncMock
 
 import pytest
 
-from entropy.core.providers.base import LLMProvider, TokenUsage
-from entropy.core.providers.openai import OpenAIProvider
-from entropy.core.providers.claude import ClaudeProvider
+from extropy.core.providers.base import LLMProvider, TokenUsage
+from extropy.core.providers.openai import OpenAIProvider
+from extropy.core.providers.claude import ClaudeProvider
 
 
 # Disable rate limiting for all provider tests (avoid waits with mocked clients)
@@ -812,7 +812,7 @@ class TestProviderFactoryAzure:
         },
     )
     def test_create_azure_openai_provider(self):
-        from entropy.core.providers import _create_provider
+        from extropy.core.providers import _create_provider
 
         provider = _create_provider("azure_openai")
         assert isinstance(provider, OpenAIProvider)
@@ -828,7 +828,7 @@ class TestProviderFactoryAzure:
         },
     )
     def test_azure_openai_missing_endpoint_raises(self):
-        from entropy.core.providers import _create_provider
+        from extropy.core.providers import _create_provider
 
         with pytest.raises(ValueError, match="AZURE_OPENAI_ENDPOINT"):
             _create_provider("azure_openai")

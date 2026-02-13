@@ -2,13 +2,13 @@
 
 Tests condition parsing, comparison evaluation, convergence detection,
 and the top-level stopping condition evaluator.
-Functions under test in entropy/simulation/stopping.py.
+Functions under test in extropy/simulation/stopping.py.
 """
 
-from entropy.core.models import TimestepSummary
-from entropy.core.models.scenario import SimulationConfig
-from entropy.simulation.state import StateManager
-from entropy.simulation.stopping import (
+from extropy.core.models import TimestepSummary
+from extropy.core.models.scenario import SimulationConfig
+from extropy.simulation.state import StateManager
+from extropy.simulation.stopping import (
     evaluate_convergence,
     evaluate_no_state_changes,
     evaluate_stopping_conditions,
@@ -169,7 +169,7 @@ class TestEvaluateStoppingConditions:
 
     def _make_state_manager(self, tmp_path, agents, aware_ids=None):
         """Create a StateManager with some agents optionally made aware."""
-        from entropy.core.models import ExposureRecord
+        from extropy.core.models import ExposureRecord
 
         sm = StateManager(tmp_path / "test.db", agents=agents)
         for aid in aware_ids or []:

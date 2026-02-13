@@ -1,4 +1,4 @@
-"""Tests for Entropy core models (Pydantic models)."""
+"""Tests for Extropy core models (Pydantic models)."""
 
 import tempfile
 from datetime import datetime
@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from entropy.core.models.population import (
+from extropy.core.models.population import (
     PopulationSpec,
     SpecMeta,
     GroundingSummary,
@@ -514,7 +514,7 @@ class TestConvictionFunctions:
 
     def test_score_to_conviction_float_very_uncertain(self):
         """Test score_to_conviction_float for very_uncertain range (0-15)."""
-        from entropy.core.models.simulation import score_to_conviction_float
+        from extropy.core.models.simulation import score_to_conviction_float
 
         assert score_to_conviction_float(0) == 0.1
         assert score_to_conviction_float(7) == 0.1
@@ -522,7 +522,7 @@ class TestConvictionFunctions:
 
     def test_score_to_conviction_float_leaning(self):
         """Test score_to_conviction_float for leaning range (16-35)."""
-        from entropy.core.models.simulation import score_to_conviction_float
+        from extropy.core.models.simulation import score_to_conviction_float
 
         assert score_to_conviction_float(16) == 0.3
         assert score_to_conviction_float(25) == 0.3
@@ -530,7 +530,7 @@ class TestConvictionFunctions:
 
     def test_score_to_conviction_float_moderate(self):
         """Test score_to_conviction_float for moderate range (36-60)."""
-        from entropy.core.models.simulation import score_to_conviction_float
+        from extropy.core.models.simulation import score_to_conviction_float
 
         assert score_to_conviction_float(36) == 0.5
         assert score_to_conviction_float(50) == 0.5
@@ -538,7 +538,7 @@ class TestConvictionFunctions:
 
     def test_score_to_conviction_float_firm(self):
         """Test score_to_conviction_float for firm range (61-85)."""
-        from entropy.core.models.simulation import score_to_conviction_float
+        from extropy.core.models.simulation import score_to_conviction_float
 
         assert score_to_conviction_float(61) == 0.7
         assert score_to_conviction_float(75) == 0.7
@@ -546,7 +546,7 @@ class TestConvictionFunctions:
 
     def test_score_to_conviction_float_absolute(self):
         """Test score_to_conviction_float for absolute range (86-100)."""
-        from entropy.core.models.simulation import score_to_conviction_float
+        from extropy.core.models.simulation import score_to_conviction_float
 
         assert score_to_conviction_float(86) == 0.9
         assert score_to_conviction_float(95) == 0.9
@@ -554,7 +554,7 @@ class TestConvictionFunctions:
 
     def test_score_to_conviction_float_boundaries(self):
         """Test score_to_conviction_float at bucket boundaries."""
-        from entropy.core.models.simulation import score_to_conviction_float
+        from extropy.core.models.simulation import score_to_conviction_float
 
         # Test all critical boundaries
         assert score_to_conviction_float(15) == 0.1  # very_uncertain upper
@@ -568,13 +568,13 @@ class TestConvictionFunctions:
 
     def test_score_to_conviction_float_none(self):
         """Test score_to_conviction_float with None returns None."""
-        from entropy.core.models.simulation import score_to_conviction_float
+        from extropy.core.models.simulation import score_to_conviction_float
 
         assert score_to_conviction_float(None) is None
 
     def test_score_to_conviction_float_accepts_float(self):
         """Test score_to_conviction_float accepts float inputs."""
-        from entropy.core.models.simulation import score_to_conviction_float
+        from extropy.core.models.simulation import score_to_conviction_float
 
         # Floats should be cast to int
         assert score_to_conviction_float(15.9) == 0.1
@@ -583,7 +583,7 @@ class TestConvictionFunctions:
 
     def test_float_to_conviction_exact_matches(self):
         """Test float_to_conviction for exact conviction map values."""
-        from entropy.core.models.simulation import (
+        from extropy.core.models.simulation import (
             float_to_conviction,
             ConvictionLevel,
         )
@@ -596,7 +596,7 @@ class TestConvictionFunctions:
 
     def test_float_to_conviction_nearest_rounding(self):
         """Test float_to_conviction rounds to nearest level."""
-        from entropy.core.models.simulation import (
+        from extropy.core.models.simulation import (
             float_to_conviction,
             ConvictionLevel,
         )
@@ -639,7 +639,7 @@ class TestConvictionFunctions:
 
     def test_float_to_conviction_extreme_values(self):
         """Test float_to_conviction with values outside normal range."""
-        from entropy.core.models.simulation import (
+        from extropy.core.models.simulation import (
             float_to_conviction,
             ConvictionLevel,
         )
@@ -654,13 +654,13 @@ class TestConvictionFunctions:
 
     def test_float_to_conviction_none(self):
         """Test float_to_conviction with None returns None."""
-        from entropy.core.models.simulation import float_to_conviction
+        from extropy.core.models.simulation import float_to_conviction
 
         assert float_to_conviction(None) is None
 
     def test_conviction_round_trip_via_score(self):
         """Test round-trip conversion score -> float -> label."""
-        from entropy.core.models.simulation import (
+        from extropy.core.models.simulation import (
             score_to_conviction_float,
             float_to_conviction,
             ConvictionLevel,

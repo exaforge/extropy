@@ -8,11 +8,11 @@ from unittest.mock import patch
 
 import pytest
 
-from entropy.core.models.scenario import (
+from extropy.core.models.scenario import (
     EventType,
     TimestepUnit,
 )
-from entropy.scenario.compiler import (
+from extropy.scenario.compiler import (
     _generate_scenario_name,
     _determine_simulation_config,
     create_scenario,
@@ -111,10 +111,10 @@ class TestCreateScenario:
 
         return pop_path, agents_path, network_path
 
-    @patch("entropy.scenario.compiler.parse_scenario")
-    @patch("entropy.scenario.compiler.generate_seed_exposure")
-    @patch("entropy.scenario.compiler.determine_interaction_model")
-    @patch("entropy.scenario.compiler.define_outcomes")
+    @patch("extropy.scenario.compiler.parse_scenario")
+    @patch("extropy.scenario.compiler.generate_seed_exposure")
+    @patch("extropy.scenario.compiler.determine_interaction_model")
+    @patch("extropy.scenario.compiler.define_outcomes")
     def test_creates_valid_scenario(
         self,
         mock_outcomes,
@@ -124,7 +124,7 @@ class TestCreateScenario:
         mock_files,
     ):
         """Test that create_scenario produces a valid ScenarioSpec."""
-        from entropy.core.models.scenario import (
+        from extropy.core.models.scenario import (
             Event,
             SeedExposure,
             ExposureChannel,
@@ -197,10 +197,10 @@ class TestCreateScenario:
         assert len(spec.seed_exposure.rules) == 1
         assert spec.simulation.max_timesteps == 50  # small population
 
-    @patch("entropy.scenario.compiler.parse_scenario")
-    @patch("entropy.scenario.compiler.generate_seed_exposure")
-    @patch("entropy.scenario.compiler.determine_interaction_model")
-    @patch("entropy.scenario.compiler.define_outcomes")
+    @patch("extropy.scenario.compiler.parse_scenario")
+    @patch("extropy.scenario.compiler.generate_seed_exposure")
+    @patch("extropy.scenario.compiler.determine_interaction_model")
+    @patch("extropy.scenario.compiler.define_outcomes")
     def test_progress_callback_called(
         self,
         mock_outcomes,
@@ -210,7 +210,7 @@ class TestCreateScenario:
         mock_files,
     ):
         """Test that progress callback is invoked for each step."""
-        from entropy.core.models.scenario import (
+        from extropy.core.models.scenario import (
             Event,
             SeedExposure,
             ExposureChannel,

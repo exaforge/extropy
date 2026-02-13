@@ -5,21 +5,21 @@ from pathlib import Path
 
 import pytest
 
-from entropy.population.network.config import (
+from extropy.population.network.config import (
     NetworkConfig,
     AttributeWeightConfig,
     DegreeMultiplierConfig,
     EdgeTypeRule,
     InfluenceFactorConfig,
 )
-from entropy.population.network.similarity import (
+from extropy.population.network.similarity import (
     compute_match_score,
     compute_similarity,
     compute_degree_factor,
     compute_edge_probability,
     sigmoid,
 )
-from entropy.population.network.generator import (
+from extropy.population.network.generator import (
     generate_network,
     generate_network_with_metrics,
     load_agents_json,
@@ -781,7 +781,7 @@ class TestEdgeTypeInference:
 
     def test_colleague_with_reference_config(self):
         """Test colleague edge type with reference config rules."""
-        from entropy.population.network.generator import _infer_edge_type
+        from extropy.population.network.generator import _infer_edge_type
 
         agent_a = {
             "employer_type": "university_hospital",
@@ -801,7 +801,7 @@ class TestEdgeTypeInference:
 
     def test_mentor_mentee_with_reference_config(self):
         """Test mentor_mentee edge type with reference config rules."""
-        from entropy.population.network.generator import _infer_edge_type
+        from extropy.population.network.generator import _infer_edge_type
 
         agent_a = {
             "employer_type": "university_hospital",
@@ -821,7 +821,7 @@ class TestEdgeTypeInference:
 
     def test_specialty_peer_with_reference_config(self):
         """Test specialty_peer edge type with reference config rules."""
-        from entropy.population.network.generator import _infer_edge_type
+        from extropy.population.network.generator import _infer_edge_type
 
         agent_a = {
             "employer_type": "university_hospital",
@@ -839,7 +839,7 @@ class TestEdgeTypeInference:
 
     def test_regional_with_reference_config(self):
         """Test regional edge type with reference config rules."""
-        from entropy.population.network.generator import _infer_edge_type
+        from extropy.population.network.generator import _infer_edge_type
 
         agent_a = {
             "employer_type": "university_hospital",
@@ -857,7 +857,7 @@ class TestEdgeTypeInference:
 
     def test_default_edge_type_rewired(self):
         """Test rewired edges get the config's default_edge_type."""
-        from entropy.population.network.generator import _infer_edge_type
+        from extropy.population.network.generator import _infer_edge_type
 
         agent_a = {"employer_type": "A"}
         agent_b = {"employer_type": "B"}
@@ -869,7 +869,7 @@ class TestEdgeTypeInference:
 
     def test_default_edge_type_no_rules(self):
         """Test that empty config returns 'peer' as default."""
-        from entropy.population.network.generator import _infer_edge_type
+        from extropy.population.network.generator import _infer_edge_type
 
         agent_a = {"employer_type": "A"}
         agent_b = {"employer_type": "B"}
@@ -879,7 +879,7 @@ class TestEdgeTypeInference:
 
     def test_no_match_falls_through_to_default(self):
         """Test that when no rules match, default_edge_type is returned."""
-        from entropy.population.network.generator import _infer_edge_type
+        from extropy.population.network.generator import _infer_edge_type
 
         agent_a = {
             "employer_type": "A",

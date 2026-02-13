@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 
-from entropy.core.models.simulation import (
+from extropy.core.models.simulation import (
     SimulationEventType,
     ExposureRecord,
     AgentState,
@@ -16,8 +16,8 @@ from entropy.core.models.simulation import (
     SimulationRunConfig,
     TimestepSummary,
 )
-from entropy.simulation.state import StateManager
-from entropy.simulation.persona import (
+from extropy.simulation.state import StateManager
+from extropy.simulation.persona import (
     generate_persona,
     render_persona,
 )
@@ -144,7 +144,7 @@ class TestSimulationModels:
             scenario_path="scenario.yaml",
             output_dir="results/",
         )
-        assert config.model == ""  # Empty = resolved from entropy config at runtime
+        assert config.model == ""  # Empty = resolved from extropy config at runtime
         assert config.reasoning_effort == "low"
         assert config.multi_touch_threshold == 3
 

@@ -1,6 +1,6 @@
 """Tests for dependency binding and inference."""
 
-from entropy.core.models.population import (
+from extropy.core.models.population import (
     AttributeSpec,
     BooleanDistribution,
     GroundingInfo,
@@ -9,7 +9,7 @@ from entropy.core.models.population import (
     NormalDistribution,
     SamplingConfig,
 )
-from entropy.population.spec_builder.binder import bind_constraints
+from extropy.population.spec_builder.binder import bind_constraints
 
 
 def _grounding() -> GroundingInfo:

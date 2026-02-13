@@ -3,7 +3,7 @@
 import json
 from pathlib import Path
 
-from entropy.core.models.scenario import (
+from extropy.core.models.scenario import (
     Event,
     EventType,
     ExposureChannel,
@@ -20,7 +20,7 @@ from entropy.core.models.scenario import (
     SpreadModifier,
     SpreadConfig,
 )
-from entropy.scenario.validator import load_and_validate_scenario, validate_scenario
+from extropy.scenario.validator import load_and_validate_scenario, validate_scenario
 
 
 def _make_scenario_spec(

@@ -2,20 +2,20 @@
 
 Tests prompt building, schema generation, sentiment-to-tone mapping,
 and primary position outcome extraction. No LLM calls.
-Functions under test in entropy/simulation/reasoning.py.
+Functions under test in extropy/simulation/reasoning.py.
 """
 
 from datetime import datetime
 
 import pytest
 
-from entropy.core.models import (
+from extropy.core.models import (
     ExposureRecord,
     MemoryEntry,
     PeerOpinion,
     ReasoningContext,
 )
-from entropy.core.models.scenario import (
+from extropy.core.models.scenario import (
     Event,
     EventType,
     ExposureChannel,
@@ -31,7 +31,7 @@ from entropy.core.models.scenario import (
     SimulationConfig,
     SpreadConfig,
 )
-from entropy.simulation.reasoning import (
+from extropy.simulation.reasoning import (
     _get_primary_position_outcome,
     _sentiment_to_tone,
     build_pass1_prompt,

@@ -1,7 +1,7 @@
 """Tests for persona config categorical phrasing generation."""
 
-from entropy.core.models import PopulationSpec
-from entropy.population.persona import generator
+from extropy.core.models import PopulationSpec
+from extropy.population.persona import generator
 
 
 def _minimal_categorical_spec() -> PopulationSpec:

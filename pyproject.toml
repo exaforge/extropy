@@ -3,7 +3,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "entropy-predict"
+name = "extropy"
 dynamic = ["version"]
 description = "Predictive intelligence through agent-based population simulation"
 readme = "README.md"
@@ -45,18 +45,18 @@ dev = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/exaforge/entropy"
-Repository = "https://github.com/exaforge/entropy"
-Issues = "https://github.com/exaforge/entropy/issues"
+Homepage = "https://github.com/exaforge/extropy"
+Repository = "https://github.com/exaforge/extropy"
+Issues = "https://github.com/exaforge/extropy/issues"
 
 [project.scripts]
-entropy = "entropy.cli:app"
+extropy = "extropy.cli:app"
 
 [tool.hatch.version]
-path = "entropy/__init__.py"
+path = "extropy/__init__.py"
 
 [tool.hatch.build.targets.wheel]
-packages = ["entropy"]
+packages = ["extropy"]
 
 [dependency-groups]
 dev = [

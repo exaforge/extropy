@@ -1,6 +1,6 @@
 """Tests for the population validator module."""
 
-from entropy.core.models.population import (
+from extropy.core.models.population import (
     PopulationSpec,
     SpecMeta,
     GroundingSummary,
@@ -13,13 +13,13 @@ from entropy.core.models.population import (
     BetaDistribution,
     Modifier,
 )
-from entropy.population.validator import (
+from extropy.population.validator import (
     validate_spec,
     ValidationResult,
     ValidationIssue,
     Severity,
 )
-from entropy.utils.expressions import (
+from extropy.utils.expressions import (
     extract_names_from_expression,
     validate_expression_syntax,
 )

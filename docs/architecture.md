@@ -1,10 +1,10 @@
 # Architecture
 
-Entropy has three phases, each mapping to a package under `entropy/`.
+Extropy has three phases, each mapping to a package under `extropy/`.
 
 ---
 
-## Phase 1: Population Creation (`entropy/population/`)
+## Phase 1: Population Creation (`extropy/population/`)
 
 The validity pipeline. This is where predictive accuracy is won or lost.
 
@@ -49,7 +49,7 @@ All network behavior is data-driven via `NetworkConfig`: attribute weights for s
 
 ---
 
-## Phase 2: Scenario Compilation (`entropy/scenario/`)
+## Phase 2: Scenario Compilation (`extropy/scenario/`)
 
 **Compiler** (`compiler.py`) orchestrates 5 steps: parse event -> generate exposure rules -> determine interaction model -> define outcomes -> assemble spec.
 
@@ -60,7 +60,7 @@ All network behavior is data-driven via `NetworkConfig`: attribute weights for s
 
 ---
 
-## Phase 3: Simulation (`entropy/simulation/`)
+## Phase 3: Simulation (`extropy/simulation/`)
 
 ### Engine (`engine.py`)
 
@@ -106,7 +106,7 @@ Each agent maintains a 3-entry sliding window memory trace. Entries include the 
 
 ### Persona System
 
-`population/persona/` + `simulation/persona.py`: The `entropy persona` command generates a `PersonaConfig` via 5-step LLM pipeline (structure -> boolean -> categorical -> relative -> concrete phrasings). At simulation time, agents are rendered computationally using this config — no per-agent LLM calls.
+`population/persona/` + `simulation/persona.py`: The `extropy persona` command generates a `PersonaConfig` via 5-step LLM pipeline (structure -> boolean -> categorical -> relative -> concrete phrasings). At simulation time, agents are rendered computationally using this config — no per-agent LLM calls.
 
 Relative attributes (personality, attitudes) are positioned against population stats via z-scores ("I'm much more price-sensitive than most people"). Concrete attributes use format specs for proper number/time rendering.
 
@@ -126,17 +126,17 @@ Token bucket rate limiter with dual RPM + TPM buckets. Provider-aware defaults a
 
 ### Cost Estimation (`simulation/estimator.py`)
 
-`entropy estimate` runs a simplified SIR-like propagation model to predict LLM calls per timestep without making any API calls. Token counts estimated from persona size + scenario content. Pricing from `core/pricing.py` model database. Supports `--verbose` for per-timestep breakdown.
+`extropy estimate` runs a simplified SIR-like propagation model to predict LLM calls per timestep without making any API calls. Token counts estimated from persona size + scenario content. Pricing from `core/pricing.py` model database. Supports `--verbose` for per-timestep breakdown.
 
 ---
 
-## LLM Integration (`entropy/core/llm.py`)
+## LLM Integration (`extropy/core/llm.py`)
 
 All LLM calls go through this file — never call providers directly elsewhere. Two-zone routing:
 
 ### Pipeline Zone (phases 1-2)
 
-Configured via `entropy config set pipeline.*`:
+Configured via `extropy config set pipeline.*`:
 
 | Function | Default Model | Tools | Use |
 |----------|--------------|-------|-----|
@@ -146,7 +146,7 @@ Configured via `entropy config set pipeline.*`:
 
 ### Simulation Zone (phase 3)
 
-Configured via `entropy config set simulation.*`:
+Configured via `extropy config set simulation.*`:
 
 | Function | Default Model | Use |
 |----------|--------------|-----|
@@ -155,9 +155,9 @@ Configured via `entropy config set simulation.*`:
 
 Two-pass model routing: Pass 1 uses `simulation.model` or `simulation.pivotal_model`. Pass 2 uses `simulation.routine_model`. CLI: `--model`, `--pivotal-model`, `--routine-model`.
 
-### Provider Abstraction (`entropy/core/providers/`)
+### Provider Abstraction (`extropy/core/providers/`)
 
-`LLMProvider` base class with `OpenAIProvider`, `ClaudeProvider`, and Azure OpenAI support (via `api_format` config). Factory functions `get_pipeline_provider()` and `get_simulation_provider()` read from `EntropyConfig`.
+`LLMProvider` base class with `OpenAIProvider`, `ClaudeProvider`, and Azure OpenAI support (via `api_format` config). Factory functions `get_pipeline_provider()` and `get_simulation_provider()` read from `ExtropyConfig`.
 
 Base class provides `_retry_with_validation()` — shared validation-retry loop used by both providers' `reasoning_call()` and `agentic_research()`. Both providers implement `_with_retry()` / `_with_retry_async()` for transient API errors with exponential backoff (`2^attempt + random(0,1)` seconds, max 3 retries).
 
@@ -165,7 +165,7 @@ All calls use structured output (`response_format: json_schema`). Failed validat
 
 ---
 
-## Data Models (`entropy/core/models/`)
+## Data Models (`extropy/core/models/`)
 
 All Pydantic v2. Key hierarchy:
 
@@ -181,31 +181,31 @@ YAML serialization via `to_yaml()`/`from_yaml()` on `PopulationSpec`, `ScenarioS
 
 ---
 
-## Validation (`entropy/population/validator/`)
+## Validation (`extropy/population/validator/`)
 
 Two layers for population specs:
 - **Structural** (`structural.py`): ERROR-level — type/modifier compatibility, range violations, distribution params, dependency cycles, condition syntax, formula references, duplicates, strategy consistency
 - **Semantic** (`semantic.py`): WARNING-level — no-op detection, modifier stacking, categorical option reference validity
 
-Scenario validation (`entropy/scenario/validator.py`): attribute reference validity, edge type references, probability ranges.
+Scenario validation (`extropy/scenario/validator.py`): attribute reference validity, edge type references, probability ranges.
 
 ---
 
-## Config (`entropy/config.py`)
+## Config (`extropy/config.py`)
 
-`EntropyConfig` with `PipelineConfig` and `SimZoneConfig` zones. Resolution order: programmatic > env vars > config file (`~/.config/entropy/config.json`) > defaults. CLI flags override at command level before reaching config.
+`ExtropyConfig` with `PipelineConfig` and `SimZoneConfig` zones. Resolution order: programmatic > env vars > config file (`~/.config/extropy/config.json`) > defaults. CLI flags override at command level before reaching config.
 
 **`PipelineConfig`** fields: `provider` (default: `"openai"`), `model_simple`, `model_reasoning`, `model_research` (all default: `""` = provider default).
 
 **`SimZoneConfig`** fields: `provider` (default: `"openai"`), `model`, `pivotal_model`, `routine_model` (all default: `""` = provider default), `max_concurrent` (default: `50`), `rate_tier` (default: `None` = Tier 1), `rpm_override`, `tpm_override` (default: `None`), `api_format` (default: `""` = auto, supports `"responses"` for OpenAI or `"chat_completions"` for Azure).
 
-**`EntropyConfig`** non-zone fields: `db_path` (default: `"./storage/entropy.db"`), `default_population_size` (default: `1000`).
+**`ExtropyConfig`** non-zone fields: `db_path` (default: `"./storage/extropy.db"`), `default_population_size` (default: `1000`).
 
 API keys always from env vars: `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `AZURE_OPENAI_API_KEY`. Azure also requires `AZURE_OPENAI_ENDPOINT`, `AZURE_OPENAI_API_VERSION` (default: `"2025-03-01-preview"`), `AZURE_OPENAI_DEPLOYMENT`.
 
 Three providers supported: `openai`, `claude`, `azure_openai`.
 
-For package use: `from entropy.config import configure, EntropyConfig`.
+For package use: `from extropy.config import configure, ExtropyConfig`.
 
 ---
 

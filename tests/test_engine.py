@@ -11,7 +11,7 @@ import pytest
 
 from unittest.mock import patch
 
-from entropy.core.models import (
+from extropy.core.models import (
     AgentState,
     ConvictionLevel,
     CONVICTION_MAP,
@@ -19,8 +19,8 @@ from entropy.core.models import (
     ReasoningResponse,
     SimulationRunConfig,
 )
-from entropy.simulation.progress import SimulationProgress
-from entropy.core.models.scenario import (
+from extropy.simulation.progress import SimulationProgress
+from extropy.core.models.scenario import (
     Event,
     EventType,
     ExposureChannel,
@@ -37,8 +37,8 @@ from entropy.core.models.scenario import (
     SpreadConfig,
     TimestepUnit,
 )
-from entropy.simulation.engine import SimulationEngine
-from entropy.simulation.reasoning import BatchTokenUsage
+from extropy.simulation.engine import SimulationEngine
+from extropy.simulation.reasoning import BatchTokenUsage
 
 
 @pytest.fixture
@@ -672,7 +672,7 @@ class TestOneShotSharing:
         )
         engine.state_manager.record_exposure("a0", exposure)
 
-        from entropy.simulation.propagation import propagate_through_network
+        from extropy.simulation.propagation import propagate_through_network
         import random
 
         # Use rng with seed for deterministic share_probability pass
@@ -767,7 +767,7 @@ class TestSimulationMetadata:
         tmp_path,
     ):
         """Returns correct max timestep from summaries."""
-        from entropy.core.models import TimestepSummary
+        from extropy.core.models import TimestepSummary
 
         config = SimulationRunConfig(
             scenario_path="test.yaml",
@@ -867,7 +867,7 @@ class TestResumeLogic:
         tmp_path,
     ):
         """Engine should start from the next timestep after last completed."""
-        from entropy.core.models import TimestepSummary
+        from extropy.core.models import TimestepSummary
 
         config = SimulationRunConfig(
             scenario_path="test.yaml",
@@ -897,7 +897,7 @@ class TestResumeLogic:
         tmp_path,
     ):
         """If checkpoint_timestep is set, resume that timestep."""
-        from entropy.core.models import TimestepSummary
+        from extropy.core.models import TimestepSummary
 
         config = SimulationRunConfig(
             scenario_path="test.yaml",
@@ -996,8 +996,8 @@ class TestTimelineAppend:
 
     def test_timeline_preserves_events_on_reopen(self, tmp_path):
         """Events written before close should persist when file is reopened."""
-        from entropy.simulation.timeline import TimelineManager, TimelineReader
-        from entropy.core.models import SimulationEvent, SimulationEventType
+        from extropy.simulation.timeline import TimelineManager, TimelineReader
+        from extropy.core.models import SimulationEvent, SimulationEventType
 
         timeline_path = tmp_path / "timeline.jsonl"
 
@@ -1160,7 +1160,7 @@ class TestProgressState:
             engine.state_manager.record_exposure(aid, exposure)
 
         with patch(
-            "entropy.simulation.engine.batch_reason_agents", side_effect=fake_batch
+            "extropy.simulation.engine.batch_reason_agents", side_effect=fake_batch
         ):
             engine._reason_agents(0)
 
@@ -1207,7 +1207,7 @@ class TestProgressState:
             return [(ctx.agent_id, resp) for ctx in contexts], BatchTokenUsage()
 
         with patch(
-            "entropy.simulation.engine.batch_reason_agents", side_effect=fake_batch
+            "extropy.simulation.engine.batch_reason_agents", side_effect=fake_batch
         ):
             engine._reason_agents(0)
 
@@ -1409,7 +1409,7 @@ class TestTokenAccumulation:
             return results, usage
 
         with patch(
-            "entropy.simulation.engine.batch_reason_agents", side_effect=fake_batch
+            "extropy.simulation.engine.batch_reason_agents", side_effect=fake_batch
         ):
             engine._reason_agents(0)
 

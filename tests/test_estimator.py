@@ -4,18 +4,18 @@ from datetime import datetime
 
 import pytest
 
-from entropy.core.pricing import (
+from extropy.core.pricing import (
     ModelPricing,
     get_pricing,
     resolve_default_model,
 )
-from entropy.simulation.estimator import (
+from extropy.simulation.estimator import (
     estimate_simulation_cost,
     _compute_avg_degree,
     _evaluate_rule_reach,
     _estimate_token_counts,
 )
-from entropy.core.models.population import (
+from extropy.core.models.population import (
     PopulationSpec,
     SpecMeta,
     GroundingSummary,
@@ -25,7 +25,7 @@ from entropy.core.models.population import (
     NormalDistribution,
     CategoricalDistribution,
 )
-from entropy.core.models.scenario import (
+from extropy.core.models.scenario import (
     ScenarioSpec,
     ScenarioMeta,
     Event,

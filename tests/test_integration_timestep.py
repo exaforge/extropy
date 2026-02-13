@@ -2,7 +2,7 @@
 
 Tests the full timestep cycle (exposure → reasoning → state update)
 and multi-timestep dynamics with mocked LLM calls. No real API calls.
-Functions under test in entropy/simulation/engine.py.
+Functions under test in extropy/simulation/engine.py.
 """
 
 from datetime import datetime
@@ -10,7 +10,7 @@ from unittest.mock import patch
 
 import pytest
 
-from entropy.core.models import (
+from extropy.core.models import (
     AgentState,
     ConvictionLevel,
     CONVICTION_MAP,
@@ -18,8 +18,8 @@ from entropy.core.models import (
     ReasoningResponse,
     SimulationRunConfig,
 )
-from entropy.simulation.reasoning import BatchTokenUsage
-from entropy.core.models.scenario import (
+from extropy.simulation.reasoning import BatchTokenUsage
+from extropy.core.models.scenario import (
     Event,
     EventType,
     ExposureChannel,
@@ -36,7 +36,7 @@ from entropy.core.models.scenario import (
     SpreadConfig,
     TimestepUnit,
 )
-from entropy.simulation.engine import SimulationEngine
+from extropy.simulation.engine import SimulationEngine
 
 
 def _make_reasoning_response(**kwargs) -> ReasoningResponse:
@@ -144,7 +144,7 @@ def _make_engine(scenario, agents, network, tmp_path):
 
 def _minimal_pop_spec():
     """Inline minimal population spec to avoid fixture dependency."""
-    from entropy.core.models.population import (
+    from extropy.core.models.population import (
         AttributeSpec,
         GroundingInfo,
         GroundingSummary,
@@ -269,7 +269,7 @@ class TestEngineInit:
 class TestSingleTimestep:
     """Test a single timestep execution with mocked LLM."""
 
-    @patch("entropy.simulation.engine.batch_reason_agents")
+    @patch("extropy.simulation.engine.batch_reason_agents")
     def test_seed_exposure_then_reasoning(
         self, mock_batch, ten_agents, linear_network, tmp_path
     ):
@@ -302,7 +302,7 @@ class TestSingleTimestep:
             assert state.position == "adopt"
             assert state.sentiment == 0.5
 
-    @patch("entropy.simulation.engine.batch_reason_agents")
+    @patch("extropy.simulation.engine.batch_reason_agents")
     def test_no_reasoning_without_exposure(
         self, mock_batch, ten_agents, linear_network, tmp_path
     ):
@@ -333,7 +333,7 @@ class TestSingleTimestep:
         # No agents to reason → batch_reason_agents is never called
         mock_batch.assert_not_called()
 
-    @patch("entropy.simulation.engine.batch_reason_agents")
+    @patch("extropy.simulation.engine.batch_reason_agents")
     def test_memory_entry_saved(self, mock_batch, ten_agents, linear_network, tmp_path):
         """Reasoning produces a memory entry for each agent."""
         mock_batch.side_effect = _mock_batch_reason()
@@ -357,7 +357,7 @@ class TestSingleTimestep:
         assert len(traces) == 1
         assert traces[0].summary == "Positive initial reaction."
 
-    @patch("entropy.simulation.engine.batch_reason_agents")
+    @patch("extropy.simulation.engine.batch_reason_agents")
     def test_flip_resistance_applied(
         self, mock_batch, ten_agents, linear_network, tmp_path
     ):
@@ -427,7 +427,7 @@ class TestSingleTimestep:
         # But sharing also gated because conviction is very_uncertain
         assert state.will_share is False
 
-    @patch("entropy.simulation.engine.batch_reason_agents")
+    @patch("extropy.simulation.engine.batch_reason_agents")
     def test_conviction_gated_sharing(
         self, mock_batch, ten_agents, linear_network, tmp_path
     ):
@@ -467,7 +467,7 @@ class TestSingleTimestep:
 class TestMultiTimestepDynamics:
     """Test multi-timestep simulation behavior."""
 
-    @patch("entropy.simulation.engine.batch_reason_agents")
+    @patch("extropy.simulation.engine.batch_reason_agents")
     def test_information_cascade_through_chain(
         self, mock_batch, ten_agents, linear_network, tmp_path
     ):
@@ -525,7 +525,7 @@ class TestMultiTimestepDynamics:
         rate = engine.state_manager.get_exposure_rate()
         assert rate > 0.1  # At minimum a0 and a1 are aware
 
-    @patch("entropy.simulation.engine.batch_reason_agents")
+    @patch("extropy.simulation.engine.batch_reason_agents")
     def test_stopping_condition_triggers(
         self, mock_batch, ten_agents, star_network, tmp_path
     ):
@@ -561,7 +561,7 @@ class TestMultiTimestepDynamics:
         assert result.total_timesteps < 50
         assert result.stopped_reason is not None
 
-    @patch("entropy.simulation.engine.batch_reason_agents")
+    @patch("extropy.simulation.engine.batch_reason_agents")
     def test_isolated_agent_never_exposed(self, mock_batch, tmp_path):
         """Agent with no network edges never gets network exposure."""
         mock_batch.side_effect = _mock_batch_reason(
@@ -612,7 +612,7 @@ class TestMultiTimestepDynamics:
         iso_state = engine.state_manager.get_agent_state("isolated")
         assert iso_state.aware is False
 
-    @patch("entropy.simulation.engine.batch_reason_agents")
+    @patch("extropy.simulation.engine.batch_reason_agents")
     def test_exposure_rate_never_decreases(
         self, mock_batch, ten_agents, star_network, tmp_path
     ):

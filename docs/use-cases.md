@@ -1,12 +1,12 @@
 # Use Cases
 
-What Entropy can simulate — and what it can't.
+What Extropy can simulate — and what it can't.
 
 ---
 
-## What Entropy Is Built For
+## What Extropy Is Built For
 
-Entropy simulates **targeted synthetic populations** — statistically grounded yet semantically enriched groups of heterogeneous agents. It models how real populations respond to events by combining:
+Extropy simulates **targeted synthetic populations** — statistically grounded yet semantically enriched groups of heterogeneous agents. It models how real populations respond to events by combining:
 
 1. **Statistical grounding** — Real-world distributions (census, research) with source citations for every attribute
 2. **Semantic extrapolation** — LLM-inferred psychographic and behavioral attributes derived from grounded demographics
@@ -21,11 +21,11 @@ The output is distributional predictions segmented by any attribute — not a si
 
 ### Market Research & Consumer Behavior
 
-**Synthetic survey replacement.** Traditional surveys take weeks, cost $50k+, and capture stated preferences rather than likely behavior. Entropy simulates the population and measures behavioral intent.
+**Synthetic survey replacement.** Traditional surveys take weeks, cost $50k+, and capture stated preferences rather than likely behavior. Extropy simulates the population and measures behavioral intent.
 
 ```bash
-entropy spec "2,000 US women aged 25-45 who regularly purchase skincare products" -o skincare/base.yaml
-entropy extend skincare/base.yaml \
+extropy spec "2,000 US women aged 25-45 who regularly purchase skincare products" -o skincare/base.yaml
+extropy extend skincare/base.yaml \
   -s "Launch of a $65 retinol serum positioned as clean beauty, sold DTC only" \
   -o skincare/population.yaml
 ```
@@ -43,8 +43,8 @@ The attribute discovery layer finds what actually matters for *this* population 
 **Use case:** Predicting behavioral response to price changes in context — with competing budget pressures, inertia, and social influence.
 
 ```bash
-entropy spec "1,500 US households currently subscribing to 2+ streaming services" -o streaming/base.yaml
-entropy extend streaming/base.yaml \
+extropy spec "1,500 US households currently subscribing to 2+ streaming services" -o streaming/base.yaml
+extropy extend streaming/base.yaml \
   -s "Netflix announces a $5/month price increase across all tiers" \
   -o streaming/population.yaml
 ```
@@ -60,8 +60,8 @@ entropy extend streaming/base.yaml \
 **Use case:** Simulating compliance with mandates in heterogeneous, culturally distinct populations to identify friction points before implementation.
 
 ```bash
-entropy spec "500 Austin TX commuters who drive into downtown for work" -o austin/base.yaml
-entropy extend austin/base.yaml \
+extropy spec "500 Austin TX commuters who drive into downtown for work" -o austin/base.yaml
+extropy extend austin/base.yaml \
   -s "Response to a $15/day downtown congestion tax during peak hours" \
   -o austin/population.yaml
 ```
@@ -77,8 +77,8 @@ entropy extend austin/base.yaml \
 **Use case:** Predicting adoption patterns for complex products where utility isn't the only factor.
 
 ```bash
-entropy spec "2,000 practicing physicians who currently prescribe GLP-1 agonists" -o glp1/base.yaml
-entropy extend glp1/base.yaml \
+extropy spec "2,000 practicing physicians who currently prescribe GLP-1 agonists" -o glp1/base.yaml
+extropy extend glp1/base.yaml \
   -s "FDA approves an oral GLP-1 alternative at 40% lower cost with comparable efficacy" \
   -o glp1/population.yaml
 ```
@@ -94,8 +94,8 @@ entropy extend glp1/base.yaml \
 **Use case:** Testing messaging on granular voter segments to understand resonance before deployment.
 
 ```bash
-entropy spec "5,000 registered voters in Pennsylvania Congressional District 7" -o pa7/base.yaml
-entropy extend pa7/base.yaml \
+extropy spec "5,000 registered voters in Pennsylvania Congressional District 7" -o pa7/base.yaml
+extropy extend pa7/base.yaml \
   -s "Candidate proposes eliminating the carried interest tax loophole" \
   -o pa7/population.yaml
 ```
@@ -111,8 +111,8 @@ entropy extend pa7/base.yaml \
 **Use case:** Pre-testing crisis responses against a synthetic population of actual stakeholders.
 
 ```bash
-entropy spec "3,000 active customers of a mid-tier US airline" -o airline/base.yaml
-entropy extend airline/base.yaml \
+extropy spec "3,000 active customers of a mid-tier US airline" -o airline/base.yaml
+extropy extend airline/base.yaml \
   -s "Viral video of passenger being forcibly removed from overbooked flight" \
   -o airline/population.yaml
 ```
@@ -126,8 +126,8 @@ entropy extend airline/base.yaml \
 **Use case:** Modeling how misinformation spreads and mutates within specific demographic bubbles.
 
 ```bash
-entropy spec "1,000 residents of a coastal town" -o coastal/base.yaml
-entropy extend coastal/base.yaml \
+extropy spec "1,000 residents of a coastal town" -o coastal/base.yaml
+extropy extend coastal/base.yaml \
   -s "Rumor spreads that the water supply is contaminated, contradicting official reports" \
   -o coastal/population.yaml
 ```
@@ -143,8 +143,8 @@ entropy extend coastal/base.yaml \
 **Use case:** Predicting community response to development proposals beyond the vocal minority.
 
 ```bash
-entropy spec "1,000 residents within 2 miles of a proposed development site in East Austin" -o dev/base.yaml
-entropy extend dev/base.yaml \
+extropy spec "1,000 residents within 2 miles of a proposed development site in East Austin" -o dev/base.yaml
+extropy extend dev/base.yaml \
   -s "Proposal for a 400-unit mixed-use development with 15% affordable units" \
   -o dev/population.yaml
 ```
@@ -157,7 +157,7 @@ entropy extend dev/base.yaml \
 
 **Discovered schemas beat templates.** Skincare buyers, Pennsylvania voters, and GLP-1 prescribing physicians require completely different attribute schemas. The attribute discovery layer finds what matters for each population rather than forcing generic demographic templates.
 
-**Network propagation is the differentiator.** Most synthetic survey tools generate independent agents. Entropy's social network layer captures how opinions spread, cluster, and cascade through real social structures — the thing surveys fundamentally cannot measure.
+**Network propagation is the differentiator.** Most synthetic survey tools generate independent agents. Extropy's social network layer captures how opinions spread, cluster, and cascade through real social structures — the thing surveys fundamentally cannot measure.
 
 **Two-pass reasoning eliminates central tendency.** Pass 1 (freeform reasoning) -> Pass 2 (classification) prevents the LLM from collapsing everything to safe middle responses.
 
@@ -165,19 +165,19 @@ entropy extend dev/base.yaml \
 
 ---
 
-## What Entropy Does NOT Do
+## What Extropy Does NOT Do
 
-Entropy simulates **populations** (social graphs), not **organizations** (hierarchies) or **physics** (spatial systems).
+Extropy simulates **populations** (social graphs), not **organizations** (hierarchies) or **physics** (spatial systems).
 
 ### Rigid Organizational Hierarchy
 
-Agents are independent nodes in a social network, not positions in an org chart. Entropy cannot model reporting lines, workflow dependencies, or strict cardinalities ("there can be only one CEO").
+Agents are independent nodes in a social network, not positions in an org chart. Extropy cannot model reporting lines, workflow dependencies, or strict cardinalities ("there can be only one CEO").
 
 **Not supported:** "How will the approval chain break down if the VP quits?"
 
 ### Physical & Spatial Logistics
 
-Geography in Entropy is a semantic label ("Austin"), not a coordinate system. No distance, velocity, collision, or capacity.
+Geography in Extropy is a semantic label ("Austin"), not a coordinate system. No distance, velocity, collision, or capacity.
 
 **Not supported:** "Optimize warehouse foot traffic" or "Evacuation route bottlenecks."
 

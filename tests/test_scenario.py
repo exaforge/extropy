@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 
-from entropy.core.models.scenario import (
+from extropy.core.models.scenario import (
     EventType,
     Event,
     ExposureChannel,
@@ -23,7 +23,7 @@ from entropy.core.models.scenario import (
     ScenarioMeta,
     ScenarioSpec,
 )
-from entropy.core.models.validation import (
+from extropy.core.models.validation import (
     ValidationIssue as ValidationError,
     ValidationIssue as ValidationWarning,
     ValidationResult,

@@ -1,8 +1,8 @@
-# Entropy
+# Extropy
 
-[![CI](https://github.com/exaforge/entropy/actions/workflows/test.yml/badge.svg)](https://github.com/exaforge/entropy/actions/workflows/test.yml)
-[![PyPI version](https://img.shields.io/pypi/v/entropy-predict.svg)](https://pypi.org/project/entropy-predict/)
-[![Python](https://img.shields.io/pypi/pyversions/entropy-predict.svg)](https://pypi.org/project/entropy-predict/)
+[![CI](https://github.com/exaforge/extropy/actions/workflows/test.yml/badge.svg)](https://github.com/exaforge/extropy/actions/workflows/test.yml)
+[![PyPI version](https://img.shields.io/pypi/v/extropy.svg)](https://pypi.org/project/extropy/)
+[![Python](https://img.shields.io/pypi/pyversions/extropy.svg)](https://pypi.org/project/extropy/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 Predictive intelligence through agent-based population simulation. Create synthetic populations grounded in real-world data, simulate how they respond to events, and watch opinions emerge through social networks.
@@ -11,25 +11,25 @@ Not a survey. Not a poll. A simulation of collective human behavior.
 
 ## What It Does
 
-You describe a population and a scenario. Entropy builds statistically grounded synthetic agents, connects them in a social network, and has each one reason individually about the event using an LLM. Opinions form, spread through the network, and evolve — producing distributional predictions you can segment and analyze.
+You describe a population and a scenario. Extropy builds statistically grounded synthetic agents, connects them in a social network, and has each one reason individually about the event using an LLM. Opinions form, spread through the network, and evolve — producing distributional predictions you can segment and analyze.
 
 ```
-entropy spec → entropy extend → entropy sample → entropy network → entropy persona → entropy scenario → entropy simulate
+extropy spec → extropy extend → extropy sample → extropy network → extropy persona → extropy scenario → extropy simulate
                                                                                                   │              │
-                                                                                           entropy estimate    entropy results
+                                                                                           extropy estimate    extropy results
 ```
 
 ## Install
 
 ```bash
-pip install entropy-predict
+pip install extropy
 ```
 
 Or from source:
 
 ```bash
-git clone https://github.com/exaforge/entropy.git
-cd entropy
+git clone https://github.com/exaforge/extropy.git
+cd extropy
 pip install -e ".[dev]"
 ```
 
@@ -46,28 +46,28 @@ export ANTHROPIC_API_KEY=sk-ant-...
 # export AZURE_OPENAI_DEPLOYMENT=your-deployment-name
 
 # Configure providers (openai, claude, or azure_openai)
-entropy config set pipeline.provider claude      # Claude for population/scenario building
-entropy config set simulation.provider openai    # OpenAI for agent reasoning
-entropy config show
+extropy config set pipeline.provider claude      # Claude for population/scenario building
+extropy config set simulation.provider openai    # OpenAI for agent reasoning
+extropy config show
 ```
 
 ## Quick Start
 
 ```bash
 # Build a population
-entropy spec "500 Austin TX commuters who drive into downtown for work" -o austin/base.yaml
-entropy extend austin/base.yaml -s "Response to a $15/day downtown congestion tax" -o austin/population.yaml
-entropy sample austin/population.yaml -o austin/agents.json --seed 42
-entropy network austin/agents.json -o austin/network.json -p austin/population.yaml --seed 42
-entropy persona austin/population.yaml --agents austin/agents.json
+extropy spec "500 Austin TX commuters who drive into downtown for work" -o austin/base.yaml
+extropy extend austin/base.yaml -s "Response to a $15/day downtown congestion tax" -o austin/population.yaml
+extropy sample austin/population.yaml -o austin/agents.json --seed 42
+extropy network austin/agents.json -o austin/network.json -p austin/population.yaml --seed 42
+extropy persona austin/population.yaml --agents austin/agents.json
 
 # Compile and run a scenario
-entropy scenario -p austin/population.yaml -a austin/agents.json -n austin/network.json -o austin/scenario.yaml
-entropy simulate austin/scenario.yaml -o austin/results/ --seed 42
+extropy scenario -p austin/population.yaml -a austin/agents.json -n austin/network.json -o austin/scenario.yaml
+extropy simulate austin/scenario.yaml -o austin/results/ --seed 42
 
 # View results
-entropy results austin/results/
-entropy results austin/results/ --segment income
+extropy results austin/results/
+extropy results austin/results/ --segment income
 ```
 
 ### What Comes Out
@@ -147,7 +147,7 @@ outcomes:
 
 - **[CLI Reference](docs/commands.md)** — Every command with arguments, options, and examples
 - **[Architecture](docs/architecture.md)** — How the system works under the hood
-- **[Use Cases](docs/use-cases.md)** — What Entropy can simulate, with examples
+- **[Use Cases](docs/use-cases.md)** — What Extropy can simulate, with examples
 
 ## Development
 
