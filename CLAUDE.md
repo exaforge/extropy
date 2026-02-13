@@ -1,196 +1,146 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file gives practical guidance to coding agents working in this repository.
 
 ## What Extropy Is
 
-Extropy is a predictive intelligence framework that simulates how real human populations respond to scenarios. It creates synthetic populations grounded in real-world statistical data, enriches them with LLM-extrapolated psychographic attributes, connects them via social networks, and runs agent-based simulations where each agent reasons individually via LLM calls. The output is not a poll — it's a simulation of emergent collective behavior.
+Extropy is a Python framework + CLI for agent-based population simulation.
 
-Competitor reference: [Aaru](https://aaru.com) operates in the same space (multi-agent population simulation for predictive intelligence). Extropy differentiates through its grounding pipeline — every attribute distribution is researched from real-world sources with citations, not just LLM-generated.
+It:
+- builds synthetic populations from statistically grounded attribute distributions,
+- adds scenario-relevant psychographic/context attributes,
+- connects sampled agents in a social network,
+- simulates multi-timestep opinion/behavior updates with two-pass LLM reasoning,
+- outputs segmented distributional results.
 
-## Commands
+## Core CLI Pipeline
 
 ```bash
-pip install -e ".[dev]"      # Install with dev deps
-
-# Set API keys (secrets only — in .env or env vars)
-export ANTHROPIC_API_KEY=sk-ant-...
-export OPENAI_API_KEY=sk-...
-
-# Configure providers and models
-extropy config set pipeline.provider claude        # Use Claude for population/scenario building
-extropy config set simulation.provider openai      # Use OpenAI for agent reasoning
-extropy config set simulation.model gpt-5-mini     # Override simulation model
-extropy config set simulation.routine_model gpt-5-mini  # Cheap model for Pass 2 classification
-extropy config set simulation.rate_tier 2          # Rate limit tier (1-4)
-extropy config show                                # View current config
-
-pytest                       # Run all tests
-pytest tests/test_sampler.py # Single test file
-pytest -k "test_name"        # Single test by name
-
-ruff check .                 # Lint
-ruff format .                # Format
+extropy spec -> extropy extend -> extropy sample -> extropy network -> extropy persona -> extropy scenario -> extropy simulate
+                                                                                                          |              |
+                                                                                                   extropy estimate    extropy results
 ```
 
-CLI entry point: `extropy` (defined in `pyproject.toml` → `extropy.cli:app`). Python >=3.11.
+Utility commands: `extropy validate`, `extropy config`.
 
-## Pipeline (7 sequential commands)
+CLI entry point: `extropy` (from `pyproject.toml`), Python `>=3.11`.
 
+## Local Dev Commands
+
+```bash
+pip install -e ".[dev]"
+
+# tests / lint
+pytest
+ruff check .
+ruff format .
+
+# config
+extropy config show
+extropy config set pipeline.provider claude
+extropy config set simulation.provider openai
 ```
-extropy spec → extropy extend → extropy sample → extropy network → extropy persona → extropy scenario → extropy simulate
- │
- extropy results
- extropy estimate
-```
 
-Each command produces a file consumed by the next. `extropy validate` is a utility runnable at any point. `extropy results` is a viewer for simulation output. `extropy estimate` predicts simulation cost (LLM calls, tokens, USD) without requiring API keys.
+## High-Level Architecture
 
-## Architecture
+Three phases map to top-level packages:
 
-Three phases, each mapping to a package under `extropy/`:
+1. Population creation (`extropy/population/`)
+- Sufficiency check (`spec_builder/sufficiency.py`)
+- Attribute selection (`spec_builder/selector.py`)
+- Hydration (`spec_builder/hydrator.py`, `hydrators/`)
+- Dependency binding (`spec_builder/binder.py`)
+- Sampling (`sampler/core.py`)
+- Network generation (`network/`)
 
-### Phase 1: Population Creation (`extropy/population/`)
+2. Scenario compilation (`extropy/scenario/`)
+- Compiler (`compiler.py`) orchestrates parse -> exposure -> interaction -> outcomes -> assembly
+- Event types in code: `announcement`, `news`, `rumor`, `policy_change`, `product_launch`, `emergency`, `observation`
+- Outcomes: `categorical`, `boolean`, `float`, `open_ended`
 
-**The validity pipeline.** This is where predictive accuracy is won or lost.
+3. Simulation (`extropy/simulation/`)
+- Engine (`engine.py`) loops over timestep phases
+- Seed + network exposure propagation
+- Two-pass reasoning (role-play then classification)
+- Memory traces (sliding window)
+- Conviction-aware sharing + flip resistance
+- Checkpoint/resume via `simulation_metadata`
 
-1. **Sufficiency check** (`spec_builder/sufficiency.py`) — LLM validates the description has enough context (who, how many, where).
+## LLM Integration
 
-2. **Attribute selection** (`spec_builder/selector.py`) — LLM discovers 25-40 attributes across 4 categories: `universal` (age, gender), `population_specific` (specialty, seniority), `context_specific` (scenario-relevant), `personality` (Big Five). Each attribute gets a type (`int`/`float`/`categorical`/`boolean`) and sampling strategy (`independent`/`derived`/`conditional`).
+All LLM calls go through `extropy/core/llm.py`.
 
-3. **Hydration** (`spec_builder/hydrator.py` → `hydrators/`) — The most important step. Four sub-steps, each using different LLM tiers:
-   - **2a: Independent** (`hydrators/independent.py`) — `agentic_research()` with web search finds real-world distributions with source URLs. This is the grounding layer.
-   - **2b: Derived** (`hydrators/derived.py`) — `reasoning_call()` specifies deterministic formulas (e.g., `years_experience = age - 26`).
-   - **2c: Conditional base** (`hydrators/conditional.py`) — `agentic_research()` finds base distributions for attributes that depend on others.
-   - **2d: Conditional modifiers** (`hydrators/conditional.py`) — `reasoning_call()` specifies how attribute values shift based on other attributes. Type-specific: numeric gets `multiply`/`add`, categorical gets `weight_overrides`, boolean gets `probability_override`.
+Two-zone routing:
+- Pipeline zone (phases 1-2): `simple_call`, `reasoning_call`, `agentic_research`
+- Simulation zone (phase 3): `simple_call_async`
 
-4. **Constraint binding** (`spec_builder/binder.py`) — Topological sort (Kahn's algorithm, `utils/graphs.py`) resolves attribute dependencies into a valid sampling order. Raises `CircularDependencyError` with cycle path.
+Providers are created via `extropy/core/providers/`:
+- `openai`
+- `claude`
+- `azure_openai`
 
-5. **Sampling** (`sampler/core.py`) — Iterates through `sampling_order`, routing each attribute by strategy. Supports 6 distribution types: normal, lognormal, uniform, beta, categorical, boolean. Hard constraints (min/max) are clamped post-sampling. Formula parameters evaluated via `utils/eval_safe.py` (restricted Python eval, whitelisted builtins only).
+Use provider factories (`get_pipeline_provider`, `get_simulation_provider`) rather than provider-specific calls in feature code.
 
-6. **Network generation** (`network/`) — Hybrid algorithm: similarity-based edge probability with degree correction, calibrated via binary search to hit target avg_degree, then Watts-Strogatz rewiring (5%) for small-world properties. Edge probability: `base_rate * sigmoid(similarity) * degree_factor_a * degree_factor_b`. All network behavior is data-driven via `NetworkConfig`: attribute weights, edge type rules (evaluated by priority via `_eval_edge_condition()`), influence factors (ordinal/boolean/numeric), and degree multipliers. `NetworkConfig` can be generated from a `PopulationSpec` via LLM (`config_generator.py`), loaded from YAML (`--network-config`), or auto-detected as `{population_stem}.network-config.yaml`. Empty config (no `-p` or `-c`) produces a flat network.
+## Configuration
 
-### Phase 2: Scenario Compilation (`extropy/scenario/`)
+Config lives in `extropy/config.py` and `~/.config/extropy/config.json`.
 
-**Compiler** (`compiler.py`) orchestrates 5 steps: parse event → generate exposure rules → determine interaction model → define outcomes → assemble spec.
+Resolution order (highest first):
+1. Programmatic config (`configure(...)` / constructed `ExtropyConfig`)
+2. Environment variables
+3. Config file
+4. Dataclass defaults
 
-- **Event types**: product_launch, policy_change, pricing_change, technology_release, organizational_change, market_event, crisis_event
-- **Exposure channels**: broadcast, targeted, organic — with per-timestep rules containing conditions and probabilities
-- **Outcomes**: categorical (enum options), boolean, float (with range), open_ended
-- Auto-configures simulation parameters based on population size (<500: 50 timesteps, ≤5000: 100, >5000: 168)
+Defaults in code:
+- `pipeline.provider = "openai"`
+- `simulation.provider = "openai"`
 
-### Phase 3: Simulation (`extropy/simulation/`)
+API keys are env-only:
+- `OPENAI_API_KEY`
+- `ANTHROPIC_API_KEY`
+- `AZURE_OPENAI_API_KEY`
 
-**Engine** (`engine.py`) runs per-timestep loop, decomposed into sub-functions:
-1. **`_apply_exposures(timestep)`** — Apply seed exposures from scenario rules (`propagation.py`), then propagate through network via conviction-gated sharing (very_uncertain agents don't share). Uses pre-built adjacency list for O(1) neighbor lookups.
-2. **`_reason_agents(timestep)`** — Select agents to reason (first exposure OR multi-touch threshold exceeded, default: 3 new exposures since last reasoning), filter out already-processed agents (resume support), split into chunks of `chunk_size` (default 50), run two-pass async LLM reasoning per chunk (`reasoning.py`, rate-limiter-controlled), commit per chunk:
-   - **Pass 1 (role-play)**: Agent reasons in first person with no categorical enums. Produces reasoning, public_statement, sentiment, conviction (0-100 integer, bucketed post-hoc), will_share. Memory trace (last 3 reasoning summaries) is fed back for re-reasoning agents.
-   - **Pass 2 (classification)**: A cheap model classifies the free-text reasoning into scenario-defined categorical/boolean/float outcomes. Position is extracted here — it is output-only, never used in peer influence.
-3. **`_process_reasoning_chunk(timestep, results, old_states)`** — Process a chunk of reasoning results: conviction-based flip resistance (firm+ agents reject flips unless new conviction is moderate+), conviction-gated sharing, state persistence. State updates are batched via `batch_update_states()`.
-4. Compute timestep summary, check stopping conditions (`stopping.py`) — Compound conditions like `"exposure_rate > 0.95 and no_state_changes_for > 10"`, convergence detection via sentiment variance.
+Azure extras:
+- `AZURE_OPENAI_ENDPOINT`
+- `AZURE_OPENAI_API_VERSION` (defaults to `2025-03-01-preview`)
+- `AZURE_OPENAI_DEPLOYMENT`
 
-**Semantic peer influence**: Agents see peers' `public_statement` + sentiment tone, NOT position labels.
+## Data Models
 
-**Adjacency list**: Built at engine init from network edges (both directions). Stored as `dict[str, list[tuple[str, dict]]]`. Passed to `propagate_through_network()` and used in `_get_peer_opinions()` for O(1) neighbor lookups instead of O(E) scans.
+Primary Pydantic models are under `extropy/core/models/`:
+- `population.py`: `PopulationSpec`, attribute/distribution/sampling models
+- `scenario.py`: `ScenarioSpec`, event/exposure/interaction/outcomes/simulation config
+- `simulation.py`: `AgentState`, `ReasoningContext`, `ReasoningResponse`, conviction maps, timestep summaries
+- `network.py`, `results.py`, `validation.py`, `sampling.py`
 
-**Two-pass reasoning rationale**: Single-pass reasoning caused 83% of agents to pick safe middle options (central tendency bias). Splitting role-play from classification fixes this — agents reason naturally in Pass 1, then a cheap model maps to categories in Pass 2.
+YAML I/O helpers exist on core spec/config models (`to_yaml` / `from_yaml`).
 
-**Checkpointing** (`state.py`, `engine.py`): Each timestep phase has its own transaction — exposures, each reasoning chunk, and summary are committed separately. The `simulation_metadata` table stores checkpoint state: `mark_timestep_started()` records which timestep is in progress, `mark_timestep_completed()` clears it. On resume (`_get_resume_timestep()`), the engine detects crashed-mid-timestep (checkpoint set) or last-completed-timestep and picks up from there. Already-processed agents within a partial timestep are skipped via `get_agents_already_reasoned_this_timestep()`. Metadata uses immediate commits (not wrapped in `transaction()`). Setup methods (`_create_schema`, `initialize_agents`) also retain their own commits. CLI: `--chunk-size` (default 50).
+## Validation
 
-**Live progress** (`progress.py`, `cli/commands/simulate.py`): `SimulationProgress` is a thread-safe dataclass shared between the simulation thread and CLI display thread. The engine calls `record_agent_done(position, sentiment, conviction)` per agent via an `on_agent_done` callback passed to `batch_reason_agents()`. The CLI renders a `Rich.Live` display at 4 Hz showing timestep/agent progress, exposure rate, elapsed time, and unicode distribution bars for each position. Position counts are cumulative across all timesteps. Verbose mode logs periodic summary blocks every 50 agents via `_log_verbose_summary()`.
+Population validation (`extropy/population/validator/`):
+- Structural: hard errors
+- Semantic: warnings
 
-**Conviction system**: Agents output a 0-100 integer score on a free scale (with descriptive anchors: 0=no idea, 25=leaning, 50=clear opinion, 75=quite sure, 100=certain). `score_to_conviction_float()` buckets it immediately: 0-15→0.1 (very_uncertain), 16-35→0.3 (leaning), 36-60→0.5 (moderate), 61-85→0.7 (firm), 86-100→0.9 (absolute). Agents never see categorical labels or float values — only the 0-100 scale. On re-reasoning, memory traces show the bucketed label (e.g. "you felt *moderate* about this") via `float_to_conviction()`. Engine conviction thresholds reference `CONVICTION_MAP[ConvictionLevel.*]` constants, not hardcoded floats.
+Scenario validation: `extropy/scenario/validator.py`.
 
-**Cost estimation** (`simulation/estimator.py`): `extropy estimate` runs a simplified SIR-like propagation model to predict LLM calls per timestep without making any API calls. Token counts estimated from persona size + scenario content. Pricing from `core/pricing.py` model database. Supports `--verbose` for per-timestep breakdown.
+## Conventions
 
-**Rate limiter** (`core/rate_limiter.py`): Token bucket with dual RPM + TPM buckets. Provider-aware defaults from `core/rate_limits.py` (Anthropic/OpenAI, tiers 1-4). Replaces the old hardcoded `Semaphore(50)`. CLI flags: `--rate-tier`, config: `simulation.rate_tier`, `simulation.rpm_override`, `simulation.tpm_override`.
+- Use `_id` from agent JSON as primary ID (fallback to index string).
+- Network edges are traversed bidirectionally during simulation.
+- Keep LLM reasoning pass semantic; classification pass handles structured outcome extraction.
+- Prefer data-driven network behavior through `NetworkConfig` over hardcoded social rules.
 
-**Persona system** (`population/persona/` + `simulation/persona.py`): The `extropy persona` command generates a `PersonaConfig` via 5-step LLM pipeline (structure → boolean → categorical → relative → concrete phrasings). At simulation time, agents are rendered computationally using this config — no per-agent LLM calls. Relative attributes (personality, attitudes) are positioned against population stats via z-scores ("I'm much more price-sensitive than most people"). Concrete attributes use format specs for proper number/time rendering. **Trait salience**: If `decision_relevant_attributes` is set on `OutcomeConfig`, those attributes are grouped first under "Most Relevant to This Decision" in the persona.
+## Testing & CI
 
-## LLM Integration (`extropy/core/llm.py`)
+Tests are in `tests/` and run with `pytest`.
 
-All LLM calls go through this file — never call providers directly elsewhere. Two-zone routing:
-
-**Pipeline zone** (phases 1-2: spec, extend, persona, scenario) — configured via `extropy config set pipeline.*`:
-
-| Function | Default Model | Tools | Use |
-|----------|--------------|-------|-----|
-| `simple_call()` | provider default (haiku/gpt-5-mini) | none | Sufficiency checks, simple extractions |
-| `reasoning_call()` | provider default (sonnet/gpt-5) | none | Attribute selection, hydration, scenario compilation. Supports validator callback + retry |
-| `agentic_research()` | provider default (sonnet/gpt-5) | web_search | Distribution hydration with real-world data. Extracts source URLs |
-
-**Simulation zone** (phase 3: agent reasoning) — configured via `extropy config set simulation.*`:
-
-| Function | Default Model | Tools | Use |
-|----------|--------------|-------|-----|
-| `simple_call_async()` | provider default | none | Pass 1 role-play reasoning + Pass 2 classification (async) |
-
-Two-pass model routing: Pass 1 uses `simulation.model` (pivotal reasoning). Pass 2 uses `simulation.routine_model` (cheap classification). Both default to provider default if not set. CLI: `--model`, `--pivotal-model`, `--routine-model`. Standard inference only — no thinking/extended models (no o1, o3, extended thinking).
-
-**Provider abstraction** (`extropy/core/providers/`): `LLMProvider` base class with `OpenAIProvider` and `ClaudeProvider` implementations. Factory functions `get_pipeline_provider()` and `get_simulation_provider()` read from `ExtropyConfig`. Base class provides `_retry_with_validation()` — shared validation-retry loop used by both providers' `reasoning_call()` and `agentic_research()`. Both providers implement `_with_retry()` / `_with_retry_async()` for transient API errors (APIConnectionError, InternalServerError, RateLimitError) with exponential backoff (`2^attempt + random(0,1)` seconds, max 3 retries).
-
-**Config** (`extropy/config.py`): `ExtropyConfig` with `PipelineConfig` and `SimZoneConfig` zones. Resolution order: env vars > config file (`~/.config/extropy/config.json`) > defaults. API keys always from env vars (`OPENAI_API_KEY`, `ANTHROPIC_API_KEY`). For package use: `from extropy.config import configure, ExtropyConfig`.
-
-**Default zones**: Pipeline = Claude (population/scenario building). Simulation = OpenAI (agent reasoning). `SimZoneConfig` fields: `provider`, `model`, `pivotal_model`, `routine_model`, `max_concurrent`, `rate_tier`, `rpm_override`, `tpm_override`.
-
-All calls use structured output (`response_format: json_schema`). Failed validations are fed back as "PREVIOUS ATTEMPT FAILED" prompts for self-correction.
-
-## Data Models (`extropy/core/models/`)
-
-All Pydantic v2. Key hierarchy:
-
-- `population.py`: `PopulationSpec` → `AttributeSpec` → `SamplingConfig` → `Distribution` / `Modifier` / `Constraint`
-- `scenario.py`: `ScenarioSpec` → `Event`, `SeedExposure` (channels + rules), `InteractionConfig`, `SpreadConfig`, `OutcomeConfig`
-- `simulation.py`: `ConvictionLevel`, `MemoryEntry`, `AgentState` (conviction, public_statement), `PeerOpinion` (public_statement, credibility), `ReasoningContext` (memory_trace), `ReasoningResponse` (conviction, public_statement, reasoning_summary), `SimulationRunConfig` (pivotal_model, routine_model, chunk_size), `TimestepSummary` (average_conviction, sentiment_variance)
-- `network.py`: `Edge`, `NodeMetrics`, `NetworkMetrics`
-- `validation.py`: `ValidationIssue`, `ValidationResult`
-
-YAML serialization via `to_yaml()`/`from_yaml()` on `PopulationSpec` and `ScenarioSpec`.
-
-## Validation (`extropy/population/validator/`)
-
-Two layers for population specs:
-- **Structural** (`structural.py`): ERROR-level — type/modifier compatibility, range violations, distribution params, dependency cycles, condition syntax, formula references, duplicates, strategy consistency
-- **Semantic** (`semantic.py`): WARNING-level — no-op detection, modifier stacking, categorical option reference validity
-
-Scenario validation (`extropy/scenario/validator.py`): attribute reference validity, edge type references, probability ranges.
-
-## Key Conventions
-
-- Conditions and formulas use restricted Python syntax via `eval_safe()` — whitelisted builtins only (abs, min, max, round, int, float, str, len, sum, all, any, bool)
-- Agent IDs use the `_id` field from agent JSON, falling back to string index
-- Network edges are bidirectional (stored as source/target, traversed both ways)
-- Exposure credibility: `event_credibility * channel_credibility` for seed, fixed 0.85 for peer
-- "Position" = first required categorical outcome (extracted in Pass 2, used for aggregation/output only — never used in peer influence)
-- Peer influence is semantic: agents see neighbors' `public_statement` + sentiment tone, not position labels
-- Conviction: agents output 0-100 integer, bucketed to 5 float levels (0.1/0.3/0.5/0.7/0.9) via `score_to_conviction_float()`. Agents see only the 0-100 scale; memory traces show categorical labels. Engine thresholds reference `CONVICTION_MAP[ConvictionLevel.*]`
-- Memory traces: 3-entry sliding window per agent, fed back into reasoning prompts for re-reasoning
-- Progress callbacks use typed `Protocol` classes from `extropy/utils/callbacks.py` (`StepProgressCallback`, `TimestepProgressCallback`, `ItemProgressCallback`, `HydrationProgressCallback`, `NetworkProgressCallback`) — structurally compatible with plain callables via duck typing
-- The `persona` command generates detailed persona configs; `extend` still generates a simpler `persona_template` for backwards compatibility
-- Simulation auto-detects `{population_stem}.persona.yaml` and uses the new rendering if present
-- Network config is data-driven via `NetworkConfig` (YAML-serializable). No built-in reference preset is shipped. CLI: `extropy network -p population.yaml` (LLM-generated), `-c config.yaml` (manual), `--save-config` (export)
-
-## Tests
-
-pytest + pytest-asyncio. Fixtures in `tests/conftest.py` include seeded RNG (`Random(42)`), minimal/complex population specs, and sample agents. 580+ tests across 15+ test files:
-
-- `test_models.py`, `test_network.py`, `test_sampler.py`, `test_scenario.py`, `test_simulation.py`, `test_validator.py` — core logic
-- `test_engine.py` — mock-based engine integration (seed exposure, flip resistance, conviction-gated sharing, chunked reasoning, checkpointing, resume logic, metadata lifecycle, progress state wiring)
-- `test_progress.py` — SimulationProgress thread-safe state (begin_timestep, record_agent_done, position counts, running averages, snapshot isolation)
-- `test_compiler.py` — scenario compiler pipeline with mocked LLM calls, auto-configuration
-- `test_providers.py` — provider response extraction, transient error retry, validation-retry exhaustion, source URL extraction (mocked HTTP)
-- `test_rate_limiter.py` — token bucket, dual-bucket rate limiter, `for_provider` factory
-- `test_cli.py` — CLI smoke tests (`config show/set`, `validate`, `--version`)
-- `test_estimator.py` — cost estimation, pricing lookup, token estimation
-
-CI: `.github/workflows/test.yml` — lint (ruff check + format) and test (pytest, matrix: Python 3.11/3.12/3.13) via `astral-sh/setup-uv@v4`.
+CI (`.github/workflows/test.yml`) runs:
+- lint: `ruff check`, `ruff format --check`
+- tests on Python 3.11/3.12/3.13 (via `uv`)
 
 ## File Formats
 
-- Population/scenario specs: YAML
-- Network config: YAML (`NetworkConfig.to_yaml()`/`from_yaml()`) — attribute weights, edge type rules, influence factors, degree multipliers
-- Agents: JSON (array of objects with `_id`)
-- Network: JSON (`{meta, nodes, edges}`)
-- Simulation state: SQLite (tables: agent_states, exposures, memory_traces, timeline, timestep_summaries, shared_to, simulation_metadata)
-- Timeline: JSONL (streaming, crash-safe)
-- Results: JSON files in output directory (agent_states.json, by_timestep.json, outcome_distributions.json, meta.json)
+- YAML: population/spec/network/persona/scenario configs
+- JSON: sampled agents, network, result artifacts
+- SQLite: simulation state/checkpoints
+- JSONL: timeline events

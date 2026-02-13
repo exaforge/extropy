@@ -181,7 +181,7 @@ Each agent is a dictionary of concrete values:
 
 ```json
 {
-  "agent_id": "agent_001",
+  "_id": "agent_001",
   "age": 34,
   "income": 62000,
   "zip_code": "78745",

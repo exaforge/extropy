@@ -26,6 +26,7 @@ pip install extropy-run
 ```
 
 `extropy-run` is the PyPI package name. The CLI command and Python import remain `extropy`.
+Requires Python 3.11+.
 
 Or from source:
 
@@ -45,9 +46,11 @@ export ANTHROPIC_API_KEY=sk-ant-...
 # Or for Azure OpenAI:
 # export AZURE_OPENAI_API_KEY=...
 # export AZURE_OPENAI_ENDPOINT=https://your-resource.openai.azure.com
+# export AZURE_OPENAI_API_VERSION=2025-03-01-preview
 # export AZURE_OPENAI_DEPLOYMENT=your-deployment-name
 
-# Configure providers (openai, claude, or azure_openai)
+# Optional: configure providers (openai, claude, or azure_openai)
+# Defaults are openai for both pipeline and simulation.
 extropy config set pipeline.provider claude      # Claude for population/scenario building
 extropy config set simulation.provider openai    # OpenAI for agent reasoning
 extropy config show
@@ -56,15 +59,18 @@ extropy config show
 ## Quick Start
 
 ```bash
+mkdir -p austin
+
 # Build a population
 extropy spec "500 Austin TX commuters who drive into downtown for work" -o austin/base.yaml
 extropy extend austin/base.yaml -s "Response to a $15/day downtown congestion tax" -o austin/population.yaml
 extropy sample austin/population.yaml -o austin/agents.json --seed 42
 extropy network austin/agents.json -o austin/network.json -p austin/population.yaml --seed 42
-extropy persona austin/population.yaml --agents austin/agents.json
+extropy persona austin/population.yaml --agents austin/agents.json -o austin/population.persona.yaml
 
 # Compile and run a scenario
 extropy scenario -p austin/population.yaml -a austin/agents.json -n austin/network.json -o austin/scenario.yaml
+extropy estimate austin/scenario.yaml
 extropy simulate austin/scenario.yaml -o austin/results/ --seed 42
 
 # View results
@@ -116,6 +122,14 @@ $50-100k: drive_and_pay 40% | switch_to_transit 28% | shift_schedule 21%
 ```
 
 Each agent reasoned individually. A low-income commuter with no transit access reacts differently than a tech worker near a rail stop — not because we scripted it, but because their attributes, persona, and social context led them there.
+
+Simulation output directory (`austin/results/`) contains:
+- `simulation.db` (checkpointable state store)
+- `timeline.jsonl` (streaming event log)
+- `agent_states.json` (final per-agent states)
+- `by_timestep.json` (time-series aggregates)
+- `outcome_distributions.json` (final distributions)
+- `meta.json` (run metadata + token/cost summary)
 
 The scenario YAML controls what gets tracked:
 

@@ -53,7 +53,7 @@ All network behavior is data-driven via `NetworkConfig`: attribute weights for s
 
 **Compiler** (`compiler.py`) orchestrates 5 steps: parse event -> generate exposure rules -> determine interaction model -> define outcomes -> assemble spec.
 
-- **Event types**: product_launch, policy_change, pricing_change, technology_release, organizational_change, market_event, crisis_event
+- **Event types**: announcement, news, rumor, policy_change, product_launch, emergency, observation
 - **Exposure channels**: broadcast, targeted, organic — with per-timestep rules containing conditions and probabilities
 - **Outcomes**: categorical (enum options), boolean, float (with range), open_ended
 - Auto-configures simulation parameters based on population size (<500: 50 timesteps, <=5000: 100, >5000: 168)
@@ -69,14 +69,14 @@ Per-timestep loop, decomposed into sub-functions:
 1. **`_apply_exposures(timestep)`** — Apply seed exposures from scenario rules (`propagation.py`), then propagate through network via conviction-gated sharing (very_uncertain agents don't share). Uses pre-built adjacency list for O(1) neighbor lookups.
 
 2. **`_reason_agents(timestep)`** — Select agents to reason (first exposure OR multi-touch threshold exceeded, default: 3 new exposures since last reasoning), filter out already-processed agents (resume support), split into chunks of `chunk_size` (default 50), run two-pass async LLM reasoning per chunk (`reasoning.py`, rate-limiter-controlled), commit per chunk:
-   - **Pass 1** (pivotal model): Agent role-plays in first person with no categorical enums. Produces reasoning, public_statement, sentiment, conviction (0-100 integer, bucketed post-hoc), will_share. Memory trace (last 3 reasoning summaries) is fed back for re-reasoning agents.
+   - **Pass 1** (main simulation model): Agent role-plays in first person with no categorical enums. Produces reasoning, public_statement, sentiment, conviction (0-100 integer, bucketed post-hoc), will_share. Memory trace (last 3 reasoning summaries) is fed back for re-reasoning agents.
    - **Pass 2** (routine model): A cheap model classifies the free-text reasoning into scenario-defined categorical/boolean/float outcomes. Position is extracted here — it is output-only, never used in peer influence.
 
 3. **`_process_reasoning_chunk(timestep, results, old_states)`** — Process a chunk of reasoning results: bounded confidence opinion update (public sentiment/conviction adjusted toward peer averages via `_BOUNDED_CONFIDENCE_RHO`), conviction-based flip resistance (firm+ agents reject flips unless new conviction is moderate+), private opinion tracking (separate private sentiment/conviction with slower `_PRIVATE_ADJUSTMENT_RHO` adjustment), conviction-gated sharing, state persistence. State updates are batched via `batch_update_states()`.
 
 4. **Conviction decay** — Non-reasoning agents experience gradual conviction decay (`_CONVICTION_DECAY_RATE = 0.05`) via `state_manager.apply_conviction_decay()`, preventing stale high-conviction states from persisting indefinitely.
 
-5. Compute timestep summary, check stopping conditions (`stopping.py`) — Compound conditions like `"exposure_rate > 0.95 and no_state_changes_for > 10"`, convergence detection via sentiment variance.
+5. Compute timestep summary, check stopping conditions (`stopping.py`) — Compound conditions like `"exposure_rate > 0.95 and no_state_changes_for > 10"`, plus convergence checks over position distribution stability.
 
 ### Two-Pass Reasoning
 
@@ -140,9 +140,9 @@ Configured via `extropy config set pipeline.*`:
 
 | Function | Default Model | Tools | Use |
 |----------|--------------|-------|-----|
-| `simple_call()` | haiku / gpt-5-mini | none | Sufficiency checks, simple extractions |
-| `reasoning_call()` | sonnet / gpt-5 | none | Attribute selection, hydration, scenario compilation |
-| `agentic_research()` | sonnet / gpt-5 | web_search | Distribution hydration with real-world data |
+| `simple_call()` | provider default | none | Sufficiency checks, simple extractions |
+| `reasoning_call()` | provider default | none | Attribute selection, hydration, scenario compilation |
+| `agentic_research()` | provider default | web_search | Distribution hydration with real-world data |
 
 ### Simulation Zone (phase 3)
 
@@ -150,10 +150,10 @@ Configured via `extropy config set simulation.*`:
 
 | Function | Default Model | Use |
 |----------|--------------|-----|
-| Pass 1 reasoning | pivotal model (gpt-5 / sonnet) | Agent role-play, freeform reaction |
-| Pass 2 classification | routine model (gpt-5-mini / haiku) | Outcome extraction from narrative |
+| Pass 1 reasoning | simulation main model (provider default if unset) | Agent role-play, freeform reaction |
+| Pass 2 classification | routine model (provider default cheap tier if unset) | Outcome extraction from narrative |
 
-Two-pass model routing: Pass 1 uses `simulation.model` or `simulation.pivotal_model`. Pass 2 uses `simulation.routine_model`. CLI: `--model`, `--pivotal-model`, `--routine-model`.
+Two-pass model routing is configured via simulation zone settings and CLI flags (`--model`, `--pivotal-model`, `--routine-model`). Pass 2 classification uses the routine model path.
 
 ### Provider Abstraction (`extropy/core/providers/`)
 
@@ -222,7 +222,7 @@ For package use: `from extropy.config import configure, ExtropyConfig`.
 
 ## Tests
 
-pytest + pytest-asyncio. Fixtures in `tests/conftest.py` include seeded RNG (`Random(42)`), minimal/complex population specs, sample agents, network topologies (linear chain, star graph), and distribution fixtures. 580+ tests across 24 test files:
+pytest + pytest-asyncio. Fixtures in `tests/conftest.py` include seeded RNG (`Random(42)`), minimal/complex population specs, sample agents, network topologies (linear chain, star graph), and distribution fixtures. The suite includes coverage for:
 
 - `test_models.py`, `test_network.py`, `test_sampler.py`, `test_scenario.py`, `test_simulation.py`, `test_validator.py` — core logic
 - `test_engine.py` — mock-based engine integration (seed exposure, flip resistance, conviction-gated sharing, chunked reasoning, checkpointing, resume logic, metadata lifecycle, progress state wiring)
