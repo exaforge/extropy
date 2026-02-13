@@ -5,6 +5,7 @@ conviction-gated sharing, and the sub-function decomposition.
 """
 
 from datetime import datetime
+import math
 
 import pytest
 
@@ -170,6 +171,7 @@ class TestEngineInit:
             agents=simple_agents,
             network=simple_network,
             config=config,
+            chunk_size=2,
         )
         # a0-a1 edge => a0 has [a1], a1 has [a0, a2], a2 has [a1]
         assert len(engine.adjacency.get("a0", [])) == 1
@@ -1387,6 +1389,11 @@ class TestTokenAccumulation:
             )
             engine.state_manager.record_exposure(aid, exposure)
 
+        expected_agents = len(
+            engine.state_manager.get_agents_to_reason(0, config.multi_touch_threshold)
+        )
+        expected_chunks = math.ceil(expected_agents / engine.chunk_size)
+
         call_count = [0]
 
         def fake_batch(contexts, scenario, cfg, rate_limiter=None, on_agent_done=None):
@@ -1406,12 +1413,11 @@ class TestTokenAccumulation:
         ):
             engine._reason_agents(0)
 
-        # 3 agents, chunk_size=2 -> 2 chunks (2 + 1)
-        assert call_count[0] == 2
-        assert engine.pivotal_input_tokens == 300  # 100 * 3
-        assert engine.pivotal_output_tokens == 150  # 50 * 3
-        assert engine.routine_input_tokens == 90  # 30 * 3
-        assert engine.routine_output_tokens == 30  # 10 * 3
+        assert call_count[0] == expected_chunks
+        assert engine.pivotal_input_tokens == 100 * expected_agents
+        assert engine.pivotal_output_tokens == 50 * expected_agents
+        assert engine.routine_input_tokens == 30 * expected_agents
+        assert engine.routine_output_tokens == 10 * expected_agents
 
     def test_cost_in_meta_json(
         self,
