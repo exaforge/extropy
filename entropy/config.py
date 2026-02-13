@@ -217,11 +217,21 @@ def _ensure_dotenv() -> None:
     if not _dotenv_loaded:
         _dotenv_loaded = True
         try:
-            from dotenv import load_dotenv
+            from dotenv import find_dotenv, load_dotenv
 
-            load_dotenv()
+            # Resolve from current working directory first so CLI commands run
+            # from study repos consistently pick up that repo's `.env`.
+            dotenv_path = find_dotenv(usecwd=True)
+            if dotenv_path:
+                load_dotenv(dotenv_path=dotenv_path, override=False)
+            else:
+                # Fallback for environments where no discoverable .env exists.
+                load_dotenv(override=False)
         except ImportError:
             pass  # python-dotenv not installed, skip
+        except Exception:
+            # Keep config loading resilient even if dotenv discovery has runtime issues.
+            pass
 
 
 def get_api_key(provider: str) -> str:
