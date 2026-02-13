@@ -3,7 +3,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "extropy"
+name = "extropy-run"
 dynamic = ["version"]
 description = "Predictive intelligence through agent-based population simulation"
 readme = "README.md"

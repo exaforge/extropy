@@ -1,8 +1,8 @@
 # Extropy
 
 [![CI](https://github.com/exaforge/extropy/actions/workflows/test.yml/badge.svg)](https://github.com/exaforge/extropy/actions/workflows/test.yml)
-[![PyPI version](https://img.shields.io/pypi/v/extropy.svg)](https://pypi.org/project/extropy/)
-[![Python](https://img.shields.io/pypi/pyversions/extropy.svg)](https://pypi.org/project/extropy/)
+[![PyPI version](https://img.shields.io/pypi/v/extropy-run.svg)](https://pypi.org/project/extropy-run/)
+[![Python](https://img.shields.io/pypi/pyversions/extropy-run.svg)](https://pypi.org/project/extropy-run/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 Predictive intelligence through agent-based population simulation. Create synthetic populations grounded in real-world data, simulate how they respond to events, and watch opinions emerge through social networks.
@@ -22,7 +22,7 @@ extropy spec → extropy extend → extropy sample → extropy network → extro
 ## Install
 
 ```bash
-pip install extropy
+pip install extropy-run
 ```
 
 Or from source:

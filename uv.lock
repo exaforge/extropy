@@ -96,7 +96,7 @@ wheels = [
 ]
 
 [[package]]
-name = "extropy"
+name = "extropy-run"
 source = { editable = "." }
 dependencies = [
     { name = "anthropic" },
