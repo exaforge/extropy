@@ -1035,7 +1035,9 @@ def _build_adjacency_from_edges(
     return adjacency
 
 
-def _acceptance_bounds(config: NetworkConfig) -> tuple[float, float, float, float, float]:
+def _acceptance_bounds(
+    config: NetworkConfig,
+) -> tuple[float, float, float, float, float]:
     degree_delta = max(1.0, config.avg_degree * config.target_degree_tolerance_pct)
     deg_min = max(1.0, config.avg_degree - degree_delta)
     deg_max = config.avg_degree + degree_delta
@@ -1222,7 +1224,7 @@ def _ensure_intra_similarity_coverage(
         members_by_community[c].append(idx)
 
     intra_counts = [0] * n
-    for (i, j) in similarities.keys():
+    for i, j in similarities.keys():
         if communities[i] == communities[j]:
             intra_counts[i] += 1
             intra_counts[j] += 1
@@ -1626,11 +1628,16 @@ def _apply_rewiring(
     edge_set: set[tuple[str, str]],
     config: NetworkConfig,
     rng: random.Random,
+    protected_pairs: set[tuple[str, str]] | None = None,
 ) -> tuple[list[Edge], set[tuple[str, str]], int]:
     """Apply Watts-Strogatz rewiring for small-world properties.
 
+    Structural edges in protected_pairs are never rewired.
+
     Returns (edges, edge_set, rewired_count).
     """
+    if protected_pairs is None:
+        protected_pairs = set()
     n = len(agents)
     n_rewire = int(len(edges) * config.rewire_prob)
     rewired_count = 0
@@ -1642,6 +1649,10 @@ def _apply_rewiring(
 
         edge_idx = rng.randint(0, len(edges) - 1)
         old_edge = edges[edge_idx]
+
+        # Skip structural/protected edges
+        if (old_edge.source, old_edge.target) in protected_pairs:
+            continue
 
         source_idx = id_to_idx.get(old_edge.source)
         if source_idx is None:
@@ -1735,6 +1746,174 @@ def _compute_modularity_fast(
         l_c = internal_edges.get(community, 0)
         q += (l_c / m) - (d_sum / two_m) ** 2
     return q
+
+
+def _generate_structural_edges(
+    agents: list[dict[str, Any]],
+    agent_ids: list[str],
+    rng: random.Random,
+) -> list[Edge]:
+    """Generate deterministic structural edges from agent attributes.
+
+    Creates edges based on shared household, partner status, workplace,
+    neighborhood, congregation, and school-parent connections.
+    """
+    id_to_idx = {aid: i for i, aid in enumerate(agent_ids)}
+    edges: list[Edge] = []
+    added: set[tuple[int, int]] = set()
+
+    def _add(i: int, j: int, etype: str, weight: float, context: str) -> None:
+        pair = (min(i, j), max(i, j))
+        if pair in added or i == j:
+            return
+        added.add(pair)
+        edges.append(
+            Edge(
+                source=agent_ids[i],
+                target=agent_ids[j],
+                weight=weight,
+                edge_type=etype,
+                structural=True,
+                context=context,
+            )
+        )
+
+    # Build indexes for batch matching
+    household_map: dict[str, list[int]] = {}
+    sector_state_map: dict[tuple[str, str], list[int]] = {}
+    state_urban_map: dict[tuple[str, str], list[int]] = {}
+    religion_state_map: dict[tuple[str, str], list[int]] = {}
+    school_parent_map: dict[tuple[str, str], list[int]] = {}
+
+    for idx, agent in enumerate(agents):
+        hh_id = agent.get("household_id")
+        if hh_id:
+            household_map.setdefault(hh_id, []).append(idx)
+
+        sector = agent.get("occupation_sector")
+        state = agent.get("state")
+        urban = agent.get("urban_rural")
+
+        if sector and state:
+            sector_state_map.setdefault((sector, state), []).append(idx)
+        if state and urban:
+            state_urban_map.setdefault((state, urban), []).append(idx)
+
+        religion = agent.get("religious_affiliation")
+        if (
+            religion
+            and state
+            and religion.lower() not in ("none", "atheist", "agnostic")
+        ):
+            religion_state_map.setdefault((religion, state), []).append(idx)
+
+        # School parents: agents with school-age dependents
+        dependents = agent.get("dependents", [])
+        has_school_kid = any(
+            isinstance(d, dict)
+            and d.get("school_status") in ("elementary", "middle_school", "high_school")
+            for d in dependents
+        )
+        if has_school_kid and state and urban:
+            school_parent_map.setdefault((state, urban), []).append(idx)
+
+    # 1. Partner edges (weight 1.0, max 1 per agent)
+    for idx, agent in enumerate(agents):
+        partner_id = agent.get("partner_id")
+        if partner_id and partner_id in id_to_idx:
+            j = id_to_idx[partner_id]
+            _add(idx, j, "partner", 1.0, "household")
+
+    # 2. Household edges (weight 0.9, all members in same household)
+    for members in household_map.values():
+        for i_pos in range(len(members)):
+            for j_pos in range(i_pos + 1, len(members)):
+                _add(members[i_pos], members[j_pos], "household", 0.9, "household")
+
+    # 3. Coworker edges (weight 0.6, capped at ~8 per agent)
+    _MAX_COWORKER = 8
+    coworker_count: dict[int, int] = {}
+    for pool in sector_state_map.values():
+        if len(pool) < 2:
+            continue
+        shuffled = list(pool)
+        rng.shuffle(shuffled)
+        for i_pos, i in enumerate(shuffled):
+            if coworker_count.get(i, 0) >= _MAX_COWORKER:
+                continue
+            for j in shuffled[i_pos + 1 :]:
+                if coworker_count.get(j, 0) >= _MAX_COWORKER:
+                    continue
+                if coworker_count.get(i, 0) >= _MAX_COWORKER:
+                    break
+                _add(i, j, "coworker", 0.6, "workplace")
+                coworker_count[i] = coworker_count.get(i, 0) + 1
+                coworker_count[j] = coworker_count.get(j, 0) + 1
+
+    # 4. Neighbor edges (weight 0.4, capped at ~4, age within 15yr)
+    _MAX_NEIGHBOR = 4
+    neighbor_count: dict[int, int] = {}
+    for pool in state_urban_map.values():
+        if len(pool) < 2:
+            continue
+        shuffled = list(pool)
+        rng.shuffle(shuffled)
+        for i_pos, i in enumerate(shuffled):
+            if neighbor_count.get(i, 0) >= _MAX_NEIGHBOR:
+                continue
+            age_i = agents[i].get("age", 40)
+            for j in shuffled[i_pos + 1 :]:
+                if neighbor_count.get(j, 0) >= _MAX_NEIGHBOR:
+                    continue
+                if neighbor_count.get(i, 0) >= _MAX_NEIGHBOR:
+                    break
+                age_j = agents[j].get("age", 40)
+                if abs(age_i - age_j) <= 15:
+                    _add(i, j, "neighbor", 0.4, "neighborhood")
+                    neighbor_count[i] = neighbor_count.get(i, 0) + 1
+                    neighbor_count[j] = neighbor_count.get(j, 0) + 1
+
+    # 5. Congregation edges (weight 0.4, capped at ~4)
+    _MAX_CONGREGATION = 4
+    congregation_count: dict[int, int] = {}
+    for pool in religion_state_map.values():
+        if len(pool) < 2:
+            continue
+        shuffled = list(pool)
+        rng.shuffle(shuffled)
+        for i_pos, i in enumerate(shuffled):
+            if congregation_count.get(i, 0) >= _MAX_CONGREGATION:
+                continue
+            for j in shuffled[i_pos + 1 :]:
+                if congregation_count.get(j, 0) >= _MAX_CONGREGATION:
+                    continue
+                if congregation_count.get(i, 0) >= _MAX_CONGREGATION:
+                    break
+                _add(i, j, "congregation", 0.4, "congregation")
+                congregation_count[i] = congregation_count.get(i, 0) + 1
+                congregation_count[j] = congregation_count.get(j, 0) + 1
+
+    # 6. School parent edges (weight 0.35, capped at ~3)
+    _MAX_SCHOOL_PARENT = 3
+    school_count: dict[int, int] = {}
+    for pool in school_parent_map.values():
+        if len(pool) < 2:
+            continue
+        shuffled = list(pool)
+        rng.shuffle(shuffled)
+        for i_pos, i in enumerate(shuffled):
+            if school_count.get(i, 0) >= _MAX_SCHOOL_PARENT:
+                continue
+            for j in shuffled[i_pos + 1 :]:
+                if school_count.get(j, 0) >= _MAX_SCHOOL_PARENT:
+                    continue
+                if school_count.get(i, 0) >= _MAX_SCHOOL_PARENT:
+                    break
+                _add(i, j, "school_parent", 0.35, "school")
+                school_count[i] = school_count.get(i, 0) + 1
+                school_count[j] = school_count.get(j, 0) + 1
+
+    return edges
 
 
 def _generate_network_single_pass(
@@ -1862,7 +2041,9 @@ def generate_network(
             return
         if study_db_file is not None and network_run_id:
             if isinstance(message, dict):
-                message_text = json.dumps(message, sort_keys=True, separators=(",", ":"))
+                message_text = json.dumps(
+                    message, sort_keys=True, separators=(",", ":")
+                )
             else:
                 message_text = message or stage
             with open_study_db(study_db_file) as db:
@@ -1876,7 +2057,9 @@ def generate_network(
 
     def _stage_plan() -> list[dict[str, Any]]:
         if config.candidate_mode == "exact":
-            return [{"name": "exact", "candidate_mode": "exact", "pool_multiplier": 0.0}]
+            return [
+                {"name": "exact", "candidate_mode": "exact", "pool_multiplier": 0.0}
+            ]
         base_mult = max(6.0, config.candidate_pool_multiplier)
         if config.quality_profile == "fast":
             return [
@@ -1937,7 +2120,10 @@ def generate_network(
     stage_summaries: list[dict[str, Any]] = []
     calibration_step = 0
     calibration_total = max(
-        1, len(stage_plan) * config.calibration_restarts * config.max_calibration_iterations
+        1,
+        len(stage_plan)
+        * config.calibration_restarts
+        * config.max_calibration_iterations,
     )
 
     for stage_idx, stage in enumerate(stage_plan):
@@ -1975,7 +2161,9 @@ def generate_network(
             if candidate_map is None:
                 candidate_mode = "exact"
             elif stage.get("hybrid_expand"):
-                expanded_pool = int(max(config.avg_degree * 20, stage_cfg.min_candidate_pool))
+                expanded_pool = int(
+                    max(config.avg_degree * 20, stage_cfg.min_candidate_pool)
+                )
                 candidate_map = _expand_candidate_map_undercovered(
                     candidate_map=candidate_map,
                     n=n,
@@ -2016,14 +2204,15 @@ def generate_network(
         if should_resume_similarity:
             if checkpoint_file is None or not checkpoint_file.exists():
                 raise ValueError(f"Checkpoint not found: {checkpoint_file}")
-            similarities, start_row, completed_chunk_starts = _load_similarity_checkpoint(
-                checkpoint_file, checkpoint_signature
+            similarities, start_row, completed_chunk_starts = (
+                _load_similarity_checkpoint(checkpoint_file, checkpoint_signature)
             )
             if checkpoint_job_id and checkpoint_file is not None:
                 with open_study_db(checkpoint_file) as db:
                     db.mark_similarity_job_running(checkpoint_job_id)
 
         use_parallel_similarity = stage_cfg.similarity_workers > 1
+
         def similarity_progress(_stage: str, current: int, total: int) -> None:
             emit_progress(
                 "Computing similarities",
@@ -2082,6 +2271,31 @@ def generate_network(
         final_blocking_attrs = blocking_attrs if candidate_mode == "blocked" else []
         final_similarity_pairs = len(similarities)
 
+        # Apply identity clustering boost if configured
+        if config.identity_clustering_attributes and similarities:
+            id_attrs = config.identity_clustering_attributes
+            boost = config.identity_clustering_boost
+            boosted_count = 0
+            for (i, j), sim in list(similarities.items()):
+                shared = 0
+                for attr in id_attrs:
+                    va = agents[i].get(attr)
+                    vb = agents[j].get(attr)
+                    if va is not None and vb is not None and va == vb:
+                        shared += 1
+                if shared > 0:
+                    # Apply multiplicative boost, capped at 1.0
+                    new_sim = min(1.0, sim * (boost**shared))
+                    if new_sim != sim:
+                        similarities[(i, j)] = new_sim
+                        boosted_count += 1
+            if boosted_count > 0:
+                logger.debug(
+                    "Identity clustering: boosted %d pairs on attributes %s",
+                    boosted_count,
+                    id_attrs,
+                )
+
         if needs_escalation and stage_idx < len(stage_plan) - 1:
             stage_summaries.append(
                 {
@@ -2127,7 +2341,10 @@ def generate_network(
             force_db=True,
         )
 
-        if community_diag.get("low_signal", 0.0) >= 1.0 and stage_idx < len(stage_plan) - 1:
+        if (
+            community_diag.get("low_signal", 0.0) >= 1.0
+            and stage_idx < len(stage_plan) - 1
+        ):
             stage_summaries.append(
                 {
                     "stage": stage_name,
@@ -2157,7 +2374,8 @@ def generate_network(
                 with open_study_db(study_db_file) as db:
                     calibration_run_id = db.create_network_calibration_run(
                         network_run_id=network_run_id,
-                        restart_index=(stage_idx * config.calibration_restarts) + restart,
+                        restart_index=(stage_idx * config.calibration_restarts)
+                        + restart,
                         seed=restart_seed,
                     )
 
@@ -2200,11 +2418,15 @@ def generate_network(
                 )
                 if should_bridge_swap:
                     if modularity > (mod_max + 0.02):
-                        swap_budget = max(4, int(len(edges) * config.bridge_budget_fraction))
+                        swap_budget = max(
+                            4, int(len(edges) * config.bridge_budget_fraction)
+                        )
                     else:
                         # Connectivity repair should be conservative so we do not
                         # collapse modular structure while bridging components.
-                        ratio = min(config.bridge_budget_fraction * 0.25, lcc_deficit * 0.20)
+                        ratio = min(
+                            config.bridge_budget_fraction * 0.25, lcc_deficit * 0.20
+                        )
                         swap_budget = max(1, int(len(edges) * ratio))
                     edges = _apply_bridge_swaps(
                         edges,
@@ -2376,7 +2598,9 @@ def generate_network(
         if stage_accepted:
             break
 
-    emit_progress("Calibrating network", calibration_total, calibration_total, force_db=True)
+    emit_progress(
+        "Calibrating network", calibration_total, calibration_total, force_db=True
+    )
     edges = best_edges or []
 
     # Rebuild edge_set from best edges
@@ -2385,10 +2609,50 @@ def generate_network(
         edge_set.add((edge.source, edge.target))
         edge_set.add((edge.target, edge.source))
 
-    # Step 5: Watts-Strogatz rewiring
+    # Step 4b: Generate structural edges and merge (protected from pruning/rewiring)
+    structural_edges = _generate_structural_edges(agents, agent_ids, rng)
+    structural_pairs: set[tuple[str, str]] = set()
+    structural_added = 0
+    for se in structural_edges:
+        if (se.source, se.target) not in edge_set:
+            edges.append(se)
+            edge_set.add((se.source, se.target))
+            edge_set.add((se.target, se.source))
+            structural_added += 1
+        else:
+            # Mark existing edge as structural if it matches
+            for existing in edges:
+                if (existing.source == se.source and existing.target == se.target) or (
+                    existing.source == se.target and existing.target == se.source
+                ):
+                    existing.structural = True
+                    existing.context = se.context
+                    break
+        structural_pairs.add((se.source, se.target))
+        structural_pairs.add((se.target, se.source))
+
+    if structural_added > 0:
+        emit_progress(
+            "Structural edges",
+            structural_added,
+            structural_added,
+            message={
+                "structural_added": structural_added,
+                "total_structural": len(structural_edges),
+            },
+            force_db=True,
+        )
+
+    # Step 5: Watts-Strogatz rewiring (skip structural edges)
     emit_progress("Rewiring edges", 0, len(edges), force_db=True)
     edges, edge_set, rewired_count = _apply_rewiring(
-        agents, agent_ids, edges, edge_set, config, rng
+        agents,
+        agent_ids,
+        edges,
+        edge_set,
+        config,
+        rng,
+        protected_pairs=structural_pairs,
     )
     emit_progress("Rewiring edges", len(edges), len(edges), force_db=True)
 
@@ -2439,6 +2703,8 @@ def generate_network(
             },
             "ladder_stages": stage_summaries,
         },
+        "structural_edge_count": len(structural_edges),
+        "structural_edges_added": structural_added,
         "resume_calibration_requested": resume_calibration,
         "generated_at": datetime.now().isoformat(),
     }

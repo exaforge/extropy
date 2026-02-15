@@ -161,6 +161,13 @@ class NetworkConfig(BaseModel):
     target_clustering_tolerance: float = 0.08
     bridge_budget_fraction: float = 0.08
     swap_passes: int = 3
+    degree_distribution_target: Literal["uniform", "power_law"] | None = None
+    power_law_exponent: float = 2.5  # only used when target is power_law
+    identity_clustering_attributes: list[str] = Field(
+        default_factory=list,
+        description="Attributes for in-group edge density boost (e.g., political_orientation, religious_affiliation)",
+    )
+    identity_clustering_boost: float = 1.5  # multiplier on intra-group edge probability
     auto_save_generated_config: bool = True
     allow_quarantine: bool = True
     quarantine_suffix: str = "rejected"

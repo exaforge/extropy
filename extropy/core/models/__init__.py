@@ -34,6 +34,10 @@ from .population import (
     PopulationSpec,
     # Pipeline types
     SufficiencyResult,
+    # Household models
+    HouseholdType,
+    Dependent,
+    STANDARD_PERSONALITY_ATTRIBUTES,
 )
 
 # Validation models (shared across population and scenario)
@@ -139,6 +143,10 @@ __all__ = [
     "PopulationSpec",
     # Population - Pipeline types
     "SufficiencyResult",
+    # Population - Household models
+    "HouseholdType",
+    "Dependent",
+    "STANDARD_PERSONALITY_ATTRIBUTES",
     # Scenario - Event
     "EventType",
     "Event",

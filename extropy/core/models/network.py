@@ -28,10 +28,12 @@ class Edge(BaseModel):
     edge_type: str
     bidirectional: bool = True
     influence_weight: dict[str, float] = Field(default_factory=dict)
+    structural: bool = False
+    context: str | None = None  # "household", "workplace", "neighborhood", etc.
 
     def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for JSON serialization."""
-        return {
+        d: dict[str, Any] = {
             "source": self.source,
             "target": self.target,
             "weight": round(self.weight, 4),
@@ -46,6 +48,11 @@ class Edge(BaseModel):
                 ),
             },
         }
+        if self.structural:
+            d["structural"] = True
+        if self.context:
+            d["context"] = self.context
+        return d
 
 
 class NodeMetrics(BaseModel):
