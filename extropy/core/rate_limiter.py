@@ -167,9 +167,21 @@ class RateLimiter:
         We don't know latency upfront, so use RPM-derived ceiling:
         allow up to rpm/2 in-flight (30s worth of launches).
 
+        Also capped by OS file descriptor limit — each concurrent request
+        needs ~2 fds (socket + TLS), plus ~50 for Python runtime overhead.
+
         TPM is already enforced by token buckets during acquire().
         """
-        return max(1, self.rpm // 2)
+        import resource
+
+        rpm_derived = self.rpm // 2
+        try:
+            soft_limit, _ = resource.getrlimit(resource.RLIMIT_NOFILE)
+        except (ValueError, OSError):
+            soft_limit = 256  # conservative fallback
+        # Each connection uses ~2 fds; reserve 100 for runtime overhead
+        fd_derived = max(1, (soft_limit - 100) // 2)
+        return max(1, min(rpm_derived, fd_derived))
 
     async def acquire(
         self,

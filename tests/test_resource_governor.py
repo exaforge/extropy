@@ -29,12 +29,17 @@ def test_memory_pressure_ratio_uses_budget(monkeypatch):
 
 
 def test_max_safe_concurrent_scales_with_rpm():
-    """max_safe_concurrent should be rpm // 2."""
+    """max_safe_concurrent should scale with rpm, capped by fd limit."""
+    import resource
+
+    soft_limit, _ = resource.getrlimit(resource.RLIMIT_NOFILE)
+    fd_cap = max(1, (soft_limit - 100) // 2)
+
     rl = RateLimiter(provider="test", model="m", rpm=100, tpm=100_000)
-    assert rl.max_safe_concurrent == 50
+    assert rl.max_safe_concurrent == min(50, fd_cap)
 
     rl2 = RateLimiter(provider="test", model="m", rpm=1000, tpm=1_000_000)
-    assert rl2.max_safe_concurrent == 500
+    assert rl2.max_safe_concurrent == min(500, fd_cap)
 
     rl3 = RateLimiter(provider="test", model="m", rpm=1, tpm=10_000)
     assert rl3.max_safe_concurrent == 1
