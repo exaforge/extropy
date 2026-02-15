@@ -1,6 +1,5 @@
 """Tests for scenario validation behavior."""
 
-import json
 from pathlib import Path
 
 from extropy.core.models.scenario import (
@@ -21,20 +20,21 @@ from extropy.core.models.scenario import (
     SpreadConfig,
 )
 from extropy.scenario.validator import load_and_validate_scenario, validate_scenario
+from extropy.storage import open_study_db
 
 
 def _make_scenario_spec(
     population_path: str,
-    agents_path: str,
-    network_path: str,
+    study_db_path: str,
 ) -> ScenarioSpec:
     return ScenarioSpec(
         meta=ScenarioMeta(
             name="test_scenario",
             description="Validation test scenario",
             population_spec=population_path,
-            agents_file=agents_path,
-            network_file=network_path,
+            study_db=study_db_path,
+            population_id="default",
+            network_id="default",
         ),
         event=Event(
             type=EventType.ANNOUNCEMENT,
@@ -83,17 +83,19 @@ def _make_scenario_spec(
 def test_validate_scenario_surfaces_errors(tmp_path: Path):
     """Validation should preserve and return discovered errors."""
     population_path = tmp_path / "population.yaml"
-    agents_path = tmp_path / "agents.json"
-    network_path = tmp_path / "network.json"
+    study_db = tmp_path / "study.db"
 
     population_path.write_text("placeholder: true\n")
-    agents_path.write_text("[]\n")
-    network_path.write_text('{"meta": {}, "edges": []}\n')
+    with open_study_db(study_db) as db:
+        db.save_sample_result(
+            population_id="default",
+            agents=[],
+            meta={"source": "test"},
+        )
 
     spec = _make_scenario_spec(
         str(population_path),
-        str(agents_path),
-        str(network_path),
+        str(study_db),
     )
     spec.seed_exposure.rules[0].channel = "missing_channel"
 
@@ -110,15 +112,38 @@ def test_load_and_validate_scenario_resolves_relative_paths(
 ):
     """Relative file references should resolve against scenario file location."""
     population_path = tmp_path / "population.yaml"
-    agents_path = tmp_path / "agents.json"
-    network_path = tmp_path / "network.json"
+    study_db = tmp_path / "study.db"
     scenario_path = tmp_path / "scenario.yaml"
 
     minimal_population_spec.to_yaml(population_path)
-    agents_path.write_text('[{"_id": "agent_0", "age": 35, "gender": "male"}]\n')
-    network_path.write_text(json.dumps({"meta": {"node_count": 1}, "edges": []}))
+    with open_study_db(study_db) as db:
+        db.save_sample_result(
+            population_id="default",
+            agents=[{"_id": "agent_0", "age": 35, "gender": "male"}],
+            meta={"source": "test"},
+        )
+        db.save_network_result(
+            population_id="default",
+            network_id="default",
+            config={},
+            result_meta={"node_count": 1},
+            edges=[
+                {
+                    "source": "agent_0",
+                    "target": "agent_0",
+                    "weight": 1.0,
+                    "type": "self",
+                    "influence_weight": {
+                        "source_to_target": 1.0,
+                        "target_to_source": 1.0,
+                    },
+                }
+            ],
+            seed=None,
+            candidate_mode="test",
+        )
 
-    spec = _make_scenario_spec("population.yaml", "agents.json", "network.json")
+    spec = _make_scenario_spec("population.yaml", "study.db")
     spec.to_yaml(scenario_path)
 
     _, result = load_and_validate_scenario(scenario_path)
@@ -133,17 +158,17 @@ def test_load_and_validate_scenario_resolves_relative_paths(
 def test_validate_scenario_allows_edge_weight_in_spread_modifier(tmp_path: Path):
     """edge_weight should be treated as a valid spread modifier reference."""
     population_path = tmp_path / "population.yaml"
-    agents_path = tmp_path / "agents.json"
-    network_path = tmp_path / "network.json"
+    study_db = tmp_path / "study.db"
 
     population_path.write_text("placeholder: true\n")
-    agents_path.write_text("[]\n")
-    network_path.write_text('{"meta": {}, "edges": []}\n')
+    with open_study_db(study_db) as db:
+        db.save_sample_result(
+            population_id="default", agents=[], meta={"source": "test"}
+        )
 
     spec = _make_scenario_spec(
         str(population_path),
-        str(agents_path),
-        str(network_path),
+        str(study_db),
     )
     spec.spread.share_modifiers = [
         SpreadModifier(when="edge_weight > 0.7", multiply=1.1, add=0.0)

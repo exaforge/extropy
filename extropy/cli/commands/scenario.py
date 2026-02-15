@@ -17,8 +17,13 @@ def scenario_command(
     population: Path = typer.Option(
         ..., "--population", "-p", help="Population spec YAML file"
     ),
-    agents: Path = typer.Option(..., "--agents", "-a", help="Sampled agents JSON file"),
-    network: Path = typer.Option(..., "--network", "-n", help="Network JSON file"),
+    study_db: Path = typer.Option(..., "--study-db", help="Canonical study DB file"),
+    population_id: str = typer.Option(
+        "default", "--population-id", help="Population ID in study DB"
+    ),
+    network_id: str = typer.Option(
+        "default", "--network-id", help="Network ID in study DB"
+    ),
     description: str | None = typer.Option(
         None,
         "--description",
@@ -44,12 +49,12 @@ def scenario_command(
     - Outcome definitions (what to measure)
 
     Example:
-        extropy scenario -p population.yaml -a agents.json -n network.json
-        extropy scenario -p pop.yaml -a agents.json -n net.json -d "Custom description" -o custom.yaml
+        extropy scenario -p population.yaml --study-db study.db
+        extropy scenario -p pop.yaml --study-db study.db --population-id main --network-id main -d "Custom description" -o custom.yaml
     """
     from ...core.models import PopulationSpec
     from ...scenario import create_scenario
-    from ...utils import make_relative_to
+    from ...storage import open_study_db
 
     start_time = time.time()
     console.print()
@@ -59,13 +64,21 @@ def scenario_command(
         console.print(f"[red]✗[/red] Population spec not found: {population}")
         raise typer.Exit(1)
 
-    if not agents.exists():
-        console.print(f"[red]✗[/red] Agents file not found: {agents}")
+    if not study_db.exists():
+        console.print(f"[red]✗[/red] Study DB not found: {study_db}")
         raise typer.Exit(1)
 
-    if not network.exists():
-        console.print(f"[red]✗[/red] Network file not found: {network}")
-        raise typer.Exit(1)
+    with open_study_db(study_db) as db:
+        if db.get_agent_count(population_id) == 0:
+            console.print(
+                f"[red]✗[/red] No agents found for population_id '{population_id}' in {study_db}"
+            )
+            raise typer.Exit(1)
+        if db.get_network_edge_count(network_id) == 0:
+            console.print(
+                f"[red]✗[/red] No network edges found for network_id '{network_id}' in {study_db}"
+            )
+            raise typer.Exit(1)
 
     # Load population spec to get scenario description if not provided
     try:
@@ -106,8 +119,9 @@ def scenario_command(
             result_spec, validation_result = create_scenario(
                 description=scenario_desc,
                 population_spec_path=population,
-                agents_path=agents,
-                network_path=network,
+                study_db_path=study_db,
+                population_id=population_id,
+                network_id=network_id,
                 output_path=None,  # Don't save yet
                 on_progress=on_progress,
             )
@@ -239,10 +253,10 @@ def scenario_command(
             console.print("[dim]Cancelled.[/dim]")
             raise typer.Exit(0)
 
-    # Convert paths to be relative to output file before saving
-    result_spec.meta.population_spec = make_relative_to(population, output_path)
-    result_spec.meta.agents_file = make_relative_to(agents, output_path)
-    result_spec.meta.network_file = make_relative_to(network, output_path)
+    result_spec.meta.population_spec = str(population)
+    result_spec.meta.study_db = str(study_db)
+    result_spec.meta.population_id = population_id
+    result_spec.meta.network_id = network_id
 
     # Save to YAML
     result_spec.to_yaml(output_path)

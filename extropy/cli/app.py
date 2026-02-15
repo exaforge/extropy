@@ -1,5 +1,6 @@
 """Core CLI app definition and global state."""
 
+import atexit
 from typing import Annotated
 
 import typer
@@ -15,6 +16,7 @@ console = Console()
 
 # Global state for JSON mode (set by callback)
 _json_mode = False
+_show_cost = False
 
 
 def get_json_mode() -> bool:
@@ -28,6 +30,28 @@ def _version_callback(value: bool) -> None:
 
         print(f"extropy {__version__}")
         raise typer.Exit()
+
+
+def _print_cost_footer() -> None:
+    """Print cost summary footer at CLI exit (if enabled and there are records)."""
+    try:
+        from ..core.cost.tracker import CostTracker
+        from ..core.cost.ledger import record_session
+
+        tracker = CostTracker.get()
+        if not tracker.has_records:
+            return
+
+        # Persist to ledger
+        summary = tracker.summary()
+        record_session(summary)
+
+        # Print footer
+        line = tracker.summary_line()
+        if line:
+            console.print(f"\n[dim]Cost: {line}[/dim]")
+    except Exception:
+        pass  # Never let cost display crash the CLI
 
 
 @app.callback()
@@ -49,13 +73,36 @@ def main_callback(
             is_eager=True,
         ),
     ] = False,
+    cost: Annotated[
+        bool,
+        typer.Option(
+            "--cost",
+            help="Show cost summary after command completes",
+            is_eager=True,
+        ),
+    ] = False,
 ):
     """Extropy: Population simulation engine for agent-based modeling.
 
     Use --json for machine-readable output suitable for scripting and AI tools.
+    Use --cost to show token usage and cost summary after each command.
     """
-    global _json_mode
+    global _json_mode, _show_cost
     _json_mode = json_output
+
+    # Determine if cost footer should be shown: --cost flag or config setting
+    show = cost
+    if not show:
+        try:
+            from ..config import get_config
+
+            show = get_config().show_cost
+        except Exception:
+            pass
+
+    _show_cost = show
+    if _show_cost:
+        atexit.register(_print_cost_footer)
 
 
 # Import commands to register them with the app
@@ -71,4 +118,10 @@ from .commands import (  # noqa: E402, F401
     estimate,
     results,
     config_cmd,
+    inspect,
+    query,
+    report,
+    export,
+    chat,
+    migrate,
 )

@@ -25,11 +25,8 @@ Key Concepts:
 
 Output:
     Results directory containing:
-    - simulation.db: SQLite database with all state
-    - timeline.jsonl: Streaming event log
-    - agent_states.json: Final state per agent
+    - study.db: Canonical SQLite database with simulation state/checkpoints
     - by_timestep.json: Metrics over time
-    - outcome_distributions.json: Final outcome distributions
     - meta.json: Run configuration
 """
 

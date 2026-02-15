@@ -14,8 +14,12 @@ Implements Phase 0 redesign:
 
 import json
 import logging
+import queue
 import random
+import sqlite3
+import threading
 import time
+import uuid
 from datetime import datetime
 from pathlib import Path
 from typing import Any
@@ -36,16 +40,16 @@ from ..core.models import (
     float_to_conviction,
 )
 from ..core.rate_limiter import DualRateLimiter
-from ..population.network import load_agents_json
 from ..population.persona import PersonaConfig
+from ..storage import open_study_db
 from .progress import SimulationProgress
 from .state import StateManager
 from .persona import generate_persona
 from .reasoning import batch_reason_agents, create_reasoning_context
 from .propagation import apply_seed_exposures, propagate_through_network
 from .stopping import evaluate_stopping_conditions
-from .timeline import TimelineManager
 from ..utils.callbacks import TimestepProgressCallback
+from ..utils.resource_governor import ResourceGovernor
 from .aggregation import (
     compute_timestep_summary,
     compute_final_aggregates,
@@ -65,12 +69,29 @@ _PRIVATE_ADJUSTMENT_RHO = 0.12
 _PRIVATE_FLIP_CONVICTION = CONVICTION_MAP[ConvictionLevel.FIRM]
 
 
+class _StateTimelineAdapter:
+    """Timeline adapter that persists events into StateManager timeline table."""
+
+    def __init__(self, state_manager: StateManager):
+        self.state_manager = state_manager
+
+    def log_event(self, event: SimulationEvent) -> None:
+        self.state_manager.log_event(event)
+
+    def flush(self) -> None:
+        return
+
+    def close(self) -> None:
+        return
+
+
 class SimulationSummary:
     """Summary of a completed simulation run."""
 
     def __init__(
         self,
         scenario_name: str,
+        run_id: str | None,
         population_size: int,
         total_timesteps: int,
         stopped_reason: str | None,
@@ -83,6 +104,7 @@ class SimulationSummary:
         completed_at: datetime,
     ):
         self.scenario_name = scenario_name
+        self.run_id = run_id
         self.population_size = population_size
         self.total_timesteps = total_timesteps
         self.stopped_reason = stopped_reason
@@ -98,6 +120,7 @@ class SimulationSummary:
         """Convert to dictionary."""
         return {
             "scenario_name": self.scenario_name,
+            "run_id": self.run_id,
             "population_size": self.population_size,
             "total_timesteps": self.total_timesteps,
             "stopped_reason": self.stopped_reason,
@@ -128,6 +151,13 @@ class SimulationEngine:
         persona_config: PersonaConfig | None = None,
         rate_limiter: DualRateLimiter | None = None,
         chunk_size: int = 50,
+        state_db_path: Path | str | None = None,
+        run_id: str | None = None,
+        checkpoint_every_chunks: int = 1,
+        retention_lite: bool = False,
+        writer_queue_size: int = 256,
+        db_write_batch_size: int = 100,
+        resource_governor: ResourceGovernor | None = None,
     ):
         """Initialize simulation engine.
 
@@ -149,6 +179,19 @@ class SimulationEngine:
         self.persona_config = persona_config
         self.rate_limiter = rate_limiter
         self.chunk_size = chunk_size
+        self.run_id = run_id or f"run_{uuid.uuid4().hex[:12]}"
+        self.checkpoint_every_chunks = max(1, checkpoint_every_chunks)
+        self.retention_lite = retention_lite
+        self.writer_queue_size = max(1, writer_queue_size)
+        self.db_write_batch_size = max(1, db_write_batch_size)
+        self.resource_governor = resource_governor
+        self.reasoning_max_concurrency = 50
+        if self.resource_governor is not None:
+            self.reasoning_max_concurrency = self.resource_governor.recommend_workers(
+                requested_workers=50,
+                memory_per_worker_gb=0.2,
+            )
+        self._last_guardrail_timestep = -1
 
         # Build agent map for quick lookup
         self.agent_map = {a.get("_id", str(i)): a for i, a in enumerate(agents)}
@@ -174,13 +217,18 @@ class SimulationEngine:
         self.output_dir.mkdir(parents=True, exist_ok=True)
 
         # Initialize state manager
-        self.state_manager = StateManager(
-            self.output_dir / "simulation.db",
-            agents,
+        state_db_file = (
+            Path(state_db_path) if state_db_path else self.output_dir / "study.db"
         )
+        self.state_manager = StateManager(
+            state_db_file,
+            agents,
+            run_id=self.run_id,
+        )
+        self.study_db = open_study_db(state_db_file)
 
         # Initialize timeline manager
-        self.timeline = TimelineManager(self.output_dir / "timeline.jsonl")
+        self.timeline = _StateTimelineAdapter(self.state_manager)
 
         # Pre-generate personas for all agents
         # Extract decision-relevant attributes from outcome config (trait salience)
@@ -258,6 +306,52 @@ class SimulationEngine:
         """
         self._progress = progress
 
+    def _apply_runtime_guardrails(self, timestep: int) -> None:
+        """Downshift runtime knobs when process memory nears configured budget."""
+        if (
+            self.resource_governor is None
+            or self.resource_governor.resource_mode != "auto"
+        ):
+            return
+
+        ratio = self.resource_governor.memory_pressure_ratio()
+        if ratio < 0.85:
+            return
+
+        factor = 0.5 if ratio >= 0.98 else 0.75
+        old_concurrency = self.reasoning_max_concurrency
+        old_batch = self.db_write_batch_size
+        old_queue = self.writer_queue_size
+
+        self.reasoning_max_concurrency = self.resource_governor.downshift_int(
+            self.reasoning_max_concurrency, factor=factor, minimum=1
+        )
+        self.db_write_batch_size = self.resource_governor.downshift_int(
+            self.db_write_batch_size, factor=factor, minimum=1
+        )
+        self.writer_queue_size = self.resource_governor.downshift_int(
+            self.writer_queue_size, factor=factor, minimum=4
+        )
+
+        changed = (
+            old_concurrency != self.reasoning_max_concurrency
+            or old_batch != self.db_write_batch_size
+            or old_queue != self.writer_queue_size
+        )
+        if changed and timestep != self._last_guardrail_timestep:
+            self._last_guardrail_timestep = timestep
+            logger.warning(
+                "[RESOURCE] Memory pressure %.2fx budget; "
+                "reasoning_concurrency %d->%d, writer_batch %d->%d, writer_queue %d->%d",
+                ratio,
+                old_concurrency,
+                self.reasoning_max_concurrency,
+                old_batch,
+                self.db_write_batch_size,
+                old_queue,
+                self.writer_queue_size,
+            )
+
     def _report_progress(self, timestep: int, status: str) -> None:
         """Report progress to callback."""
         if self._on_progress:
@@ -320,7 +414,7 @@ class SimulationEngine:
         """Execute the full simulation.
 
         Supports automatic resume: if the output directory contains a
-        simulation.db with partial progress, the engine picks up where
+        study.db with partial progress, the engine picks up where
         it left off.
 
         Returns:
@@ -379,6 +473,7 @@ class SimulationEngine:
             self._export_results()
         finally:
             self.state_manager.close()
+            self.study_db.close()
 
         return summary
 
@@ -491,6 +586,7 @@ class SimulationEngine:
         Returns:
             Tuple of (agents_reasoned, state_changes, shares_occurred).
         """
+        self._apply_runtime_guardrails(timestep)
         agents_to_reason = self.state_manager.get_agents_to_reason(
             timestep,
             self.config.multi_touch_threshold,
@@ -547,12 +643,96 @@ class SimulationEngine:
             context = self._build_reasoning_context(agent_id, old_state)
             contexts.append(context)
 
-        # Split into chunks
-        total_reasoned = 0
-        total_changes = 0
-        total_shares = 0
+        completed_chunks = self.study_db.get_completed_simulation_chunks(
+            self.run_id, timestep
+        )
+        totals = {"reasoned": 0, "changes": 0, "shares": 0}
+        work_queue: queue.Queue[tuple[int, list[tuple[str, Any]], bool] | object] = (
+            queue.Queue(maxsize=self.writer_queue_size)
+        )
+        sentinel = object()
+        writer_error: list[Exception] = []
+
+        def _writer_loop() -> None:
+            chunks_since_checkpoint = 0
+            pending_chunks: list[tuple[int, list[tuple[str, Any]], bool]] = []
+
+            def _flush_pending() -> None:
+                nonlocal chunks_since_checkpoint
+                if not pending_chunks:
+                    return
+
+                with self.state_manager.transaction():
+                    for chunk_index, chunk_results, _is_last_chunk in pending_chunks:
+                        reasoned, changes, shares = self._process_reasoning_chunk(
+                            timestep, chunk_results, old_states
+                        )
+                        totals["reasoned"] += reasoned
+                        totals["changes"] += changes
+                        totals["shares"] += shares
+
+                for chunk_index, _chunk_results, is_last_chunk in pending_chunks:
+                    self.study_db.save_simulation_checkpoint(
+                        run_id=self.run_id,
+                        timestep=timestep,
+                        chunk_index=chunk_index,
+                        status="done",
+                    )
+                    chunks_since_checkpoint += 1
+                    if (
+                        chunks_since_checkpoint >= self.checkpoint_every_chunks
+                        or is_last_chunk
+                    ):
+                        self.study_db.set_run_metadata(
+                            self.run_id,
+                            "last_checkpoint",
+                            f"{timestep}:{chunk_index}",
+                        )
+                        chunks_since_checkpoint = 0
+
+                pending_chunks.clear()
+
+            try:
+                while True:
+                    item = work_queue.get()
+                    try:
+                        if item is sentinel:
+                            _flush_pending()
+                            break
+
+                        chunk_index, chunk_results, is_last_chunk = item
+                        if chunk_index in completed_chunks:
+                            continue
+                        pending_chunks.append(
+                            (chunk_index, chunk_results, is_last_chunk)
+                        )
+                        if (
+                            len(pending_chunks) >= self.db_write_batch_size
+                            or is_last_chunk
+                        ):
+                            _flush_pending()
+                    finally:
+                        work_queue.task_done()
+            except Exception as e:  # pragma: no cover - surfaced to caller
+                writer_error.append(e)
+
+        writer_thread = threading.Thread(
+            target=_writer_loop,
+            name=f"sim-writer-{self.run_id}-{timestep}",
+            daemon=True,
+        )
+        writer_thread.start()
 
         for chunk_start in range(0, len(contexts), self.chunk_size):
+            if writer_error:
+                break
+            self._apply_runtime_guardrails(timestep)
+            chunk_index = chunk_start // self.chunk_size
+            if chunk_index in completed_chunks:
+                logger.info(
+                    f"[TIMESTEP {timestep}] Skipping completed chunk {chunk_index}"
+                )
+                continue
             chunk_contexts = contexts[chunk_start : chunk_start + self.chunk_size]
 
             reasoning_start = time.time()
@@ -560,13 +740,13 @@ class SimulationEngine:
                 chunk_contexts,
                 self.scenario,
                 self.config,
+                max_concurrency=self.reasoning_max_concurrency,
                 rate_limiter=self.rate_limiter,
                 on_agent_done=_on_agent_done,
             )
             reasoning_elapsed = time.time() - reasoning_start
             self.total_reasoning_calls += len(chunk_results)
 
-            # Accumulate token usage
             self.pivotal_input_tokens += chunk_usage.pivotal_input_tokens
             self.pivotal_output_tokens += chunk_usage.pivotal_output_tokens
             self.routine_input_tokens += chunk_usage.routine_input_tokens
@@ -578,18 +758,27 @@ class SimulationEngine:
                 if chunk_results
                 else f"[TIMESTEP {timestep}] Chunk empty"
             )
+            is_last_chunk = chunk_start + self.chunk_size >= len(contexts)
+            work_queue.put((chunk_index, chunk_results, is_last_chunk))
 
-            # Process and commit this chunk
-            with self.state_manager.transaction():
-                reasoned, changes, shares = self._process_reasoning_chunk(
-                    timestep, chunk_results, old_states
-                )
+        work_queue.put(sentinel)
+        while work_queue.unfinished_tasks > 0:
+            if writer_error:
+                while True:
+                    try:
+                        work_queue.get_nowait()
+                        work_queue.task_done()
+                    except queue.Empty:
+                        break
+                break
+            time.sleep(0.01)
 
-            total_reasoned += reasoned
-            total_changes += changes
-            total_shares += shares
+        work_queue.join()
+        writer_thread.join(timeout=1)
+        if writer_error:
+            raise writer_error[0]
 
-        return total_reasoned, total_changes, total_shares
+        return totals["reasoned"], totals["changes"], totals["shares"]
 
     def _process_reasoning_chunk(
         self,
@@ -778,7 +967,7 @@ class SimulationEngine:
                 private_outcomes=private_outcomes,
                 committed=is_committed,
                 outcomes=private_outcomes,
-                raw_reasoning=response.reasoning,
+                raw_reasoning=None if self.retention_lite else response.reasoning,
                 updated_at=timestep,
             )
 
@@ -813,6 +1002,9 @@ class SimulationEngine:
                         "public_conviction": new_state.public_conviction,
                         "private_conviction": new_state.private_conviction,
                         "will_share": new_state.will_share,
+                        "raw_reasoning": None
+                        if self.retention_lite
+                        else response.reasoning,
                     },
                 )
             )
@@ -1054,6 +1246,7 @@ class SimulationEngine:
 
         return SimulationSummary(
             scenario_name=self.scenario.meta.name,
+            run_id=self.run_id,
             population_size=len(self.agents),
             total_timesteps=final_timestep + 1,
             stopped_reason=stopped_reason,
@@ -1062,7 +1255,7 @@ class SimulationEngine:
             final_exposure_rate=self.state_manager.get_exposure_rate(),
             outcome_distributions=outcome_dists,
             runtime_seconds=runtime,
-            model_used=self.config.model,
+            model_used=self.config.strong,
             completed_at=datetime.now(),
         )
 
@@ -1072,7 +1265,7 @@ class SimulationEngine:
         Returns:
             Cost dictionary with token counts and estimated USD.
         """
-        from ..core.pricing import get_pricing, resolve_default_model
+        from ..core.pricing import get_pricing
         from ..config import get_config
 
         cost: dict[str, Any] = {
@@ -1087,19 +1280,14 @@ class SimulationEngine:
 
         # Resolve effective model names for pricing
         config = get_config()
-        provider = config.simulation.provider
-        pivotal_model = (
-            self.config.pivotal_model
-            or self.config.model
-            or config.simulation.pivotal_model
-            or config.simulation.model
-            or resolve_default_model(provider, "reasoning")
-        )
-        routine_model = (
-            self.config.routine_model
-            or config.simulation.routine_model
-            or resolve_default_model(provider, "simple")
-        )
+        from ..config import parse_model_string
+
+        strong_model_str = self.config.strong or config.resolve_sim_strong()
+        fast_model_str = self.config.fast or config.resolve_sim_fast()
+
+        # Strip provider prefix for pricing lookup (pricing is keyed by bare model name)
+        _, pivotal_model = parse_model_string(strong_model_str)
+        _, routine_model = parse_model_string(fast_model_str)
 
         cost["pivotal_model"] = pivotal_model
         cost["routine_model"] = routine_model
@@ -1141,7 +1329,7 @@ class SimulationEngine:
         return cost
 
     def _export_results(self) -> None:
-        """Export all results to output directory."""
+        """Export compact default artifacts to output directory."""
         # Export summary
         summaries = self.state_manager.get_timestep_summaries()
         timeline_agg = compute_timeline_aggregates(summaries)
@@ -1149,48 +1337,13 @@ class SimulationEngine:
         with open(self.output_dir / "by_timestep.json", "w") as f:
             json.dump(timeline_agg, f, indent=2)
 
-        # Export final agent states
-        final_states = self.state_manager.export_final_states()
-
-        # Merge with agent attributes
-        agent_results = []
-        for state in final_states:
-            agent_id = state["agent_id"]
-            agent = self.agent_map.get(agent_id, {})
-
-            agent_results.append(
-                {
-                    "agent_id": agent_id,
-                    "attributes": {
-                        k: v for k, v in agent.items() if not k.startswith("_")
-                    },
-                    "final_state": state,
-                    "reasoning_count": (
-                        1 if state["last_reasoning_timestep"] >= 0 else 0
-                    ),
-                }
-            )
-
-        with open(self.output_dir / "agent_states.json", "w") as f:
-            json.dump(agent_results, f, indent=2)
-
-        # Export outcome distributions
-        outcome_dists = compute_outcome_distributions(
-            self.state_manager,
-            self.scenario.outcomes.suggested_outcomes,
-        )
-
-        with open(self.output_dir / "outcome_distributions.json", "w") as f:
-            json.dump(outcome_dists, f, indent=2)
-
         # Export meta information
         meta = {
             "scenario_name": self.scenario.meta.name,
             "scenario_path": self.config.scenario_path,
             "population_size": len(self.agents),
-            "model": self.config.model,
-            "pivotal_model": self.config.pivotal_model,
-            "routine_model": self.config.routine_model,
+            "strong_model": self.config.strong,
+            "fast_model": self.config.fast,
             "seed": self.seed,
             "multi_touch_threshold": self.config.multi_touch_threshold,
             "completed_at": datetime.now().isoformat(),
@@ -1209,9 +1362,9 @@ class SimulationEngine:
 def run_simulation(
     scenario_path: str | Path,
     output_dir: str | Path,
-    model: str = "",
-    pivotal_model: str = "",
-    routine_model: str = "",
+    study_db_path: str | Path | None = None,
+    strong: str = "",
+    fast: str = "",
     multi_touch_threshold: int = 3,
     random_seed: int | None = None,
     on_progress: TimestepProgressCallback | None = None,
@@ -1221,6 +1374,13 @@ def run_simulation(
     tpm_override: int | None = None,
     chunk_size: int = 50,
     progress: SimulationProgress | None = None,
+    run_id: str | None = None,
+    resume: bool = False,
+    checkpoint_every_chunks: int = 1,
+    retention_lite: bool = False,
+    writer_queue_size: int = 256,
+    db_write_batch_size: int = 100,
+    resource_governor: ResourceGovernor | None = None,
 ) -> SimulationSummary:
     """Run a simulation from a scenario file.
 
@@ -1229,9 +1389,8 @@ def run_simulation(
     Args:
         scenario_path: Path to scenario YAML file
         output_dir: Directory for results output
-        model: LLM model for agent reasoning
-        pivotal_model: Model for pivotal reasoning (default: same as model)
-        routine_model: Cheap model for routine + classification
+        strong: Strong model for Pass 1 reasoning (provider/model format)
+        fast: Fast model for Pass 2 classification (provider/model format)
         multi_touch_threshold: Re-reason after N new exposures
         random_seed: Random seed for reproducibility
         on_progress: Progress callback(timestep, max, status)
@@ -1241,12 +1400,48 @@ def run_simulation(
         tpm_override: Override TPM limit
         chunk_size: Agents per reasoning chunk for checkpointing
         progress: Optional SimulationProgress for live display tracking
+        run_id: Optional run identifier for resume and bookkeeping
+        resume: Resume a prior run from DB checkpoints
+        checkpoint_every_chunks: Mark simulation checkpoint every N chunks
+        retention_lite: Reduce payload volume by dropping full raw reasoning text
+        writer_queue_size: Maximum buffered chunks waiting for DB writer
+        db_write_batch_size: Number of chunks applied per DB writer transaction
+        resource_governor: Optional governor for runtime downshift guardrails
 
     Returns:
         SimulationSummary with results
     """
     scenario_path = Path(scenario_path)
     output_dir = Path(output_dir)
+    if resume and not run_id:
+        raise ValueError("--resume requires --run-id")
+
+    def _reset_runtime_tables(path: Path, run_key: str) -> None:
+        conn = sqlite3.connect(str(path))
+        try:
+            cur = conn.cursor()
+            statements = [
+                "DELETE FROM agent_states WHERE run_id = ?",
+                "DELETE FROM exposures WHERE run_id = ?",
+                "DELETE FROM memory_traces WHERE run_id = ?",
+                "DELETE FROM timeline WHERE run_id = ?",
+                "DELETE FROM timestep_summaries WHERE run_id = ?",
+                "DELETE FROM shared_to WHERE run_id = ?",
+                "DELETE FROM simulation_metadata WHERE run_id = ?",
+            ]
+            for sql in statements:
+                try:
+                    cur.execute(sql, (run_key,))
+                except sqlite3.OperationalError:
+                    # Legacy table shape fallback.
+                    table = sql.split()[2]
+                    cur.execute(f"DELETE FROM {table}")
+            conn.commit()
+        except sqlite3.OperationalError:
+            # First run on this DB may not have simulation tables yet.
+            pass
+        finally:
+            conn.close()
 
     # Load scenario
     scenario = ScenarioSpec.from_yaml(scenario_path)
@@ -1257,18 +1452,63 @@ def run_simulation(
         pop_path = scenario_path.parent / pop_path
     population_spec = PopulationSpec.from_yaml(pop_path)
 
-    # Load agents
-    agents_path = Path(scenario.meta.agents_file)
-    if not agents_path.is_absolute():
-        agents_path = scenario_path.parent / agents_path
-    agents = load_agents_json(agents_path)
+    # Resolve canonical study DB
+    if study_db_path is None:
+        if not getattr(scenario.meta, "study_db", None):
+            raise ValueError(
+                "Legacy scenario format detected. Rebuild scenario with --study-db."
+            )
+        study_db_resolved = Path(scenario.meta.study_db)
+        if not study_db_resolved.is_absolute():
+            study_db_resolved = scenario_path.parent / study_db_resolved
+    else:
+        study_db_resolved = Path(study_db_path)
 
-    # Load network
-    network_path = Path(scenario.meta.network_file)
-    if not network_path.is_absolute():
-        network_path = scenario_path.parent / network_path
-    with open(network_path) as f:
-        network = json.load(f)
+    if not study_db_resolved.exists():
+        raise FileNotFoundError(f"Study DB not found: {study_db_resolved}")
+
+    resolved_run_id = (
+        run_id
+        or f"run_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{uuid.uuid4().hex[:8]}"
+    )
+
+    with open_study_db(study_db_resolved) as db:
+        agents = db.get_agents(scenario.meta.population_id)
+        if not agents:
+            raise ValueError(
+                f"No agents for population_id '{scenario.meta.population_id}' in {study_db_resolved}"
+            )
+        network = db.get_network(scenario.meta.network_id)
+        if not network.get("edges"):
+            raise ValueError(
+                f"No network edges for network_id '{scenario.meta.network_id}' in {study_db_resolved}"
+            )
+        db.create_simulation_run(
+            run_id=resolved_run_id,
+            scenario_name=scenario.meta.name,
+            population_id=scenario.meta.population_id,
+            network_id=scenario.meta.network_id,
+            config={
+                "scenario_path": str(scenario_path),
+                "output_dir": str(output_dir),
+                "strong": strong,
+                "fast": fast,
+                "multi_touch_threshold": multi_touch_threshold,
+                "chunk_size": chunk_size,
+                "checkpoint_every_chunks": checkpoint_every_chunks,
+                "retention_lite": retention_lite,
+                "writer_queue_size": writer_queue_size,
+                "db_write_batch_size": db_write_batch_size,
+                "resume": resume,
+            },
+            seed=random_seed,
+            status="running",
+        )
+        db.set_run_metadata(resolved_run_id, "output_dir", str(output_dir))
+        db.set_run_metadata(resolved_run_id, "study_db", str(study_db_resolved))
+
+    if not resume:
+        _reset_runtime_tables(study_db_resolved, resolved_run_id)
 
     # Load persona config if provided
     persona_config = None
@@ -1288,26 +1528,22 @@ def run_simulation(
     config = SimulationRunConfig(
         scenario_path=str(scenario_path),
         output_dir=str(output_dir),
-        model=model,
-        pivotal_model=pivotal_model,
-        routine_model=routine_model,
+        strong=strong,
+        fast=fast,
         multi_touch_threshold=multi_touch_threshold,
         random_seed=random_seed,
     )
 
-    # Create dual rate limiter (separate limiters for pivotal and routine models)
+    # Resolve effective model strings for rate limiting
     from ..config import get_config
 
     entropy_config = get_config()
-    provider = entropy_config.simulation.provider
-    effective_model = model or entropy_config.simulation.model or ""
-    effective_pivotal = pivotal_model or effective_model
-    effective_routine = routine_model or entropy_config.simulation.routine_model or ""
+    effective_strong = strong or entropy_config.resolve_sim_strong()
+    effective_fast = fast or entropy_config.resolve_sim_fast()
 
     rate_limiter = DualRateLimiter.create(
-        provider=provider,
-        pivotal_model=effective_pivotal,
-        routine_model=effective_routine,
+        strong_model_string=effective_strong,
+        fast_model_string=effective_fast,
         tier=rate_tier,
         rpm_override=rpm_override,
         tpm_override=tpm_override,
@@ -1323,6 +1559,13 @@ def run_simulation(
         persona_config=persona_config,
         rate_limiter=rate_limiter,
         chunk_size=chunk_size,
+        state_db_path=study_db_resolved,
+        run_id=resolved_run_id,
+        checkpoint_every_chunks=checkpoint_every_chunks,
+        retention_lite=retention_lite,
+        writer_queue_size=writer_queue_size,
+        db_write_batch_size=db_write_batch_size,
+        resource_governor=resource_governor,
     )
 
     if on_progress:
@@ -1331,4 +1574,23 @@ def run_simulation(
     if progress:
         engine.set_progress_state(progress)
 
-    return engine.run()
+    try:
+        summary = engine.run()
+    except Exception as e:
+        with open_study_db(study_db_resolved) as db:
+            db.update_simulation_run(
+                run_id=resolved_run_id,
+                status="failed",
+                stopped_reason=str(e),
+            )
+        raise
+
+    final_status = "stopped" if summary.stopped_reason else "completed"
+    with open_study_db(study_db_resolved) as db:
+        db.update_simulation_run(
+            run_id=resolved_run_id,
+            status=final_status,
+            stopped_reason=summary.stopped_reason,
+        )
+
+    return summary

@@ -3,7 +3,6 @@
 Tests the 5-step compilation pipeline and auto-configuration logic.
 """
 
-import json
 from unittest.mock import patch
 
 import pytest
@@ -17,6 +16,7 @@ from extropy.scenario.compiler import (
     _determine_simulation_config,
     create_scenario,
 )
+from extropy.storage import open_study_db
 
 
 class TestGenerateScenarioName:
@@ -85,31 +85,39 @@ class TestCreateScenario:
         pop_path = tmp_path / "population.yaml"
         minimal_population_spec.to_yaml(pop_path)
 
-        # Create agents JSON
         agents = [
             {"_id": f"agent_{i:03d}", "age": 30 + i, "gender": "male"}
             for i in range(10)
         ]
-        agents_path = tmp_path / "agents.json"
-        agents_path.write_text(json.dumps(agents))
+        edges = [
+            {
+                "source": f"agent_{i:03d}",
+                "target": f"agent_{(i + 1) % 10:03d}",
+                "weight": 1.0,
+                "type": "colleague",
+                "influence_weight": {"source_to_target": 1.0, "target_to_source": 1.0},
+            }
+            for i in range(10)
+        ]
 
-        # Create network JSON
-        network = {
-            "meta": {"node_count": 10},
-            "nodes": [{"id": f"agent_{i:03d}"} for i in range(10)],
-            "edges": [
-                {
-                    "source": f"agent_{i:03d}",
-                    "target": f"agent_{(i + 1) % 10:03d}",
-                    "type": "colleague",
-                }
-                for i in range(10)
-            ],
-        }
-        network_path = tmp_path / "network.json"
-        network_path.write_text(json.dumps(network))
+        study_db = tmp_path / "study.db"
+        with open_study_db(study_db) as db:
+            db.save_sample_result(
+                population_id="default",
+                agents=agents,
+                meta={"source": "test_fixture"},
+            )
+            db.save_network_result(
+                population_id="default",
+                network_id="default",
+                config={},
+                result_meta={"node_count": 10},
+                edges=edges,
+                seed=42,
+                candidate_mode="test",
+            )
 
-        return pop_path, agents_path, network_path
+        return pop_path, study_db
 
     @patch("extropy.scenario.compiler.parse_scenario")
     @patch("extropy.scenario.compiler.generate_seed_exposure")
@@ -137,7 +145,7 @@ class TestCreateScenario:
             OutcomeType,
         )
 
-        pop_path, agents_path, network_path = mock_files
+        pop_path, study_db = mock_files
 
         # Configure mocks
         mock_parse.return_value = Event(
@@ -188,8 +196,9 @@ class TestCreateScenario:
         spec, validation_result = create_scenario(
             description="Test product launch scenario",
             population_spec_path=pop_path,
-            agents_path=agents_path,
-            network_path=network_path,
+            study_db_path=study_db,
+            population_id="default",
+            network_id="default",
         )
 
         assert spec.meta.name is not None
@@ -223,7 +232,7 @@ class TestCreateScenario:
             OutcomeType,
         )
 
-        pop_path, agents_path, network_path = mock_files
+        pop_path, study_db = mock_files
 
         mock_parse.return_value = Event(
             type=EventType.PRODUCT_LAUNCH,
@@ -270,8 +279,9 @@ class TestCreateScenario:
         create_scenario(
             description="Test",
             population_spec_path=pop_path,
-            agents_path=agents_path,
-            network_path=network_path,
+            study_db_path=study_db,
+            population_id="default",
+            network_id="default",
             on_progress=on_progress,
         )
 

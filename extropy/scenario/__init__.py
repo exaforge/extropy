@@ -16,8 +16,9 @@ Usage:
     >>> spec, result = create_scenario(
     ...     "Netflix announces $3 price increase",
     ...     "population.yaml",
-    ...     "agents.json",
-    ...     "network.json",
+    ...     study_db_path="study.db",
+    ...     population_id="default",
+    ...     network_id="default",
     ...     "scenario.yaml"
     ... )
     >>> result.valid

@@ -20,6 +20,7 @@ from extropy.core.models import (
     SimulationRunConfig,
 )
 from extropy.simulation.progress import SimulationProgress
+from extropy.utils.resource_governor import ResourceGovernor
 from extropy.core.models.scenario import (
     Event,
     EventType,
@@ -49,8 +50,9 @@ def minimal_scenario():
             name="test_scenario",
             description="Test scenario",
             population_spec="test.yaml",
-            agents_file="test.json",
-            network_file="test_network.json",
+            study_db="study.db",
+            population_id="default",
+            network_id="default",
             created_at=datetime(2024, 1, 1),
         ),
         event=Event(
@@ -854,6 +856,66 @@ class TestSimulationMetadata:
         already_4 = engine.state_manager.get_agents_already_reasoned_this_timestep(4)
         assert "a0" not in already_4
 
+    def test_chunk_checkpoints_written_with_writer_pipeline(
+        self,
+        minimal_scenario,
+        simple_agents,
+        simple_network,
+        minimal_pop_spec,
+        tmp_path,
+    ):
+        """Writer pipeline should persist per-chunk checkpoints and last checkpoint marker."""
+        config = SimulationRunConfig(
+            scenario_path="test.yaml",
+            output_dir=str(tmp_path / "output"),
+            chunk_size=1,
+        )
+        engine = SimulationEngine(
+            scenario=minimal_scenario,
+            population_spec=minimal_pop_spec,
+            agents=simple_agents,
+            network=simple_network,
+            config=config,
+            chunk_size=1,
+            checkpoint_every_chunks=2,
+            writer_queue_size=2,
+            db_write_batch_size=2,
+        )
+
+        for aid in ["a0", "a1", "a2"]:
+            exposure = ExposureRecord(
+                timestep=0, channel="broadcast", content="Test", credibility=0.9
+            )
+            engine.state_manager.record_exposure(aid, exposure)
+
+        def fake_batch(
+            contexts,
+            scenario,
+            cfg,
+            max_concurrency=50,
+            rate_limiter=None,
+            on_agent_done=None,
+        ):
+            response = _make_reasoning_response()
+            results = []
+            for ctx in contexts:
+                if on_agent_done:
+                    on_agent_done(ctx.agent_id, response)
+                results.append((ctx.agent_id, response))
+            return results, BatchTokenUsage()
+
+        with patch(
+            "extropy.simulation.engine.batch_reason_agents", side_effect=fake_batch
+        ):
+            reasoned, _, _ = engine._reason_agents(0)
+
+        assert reasoned == 3
+        completed = engine.study_db.get_completed_simulation_chunks(engine.run_id, 0)
+        assert completed == {0, 1, 2}
+        assert (
+            engine.study_db.get_run_metadata(engine.run_id, "last_checkpoint") == "0:2"
+        )
+
 
 class TestResumeLogic:
     """Test engine resume/checkpoint logic."""
@@ -1138,7 +1200,14 @@ class TestProgressState:
         response_a0 = _make_reasoning_response(position="adopt", conviction=0.5)
         response_a1 = _make_reasoning_response(position="reject", conviction=0.7)
 
-        def fake_batch(contexts, scenario, cfg, rate_limiter=None, on_agent_done=None):
+        def fake_batch(
+            contexts,
+            scenario,
+            cfg,
+            max_concurrency=50,
+            rate_limiter=None,
+            on_agent_done=None,
+        ):
             results = []
             for ctx in contexts:
                 if ctx.agent_id == "a0":
@@ -1201,7 +1270,14 @@ class TestProgressState:
 
         received_kwargs = {}
 
-        def fake_batch(contexts, scenario, cfg, rate_limiter=None, on_agent_done=None):
+        def fake_batch(
+            contexts,
+            scenario,
+            cfg,
+            max_concurrency=50,
+            rate_limiter=None,
+            on_agent_done=None,
+        ):
             received_kwargs["on_agent_done"] = on_agent_done
             resp = _make_reasoning_response()
             return [(ctx.agent_id, resp) for ctx in contexts], BatchTokenUsage()
@@ -1396,7 +1472,14 @@ class TestTokenAccumulation:
 
         call_count = [0]
 
-        def fake_batch(contexts, scenario, cfg, rate_limiter=None, on_agent_done=None):
+        def fake_batch(
+            contexts,
+            scenario,
+            cfg,
+            max_concurrency=50,
+            rate_limiter=None,
+            on_agent_done=None,
+        ):
             call_count[0] += 1
             resp = _make_reasoning_response()
             results = [(ctx.agent_id, resp) for ctx in contexts]
@@ -1483,8 +1566,8 @@ class TestTokenAccumulation:
         config = SimulationRunConfig(
             scenario_path="test.yaml",
             output_dir=str(tmp_path / "output"),
-            model="unknown-model-xyz",
-            routine_model="unknown-model-abc",
+            strong="unknown-provider/unknown-model-xyz",
+            fast="unknown-provider/unknown-model-abc",
         )
         engine = SimulationEngine(
             scenario=minimal_scenario,
@@ -1505,3 +1588,75 @@ class TestTokenAccumulation:
             meta = json.load(f)
 
         assert meta["cost"]["estimated_usd"] is None
+
+    def test_export_results_keeps_compact_default_artifacts(
+        self,
+        minimal_scenario,
+        simple_agents,
+        simple_network,
+        minimal_pop_spec,
+        tmp_path,
+    ):
+        """Default export should keep compact summaries and skip large JSON dumps."""
+        config = SimulationRunConfig(
+            scenario_path="test.yaml",
+            output_dir=str(tmp_path / "output"),
+        )
+        engine = SimulationEngine(
+            scenario=minimal_scenario,
+            population_spec=minimal_pop_spec,
+            agents=simple_agents,
+            network=simple_network,
+            config=config,
+        )
+
+        engine._export_results()
+
+        assert (tmp_path / "output" / "meta.json").exists()
+        assert (tmp_path / "output" / "by_timestep.json").exists()
+        assert not (tmp_path / "output" / "agent_states.json").exists()
+        assert not (tmp_path / "output" / "outcome_distributions.json").exists()
+
+    def test_runtime_guardrails_downshift_under_pressure(
+        self,
+        minimal_scenario,
+        simple_agents,
+        simple_network,
+        minimal_pop_spec,
+        tmp_path,
+    ):
+        """Runtime memory pressure should downshift concurrency/write knobs."""
+
+        class HighPressureGovernor(ResourceGovernor):
+            def memory_pressure_ratio(self) -> float:
+                return 1.1
+
+        config = SimulationRunConfig(
+            scenario_path="test.yaml",
+            output_dir=str(tmp_path / "output"),
+        )
+        governor = HighPressureGovernor(resource_mode="auto")
+        engine = SimulationEngine(
+            scenario=minimal_scenario,
+            population_spec=minimal_pop_spec,
+            agents=simple_agents,
+            network=simple_network,
+            config=config,
+            writer_queue_size=64,
+            db_write_batch_size=16,
+            resource_governor=governor,
+        )
+        before = (
+            engine.reasoning_max_concurrency,
+            engine.db_write_batch_size,
+            engine.writer_queue_size,
+        )
+        engine._apply_runtime_guardrails(timestep=0)
+        after = (
+            engine.reasoning_max_concurrency,
+            engine.db_write_batch_size,
+            engine.writer_queue_size,
+        )
+        assert after[0] < before[0]
+        assert after[1] < before[1]
+        assert after[2] < before[2]

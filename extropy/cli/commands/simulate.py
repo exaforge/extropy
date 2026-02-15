@@ -101,21 +101,17 @@ def setup_logging(verbose: bool = False, debug: bool = False):
 def simulate_command(
     scenario_file: Path = typer.Argument(..., help="Scenario spec YAML file"),
     output: Path = typer.Option(..., "--output", "-o", help="Output results directory"),
-    model: str = typer.Option(
+    study_db: Path = typer.Option(..., "--study-db", help="Canonical study DB file"),
+    strong: str = typer.Option(
         "",
-        "--model",
+        "--strong",
         "-m",
-        help="LLM model for agent reasoning (empty = use config default)",
+        help="Strong model for Pass 1 (provider/model format)",
     ),
-    pivotal_model: str = typer.Option(
+    fast: str = typer.Option(
         "",
-        "--pivotal-model",
-        help="Model for pivotal/first-pass reasoning (default: same as --model)",
-    ),
-    routine_model: str = typer.Option(
-        "",
-        "--routine-model",
-        help="Cheap model for classification pass (default: provider cheap tier)",
+        "--fast",
+        help="Fast model for Pass 2 (provider/model format)",
     ),
     threshold: int = typer.Option(
         3, "--threshold", "-t", help="Multi-touch threshold for re-reasoning"
@@ -131,6 +127,55 @@ def simulate_command(
     ),
     chunk_size: int = typer.Option(
         50, "--chunk-size", help="Agents per reasoning chunk for checkpointing"
+    ),
+    checkpoint_every_chunks: int = typer.Option(
+        1,
+        "--checkpoint-every-chunks",
+        min=1,
+        help="Persist simulation chunk checkpoints every N chunks",
+    ),
+    run_id: str | None = typer.Option(
+        None,
+        "--run-id",
+        help="Explicit run id (required with --resume)",
+    ),
+    resume: bool = typer.Option(
+        False,
+        "--resume",
+        help="Resume an existing run from study DB checkpoints",
+    ),
+    writer_queue_size: int = typer.Option(
+        256,
+        "--writer-queue-size",
+        min=1,
+        help="Max reasoning chunks buffered before DB writer backpressure",
+    ),
+    db_write_batch_size: int = typer.Option(
+        100,
+        "--db-write-batch-size",
+        min=1,
+        help="Number of chunks applied per DB writer transaction",
+    ),
+    retention_lite: bool = typer.Option(
+        False,
+        "--retention-lite",
+        help="Reduce retained payload volume (drops full raw reasoning text)",
+    ),
+    resource_mode: str = typer.Option(
+        "auto",
+        "--resource-mode",
+        help="Resource tuning mode: auto | manual",
+    ),
+    safe_auto_workers: bool = typer.Option(
+        True,
+        "--safe-auto-workers/--unsafe-auto-workers",
+        help="Conservative auto tuning for laptop/VM environments",
+    ),
+    max_memory_gb: float | None = typer.Option(
+        None,
+        "--max-memory-gb",
+        min=0.5,
+        help="Optional memory budget cap for auto resource tuning",
     ),
     seed: int | None = typer.Option(
         None, "--seed", help="Random seed for reproducibility"
@@ -157,12 +202,13 @@ def simulate_command(
     used automatically for embodied first-person personas.
 
     Example:
-        extropy simulate scenario.yaml -o results/
-        extropy simulate scenario.yaml -o results/ --model gpt-5-nano --seed 42
-        extropy simulate scenario.yaml -o results/ --persona population.persona.yaml
+        extropy simulate scenario.yaml --study-db study.db -o results/
+        extropy simulate scenario.yaml --study-db study.db -o results/ --model gpt-5-nano --seed 42
+        extropy simulate scenario.yaml --study-db study.db -o results/ --persona population.persona.yaml
     """
     from ...simulation import run_simulation
     from ...simulation.progress import SimulationProgress
+    from ...utils import ResourceGovernor
 
     # Setup logging based on verbosity
     setup_logging(verbose=verbose, debug=debug)
@@ -174,34 +220,33 @@ def simulate_command(
     if not scenario_file.exists():
         console.print(f"[red]✗[/red] Scenario file not found: {scenario_file}")
         raise typer.Exit(1)
+    if not study_db.exists():
+        console.print(f"[red]✗[/red] Study DB not found: {study_db}")
+        raise typer.Exit(1)
+    if resume and not run_id:
+        console.print("[red]✗[/red] --resume requires --run-id")
+        raise typer.Exit(1)
+    if resource_mode not in {"auto", "manual"}:
+        console.print("[red]✗[/red] --resource-mode must be 'auto' or 'manual'")
+        raise typer.Exit(1)
 
     from ...config import get_config
 
     config = get_config()
 
     # Resolve models from CLI args > config > defaults
-    effective_model = model or config.simulation.model
-    effective_pivotal = pivotal_model or config.simulation.pivotal_model
-    effective_routine = routine_model or config.simulation.routine_model
+    effective_strong = strong or config.resolve_sim_strong()
+    effective_fast = fast or config.resolve_sim_fast()
     effective_tier = rate_tier or config.simulation.rate_tier
     effective_rpm = rpm_override or config.simulation.rpm_override
     effective_tpm = tpm_override or config.simulation.tpm_override
 
-    display_model = effective_model or f"({config.simulation.provider} default)"
-    display_provider = config.simulation.provider
-
     console.print(f"Simulating: [bold]{scenario_file}[/bold]")
     console.print(f"Output: {output}")
+    console.print(f"Study DB: {study_db}")
     console.print(
-        f"Provider: {display_provider} | Model: {display_model} | Threshold: {threshold}"
+        f"Strong: {effective_strong} | Fast: {effective_fast} | Threshold: {threshold}"
     )
-    if effective_pivotal or effective_routine:
-        parts = []
-        if effective_pivotal:
-            parts.append(f"Pivotal: {effective_pivotal}")
-        if effective_routine:
-            parts.append(f"Routine: {effective_routine}")
-        console.print(" | ".join(parts))
     if effective_tier:
         console.print(f"Rate tier: {effective_tier}")
     if effective_rpm or effective_tpm:
@@ -213,6 +258,22 @@ def simulate_command(
         console.print(f"Rate overrides: {' | '.join(parts)}")
     if seed:
         console.print(f"Seed: {seed}")
+    governor = ResourceGovernor(
+        resource_mode=resource_mode,
+        safe_auto_workers=safe_auto_workers,
+        max_memory_gb=max_memory_gb,
+    )
+    tuned_chunk_size = governor.recommend_chunk_size(
+        requested_chunk_size=chunk_size,
+        min_chunk_size=8,
+        max_chunk_size=2000,
+    )
+    if resource_mode == "auto":
+        snap = governor.snapshot()
+        console.print(
+            f"Resources(auto): cpu={snap.cpu_count} mem={snap.total_memory_gb:.1f}GB "
+            f"budget={snap.memory_budget_gb:.1f}GB chunk={tuned_chunk_size}"
+        )
     if verbose or debug:
         console.print(f"Logging: {'DEBUG' if debug else 'VERBOSE'}")
     console.print()
@@ -236,9 +297,9 @@ def simulate_command(
             result = run_simulation(
                 scenario_path=scenario_file,
                 output_dir=output,
-                model=effective_model,
-                pivotal_model=effective_pivotal,
-                routine_model=effective_routine,
+                study_db_path=study_db,
+                strong=effective_strong,
+                fast=effective_fast,
                 multi_touch_threshold=threshold,
                 random_seed=seed,
                 on_progress=on_progress,
@@ -246,8 +307,15 @@ def simulate_command(
                 rate_tier=effective_tier,
                 rpm_override=effective_rpm,
                 tpm_override=effective_tpm,
-                chunk_size=chunk_size,
+                chunk_size=tuned_chunk_size,
                 progress=progress_state,
+                run_id=run_id,
+                resume=resume,
+                checkpoint_every_chunks=checkpoint_every_chunks,
+                retention_lite=retention_lite,
+                writer_queue_size=writer_queue_size,
+                db_write_batch_size=db_write_batch_size,
+                resource_governor=governor,
             )
             simulation_error = None
         except Exception as e:
@@ -265,9 +333,9 @@ def simulate_command(
                 result = run_simulation(
                     scenario_path=scenario_file,
                     output_dir=output,
-                    model=effective_model,
-                    pivotal_model=effective_pivotal,
-                    routine_model=effective_routine,
+                    study_db_path=study_db,
+                    strong=effective_strong,
+                    fast=effective_fast,
                     multi_touch_threshold=threshold,
                     random_seed=seed,
                     on_progress=on_progress if not quiet else None,
@@ -275,8 +343,15 @@ def simulate_command(
                     rate_tier=effective_tier,
                     rpm_override=effective_rpm,
                     tpm_override=effective_tpm,
-                    chunk_size=chunk_size,
+                    chunk_size=tuned_chunk_size,
                     progress=progress_state,
+                    run_id=run_id,
+                    resume=resume,
+                    checkpoint_every_chunks=checkpoint_every_chunks,
+                    retention_lite=retention_lite,
+                    writer_queue_size=writer_queue_size,
+                    db_write_batch_size=db_write_batch_size,
+                    resource_governor=governor,
                 )
             except Exception as e:
                 simulation_error = e

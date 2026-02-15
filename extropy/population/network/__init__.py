@@ -7,7 +7,8 @@ professional societies, and informal ties.
 Usage:
     from extropy.network import generate_network, NetworkConfig, NetworkResult
 
-    # Load agents from JSON
+    # Agents are typically loaded from study.db via CLI, then passed here.
+    # (load_agents_json is kept for explicit import/export workflows.)
     agents = load_agents_json("agents.json")
 
     # Generate network with default config (flat — no similarity structure)

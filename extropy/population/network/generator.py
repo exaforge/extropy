@@ -5,12 +5,16 @@ Implements adaptive calibration to hit target metrics (avg_degree, clustering, m
 
 import json
 import logging
+import hashlib
+import multiprocessing as mp
 import random
+from concurrent.futures import ProcessPoolExecutor, as_completed
 from datetime import datetime
 from pathlib import Path
 from typing import Any
 
 from ...core.models import Edge, NetworkResult
+from ...storage import open_study_db
 from ...utils.callbacks import NetworkProgressCallback
 from ...utils.eval_safe import ConditionError, eval_condition
 from .config import NetworkConfig, InfluenceFactorConfig
@@ -20,6 +24,395 @@ from .similarity import (
 )
 
 logger = logging.getLogger(__name__)
+
+_SIM_WORKER_AGENTS: list[dict[str, Any]] | None = None
+_SIM_WORKER_ATTRIBUTE_WEIGHTS = None
+_SIM_WORKER_ORDINAL_LEVELS: dict[str, dict[str, int]] | None = None
+_SIM_WORKER_THRESHOLD: float = 0.05
+_SIM_WORKER_CANDIDATE_MAP: list[list[int]] | None = None
+
+
+def _choose_blocking_attributes(config: NetworkConfig) -> list[str]:
+    """Choose blocking attributes for candidate pruning."""
+    if config.blocking_attributes:
+        return list(config.blocking_attributes)
+
+    weighted = sorted(
+        config.attribute_weights.items(),
+        key=lambda x: x[1].weight,
+        reverse=True,
+    )
+    preferred = [
+        attr for attr, cfg in weighted if cfg.match_type in {"exact", "within_n"}
+    ]
+
+    if preferred:
+        return preferred[:3]
+
+    return [attr for attr, _ in weighted[:2]]
+
+
+def _build_blocked_candidate_map(
+    agents: list[dict[str, Any]],
+    config: NetworkConfig,
+    seed: int,
+) -> tuple[list[list[int]] | None, list[str]]:
+    """Build per-agent candidate lists for blocked similarity mode."""
+    attrs = _choose_blocking_attributes(config)
+    n = len(agents)
+
+    if not attrs or n <= 1:
+        return None, attrs
+
+    blocks: dict[str, dict[Any, list[int]]] = {attr: {} for attr in attrs}
+
+    for idx, agent in enumerate(agents):
+        for attr in attrs:
+            val = agent.get(attr)
+            if val is None:
+                continue
+            blocks[attr].setdefault(val, []).append(idx)
+
+    target_pool = max(
+        config.min_candidate_pool,
+        int(config.avg_degree * config.candidate_pool_multiplier),
+    )
+    target_pool = max(1, min(n - 1, target_pool))
+
+    candidate_map: list[list[int]] = [[] for _ in range(n)]
+
+    for i, agent in enumerate(agents):
+        scores: dict[int, int] = {}
+
+        for attr in attrs:
+            val = agent.get(attr)
+            if val is None:
+                continue
+            for j in blocks[attr].get(val, []):
+                if j == i:
+                    continue
+                scores[j] = scores.get(j, 0) + 1
+
+        ranked = sorted(scores.items(), key=lambda x: (-x[1], x[0]))
+        chosen = [j for j, _ in ranked[:target_pool]]
+
+        if len(chosen) < target_pool:
+            rng = random.Random(seed + (i + 1) * 7919)
+            seen = set(chosen)
+            seen.add(i)
+            while len(chosen) < target_pool and len(seen) < n:
+                j = rng.randrange(n)
+                if j in seen:
+                    continue
+                seen.add(j)
+                chosen.append(j)
+
+        candidate_map[i] = sorted(chosen)
+
+    return candidate_map, attrs
+
+
+def _similarity_checkpoint_signature(
+    n: int,
+    seed: int,
+    config: NetworkConfig,
+    blocking_attrs: list[str],
+) -> dict[str, Any]:
+    """Build a minimal signature to validate checkpoint compatibility."""
+    return {
+        "n": n,
+        "seed": seed,
+        "candidate_mode": config.candidate_mode,
+        "threshold": config.similarity_store_threshold,
+        "candidate_pool_multiplier": config.candidate_pool_multiplier,
+        "min_candidate_pool": config.min_candidate_pool,
+        "blocking_attributes": blocking_attrs,
+    }
+
+
+def _similarity_checkpoint_job_id(signature: dict[str, Any]) -> str:
+    raw = json.dumps(signature, sort_keys=True, separators=(",", ":"))
+    return hashlib.sha256(raw.encode("utf-8")).hexdigest()[:24]
+
+
+def _load_similarity_checkpoint(
+    checkpoint_db: Path,
+    expected_signature: dict[str, Any],
+) -> tuple[dict[tuple[int, int], float], int, set[int]]:
+    """Load checkpoint and validate compatibility with current run settings."""
+    job_id = _similarity_checkpoint_job_id(expected_signature)
+    with open_study_db(checkpoint_db) as db:
+        signature = db.get_network_similarity_job_signature(job_id)
+        if signature is None:
+            raise ValueError(f"Checkpoint not found in study DB: job_id={job_id}")
+        if signature != expected_signature:
+            raise ValueError(
+                "Checkpoint settings do not match current run. "
+                "Delete checkpoint or run with matching config."
+            )
+
+        done_chunks = db.list_completed_similarity_chunks(job_id)
+        done_starts = {start for start, _ in done_chunks}
+        similarities = db.load_similarity_pairs(job_id)
+
+    contiguous_rows = 0
+    for start, end in done_chunks:
+        if start != contiguous_rows:
+            break
+        contiguous_rows = end
+
+    return similarities, max(0, contiguous_rows), done_starts
+
+
+def _init_similarity_worker(
+    agents: list[dict[str, Any]],
+    attribute_weights,
+    ordinal_levels: dict[str, dict[str, int]] | None,
+    threshold: float,
+    candidate_map: list[list[int]] | None,
+) -> None:
+    """Initialize process-local globals for similarity workers."""
+    global _SIM_WORKER_AGENTS
+    global _SIM_WORKER_ATTRIBUTE_WEIGHTS
+    global _SIM_WORKER_ORDINAL_LEVELS
+    global _SIM_WORKER_THRESHOLD
+    global _SIM_WORKER_CANDIDATE_MAP
+
+    _SIM_WORKER_AGENTS = agents
+    _SIM_WORKER_ATTRIBUTE_WEIGHTS = attribute_weights
+    _SIM_WORKER_ORDINAL_LEVELS = ordinal_levels
+    _SIM_WORKER_THRESHOLD = threshold
+    _SIM_WORKER_CANDIDATE_MAP = candidate_map
+
+
+def _compute_similarity_chunk(
+    task: tuple[int, int],
+) -> tuple[int, list[tuple[int, int, float]]]:
+    """Compute similarities for a chunk of row indices in a worker process."""
+    start, end = task
+    if _SIM_WORKER_AGENTS is None:
+        raise RuntimeError("Similarity worker not initialized")
+
+    n = len(_SIM_WORKER_AGENTS)
+    rows: list[tuple[int, int, float]] = []
+
+    for i in range(start, min(end, n)):
+        if _SIM_WORKER_CANDIDATE_MAP is None:
+            candidates = range(i + 1, n)
+        else:
+            candidates = _SIM_WORKER_CANDIDATE_MAP[i]
+
+        for j in candidates:
+            if j <= i:
+                continue
+            sim = compute_similarity(
+                _SIM_WORKER_AGENTS[i],
+                _SIM_WORKER_AGENTS[j],
+                _SIM_WORKER_ATTRIBUTE_WEIGHTS,
+                _SIM_WORKER_ORDINAL_LEVELS,
+            )
+            if sim >= _SIM_WORKER_THRESHOLD:
+                rows.append((i, j, sim))
+
+    return end, rows
+
+
+def _compute_similarities_parallel(
+    agents: list[dict[str, Any]],
+    config: NetworkConfig,
+    candidate_map: list[list[int]] | None,
+    on_progress: NetworkProgressCallback | None = None,
+    checkpoint_path: Path | None = None,
+    checkpoint_signature: dict[str, Any] | None = None,
+    initial_similarities: dict[tuple[int, int], float] | None = None,
+    completed_rows: int = 0,
+    completed_chunk_starts: set[int] | None = None,
+    checkpoint_job_id: str | None = None,
+) -> dict[tuple[int, int], float]:
+    """Compute sparse similarities with process parallelism."""
+    n = len(agents)
+    similarities: dict[tuple[int, int], float] = dict(initial_similarities or {})
+
+    chunk_size = max(8, config.similarity_chunk_size)
+    tasks = [(i, min(i + chunk_size, n)) for i in range(0, n, chunk_size)]
+    task_ends = {start: end for start, end in tasks}
+    completed_starts: set[int] = set(completed_chunk_starts or set())
+    for start, end in tasks:
+        if end <= completed_rows:
+            completed_starts.add(start)
+    pending_tasks = [(s, e) for s, e in tasks if s not in completed_starts]
+    workers = max(1, config.similarity_workers)
+
+    completed_row_count = sum((e - s) for s, e in tasks if s in completed_starts)
+    if on_progress and completed_row_count > 0:
+        on_progress("Computing similarities", min(completed_row_count, n), n)
+
+    try:
+        ctx = mp.get_context("spawn")
+        with ProcessPoolExecutor(
+            max_workers=workers,
+            mp_context=ctx,
+            initializer=_init_similarity_worker,
+            initargs=(
+                agents,
+                config.attribute_weights,
+                config.ordinal_levels,
+                config.similarity_store_threshold,
+                candidate_map,
+            ),
+        ) as ex:
+            futures = {
+                ex.submit(_compute_similarity_chunk, task): task
+                for task in pending_tasks
+            }
+            pending_results: dict[int, list[tuple[int, int, float]]] = {}
+            sorted_starts = [start for start, _ in tasks]
+            next_commit_idx = 0
+
+            for fut in as_completed(futures):
+                task_start, _task_end = futures[fut]
+                _row_end, local_rows = fut.result()
+                pending_results[task_start] = local_rows
+
+                # Deterministic merge: commit completed chunks in chunk_start order.
+                while next_commit_idx < len(sorted_starts):
+                    current_start = sorted_starts[next_commit_idx]
+                    current_end = task_ends[current_start]
+                    if current_start in completed_starts:
+                        next_commit_idx += 1
+                        continue
+                    if current_start not in pending_results:
+                        break
+
+                    chunk_rows = pending_results.pop(current_start)
+                    for i, j, sim in chunk_rows:
+                        similarities[(i, j)] = sim
+                    completed_starts.add(current_start)
+                    completed_row_count += current_end - current_start
+                    completed_rows = max(completed_rows, current_end)
+
+                    if (
+                        checkpoint_path is not None
+                        and checkpoint_signature is not None
+                        and checkpoint_job_id is not None
+                    ):
+                        with open_study_db(checkpoint_path) as db:
+                            db.save_similarity_chunk_rows(
+                                job_id=checkpoint_job_id,
+                                chunk_start=current_start,
+                                chunk_end=current_end,
+                                rows=chunk_rows,
+                            )
+
+                    if on_progress:
+                        on_progress(
+                            "Computing similarities", min(completed_row_count, n), n
+                        )
+                    next_commit_idx += 1
+
+    except Exception as e:
+        downgraded_config = config.model_copy(
+            update={
+                "similarity_workers": 1,
+                "similarity_chunk_size": max(8, config.similarity_chunk_size // 2),
+            }
+        )
+        logger.warning(
+            "Parallel similarity failed (%s). Falling back to serial mode "
+            "(chunk_size %d -> %d).",
+            e,
+            config.similarity_chunk_size,
+            downgraded_config.similarity_chunk_size,
+        )
+        return _compute_similarities_serial(
+            agents=agents,
+            config=downgraded_config,
+            candidate_map=candidate_map,
+            on_progress=on_progress,
+            checkpoint_path=checkpoint_path,
+            initial_similarities=similarities,
+            start_row=completed_rows,
+            checkpoint_signature=checkpoint_signature,
+            completed_chunk_starts=completed_starts,
+            checkpoint_job_id=checkpoint_job_id,
+        )
+
+    return similarities
+
+
+def _compute_similarities_serial(
+    agents: list[dict[str, Any]],
+    config: NetworkConfig,
+    candidate_map: list[list[int]] | None = None,
+    on_progress: NetworkProgressCallback | None = None,
+    checkpoint_path: Path | None = None,
+    initial_similarities: dict[tuple[int, int], float] | None = None,
+    start_row: int = 0,
+    checkpoint_signature: dict[str, Any] | None = None,
+    completed_chunk_starts: set[int] | None = None,
+    checkpoint_job_id: str | None = None,
+) -> dict[tuple[int, int], float]:
+    """Compute sparse similarities serially, with optional checkpointing."""
+    n = len(agents)
+    threshold = config.similarity_store_threshold
+    similarities = dict(initial_similarities or {})
+    checkpoint_every = max(1, config.checkpoint_every_rows)
+    chunk_size = max(8, config.similarity_chunk_size)
+    tasks = [(i, min(i + chunk_size, n)) for i in range(0, n, chunk_size)]
+    completed_starts: set[int] = set(completed_chunk_starts or set())
+    for start, end in tasks:
+        if end <= start_row:
+            completed_starts.add(start)
+    completed_row_count = sum((e - s) for s, e in tasks if s in completed_starts)
+
+    for chunk_idx, (start, end) in enumerate(tasks):
+        if start in completed_starts:
+            continue
+
+        local_rows: list[tuple[int, int, float]] = []
+        for i in range(start, end):
+            if candidate_map is None:
+                candidates = range(i + 1, n)
+            else:
+                candidates = candidate_map[i]
+
+            for j in candidates:
+                if j <= i:
+                    continue
+                sim = compute_similarity(
+                    agents[i],
+                    agents[j],
+                    config.attribute_weights,
+                    config.ordinal_levels,
+                )
+                if sim >= threshold:
+                    similarities[(i, j)] = sim
+                    local_rows.append((i, j, sim))
+
+        completed_starts.add(start)
+        completed_row_count += end - start
+
+        if (
+            checkpoint_path is not None
+            and checkpoint_signature is not None
+            and checkpoint_job_id is not None
+        ):
+            if (
+                completed_row_count % checkpoint_every == 0
+                or chunk_idx == len(tasks) - 1
+            ):
+                with open_study_db(checkpoint_path) as db:
+                    db.save_similarity_chunk_rows(
+                        job_id=checkpoint_job_id,
+                        chunk_start=start,
+                        chunk_end=end,
+                        rows=local_rows,
+                    )
+
+        if on_progress:
+            on_progress("Computing similarities", min(completed_row_count, n), n)
+
+    return similarities
 
 
 def _eval_edge_condition(
@@ -429,6 +822,7 @@ def _triadic_closure(
     edge_set: set[tuple[str, str]],
     config: NetworkConfig,
     rng: random.Random,
+    similarities: dict[tuple[int, int], float] | None = None,
     communities: list[int] | None = None,
     target_clustering: float = 0.35,
     max_edge_increase: float = 1.5,
@@ -480,9 +874,17 @@ def _triadic_closure(
         # Score triads by similarity and community membership
         triad_with_score = []
         for a, c, b in open_triads:
-            sim = compute_similarity(
-                agents[a], agents[c], config.attribute_weights, config.ordinal_levels
-            )
+            pair = (min(a, c), max(a, c))
+            sim = similarities.get(pair) if similarities is not None else None
+            if sim is None:
+                sim = compute_similarity(
+                    agents[a],
+                    agents[c],
+                    config.attribute_weights,
+                    config.ordinal_levels,
+                )
+                if similarities is not None:
+                    similarities[pair] = sim
             same_community = (
                 communities is not None and communities[a] == communities[c]
             )
@@ -691,6 +1093,7 @@ def _generate_network_single_pass(
         edge_set,
         config,
         rng,
+        similarities=similarities,
         communities=communities,
         target_clustering=config.target_clustering,
         max_edge_increase=2.5,  # Allow up to 2.5x edges for better clustering
@@ -718,6 +1121,8 @@ def generate_network(
     agents: list[dict[str, Any]],
     config: NetworkConfig | None = None,
     on_progress: NetworkProgressCallback | None = None,
+    checkpoint_path: Path | str | None = None,
+    resume_from_checkpoint: bool = False,
 ) -> NetworkResult:
     """Generate a social network from sampled agents.
 
@@ -746,27 +1151,108 @@ def generate_network(
 
     n = len(agents)
     agent_ids = [a.get("_id", f"agent_{i}") for i, a in enumerate(agents)]
-
-    if on_progress:
-        on_progress("Computing similarities", 0, n)
+    checkpoint_file = Path(checkpoint_path) if checkpoint_path else None
+    if checkpoint_file is not None and checkpoint_file.suffix.lower() != ".db":
+        raise ValueError(
+            "Network checkpoints are DB-only now. Use --study-db (or --checkpoint <study.db>)."
+        )
 
     # Step 1: Compute degree factors
     degree_factors = [compute_degree_factor(a, config) for a in agents]
 
-    # Step 2: Compute similarity matrix (sparse)
-    similarities: dict[tuple[int, int], float] = {}
-    threshold = 0.05
+    # Step 2: Build similarity candidates (exact/blocked)
+    candidate_map: list[list[int]] | None = None
+    blocking_attrs: list[str] = []
+    candidate_mode = config.candidate_mode
 
-    for i in range(n):
-        for j in range(i + 1, n):
-            sim = compute_similarity(
-                agents[i], agents[j], config.attribute_weights, config.ordinal_levels
+    if config.candidate_mode == "blocked":
+        if on_progress:
+            on_progress("Preparing candidate blocks", 0, n)
+        candidate_map, blocking_attrs = _build_blocked_candidate_map(
+            agents, config, seed
+        )
+        if on_progress:
+            on_progress("Preparing candidate blocks", n, n)
+        if candidate_map is None:
+            logger.warning(
+                "Blocked candidate mode could not be initialized. Falling back to exact mode."
             )
-            if sim >= threshold:
-                similarities[(i, j)] = sim
+            candidate_mode = "exact"
 
-        if on_progress and i % 50 == 0:
-            on_progress("Computing similarities", i, n)
+    if on_progress:
+        on_progress("Computing similarities", 0, n)
+
+    checkpoint_signature = _similarity_checkpoint_signature(
+        n=n,
+        seed=seed,
+        config=config,
+        blocking_attrs=blocking_attrs,
+    )
+    checkpoint_job_id: str | None = None
+    if checkpoint_file is not None:
+        checkpoint_job_id = _similarity_checkpoint_job_id(checkpoint_signature)
+        if not resume_from_checkpoint:
+            with open_study_db(checkpoint_file) as db:
+                db.init_network_similarity_job(
+                    network_run_id=f"checkpoint:{checkpoint_job_id}",
+                    signature=checkpoint_signature,
+                    job_id=checkpoint_job_id,
+                )
+                db.mark_similarity_job_running(checkpoint_job_id)
+
+    similarities: dict[tuple[int, int], float]
+    start_row = 0
+    completed_chunk_starts: set[int] = set()
+
+    if resume_from_checkpoint and checkpoint_file is None:
+        raise ValueError("--resume-checkpoint requires a checkpoint DB path")
+
+    if resume_from_checkpoint:
+        if checkpoint_file is None or not checkpoint_file.exists():
+            raise ValueError(f"Checkpoint not found: {checkpoint_file}")
+        similarities, start_row, completed_chunk_starts = _load_similarity_checkpoint(
+            checkpoint_file, checkpoint_signature
+        )
+        if checkpoint_job_id and checkpoint_file is not None:
+            with open_study_db(checkpoint_file) as db:
+                db.mark_similarity_job_running(checkpoint_job_id)
+        if on_progress:
+            on_progress("Computing similarities", min(start_row, n), n)
+    else:
+        similarities = {}
+
+    use_parallel_similarity = config.similarity_workers > 1
+
+    if use_parallel_similarity:
+        similarities = _compute_similarities_parallel(
+            agents=agents,
+            config=config,
+            candidate_map=candidate_map if candidate_mode == "blocked" else None,
+            on_progress=on_progress,
+            checkpoint_path=checkpoint_file,
+            checkpoint_signature=checkpoint_signature,
+            initial_similarities=similarities,
+            completed_rows=start_row,
+            completed_chunk_starts=completed_chunk_starts,
+            checkpoint_job_id=checkpoint_job_id,
+        )
+    else:
+        similarities = _compute_similarities_serial(
+            agents=agents,
+            config=config,
+            candidate_map=candidate_map if candidate_mode == "blocked" else None,
+            on_progress=on_progress,
+            checkpoint_path=checkpoint_file,
+            initial_similarities=similarities,
+            start_row=start_row,
+            checkpoint_signature=checkpoint_signature,
+            completed_chunk_starts=completed_chunk_starts,
+            checkpoint_job_id=checkpoint_job_id,
+        )
+
+    if checkpoint_job_id and checkpoint_file is not None:
+        with open_study_db(checkpoint_file) as db:
+            db.mark_similarity_job_complete(checkpoint_job_id)
 
     if on_progress:
         on_progress("Computing similarities", n, n)
@@ -935,6 +1421,10 @@ def generate_network(
         "rewired_count": rewired_count,
         "algorithm": "adaptive_calibration",
         "seed": seed,
+        "candidate_mode": candidate_mode,
+        "similarity_pairs": len(similarities),
+        "blocking_attributes": blocking_attrs if candidate_mode == "blocked" else [],
+        "resumed_from_checkpoint": resume_from_checkpoint,
         "config": {
             "avg_degree_target": config.avg_degree,
             "rewire_prob": config.rewire_prob,
@@ -951,6 +1441,8 @@ def generate_network_with_metrics(
     agents: list[dict[str, Any]],
     config: NetworkConfig | None = None,
     on_progress: NetworkProgressCallback | None = None,
+    checkpoint_path: Path | str | None = None,
+    resume_from_checkpoint: bool = False,
 ) -> NetworkResult:
     """Generate network and compute all metrics.
 
@@ -960,7 +1452,13 @@ def generate_network_with_metrics(
     """
     from .metrics import compute_network_metrics, compute_node_metrics
 
-    result = generate_network(agents, config, on_progress)
+    result = generate_network(
+        agents,
+        config,
+        on_progress,
+        checkpoint_path=checkpoint_path,
+        resume_from_checkpoint=resume_from_checkpoint,
+    )
 
     agent_ids = [a.get("_id", f"agent_{i}") for i, a in enumerate(agents)]
 

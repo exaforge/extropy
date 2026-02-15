@@ -27,16 +27,23 @@ class StateManager:
     for frequently accessed data.
     """
 
-    def __init__(self, db_path: Path | str, agents: list[dict[str, Any]] | None = None):
+    def __init__(
+        self,
+        db_path: Path | str,
+        agents: list[dict[str, Any]] | None = None,
+        run_id: str = "default",
+    ):
         """Initialize state manager with database path.
 
         Args:
             db_path: Path to SQLite database file
             agents: Optional list of agents to initialize
+            run_id: Simulation run scope key
         """
         self.db_path = Path(db_path)
+        self.run_id = run_id
         self.db_path.parent.mkdir(parents=True, exist_ok=True)
-        self.conn = sqlite3.connect(str(self.db_path))
+        self.conn = sqlite3.connect(str(self.db_path), check_same_thread=False)
         self.conn.row_factory = sqlite3.Row
         self.conn.execute("PRAGMA foreign_keys = ON")
 
@@ -54,7 +61,8 @@ class StateManager:
         cursor.execute(
             """
             CREATE TABLE IF NOT EXISTS agent_states (
-                agent_id TEXT PRIMARY KEY,
+                run_id TEXT NOT NULL,
+                agent_id TEXT NOT NULL,
                 aware INTEGER DEFAULT 0,
                 exposure_count INTEGER DEFAULT 0,
                 last_reasoning_timestep INTEGER DEFAULT -1,
@@ -73,7 +81,8 @@ class StateManager:
                 private_conviction REAL,
                 private_outcomes_json TEXT,
                 raw_reasoning TEXT,
-                updated_at INTEGER DEFAULT 0
+                updated_at INTEGER DEFAULT 0,
+                PRIMARY KEY (run_id, agent_id)
             )
         """
         )
@@ -82,6 +91,7 @@ class StateManager:
         cursor.execute(
             """
             CREATE TABLE IF NOT EXISTS exposures (
+                run_id TEXT NOT NULL,
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 agent_id TEXT,
                 timestep INTEGER,
@@ -89,7 +99,7 @@ class StateManager:
                 source_agent_id TEXT,
                 content TEXT,
                 credibility REAL,
-                FOREIGN KEY (agent_id) REFERENCES agent_states(agent_id)
+                FOREIGN KEY (run_id, agent_id) REFERENCES agent_states(run_id, agent_id)
             )
         """
         )
@@ -98,13 +108,14 @@ class StateManager:
         cursor.execute(
             """
             CREATE TABLE IF NOT EXISTS memory_traces (
+                run_id TEXT NOT NULL,
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 agent_id TEXT,
                 timestep INTEGER,
                 sentiment REAL,
                 conviction REAL,
                 summary TEXT,
-                FOREIGN KEY (agent_id) REFERENCES agent_states(agent_id)
+                FOREIGN KEY (run_id, agent_id) REFERENCES agent_states(run_id, agent_id)
             )
         """
         )
@@ -113,6 +124,7 @@ class StateManager:
         cursor.execute(
             """
             CREATE TABLE IF NOT EXISTS timeline (
+                run_id TEXT NOT NULL,
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 timestep INTEGER,
                 event_type TEXT,
@@ -127,7 +139,8 @@ class StateManager:
         cursor.execute(
             """
             CREATE TABLE IF NOT EXISTS timestep_summaries (
-                timestep INTEGER PRIMARY KEY,
+                run_id TEXT NOT NULL,
+                timestep INTEGER NOT NULL,
                 new_exposures INTEGER,
                 agents_reasoned INTEGER,
                 shares_occurred INTEGER,
@@ -136,7 +149,8 @@ class StateManager:
                 position_distribution_json TEXT,
                 average_sentiment REAL,
                 average_conviction REAL,
-                sentiment_variance REAL
+                sentiment_variance REAL,
+                PRIMARY KEY (run_id, timestep)
             )
         """
         )
@@ -145,37 +159,37 @@ class StateManager:
         cursor.execute(
             """
             CREATE INDEX IF NOT EXISTS idx_exposures_agent
-            ON exposures(agent_id)
+            ON exposures(run_id, agent_id)
         """
         )
         cursor.execute(
             """
             CREATE INDEX IF NOT EXISTS idx_exposures_timestep
-            ON exposures(timestep)
+            ON exposures(run_id, timestep)
         """
         )
         cursor.execute(
             """
             CREATE INDEX IF NOT EXISTS idx_timeline_timestep
-            ON timeline(timestep)
+            ON timeline(run_id, timestep)
         """
         )
         cursor.execute(
             """
             CREATE INDEX IF NOT EXISTS idx_agent_states_aware
-            ON agent_states(aware)
+            ON agent_states(run_id, aware)
         """
         )
         cursor.execute(
             """
             CREATE INDEX IF NOT EXISTS idx_agent_states_will_share
-            ON agent_states(will_share)
+            ON agent_states(run_id, will_share)
         """
         )
         cursor.execute(
             """
             CREATE INDEX IF NOT EXISTS idx_memory_traces_agent
-            ON memory_traces(agent_id)
+            ON memory_traces(run_id, agent_id)
         """
         )
 
@@ -183,18 +197,19 @@ class StateManager:
         cursor.execute(
             """
             CREATE TABLE IF NOT EXISTS shared_to (
+                run_id TEXT NOT NULL,
                 source_agent_id TEXT,
                 target_agent_id TEXT,
                 timestep INTEGER,
                 position TEXT,
-                PRIMARY KEY (source_agent_id, target_agent_id)
+                PRIMARY KEY (run_id, source_agent_id, target_agent_id)
             )
         """
         )
         cursor.execute(
             """
             CREATE INDEX IF NOT EXISTS idx_shared_to_source
-            ON shared_to(source_agent_id)
+            ON shared_to(run_id, source_agent_id)
         """
         )
 
@@ -202,8 +217,11 @@ class StateManager:
         cursor.execute(
             """
             CREATE TABLE IF NOT EXISTS simulation_metadata (
-                key TEXT PRIMARY KEY,
+                run_id TEXT NOT NULL,
+                key TEXT NOT NULL,
                 value TEXT
+                ,
+                PRIMARY KEY (run_id, key)
             )
         """
         )
@@ -215,6 +233,13 @@ class StateManager:
         cursor = self.conn.cursor()
 
         migrations = [
+            ("agent_states", "run_id", "TEXT DEFAULT 'default'"),
+            ("exposures", "run_id", "TEXT DEFAULT 'default'"),
+            ("memory_traces", "run_id", "TEXT DEFAULT 'default'"),
+            ("timeline", "run_id", "TEXT DEFAULT 'default'"),
+            ("timestep_summaries", "run_id", "TEXT DEFAULT 'default'"),
+            ("shared_to", "run_id", "TEXT DEFAULT 'default'"),
+            ("simulation_metadata", "run_id", "TEXT DEFAULT 'default'"),
             ("agent_states", "conviction", "REAL"),
             ("agent_states", "public_statement", "TEXT"),
             ("timestep_summaries", "average_conviction", "REAL"),
@@ -236,6 +261,28 @@ class StateManager:
             except sqlite3.OperationalError:
                 # Column already exists
                 pass
+
+        cursor.execute(
+            "UPDATE agent_states SET run_id = COALESCE(run_id, 'default') WHERE run_id IS NULL"
+        )
+        cursor.execute(
+            "UPDATE exposures SET run_id = COALESCE(run_id, 'default') WHERE run_id IS NULL"
+        )
+        cursor.execute(
+            "UPDATE memory_traces SET run_id = COALESCE(run_id, 'default') WHERE run_id IS NULL"
+        )
+        cursor.execute(
+            "UPDATE timeline SET run_id = COALESCE(run_id, 'default') WHERE run_id IS NULL"
+        )
+        cursor.execute(
+            "UPDATE timestep_summaries SET run_id = COALESCE(run_id, 'default') WHERE run_id IS NULL"
+        )
+        cursor.execute(
+            "UPDATE shared_to SET run_id = COALESCE(run_id, 'default') WHERE run_id IS NULL"
+        )
+        cursor.execute(
+            "UPDATE simulation_metadata SET run_id = COALESCE(run_id, 'default') WHERE run_id IS NULL"
+        )
 
         self.conn.commit()
 
@@ -264,10 +311,10 @@ class StateManager:
             agent_id = agent.get("_id", str(agent.get("id", "")))
             cursor.execute(
                 """
-                INSERT OR IGNORE INTO agent_states (agent_id)
-                VALUES (?)
+                INSERT OR IGNORE INTO agent_states (run_id, agent_id)
+                VALUES (?, ?)
             """,
-                (agent_id,),
+                (self.run_id, agent_id),
             )
 
         self.conn.commit()
@@ -286,9 +333,9 @@ class StateManager:
         # Get main state
         cursor.execute(
             """
-            SELECT * FROM agent_states WHERE agent_id = ?
+            SELECT * FROM agent_states WHERE run_id = ? AND agent_id = ?
         """,
-            (agent_id,),
+            (self.run_id, agent_id),
         )
         row = cursor.fetchone()
 
@@ -298,9 +345,11 @@ class StateManager:
         # Get exposure history
         cursor.execute(
             """
-            SELECT * FROM exposures WHERE agent_id = ? ORDER BY timestep
+            SELECT * FROM exposures
+            WHERE run_id = ? AND agent_id = ?
+            ORDER BY timestep
         """,
-            (agent_id,),
+            (self.run_id, agent_id),
         )
         exposure_rows = cursor.fetchall()
 
@@ -386,35 +435,44 @@ class StateManager:
     def get_unaware_agents(self) -> list[str]:
         """Get IDs of agents who haven't been exposed yet."""
         cursor = self.conn.cursor()
-        cursor.execute("SELECT agent_id FROM agent_states WHERE aware = 0")
+        cursor.execute(
+            "SELECT agent_id FROM agent_states WHERE run_id = ? AND aware = 0",
+            (self.run_id,),
+        )
         return [row["agent_id"] for row in cursor.fetchall()]
 
     def get_aware_agents(self) -> list[str]:
         """Get IDs of agents who are aware of the event."""
         cursor = self.conn.cursor()
-        cursor.execute("SELECT agent_id FROM agent_states WHERE aware = 1")
+        cursor.execute(
+            "SELECT agent_id FROM agent_states WHERE run_id = ? AND aware = 1",
+            (self.run_id,),
+        )
         return [row["agent_id"] for row in cursor.fetchall()]
 
     def get_sharers(self) -> list[str]:
         """Get IDs of agents who will share."""
         cursor = self.conn.cursor()
         cursor.execute(
-            "SELECT agent_id FROM agent_states WHERE aware = 1 AND will_share = 1"
+            "SELECT agent_id FROM agent_states WHERE run_id = ? AND aware = 1 AND will_share = 1",
+            (self.run_id,),
         )
         return [row["agent_id"] for row in cursor.fetchall()]
 
     def get_all_agent_ids(self) -> list[str]:
         """Get all agent IDs in the database."""
         cursor = self.conn.cursor()
-        cursor.execute("SELECT agent_id FROM agent_states")
+        cursor.execute(
+            "SELECT agent_id FROM agent_states WHERE run_id = ?", (self.run_id,)
+        )
         return [row["agent_id"] for row in cursor.fetchall()]
 
     def get_network_hop_depth(self, agent_id: str) -> int | None:
         """Get the minimum network hop depth from a seed exposure for an agent."""
         cursor = self.conn.cursor()
         cursor.execute(
-            "SELECT network_hop_depth FROM agent_states WHERE agent_id = ?",
-            (agent_id,),
+            "SELECT network_hop_depth FROM agent_states WHERE run_id = ? AND agent_id = ?",
+            (self.run_id, agent_id),
         )
         row = cursor.fetchone()
         if not row:
@@ -443,8 +501,9 @@ class StateManager:
         cursor.execute(
             """
             SELECT agent_id FROM agent_states
-            WHERE aware = 1 AND last_reasoning_timestep < 0
-        """
+            WHERE run_id = ? AND aware = 1 AND last_reasoning_timestep < 0
+        """,
+            (self.run_id,),
         )
         never_reasoned = [row["agent_id"] for row in cursor.fetchall()]
 
@@ -456,14 +515,17 @@ class StateManager:
                    COUNT(DISTINCT e.source_agent_id) as unique_sources
             FROM agent_states s
             JOIN exposures e
-              ON e.agent_id = s.agent_id
+              ON e.run_id = s.run_id
+              AND e.agent_id = s.agent_id
               AND e.timestep > s.last_reasoning_timestep
               AND e.source_agent_id IS NOT NULL
-            WHERE s.aware = 1
+            WHERE s.run_id = ?
+              AND s.aware = 1
               AND s.last_reasoning_timestep >= 0
               AND s.committed = 0
             GROUP BY s.agent_id
-        """
+        """,
+            (self.run_id,),
         )
 
         multi_touch = []
@@ -490,10 +552,10 @@ class StateManager:
         cursor.execute(
             """
             INSERT OR REPLACE INTO shared_to
-            (source_agent_id, target_agent_id, timestep, position)
-            VALUES (?, ?, ?, ?)
+            (run_id, source_agent_id, target_agent_id, timestep, position)
+            VALUES (?, ?, ?, ?, ?)
         """,
-            (source_id, target_id, timestep, position),
+            (self.run_id, source_id, target_id, timestep, position),
         )
 
     def get_unshared_neighbors(
@@ -518,10 +580,11 @@ class StateManager:
             f"""
             SELECT target_agent_id, position
             FROM shared_to
-            WHERE source_agent_id = ?
+            WHERE run_id = ?
+              AND source_agent_id = ?
               AND target_agent_id IN ({placeholders})
         """,
-            [source_id] + neighbor_ids,
+            [self.run_id, source_id] + neighbor_ids,
         )
 
         already_shared = {
@@ -547,8 +610,8 @@ class StateManager:
         """
         cursor = self.conn.cursor()
         cursor.execute(
-            "INSERT OR REPLACE INTO simulation_metadata (key, value) VALUES (?, ?)",
-            (key, value),
+            "INSERT OR REPLACE INTO simulation_metadata (run_id, key, value) VALUES (?, ?, ?)",
+            (self.run_id, key, value),
         )
         self.conn.commit()
 
@@ -562,7 +625,10 @@ class StateManager:
             Value string or None if not found
         """
         cursor = self.conn.cursor()
-        cursor.execute("SELECT value FROM simulation_metadata WHERE key = ?", (key,))
+        cursor.execute(
+            "SELECT value FROM simulation_metadata WHERE run_id = ? AND key = ?",
+            (self.run_id, key),
+        )
         row = cursor.fetchone()
         return row["value"] if row else None
 
@@ -573,7 +639,10 @@ class StateManager:
             key: Metadata key to delete
         """
         cursor = self.conn.cursor()
-        cursor.execute("DELETE FROM simulation_metadata WHERE key = ?", (key,))
+        cursor.execute(
+            "DELETE FROM simulation_metadata WHERE run_id = ? AND key = ?",
+            (self.run_id, key),
+        )
         self.conn.commit()
 
     def get_last_completed_timestep(self) -> int:
@@ -583,7 +652,10 @@ class StateManager:
             Max timestep from timestep_summaries, or -1 if none exist.
         """
         cursor = self.conn.cursor()
-        cursor.execute("SELECT MAX(timestep) as max_ts FROM timestep_summaries")
+        cursor.execute(
+            "SELECT MAX(timestep) as max_ts FROM timestep_summaries WHERE run_id = ?",
+            (self.run_id,),
+        )
         row = cursor.fetchone()
         if row and row["max_ts"] is not None:
             return row["max_ts"]
@@ -625,8 +697,8 @@ class StateManager:
         """
         cursor = self.conn.cursor()
         cursor.execute(
-            "SELECT agent_id FROM agent_states WHERE last_reasoning_timestep = ?",
-            (timestep,),
+            "SELECT agent_id FROM agent_states WHERE run_id = ? AND last_reasoning_timestep = ?",
+            (self.run_id, timestep),
         )
         return {row["agent_id"] for row in cursor.fetchall()}
 
@@ -642,10 +714,19 @@ class StateManager:
         # Insert exposure record
         cursor.execute(
             """
-            INSERT INTO exposures (agent_id, timestep, channel, source_agent_id, content, credibility)
-            VALUES (?, ?, ?, ?, ?, ?)
+            INSERT INTO exposures (
+                run_id,
+                agent_id,
+                timestep,
+                channel,
+                source_agent_id,
+                content,
+                credibility
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?)
         """,
             (
+                self.run_id,
                 agent_id,
                 exposure.timestep,
                 exposure.channel,
@@ -675,13 +756,15 @@ class StateManager:
                     ELSE MIN(network_hop_depth, ?)
                 END,
                 updated_at = ?
-            WHERE agent_id = ?
+            WHERE run_id = ?
+              AND agent_id = ?
         """,
             (
                 new_hop_depth,
                 new_hop_depth,
                 new_hop_depth,
                 exposure.timestep,
+                self.run_id,
                 agent_id,
             ),
         )
@@ -724,7 +807,8 @@ class StateManager:
                     ELSE will_share
                 END,
                 updated_at = ?
-            WHERE aware = 1
+            WHERE run_id = ?
+              AND aware = 1
               AND conviction IS NOT NULL
               AND conviction > ?
               AND last_reasoning_timestep < ?
@@ -738,6 +822,7 @@ class StateManager:
                 decay_multiplier,
                 sharing_threshold,
                 timestep,
+                self.run_id,
                 sharing_threshold,
                 timestep,
             ),
@@ -783,7 +868,8 @@ class StateManager:
                 raw_reasoning = ?,
                 last_reasoning_timestep = ?,
                 updated_at = ?
-            WHERE agent_id = ?
+            WHERE run_id = ?
+              AND agent_id = ?
         """,
             (
                 state.position,
@@ -808,6 +894,7 @@ class StateManager:
                 state.raw_reasoning,
                 timestep,
                 timestep,
+                self.run_id,
                 agent_id,
             ),
         )
@@ -851,7 +938,8 @@ class StateManager:
                     raw_reasoning = ?,
                     last_reasoning_timestep = ?,
                     updated_at = ?
-                WHERE agent_id = ?
+                WHERE run_id = ?
+                  AND agent_id = ?
             """,
                 (
                     state.position,
@@ -876,6 +964,7 @@ class StateManager:
                     state.raw_reasoning,
                     timestep,
                     timestep,
+                    self.run_id,
                     agent_id,
                 ),
             )
@@ -895,10 +984,11 @@ class StateManager:
         # Insert new entry
         cursor.execute(
             """
-            INSERT INTO memory_traces (agent_id, timestep, sentiment, conviction, summary)
-            VALUES (?, ?, ?, ?, ?)
+            INSERT INTO memory_traces (run_id, agent_id, timestep, sentiment, conviction, summary)
+            VALUES (?, ?, ?, ?, ?, ?)
         """,
             (
+                self.run_id,
                 agent_id,
                 entry.timestep,
                 entry.sentiment,
@@ -913,12 +1003,12 @@ class StateManager:
             DELETE FROM memory_traces
             WHERE id NOT IN (
                 SELECT id FROM memory_traces
-                WHERE agent_id = ?
+                WHERE run_id = ? AND agent_id = ?
                 ORDER BY timestep DESC
                 LIMIT 3
-            ) AND agent_id = ?
+            ) AND run_id = ? AND agent_id = ?
         """,
-            (agent_id, agent_id),
+            (self.run_id, agent_id, self.run_id, agent_id),
         )
 
     def get_memory_traces(self, agent_id: str) -> list[MemoryEntry]:
@@ -934,10 +1024,10 @@ class StateManager:
         cursor.execute(
             """
             SELECT * FROM memory_traces
-            WHERE agent_id = ?
+            WHERE run_id = ? AND agent_id = ?
             ORDER BY timestep ASC
         """,
-            (agent_id,),
+            (self.run_id, agent_id),
         )
 
         return [
@@ -960,10 +1050,18 @@ class StateManager:
 
         cursor.execute(
             """
-            INSERT INTO timeline (timestep, event_type, agent_id, details_json, wall_timestamp)
-            VALUES (?, ?, ?, ?, ?)
+            INSERT INTO timeline (
+                run_id,
+                timestep,
+                event_type,
+                agent_id,
+                details_json,
+                wall_timestamp
+            )
+            VALUES (?, ?, ?, ?, ?, ?)
         """,
             (
+                self.run_id,
                 event.timestep,
                 event.event_type.value,
                 event.agent_id,
@@ -976,13 +1074,19 @@ class StateManager:
         """Get fraction of population that is aware."""
         cursor = self.conn.cursor()
 
-        cursor.execute("SELECT COUNT(*) as total FROM agent_states")
+        cursor.execute(
+            "SELECT COUNT(*) as total FROM agent_states WHERE run_id = ?",
+            (self.run_id,),
+        )
         total = cursor.fetchone()["total"]
 
         if total == 0:
             return 0.0
 
-        cursor.execute("SELECT COUNT(*) as aware FROM agent_states WHERE aware = 1")
+        cursor.execute(
+            "SELECT COUNT(*) as aware FROM agent_states WHERE run_id = ? AND aware = 1",
+            (self.run_id,),
+        )
         aware = cursor.fetchone()["aware"]
 
         return aware / total
@@ -995,9 +1099,11 @@ class StateManager:
             """
             SELECT COALESCE(private_position, position) as position, COUNT(*) as cnt
             FROM agent_states
-            WHERE COALESCE(private_position, position) IS NOT NULL
+            WHERE run_id = ?
+              AND COALESCE(private_position, position) IS NOT NULL
             GROUP BY COALESCE(private_position, position)
-        """
+        """,
+            (self.run_id,),
         )
 
         return {row["position"]: row["cnt"] for row in cursor.fetchall()}
@@ -1010,8 +1116,10 @@ class StateManager:
             """
             SELECT AVG(COALESCE(private_sentiment, sentiment)) as avg_sentiment
             FROM agent_states
-            WHERE COALESCE(private_sentiment, sentiment) IS NOT NULL
-        """
+            WHERE run_id = ?
+              AND COALESCE(private_sentiment, sentiment) IS NOT NULL
+        """,
+            (self.run_id,),
         )
         row = cursor.fetchone()
 
@@ -1025,8 +1133,10 @@ class StateManager:
             """
             SELECT AVG(COALESCE(private_conviction, conviction)) as avg_conviction
             FROM agent_states
-            WHERE COALESCE(private_conviction, conviction) IS NOT NULL
-        """
+            WHERE run_id = ?
+              AND COALESCE(private_conviction, conviction) IS NOT NULL
+        """,
+            (self.run_id,),
         )
         row = cursor.fetchone()
 
@@ -1040,8 +1150,10 @@ class StateManager:
             """
             SELECT AVG(COALESCE(private_sentiment, sentiment)) as mean_s, COUNT(*) as cnt
             FROM agent_states
-            WHERE COALESCE(private_sentiment, sentiment) IS NOT NULL
-        """
+            WHERE run_id = ?
+              AND COALESCE(private_sentiment, sentiment) IS NOT NULL
+        """,
+            (self.run_id,),
         )
         row = cursor.fetchone()
 
@@ -1056,9 +1168,10 @@ class StateManager:
                 * (COALESCE(private_sentiment, sentiment) - ?)
             ) as variance
             FROM agent_states
-            WHERE COALESCE(private_sentiment, sentiment) IS NOT NULL
+            WHERE run_id = ?
+              AND COALESCE(private_sentiment, sentiment) IS NOT NULL
         """,
-            (mean, mean),
+            (mean, mean, self.run_id),
         )
         var_row = cursor.fetchone()
         return var_row["variance"] if var_row else None
@@ -1074,12 +1187,13 @@ class StateManager:
         cursor.execute(
             """
             INSERT OR REPLACE INTO timestep_summaries
-            (timestep, new_exposures, agents_reasoned, shares_occurred,
+            (run_id, timestep, new_exposures, agents_reasoned, shares_occurred,
              state_changes, exposure_rate, position_distribution_json, average_sentiment,
              average_conviction, sentiment_variance)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """,
             (
+                self.run_id,
                 summary.timestep,
                 summary.new_exposures,
                 summary.agents_reasoned,
@@ -1099,8 +1213,11 @@ class StateManager:
 
         cursor.execute(
             """
-            SELECT * FROM timestep_summaries ORDER BY timestep
-        """
+            SELECT * FROM timestep_summaries
+            WHERE run_id = ?
+            ORDER BY timestep
+        """,
+            (self.run_id,),
         )
 
         summaries = []
@@ -1137,7 +1254,7 @@ class StateManager:
         """
         cursor = self.conn.cursor()
 
-        cursor.execute("SELECT * FROM agent_states")
+        cursor.execute("SELECT * FROM agent_states WHERE run_id = ?", (self.run_id,))
         agent_rows = cursor.fetchall()
         states = []
 
@@ -1145,8 +1262,10 @@ class StateManager:
             """
             SELECT agent_id, COUNT(*) as cnt
             FROM exposures
+            WHERE run_id = ?
             GROUP BY agent_id
-        """
+        """,
+            (self.run_id,),
         )
         exposure_counts = {row["agent_id"]: row["cnt"] for row in cursor.fetchall()}
 
@@ -1227,7 +1346,10 @@ class StateManager:
         """
         cursor = self.conn.cursor()
 
-        cursor.execute("SELECT * FROM timeline ORDER BY timestep, id")
+        cursor.execute(
+            "SELECT * FROM timeline WHERE run_id = ? ORDER BY timestep, id",
+            (self.run_id,),
+        )
 
         events = []
         for row in cursor.fetchall():
@@ -1253,7 +1375,10 @@ class StateManager:
     def get_population_count(self) -> int:
         """Get total number of agents."""
         cursor = self.conn.cursor()
-        cursor.execute("SELECT COUNT(*) as cnt FROM agent_states")
+        cursor.execute(
+            "SELECT COUNT(*) as cnt FROM agent_states WHERE run_id = ?",
+            (self.run_id,),
+        )
         return cursor.fetchone()["cnt"]
 
     def close(self) -> None:

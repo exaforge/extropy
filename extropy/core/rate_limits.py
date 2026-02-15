@@ -85,11 +85,32 @@ RATE_LIMIT_PROFILES: dict[str, dict[str, dict[int, dict[str, int]]]] = {
     },
 }
 
-# Map "claude" provider name to anthropic profiles
+# Provider aliases — map alternate names to canonical profiles
 RATE_LIMIT_PROFILES["claude"] = RATE_LIMIT_PROFILES["anthropic"]
-
-# Azure OpenAI uses the same rate limit profiles as standard OpenAI
 RATE_LIMIT_PROFILES["azure_openai"] = RATE_LIMIT_PROFILES["openai"]
+RATE_LIMIT_PROFILES["azure"] = RATE_LIMIT_PROFILES["openai"]
+
+# Third-party providers — conservative defaults
+# These providers typically have per-key limits; adjust via rate_tier/rpm_override.
+_THIRD_PARTY_DEFAULT = {
+    "default": {
+        1: {"rpm": 60, "tpm": 100_000},
+        2: {"rpm": 200, "tpm": 500_000},
+        3: {"rpm": 500, "tpm": 1_000_000},
+        4: {"rpm": 1_000, "tpm": 2_000_000},
+    },
+}
+RATE_LIMIT_PROFILES["openrouter"] = _THIRD_PARTY_DEFAULT
+RATE_LIMIT_PROFILES["deepseek"] = _THIRD_PARTY_DEFAULT
+RATE_LIMIT_PROFILES["together"] = _THIRD_PARTY_DEFAULT
+RATE_LIMIT_PROFILES["groq"] = {
+    "default": {
+        1: {"rpm": 30, "tpm": 15_000},
+        2: {"rpm": 60, "tpm": 50_000},
+        3: {"rpm": 200, "tpm": 100_000},
+        4: {"rpm": 500, "tpm": 500_000},
+    },
+}
 
 
 def get_limits(

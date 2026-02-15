@@ -158,8 +158,14 @@ class TestNetworkConfig:
 
         assert config.avg_degree == 20.0
         assert config.rewire_prob == 0.05
+        assert config.similarity_store_threshold == 0.05
         assert config.similarity_threshold == 0.3
         assert config.similarity_steepness == 10.0
+        assert config.candidate_mode == "exact"
+        assert config.candidate_pool_multiplier == 12.0
+        assert config.min_candidate_pool == 80
+        assert config.similarity_workers == 1
+        assert config.checkpoint_every_rows == 250
         assert config.seed is None
 
     def test_custom_config(self):
@@ -703,6 +709,111 @@ class TestGenerateNetwork:
         # Check various stages were reported
         stages = set(call[0] for call in progress_calls)
         assert "Computing similarities" in stages
+
+    def test_generate_network_blocked_mode_reproducibility(self, sample_agents):
+        """Blocked candidate mode should remain deterministic with fixed seed."""
+        config = REFERENCE_NETWORK_CONFIG.model_copy(
+            update={
+                "seed": 42,
+                "candidate_mode": "blocked",
+                "candidate_pool_multiplier": 8.0,
+                "blocking_attributes": ["employer_type", "federal_state"],
+            }
+        )
+
+        result1 = generate_network(sample_agents, config)
+        result2 = generate_network(sample_agents, config)
+
+        edges1 = {(e.source, e.target) for e in result1.edges}
+        edges2 = {(e.source, e.target) for e in result2.edges}
+
+        assert result1.meta["candidate_mode"] == "blocked"
+        assert result2.meta["candidate_mode"] == "blocked"
+        assert edges1 == edges2
+
+    def test_generate_network_resume_from_checkpoint_matches_fresh(self, sample_agents):
+        """Resuming from a saved similarity checkpoint should match a fresh run."""
+        import sqlite3
+
+        config = REFERENCE_NETWORK_CONFIG.model_copy(
+            update={
+                "seed": 42,
+                "similarity_chunk_size": 8,
+                "checkpoint_every_rows": 1,
+            }
+        )
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            checkpoint_path = Path(tmpdir) / "study.db"
+
+            # Build and persist checkpoint from a full run.
+            result_checkpointed = generate_network(
+                sample_agents,
+                config,
+                checkpoint_path=checkpoint_path,
+            )
+            assert checkpoint_path.exists()
+
+            # Simulate interruption by dropping the latter half of completed chunks.
+            conn = sqlite3.connect(str(checkpoint_path))
+            cur = conn.cursor()
+            cur.execute(
+                "SELECT job_id FROM network_similarity_jobs ORDER BY created_at DESC LIMIT 1"
+            )
+            job_id = cur.fetchone()[0]
+            cutoff = max(8, (len(sample_agents) // 2))
+            cur.execute(
+                """
+                SELECT MIN(chunk_start)
+                FROM network_similarity_chunks
+                WHERE job_id = ? AND chunk_start >= ?
+                """,
+                (job_id, cutoff),
+            )
+            drop_start = cur.fetchone()[0]
+            if drop_start is None:
+                drop_start = 0
+            cur.execute(
+                "DELETE FROM network_similarity_chunks WHERE job_id = ? AND chunk_start >= ?",
+                (job_id, drop_start),
+            )
+            cur.execute(
+                "DELETE FROM network_similarity_pairs WHERE job_id = ? AND i >= ?",
+                (job_id, drop_start),
+            )
+            cur.execute(
+                "UPDATE network_similarity_jobs SET status = 'running' WHERE job_id = ?",
+                (job_id,),
+            )
+            conn.commit()
+            conn.close()
+
+            resumed = generate_network(
+                sample_agents,
+                config,
+                checkpoint_path=checkpoint_path,
+                resume_from_checkpoint=True,
+            )
+            fresh = generate_network(sample_agents, config)
+
+            resumed_edges = {(e.source, e.target) for e in resumed.edges}
+            fresh_edges = {(e.source, e.target) for e in fresh.edges}
+
+            assert resumed.meta["resumed_from_checkpoint"] is True
+            assert resumed_edges == fresh_edges
+            assert len(resumed.edges) == len(result_checkpointed.edges)
+
+    def test_generate_network_checkpoint_requires_db_path(self, sample_agents):
+        """Checkpoint path must be a SQLite DB path."""
+        config = REFERENCE_NETWORK_CONFIG.model_copy(update={"seed": 42})
+        with tempfile.TemporaryDirectory() as tmpdir:
+            checkpoint_path = Path(tmpdir) / "network-similarity.pkl"
+            with pytest.raises(ValueError, match="DB-only"):
+                generate_network(
+                    sample_agents,
+                    config,
+                    checkpoint_path=checkpoint_path,
+                )
 
 
 class TestGenerateNetworkWithMetrics:

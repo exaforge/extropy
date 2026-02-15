@@ -7,28 +7,28 @@ from ...config import (
     get_config,
     reset_config,
     CONFIG_FILE,
-    get_api_key,
-    get_azure_config,
+    get_api_key_for_provider,
 )
 
 
 VALID_KEYS = {
-    "pipeline.provider",
-    "pipeline.model_simple",
-    "pipeline.model_reasoning",
-    "pipeline.model_research",
-    "simulation.provider",
-    "simulation.model",
-    "simulation.pivotal_model",
-    "simulation.routine_model",
+    "models.fast",
+    "models.strong",
+    "simulation.fast",
+    "simulation.strong",
     "simulation.max_concurrent",
     "simulation.rate_tier",
     "simulation.rpm_override",
     "simulation.tpm_override",
-    "simulation.api_format",
+    "show_cost",
 }
 
-INT_FIELDS = {"max_concurrent", "rate_tier", "rpm_override", "tpm_override"}
+INT_FIELDS = {
+    "max_concurrent",
+    "rate_tier",
+    "rpm_override",
+    "tpm_override",
+}
 
 
 @app.command("config")
@@ -39,7 +39,7 @@ def config_command(
     ),
     key: str | None = typer.Argument(
         None,
-        help="Config key (e.g. pipeline.provider, simulation.model)",
+        help="Config key (e.g. models.fast, simulation.strong)",
     ),
     value: str | None = typer.Argument(
         None,
@@ -50,9 +50,9 @@ def config_command(
 
     Examples:
         extropy config show
-        extropy config set pipeline.provider claude
-        extropy config set simulation.provider openai
-        extropy config set simulation.model gpt-5-mini
+        extropy config set models.fast openai/gpt-5-mini
+        extropy config set models.strong anthropic/claude-sonnet-4.5
+        extropy config set simulation.strong openrouter/anthropic/claude-sonnet-4.5
         extropy config reset
     """
     if action == "show":
@@ -82,36 +82,21 @@ def _show_config():
     console.print("[bold]Extropy Configuration[/bold]")
     console.print("─" * 40)
 
-    # Pipeline zone
+    # Models (pipeline)
     console.print()
-    console.print("[bold cyan]Pipeline[/bold cyan] (spec, extend, persona, scenario)")
-    console.print(f"  provider        = {config.pipeline.provider}")
     console.print(
-        f"  model_simple    = {config.pipeline.model_simple or '[dim](provider default)[/dim]'}"
+        "[bold cyan]Models[/bold cyan] (pipeline: spec, extend, persona, scenario)"
     )
-    console.print(
-        f"  model_reasoning = {config.pipeline.model_reasoning or '[dim](provider default)[/dim]'}"
-    )
-    console.print(
-        f"  model_research  = {config.pipeline.model_research or '[dim](provider default)[/dim]'}"
-    )
+    console.print(f"  fast   = {config.models.fast}")
+    console.print(f"  strong = {config.models.strong}")
 
-    # Simulation zone
+    # Simulation
     console.print()
     console.print("[bold cyan]Simulation[/bold cyan] (agent reasoning)")
-    console.print(f"  provider        = {config.simulation.provider}")
-    console.print(
-        f"  model           = {config.simulation.model or '[dim](provider default)[/dim]'}"
-    )
-    console.print(
-        f"  pivotal_model   = {config.simulation.pivotal_model or '[dim](same as model)[/dim]'}"
-    )
-    console.print(
-        f"  routine_model   = {config.simulation.routine_model or '[dim](provider default)[/dim]'}"
-    )
-    console.print(
-        f"  api_format      = {config.simulation.api_format or '[dim](auto)[/dim]'}"
-    )
+    strong_val = config.simulation.strong or "[dim](= models.strong)[/dim]"
+    fast_val = config.simulation.fast or "[dim](= models.fast)[/dim]"
+    console.print(f"  strong          = {strong_val}")
+    console.print(f"  fast            = {fast_val}")
     console.print(f"  max_concurrent  = {config.simulation.max_concurrent}")
     console.print(
         f"  rate_tier       = {config.simulation.rate_tier or '[dim](tier 1)[/dim]'}"
@@ -121,25 +106,29 @@ def _show_config():
     if config.simulation.tpm_override:
         console.print(f"  tpm_override    = {config.simulation.tpm_override}")
 
+    # Custom providers
+    if config.providers:
+        console.print()
+        console.print("[bold cyan]Custom Providers[/bold cyan]")
+        for name, provider_cfg in config.providers.items():
+            console.print(f"  {name}:")
+            console.print(f"    base_url    = {provider_cfg.base_url}")
+            if provider_cfg.api_key_env:
+                console.print(f"    api_key_env = {provider_cfg.api_key_env}")
+
+    # Cost tracking
+    if config.show_cost:
+        console.print()
+        console.print(f"  show_cost = {config.show_cost}")
+
     # API keys status
     console.print()
     console.print("[bold cyan]API Keys[/bold cyan] (from env vars)")
     _show_key_status("openai", "OPENAI_API_KEY")
-    _show_key_status("claude", "ANTHROPIC_API_KEY")
-    _show_key_status("azure_openai", "AZURE_OPENAI_API_KEY")
-
-    # Azure-specific config (show when Azure provider is in use)
-    active_providers = {config.pipeline.provider, config.simulation.provider}
-    if "azure_openai" in active_providers:
-        azure_cfg = get_azure_config("azure_openai")
-        console.print()
-        console.print("[bold cyan]Azure OpenAI[/bold cyan]")
-        console.print(
-            f"  endpoint          = {azure_cfg['azure_endpoint'] or '[dim]not set[/dim]'}"
-        )
-        console.print(f"  api_version       = {azure_cfg['api_version']}")
-        if azure_cfg["azure_deployment"]:
-            console.print(f"  deployment        = {azure_cfg['azure_deployment']}")
+    _show_key_status("anthropic", "ANTHROPIC_API_KEY")
+    _show_key_status("azure", "AZURE_OPENAI_API_KEY")
+    _show_key_status("openrouter", "OPENROUTER_API_KEY")
+    _show_key_status("deepseek", "DEEPSEEK_API_KEY")
 
     # Config file
     console.print()
@@ -152,7 +141,7 @@ def _show_config():
 
 def _show_key_status(provider: str, env_var_label: str):
     """Show whether an API key is configured."""
-    key = get_api_key(provider)
+    key = get_api_key_for_provider(provider)
     if key:
         masked = key[:8] + "..." + key[-4:] if len(key) > 16 else "***"
         console.print(f"  {env_var_label}: [green]{masked}[/green]")
@@ -162,35 +151,57 @@ def _show_key_status(provider: str, env_var_label: str):
 
 def _set_config(key: str, value: str):
     """Set a config value and save."""
-    if key not in VALID_KEYS:
+    # Allow dynamic provider keys like providers.mycompany.base_url
+    is_provider_key = key.startswith("providers.")
+    if key not in VALID_KEYS and not is_provider_key:
         console.print(f"[red]Unknown key:[/red] {key}")
         console.print()
         console.print("Available keys:")
         for k in sorted(VALID_KEYS):
             console.print(f"  {k}")
+        console.print("  providers.<name>.base_url")
+        console.print("  providers.<name>.api_key_env")
         raise typer.Exit(1)
 
     # Load current config (or defaults if no file)
     config = get_config()
 
-    zone, field = key.split(".", 1)
-    if zone == "pipeline":
-        target = config.pipeline
-    elif zone == "simulation":
-        target = config.simulation
-    else:
-        console.print(f"[red]Unknown zone:[/red] {zone}")
-        raise typer.Exit(1)
-
-    # Type coercion
-    if field in INT_FIELDS:
-        try:
-            setattr(target, field, int(value))
-        except ValueError:
-            console.print(f"[red]Invalid integer value:[/red] {value}")
+    if is_provider_key:
+        parts = key.split(".", 2)
+        if len(parts) != 3 or parts[2] not in ("base_url", "api_key_env"):
+            console.print(
+                f"[red]Invalid provider key:[/red] {key}\n"
+                "Expected: providers.<name>.base_url or providers.<name>.api_key_env"
+            )
             raise typer.Exit(1)
+        provider_name = parts[1]
+        field = parts[2]
+        from ...config import CustomProviderConfig
+
+        if provider_name not in config.providers:
+            config.providers[provider_name] = CustomProviderConfig()
+        setattr(config.providers[provider_name], field, value)
+    elif key == "show_cost":
+        config.show_cost = value.lower() in ("true", "1", "yes")
     else:
-        setattr(target, field, value)
+        zone, field_name = key.split(".", 1)
+        if zone == "models":
+            target = config.models
+        elif zone == "simulation":
+            target = config.simulation
+        else:
+            console.print(f"[red]Unknown zone:[/red] {zone}")
+            raise typer.Exit(1)
+
+        # Type coercion
+        if field_name in INT_FIELDS:
+            try:
+                setattr(target, field_name, int(value))
+            except ValueError:
+                console.print(f"[red]Invalid integer value:[/red] {value}")
+                raise typer.Exit(1)
+        else:
+            setattr(target, field_name, value)
 
     config.save()
     reset_config()  # Clear cached singleton so next get_config() reloads
