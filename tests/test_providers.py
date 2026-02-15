@@ -380,9 +380,8 @@ class TestBaseRetryWithValidation:
         """With no validator, first result is returned."""
 
         class ConcreteProvider(LLMProvider):
-            default_simple_model = "test"
-            default_reasoning_model = "test"
-            default_research_model = "test"
+            default_fast_model = "test"
+            default_strong_model = "test"
 
             def simple_call(self, *a, **kw):
                 return {}
@@ -421,9 +420,8 @@ class TestBaseRetryWithValidation:
         """When initial_prompt is provided, it should be used for the first call."""
 
         class ConcreteProvider(LLMProvider):
-            default_simple_model = "test"
-            default_reasoning_model = "test"
-            default_research_model = "test"
+            default_fast_model = "test"
+            default_strong_model = "test"
 
             def simple_call(self, *a, **kw):
                 return {}
@@ -463,9 +461,8 @@ class TestBaseRetryWithValidation:
         """Validation retries should use prompt, not initial_prompt."""
 
         class ConcreteProvider(LLMProvider):
-            default_simple_model = "test"
-            default_reasoning_model = "test"
-            default_research_model = "test"
+            default_fast_model = "test"
+            default_strong_model = "test"
 
             def simple_call(self, *a, **kw):
                 return {}
@@ -528,9 +525,8 @@ class TestBaseRetryWithValidation:
         """When validator passes on first try with initial_prompt, no retries occur."""
 
         class ConcreteProvider(LLMProvider):
-            default_simple_model = "test"
-            default_reasoning_model = "test"
-            default_research_model = "test"
+            default_fast_model = "test"
+            default_strong_model = "test"
 
             def simple_call(self, *a, **kw):
                 return {}
@@ -574,9 +570,8 @@ class TestBaseRetryWithValidation:
         """Test that on_retry callback is invoked with correct parameters."""
 
         class ConcreteProvider(LLMProvider):
-            default_simple_model = "test"
-            default_reasoning_model = "test"
-            default_research_model = "test"
+            default_fast_model = "test"
+            default_strong_model = "test"
 
             def simple_call(self, *a, **kw):
                 return {}
@@ -640,9 +635,8 @@ class TestBaseRetryWithValidation:
         """When initial_prompt is None, prompt is used for first call."""
 
         class ConcreteProvider(LLMProvider):
-            default_simple_model = "test"
-            default_reasoning_model = "test"
-            default_research_model = "test"
+            default_fast_model = "test"
+            default_strong_model = "test"
 
             def simple_call(self, *a, **kw):
                 return {}
@@ -813,12 +807,10 @@ class TestProviderFactoryAzure:
     )
     def test_create_azure_openai_provider(self):
         from extropy.core.providers import _create_provider
+        from extropy.core.providers.openai_compat import OpenAICompatProvider
 
         provider = _create_provider("azure_openai")
-        assert isinstance(provider, OpenAIProvider)
-        assert provider._is_azure is True
-        assert provider._azure_endpoint == "https://my-resource.openai.azure.com"
-        assert provider._azure_deployment == "my-deployment"
+        assert isinstance(provider, OpenAICompatProvider)
 
     @patch.dict(
         "os.environ",

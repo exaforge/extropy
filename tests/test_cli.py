@@ -1,4 +1,5 @@
 """CLI smoke tests using typer's CliRunner."""
+
 from pathlib import Path
 
 from typer.testing import CliRunner
@@ -17,7 +18,7 @@ class TestConfigCommand:
     def test_config_show(self):
         result = runner.invoke(app, ["config", "show"])
         assert result.exit_code == 0
-        assert "Pipeline" in result.output
+        assert "Models" in result.output
         assert "Simulation" in result.output
 
     def test_config_set_invalid_key(self):
@@ -78,7 +79,9 @@ class TestNetworkCommand:
             {"_id": "a3", "role": "y", "team": "beta"},
         ]
         with open_study_db(study_db) as db:
-            db.save_sample_result(population_id="default", agents=agents, meta={"source": "test"})
+            db.save_sample_result(
+                population_id="default", agents=agents, meta={"source": "test"}
+            )
 
         NetworkConfig(seed=42, avg_degree=2.0).to_yaml(config_path)
 

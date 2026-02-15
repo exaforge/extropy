@@ -338,17 +338,13 @@ class SimulationRunConfig(BaseModel):
 
     scenario_path: str = Field(description="Path to scenario YAML")
     output_dir: str = Field(description="Directory for results output")
-    model: str = Field(
+    strong: str = Field(
         default="",
-        description="LLM model for agent reasoning (empty = use config default)",
+        description="Strong model for Pass 1 role-play reasoning (provider/model format, empty = config default)",
     )
-    pivotal_model: str = Field(
+    fast: str = Field(
         default="",
-        description="Model for pivotal reasoning (default: same as model)",
-    )
-    routine_model: str = Field(
-        default="",
-        description="Cheap model for routine reasoning + classification (default: provider cheap tier)",
+        description="Fast model for Pass 2 classification (provider/model format, empty = config default)",
     )
     reasoning_effort: str = Field(default="low", description="Reasoning effort level")
     multi_touch_threshold: int = Field(
@@ -361,6 +357,19 @@ class SimulationRunConfig(BaseModel):
     chunk_size: int = Field(
         default=50, description="Agents per reasoning chunk for checkpointing"
     )
+
+    # Backward compat aliases
+    @property
+    def model(self) -> str:
+        return self.strong
+
+    @property
+    def pivotal_model(self) -> str:
+        return self.strong
+
+    @property
+    def routine_model(self) -> str:
+        return self.fast
 
 
 # =============================================================================

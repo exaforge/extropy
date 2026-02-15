@@ -78,7 +78,10 @@ def _build_blocked_candidate_map(
                 continue
             blocks[attr].setdefault(val, []).append(idx)
 
-    target_pool = max(config.min_candidate_pool, int(config.avg_degree * config.candidate_pool_multiplier))
+    target_pool = max(
+        config.min_candidate_pool,
+        int(config.avg_degree * config.candidate_pool_multiplier),
+    )
     target_pool = max(1, min(n - 1, target_pool))
 
     candidate_map: list[list[int]] = [[] for _ in range(n)]
@@ -258,7 +261,9 @@ def _init_similarity_worker(
     _SIM_WORKER_CANDIDATE_MAP = candidate_map
 
 
-def _compute_similarity_chunk(task: tuple[int, int]) -> tuple[int, list[tuple[int, int, float]]]:
+def _compute_similarity_chunk(
+    task: tuple[int, int],
+) -> tuple[int, list[tuple[int, int, float]]]:
     """Compute similarities for a chunk of row indices in a worker process."""
     start, end = task
     if _SIM_WORKER_AGENTS is None:
@@ -333,7 +338,8 @@ def _compute_similarities_parallel(
             ),
         ) as ex:
             futures = {
-                ex.submit(_compute_similarity_chunk, task): task for task in pending_tasks
+                ex.submit(_compute_similarity_chunk, task): task
+                for task in pending_tasks
             }
             pending_results: dict[int, list[tuple[int, int, float]]] = {}
             sorted_starts = [start for start, _ in tasks]
@@ -361,10 +367,7 @@ def _compute_similarities_parallel(
                     completed_row_count += current_end - current_start
                     completed_rows = max(completed_rows, current_end)
 
-                    if (
-                        checkpoint_path is not None
-                        and checkpoint_signature is not None
-                    ):
+                    if checkpoint_path is not None and checkpoint_signature is not None:
                         if _is_db_checkpoint(checkpoint_path) and checkpoint_job_id:
                             with open_study_db(checkpoint_path) as db:
                                 db.save_similarity_chunk_rows(
@@ -451,7 +454,10 @@ def _compute_similarities_serial(
                 if j <= i:
                     continue
                 sim = compute_similarity(
-                    agents[i], agents[j], config.attribute_weights, config.ordinal_levels
+                    agents[i],
+                    agents[j],
+                    config.attribute_weights,
+                    config.ordinal_levels,
                 )
                 if sim >= threshold:
                     similarities[(i, j)] = sim
@@ -1237,7 +1243,9 @@ def generate_network(
     if config.candidate_mode == "blocked":
         if on_progress:
             on_progress("Preparing candidate blocks", 0, n)
-        candidate_map, blocking_attrs = _build_blocked_candidate_map(agents, config, seed)
+        candidate_map, blocking_attrs = _build_blocked_candidate_map(
+            agents, config, seed
+        )
         if on_progress:
             on_progress("Preparing candidate blocks", n, n)
         if candidate_map is None:

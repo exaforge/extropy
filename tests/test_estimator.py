@@ -323,7 +323,8 @@ class TestEstimationPipeline:
             population_spec=small_pop_spec,
             agents=small_agents,
             network=small_network,
-            provider="openai",
+            strong_model="openai/gpt-5",
+            fast_model="openai/gpt-5-mini",
         )
 
         assert est.population_size == 10
@@ -370,7 +371,8 @@ class TestEstimationPipeline:
             population_spec=small_pop_spec,
             agents=small_agents,
             network=small_network,
-            provider="openai",
+            strong_model="openai/gpt-5",
+            fast_model="openai/gpt-5-mini",
         )
         assert est.pivotal_model == "gpt-5"
         assert est.routine_model == "gpt-5-mini"
@@ -383,7 +385,8 @@ class TestEstimationPipeline:
             population_spec=small_pop_spec,
             agents=small_agents,
             network=small_network,
-            provider="claude",
+            strong_model="anthropic/claude-sonnet-4-5-20250929",
+            fast_model="anthropic/claude-haiku-4-5-20251001",
         )
         assert est.pivotal_model == "claude-sonnet-4-5-20250929"
         assert est.routine_model == "claude-haiku-4-5-20251001"
@@ -396,9 +399,8 @@ class TestEstimationPipeline:
             population_spec=small_pop_spec,
             agents=small_agents,
             network=small_network,
-            provider="openai",
-            pivotal_model="gpt-5-mini",
-            routine_model="gpt-5-mini",
+            strong_model="openai/gpt-5-mini",
+            fast_model="openai/gpt-5-mini",
         )
         assert est.pivotal_model == "gpt-5-mini"
         assert est.routine_model == "gpt-5-mini"
@@ -411,8 +413,8 @@ class TestEstimationPipeline:
             population_spec=small_pop_spec,
             agents=small_agents,
             network=small_network,
-            pivotal_model="unknown-model-x",
-            routine_model="unknown-model-y",
+            strong_model="openai/unknown-model-x",
+            fast_model="openai/unknown-model-y",
         )
         assert est.pivotal_pricing is None
         assert est.routine_pricing is None

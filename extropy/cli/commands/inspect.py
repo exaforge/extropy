@@ -56,11 +56,15 @@ def inspect_agent(
     conn.row_factory = sqlite3.Row
     try:
         cur = conn.cursor()
-        cur.execute("SELECT attrs_json FROM agents WHERE agent_id = ? LIMIT 1", (agent_id,))
+        cur.execute(
+            "SELECT attrs_json FROM agents WHERE agent_id = ? LIMIT 1", (agent_id,)
+        )
         attrs_row = cur.fetchone()
         attrs = json.loads(attrs_row["attrs_json"]) if attrs_row else {}
 
-        cur.execute("SELECT * FROM agent_states WHERE agent_id = ? LIMIT 1", (agent_id,))
+        cur.execute(
+            "SELECT * FROM agent_states WHERE agent_id = ? LIMIT 1", (agent_id,)
+        )
         state = cur.fetchone()
 
         cur.execute(
@@ -81,7 +85,9 @@ def inspect_agent(
 
     if state:
         console.print("[bold]State[/bold]")
-        console.print(f"  aware={bool(state['aware'])} will_share={bool(state['will_share'])}")
+        console.print(
+            f"  aware={bool(state['aware'])} will_share={bool(state['will_share'])}"
+        )
         console.print(
             f"  position={state['private_position'] or state['position']} "
             f"sentiment={state['private_sentiment'] if state['private_sentiment'] is not None else state['sentiment']}"

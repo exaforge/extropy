@@ -40,21 +40,49 @@ MODEL_PRICING: dict[str, ModelPricing] = {
     ),
     "claude-haiku-4.5": ModelPricing(input_per_mtok=0.80, output_per_mtok=4.00),
     "claude-haiku-4": ModelPricing(input_per_mtok=0.80, output_per_mtok=4.00),
+    # DeepSeek (direct API)
+    "deepseek-chat": ModelPricing(input_per_mtok=0.14, output_per_mtok=0.28),
+    "deepseek-reasoner": ModelPricing(input_per_mtok=0.55, output_per_mtok=2.19),
 }
 
-# Provider default models (matches provider classes, no API key needed)
+# Provider default models — 2-tier (fast/strong)
 PROVIDER_DEFAULTS: dict[str, dict[str, str]] = {
     "openai": {
-        "simple": "gpt-5-mini",
-        "reasoning": "gpt-5",
+        "fast": "gpt-5-mini",
+        "strong": "gpt-5",
     },
+    "anthropic": {
+        "fast": "claude-haiku-4-5-20251001",
+        "strong": "claude-sonnet-4-5-20250929",
+    },
+    "azure": {
+        "fast": "gpt-5-mini",
+        "strong": "gpt-5",
+    },
+    "openrouter": {
+        "fast": "openai/gpt-5-mini",
+        "strong": "openai/gpt-5",
+    },
+    "deepseek": {
+        "fast": "deepseek-chat",
+        "strong": "deepseek-reasoner",
+    },
+    "together": {
+        "fast": "meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo",
+        "strong": "meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo",
+    },
+    "groq": {
+        "fast": "llama-3.3-70b-versatile",
+        "strong": "llama-3.3-70b-versatile",
+    },
+    # Legacy aliases
     "claude": {
-        "simple": "claude-haiku-4-5-20251001",
-        "reasoning": "claude-sonnet-4-5-20250929",
+        "fast": "claude-haiku-4-5-20251001",
+        "strong": "claude-sonnet-4-5-20250929",
     },
     "azure_openai": {
-        "simple": "gpt-5-mini",
-        "reasoning": "gpt-5",
+        "fast": "gpt-5-mini",
+        "strong": "gpt-5",
     },
 }
 
@@ -64,15 +92,19 @@ def get_pricing(model: str) -> ModelPricing | None:
     return MODEL_PRICING.get(model)
 
 
-def resolve_default_model(provider: str, tier: str = "reasoning") -> str:
+def resolve_default_model(provider: str, tier: str = "strong") -> str:
     """Resolve default model name for a provider without instantiating it.
 
     Args:
-        provider: Provider name ('openai' or 'claude')
-        tier: 'simple' or 'reasoning'
+        provider: Provider name ('openai', 'anthropic', etc.)
+        tier: 'fast' or 'strong' (also accepts legacy 'simple'/'reasoning')
 
     Returns:
         Model name string
     """
+    # Map legacy tier names
+    tier_map = {"simple": "fast", "reasoning": "strong"}
+    tier = tier_map.get(tier, tier)
+
     defaults = PROVIDER_DEFAULTS.get(provider, PROVIDER_DEFAULTS["openai"])
-    return defaults.get(tier, defaults["reasoning"])
+    return defaults.get(tier, defaults["strong"])

@@ -14,9 +14,7 @@ from ..utils import format_elapsed
 
 @app.command("network")
 def network_command(
-    study_db: Path = typer.Option(
-        ..., "--study-db", help="Canonical study DB file"
-    ),
+    study_db: Path = typer.Option(..., "--study-db", help="Canonical study DB file"),
     population_id: str = typer.Option(
         "default", "--population-id", help="Population ID in study DB"
     ),
