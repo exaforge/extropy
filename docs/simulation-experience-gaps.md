@@ -710,6 +710,68 @@ Inspired by TinyTroupe's cognitive model — they track emotions, attention, goa
 
 ---
 
+## Fidelity Tiers: `--fidelity low/medium/high`
+
+Not everyone needs the full experience. A `--fidelity` flag controls the richness of the simulation without changing the underlying data model — all tiers use the same population, network, names, and family data. The flag only controls what gets rendered in prompts and whether conversations happen.
+
+### Tier Comparison
+
+| Feature | **low** | **medium** | **high** |
+|---------|---------|-----------|----------|
+| Names & family NPCs | Yes | Yes | Yes |
+| Narrative day template | Yes | Yes | Yes |
+| Temporal awareness | Yes | Yes | Yes |
+| Aggregate mood | Yes | Yes | Yes |
+| Named peer opinions | Top 5, with conviction | Top 10, with conviction + consensus signal | All connected, conviction + consensus + demographics |
+| Memory | Last 3 full reasoning traces | All traces, timestamped | All traces + semantic beliefs (consolidated) |
+| Conversations | None | Top 1 edge (partner/closest) | Top 2-3 edges, full back-and-forth |
+| Cognitive state | Emotional label only | Emotion + conviction trajectory | Full (attention, repetition detection, internal monologue) |
+| Social posts | Stored only | Stored + aggregate rendered | Stored + aggregate + individual posts visible |
+| Internal monologue | Not separated | Not separated | Explicit THINK vs SAY separation |
+| Spontaneous memory recall | No | No | Yes (embedding-based relevance) |
+| Repetition detection | No | No | Yes (forces deepening) |
+| Pass structure | Merged single call | Merged single call | Merged single call |
+
+### Cost Estimates (all 5-mini, 1k RPM, conservative)
+
+**Per-call token budgets by tier:**
+
+| | Input tokens/call | Output tokens/call |
+|---|---|---|
+| **low** — reasoning | ~2.5k | ~400 |
+| **medium** — reasoning | ~3.5k | ~500 |
+| **medium** — conversation turn | ~2k | ~200 |
+| **high** — reasoning | ~4k | ~600 |
+| **high** — conversation turn | ~2k | ~200 |
+
+**Total cost (5-mini pricing: $0.15 input, $0.60 output per 1M tokens):**
+
+| | 2k agents | 10k agents |
+|---|---|---|
+| **Current system** (baseline) | ~$8 | ~$40 |
+| **low** (15 timesteps) | ~$18 | ~$90 |
+| **medium** (15 timesteps) | ~$30 | ~$150 |
+| **high** (15 timesteps) | ~$44 | ~$220 |
+
+**Total wall time (5-mini, 1k RPM, conservative):**
+
+| | 2k agents | 10k agents |
+|---|---|---|
+| **Current system** | ~30 min | ~2.5 hrs |
+| **low** | ~45 min | ~4 hrs |
+| **medium** | ~1 hr | ~5.5 hrs |
+| **high** | ~1.5 hrs | ~7.5 hrs |
+
+### Default: `medium`
+
+Medium is the sweet spot. You get names, narrative days, temporal awareness, full memory, richer peer context, AND the one conversation that matters most (partner/closest relationship). That Travis↔Lisa budget argument is where minds actually change — and it costs ~$150 for 10k agents. Roughly 3.5x current cost for a fundamentally better simulation.
+
+Low is for quick iteration and testing — still miles better than current (names, narrative, temporal awareness, mood) but no conversations. ~2x current cost.
+
+High is for flagship studies where you want maximum realism. Every conversation, full cognitive architecture, internal monologue. ~5.5x current cost.
+
+---
+
 ## What The New Simulation Feels Like: 4 Scenarios
 
 These show the target agent experience across wildly different study types — crisis, product change, local policy, financial event. Same engine, same systems, completely different lives.
