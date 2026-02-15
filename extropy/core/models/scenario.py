@@ -84,6 +84,10 @@ class ExposureChannel(BaseModel):
         default=1.0,
         description="How the channel affects perceived credibility (1.0=no change)",
     )
+    experience_template: str | None = Field(
+        default=None,
+        description="How the agent experiences this channel, e.g. 'I saw this on {channel_name}'",
+    )
 
 
 class ExposureRule(BaseModel):
@@ -286,6 +290,10 @@ class ScenarioSpec(BaseModel):
     spread: SpreadConfig
     outcomes: OutcomeConfig
     simulation: SimulationConfig
+    background_context: str | None = Field(
+        default=None,
+        description="Optional background context injected into reasoning prompts",
+    )
 
     def to_yaml(self, path: Path | str) -> None:
         """Save scenario spec to YAML file."""

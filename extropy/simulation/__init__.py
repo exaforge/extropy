@@ -63,8 +63,6 @@ from .state import StateManager
 from .persona import generate_persona, render_persona
 from .reasoning import (
     reason_agent,
-    build_reasoning_prompt,
-    build_response_schema,
     build_pass1_prompt,
     build_pass1_schema,
     build_pass2_prompt,
@@ -119,8 +117,6 @@ __all__ = [
     "render_persona",
     # Reasoning (two-pass)
     "reason_agent",
-    "build_reasoning_prompt",
-    "build_response_schema",
     "build_pass1_prompt",
     "build_pass1_schema",
     "build_pass2_prompt",

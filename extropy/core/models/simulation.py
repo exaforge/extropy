@@ -142,7 +142,7 @@ class ExposureRecord(BaseModel):
 class MemoryEntry(BaseModel):
     """A single entry in an agent's reasoning memory trace.
 
-    Stored after each reasoning pass — capped at 3 entries per agent.
+    Stored after each reasoning pass. All entries are retained (no cap).
     Fed back into the prompt so agents remember their own reasoning history.
     """
 
@@ -152,6 +152,12 @@ class MemoryEntry(BaseModel):
         default=None, description="Conviction float value at this time"
     )
     summary: str = Field(description="1-sentence summary of reasoning at this time")
+    raw_reasoning: str | None = Field(
+        default=None, description="Full monologue text, stored but selectively rendered"
+    )
+    action_intent: str | None = Field(
+        default=None, description="What the agent said they intended to do"
+    )
 
 
 # =============================================================================
@@ -251,6 +257,7 @@ class PeerOpinion(BaseModel):
     """
 
     agent_id: str = Field(description="The peer's ID")
+    peer_name: str | None = Field(default=None, description="The peer's first name")
     relationship: str = Field(description="Edge type (colleague, mentor, etc.)")
     position: str | None = Field(
         default=None, description="Their current position (for backwards compat only)"
@@ -283,7 +290,25 @@ class ReasoningContext(BaseModel):
         default=None, description="Previous state if re-reasoning"
     )
     memory_trace: list[MemoryEntry] = Field(
-        default_factory=list, description="Agent's previous reasoning summaries (max 3)"
+        default_factory=list, description="Agent's previous reasoning summaries"
+    )
+    timestep: int = Field(default=0, description="Current simulation timestep")
+    timestep_unit: str = Field(default="day", description="Unit for timestep display")
+    agent_name: str | None = Field(
+        default=None, description="Agent's first name for prompt personalization"
+    )
+    prior_action_intent: str | None = Field(
+        default=None,
+        description="Action intent from the agent's most recent reasoning (for accountability)",
+    )
+    macro_summary: str | None = Field(
+        default=None, description="Deterministic summary of population-level trends"
+    )
+    local_mood_summary: str | None = Field(
+        default=None, description="Deterministic summary of neighborhood sentiment"
+    )
+    background_context: str | None = Field(
+        default=None, description="Scenario-level background context"
     )
 
 

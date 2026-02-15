@@ -253,6 +253,8 @@ class StateManager:
             ("agent_states", "private_sentiment", "REAL"),
             ("agent_states", "private_conviction", "REAL"),
             ("agent_states", "private_outcomes_json", "TEXT"),
+            ("memory_traces", "raw_reasoning", "TEXT"),
+            ("memory_traces", "action_intent", "TEXT"),
         ]
 
         for table, column, col_type in migrations:
@@ -972,8 +974,7 @@ class StateManager:
     def save_memory_entry(self, agent_id: str, entry: MemoryEntry) -> None:
         """Save a memory trace entry for an agent.
 
-        Maintains a sliding window of max 3 entries per agent.
-        Oldest entries are evicted when the limit is reached.
+        All entries are retained (no eviction cap).
 
         Args:
             agent_id: Agent ID
@@ -981,11 +982,12 @@ class StateManager:
         """
         cursor = self.conn.cursor()
 
-        # Insert new entry
         cursor.execute(
             """
-            INSERT INTO memory_traces (run_id, agent_id, timestep, sentiment, conviction, summary)
-            VALUES (?, ?, ?, ?, ?, ?)
+            INSERT INTO memory_traces
+                (run_id, agent_id, timestep, sentiment, conviction, summary,
+                 raw_reasoning, action_intent)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         """,
             (
                 self.run_id,
@@ -994,25 +996,13 @@ class StateManager:
                 entry.sentiment,
                 entry.conviction,
                 entry.summary,
+                entry.raw_reasoning,
+                entry.action_intent,
             ),
         )
 
-        # Evict oldest entries beyond 3
-        cursor.execute(
-            """
-            DELETE FROM memory_traces
-            WHERE id NOT IN (
-                SELECT id FROM memory_traces
-                WHERE run_id = ? AND agent_id = ?
-                ORDER BY timestep DESC
-                LIMIT 3
-            ) AND run_id = ? AND agent_id = ?
-        """,
-            (self.run_id, agent_id, self.run_id, agent_id),
-        )
-
     def get_memory_traces(self, agent_id: str) -> list[MemoryEntry]:
-        """Get memory trace entries for an agent (max 3, oldest first).
+        """Get all memory trace entries for an agent, oldest first.
 
         Args:
             agent_id: Agent ID
@@ -1030,15 +1020,30 @@ class StateManager:
             (self.run_id, agent_id),
         )
 
-        return [
-            MemoryEntry(
-                timestep=row["timestep"],
-                sentiment=row["sentiment"],
-                conviction=row["conviction"],
-                summary=row["summary"],
+        entries = []
+        for row in cursor.fetchall():
+            # raw_reasoning / action_intent columns may not exist in older DBs
+            raw_reasoning = None
+            action_intent = None
+            try:
+                raw_reasoning = row["raw_reasoning"]
+            except (IndexError, KeyError):
+                pass
+            try:
+                action_intent = row["action_intent"]
+            except (IndexError, KeyError):
+                pass
+            entries.append(
+                MemoryEntry(
+                    timestep=row["timestep"],
+                    sentiment=row["sentiment"],
+                    conviction=row["conviction"],
+                    summary=row["summary"],
+                    raw_reasoning=raw_reasoning,
+                    action_intent=action_intent,
+                )
             )
-            for row in cursor.fetchall()
-        ]
+        return entries
 
     def log_event(self, event: SimulationEvent) -> None:
         """Log a simulation event to the timeline.

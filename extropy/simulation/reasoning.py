@@ -53,89 +53,204 @@ class BatchTokenUsage:
 def build_pass1_prompt(
     context: ReasoningContext,
     scenario: ScenarioSpec,
+    fidelity: str = "medium",
 ) -> str:
     """Build the Pass 1 (role-play) prompt.
 
-    No categorical enums. The agent reasons naturally about the event,
-    forms a sentiment, conviction level, and public statement.
+    Named, temporal, accountable prompt structure. No categorical enums —
+    the agent reasons naturally about the event, forms a sentiment,
+    conviction level, and public statement.
 
     Args:
         context: Reasoning context with persona and exposure history
         scenario: Scenario specification
+        fidelity: Memory rendering depth — "low", "medium", or "high"
 
     Returns:
         Complete prompt string for LLM
     """
-    prompt_parts = [
-        "You ARE the person described below. Think and respond as yourself — first person, authentic, decisive.",
-        "IMPORTANT: Do NOT hedge, equivocate, or give a 'balanced' take. Real people have clear reactions.",
-        "Some people love this. Some are indifferent. Some are annoyed. Be honest about YOUR reaction.",
-        "Your background and circumstances determine your response — not politeness or caution.",
-        "",
-        context.persona,
-        "",
-        "## What You Just Learned",
-        "",
-        scenario.event.content,
-        "",
-        f"Source: {scenario.event.source}",
-        "",
-        "## How This Reached You",
-        "",
-    ]
+    is_re_reasoning = bool(context.memory_trace)
+    prompt_parts: list[str] = []
 
-    # Add exposure history
+    # --- System framing ---
+    if context.agent_name:
+        prompt_parts.append(
+            f"You are going to think as {context.agent_name}. Everything below is from "
+            f"{context.agent_name}'s perspective. Respond as {context.agent_name} — "
+            "first person, honest, unfiltered."
+        )
+    else:
+        prompt_parts.append(
+            "Think as the person described below. Everything is from their perspective. "
+            "Respond in first person — honest, unfiltered."
+        )
+    prompt_parts.extend(
+        [
+            "IMPORTANT: Do NOT hedge, equivocate, or give a 'balanced' take. Real people have clear reactions.",
+            "Your background and circumstances determine your response — not politeness or caution.",
+            "",
+        ]
+    )
+
+    # --- Persona ---
+    prompt_parts.extend([context.persona, ""])
+
+    # --- Temporal header ---
+    timestep_label = f"{context.timestep_unit} {context.timestep + 1}"
+    prompt_parts.extend(
+        [
+            f"## It's {timestep_label} since {scenario.event.source} announced:",
+            "",
+            scenario.event.content,
+            "",
+        ]
+    )
+
+    # --- Background context ---
+    if context.background_context:
+        prompt_parts.extend(
+            [
+                "## Background",
+                "",
+                context.background_context,
+                "",
+            ]
+        )
+
+    # --- Exposure history (named + experiential) ---
+    prompt_parts.extend(["## How This Reached You", ""])
+
+    # Build channel lookup for experience templates
+    channel_map = {ch.name: ch for ch in scenario.seed_exposure.channels}
+
     for exp in context.exposure_history:
         if exp.source_agent_id:
-            prompt_parts.append("- Someone in your network told you about this")
+            # Network exposure — try to find peer name
+            peer_name = None
+            for peer in context.peer_opinions:
+                if peer.agent_id == exp.source_agent_id and peer.peer_name:
+                    peer_name = peer.peer_name
+                    break
+            if peer_name:
+                prompt_parts.append(f'- {peer_name} told me: "{exp.content}"')
+            else:
+                prompt_parts.append("- Someone I know told me about this")
         else:
-            prompt_parts.append(f"- You heard about this via {exp.channel}")
+            # Seed/channel exposure
+            channel = channel_map.get(exp.channel)
+            if channel and channel.experience_template:
+                text = channel.experience_template.format(
+                    channel_name=channel.description or channel.name
+                )
+                prompt_parts.append(f"- {text}")
+            else:
+                # Humanize the channel name
+                display = (exp.channel or "unknown").replace("_", " ")
+                prompt_parts.append(f"- I heard about this via {display}")
 
-    # Add memory trace if re-reasoning
-    if context.memory_trace:
-        prompt_parts.extend(
-            [
-                "",
-                "## Your Previous Thinking",
-                "",
-            ]
-        )
-        for memory in context.memory_trace:
-            conviction_label = float_to_conviction(memory.conviction) or "uncertain"
-            prompt_parts.append(
-                f'- Previously, you thought: "{memory.summary}" '
-                f"(you felt *{conviction_label}* about this)"
-            )
-
-    # Add peer opinions with public statements (NOT position labels)
+    # --- Peer opinions (named) ---
     if context.peer_opinions:
-        prompt_parts.extend(
-            [
-                "",
-                "## What People Around You Are Saying",
-                "",
-            ]
-        )
+        prompt_parts.extend(["", "## What People Around Me Are Saying", ""])
         for peer in context.peer_opinions:
+            name_label = peer.peer_name or f"A {peer.relationship}"
+            rel_label = f" (my {peer.relationship})" if peer.peer_name else ""
             if peer.public_statement:
                 prompt_parts.append(
-                    f'- A {peer.relationship} of yours says: "{peer.public_statement}"'
+                    f'- {name_label}{rel_label}: "{peer.public_statement}"'
                 )
             elif peer.sentiment is not None:
-                # Fallback: describe sentiment tone if no statement
                 tone = _sentiment_to_tone(peer.sentiment)
                 prompt_parts.append(
-                    f"- A {peer.relationship} of yours seems {tone} about this"
+                    f"- {name_label}{rel_label} seems {tone} about this"
                 )
 
-    # Add instructions
+    # --- Local mood ---
+    if context.local_mood_summary:
+        prompt_parts.extend(["", context.local_mood_summary])
+
+    # --- Macro summary ---
+    if context.macro_summary:
+        prompt_parts.extend(["", context.macro_summary])
+
+    # --- Memory trace (full, uncapped, fidelity-gated) ---
     if context.memory_trace:
+        prompt_parts.extend(["", "## What I've Been Thinking", ""])
+
+        # Determine rendering parameters by fidelity
+        if fidelity == "low":
+            max_summary_steps = 5
+            raw_excerpt_steps = 0
+            raw_excerpt_tokens = 0
+        elif fidelity == "high":
+            max_summary_steps = len(context.memory_trace)
+            raw_excerpt_steps = 5
+            raw_excerpt_tokens = 200
+        else:  # medium (default)
+            max_summary_steps = len(context.memory_trace)
+            raw_excerpt_steps = 3
+            raw_excerpt_tokens = 120
+
+        # Show summaries (possibly limited for low fidelity)
+        display_memories = context.memory_trace[-max_summary_steps:]
+        recent_cutoff = len(context.memory_trace) - raw_excerpt_steps
+
+        for i, memory in enumerate(display_memories):
+            # Compute the original index in the full trace
+            original_idx = len(context.memory_trace) - len(display_memories) + i
+            conviction_label = float_to_conviction(memory.conviction) or "uncertain"
+            unit = context.timestep_unit
+            prompt_parts.append(
+                f'- {unit} {memory.timestep + 1}: "{memory.summary}" '
+                f"(conviction: {conviction_label})"
+            )
+            # Show raw excerpt for recent steps in medium/high fidelity
+            if (
+                raw_excerpt_steps > 0
+                and original_idx >= recent_cutoff
+                and memory.raw_reasoning
+            ):
+                # Truncate to approximate token budget (1 token ≈ 4 chars)
+                max_chars = raw_excerpt_tokens * 4
+                excerpt = memory.raw_reasoning[:max_chars]
+                if len(memory.raw_reasoning) > max_chars:
+                    excerpt = excerpt.rsplit(" ", 1)[0] + "..."
+                prompt_parts.append(f'  In my own words: "{excerpt}"')
+
+    # --- Emotional trajectory ---
+    if is_re_reasoning and len(context.memory_trace) >= 2:
+        sentiments = [
+            m.sentiment for m in context.memory_trace if m.sentiment is not None
+        ]
+        if len(sentiments) >= 2:
+            trend = sentiments[-1] - sentiments[0]
+            if trend > 0.3:
+                trajectory = "increasingly positive"
+            elif trend < -0.3:
+                trajectory = "increasingly negative"
+            elif abs(sentiments[-1]) < 0.2:
+                trajectory = "mostly neutral"
+            else:
+                trajectory = "fairly steady"
+            prompt_parts.append(f"\nI've been feeling {trajectory} since this started.")
+
+    # --- Intent accountability ---
+    if is_re_reasoning and context.prior_action_intent:
+        prompt_parts.extend(
+            [
+                "",
+                f'Last time I said I intended to: "{context.prior_action_intent}". '
+                "Has anything changed?",
+            ]
+        )
+
+    # --- Instructions ---
+    if is_re_reasoning:
         prompt_parts.extend(
             [
                 "",
                 "## Your Honest Reaction",
                 "",
-                "Given YOUR background, YOUR previous thinking, and what you're hearing:",
+                "Consider whether your thinking has changed given new information.",
                 "- Has your view changed? If so, own it. If not, say so plainly.",
                 "- What are you actually going to DO about this now?",
                 "- What would you bluntly tell a friend?",
@@ -149,7 +264,7 @@ def build_pass1_prompt(
                 "",
                 "## Your Honest Reaction",
                 "",
-                "React as YOU — given your background, priorities, and constraints:",
+                "Think honestly about how this lands for someone in your exact situation.",
                 "- What is your immediate, honest reaction? Don't overthink it.",
                 "- What are you actually going to DO about this? Decide now.",
                 "- What would you bluntly tell a friend?",
@@ -300,76 +415,6 @@ def build_pass2_schema(outcomes: OutcomeConfig) -> dict[str, Any] | None:
         "required": required,
         "additionalProperties": False,
     }
-
-
-# =============================================================================
-# Legacy single-pass schema (kept for backwards compatibility)
-# =============================================================================
-
-
-def build_response_schema(outcomes: OutcomeConfig) -> dict[str, Any]:
-    """Build JSON schema from scenario outcomes (legacy single-pass).
-
-    Kept for backwards compatibility. New code should use
-    build_pass1_schema + build_pass2_schema.
-    """
-    properties: dict[str, Any] = {
-        "reasoning": {
-            "type": "string",
-            "description": "One sentence: your gut reaction and key reason why",
-        },
-        "will_share": {
-            "type": "boolean",
-            "description": "Will you discuss or share this with others?",
-        },
-    }
-
-    required = ["reasoning", "will_share"]
-
-    for outcome in outcomes.suggested_outcomes:
-        outcome_prop: dict[str, Any] = {
-            "description": outcome.description,
-        }
-
-        if outcome.type == OutcomeType.CATEGORICAL and outcome.options:
-            outcome_prop["type"] = "string"
-            outcome_prop["enum"] = outcome.options
-        elif outcome.type == OutcomeType.BOOLEAN:
-            outcome_prop["type"] = "boolean"
-        elif outcome.type == OutcomeType.FLOAT and outcome.range:
-            outcome_prop["type"] = "number"
-            outcome_prop["minimum"] = outcome.range[0]
-            outcome_prop["maximum"] = outcome.range[1]
-        elif outcome.type == OutcomeType.OPEN_ENDED:
-            outcome_prop["type"] = "string"
-        else:
-            outcome_prop["type"] = "string"
-
-        properties[outcome.name] = outcome_prop
-        required.append(outcome.name)
-
-    return {
-        "type": "object",
-        "properties": properties,
-        "required": required,
-        "additionalProperties": False,
-    }
-
-
-# =============================================================================
-# Prompt building (legacy compatibility wrapper)
-# =============================================================================
-
-
-def build_reasoning_prompt(
-    context: ReasoningContext,
-    scenario: ScenarioSpec,
-) -> str:
-    """Build the agent reasoning prompt (delegates to Pass 1).
-
-    Kept as public API for backwards compatibility.
-    """
-    return build_pass1_prompt(context, scenario)
 
 
 # =============================================================================
@@ -797,9 +842,7 @@ async def batch_reason_agents_async(
         ctx: ReasoningContext,
     ) -> tuple[int, str, ReasoningResponse | None, float]:
         start = time.time()
-        result = await _reason_agent_two_pass_async(
-            ctx, scenario, config, rate_limiter
-        )
+        result = await _reason_agent_two_pass_async(ctx, scenario, config, rate_limiter)
         elapsed = time.time() - start
         completed[0] += 1
 

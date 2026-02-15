@@ -99,7 +99,7 @@ def _make_scenario(**overrides):
 
 
 def _make_context(**overrides):
-    """Create a minimal ReasoningContext."""
+    """Create a minimal ReasoningContext with Phase A defaults."""
     defaults = dict(
         agent_id="a0",
         persona="You are a 35-year-old software engineer in San Francisco.",
@@ -115,6 +115,9 @@ def _make_context(**overrides):
         peer_opinions=[],
         current_state=None,
         memory_trace=[],
+        timestep=0,
+        timestep_unit="day",
+        agent_name="Alex",
     )
     defaults.update(overrides)
     return ReasoningContext(**defaults)
@@ -163,8 +166,34 @@ class TestBuildPass1Prompt:
         prompt = build_pass1_prompt(context, scenario)
         assert "via email" in prompt
 
-    def test_network_exposure_shows_peer(self):
-        """Network exposure says 'someone in your network'."""
+    def test_network_exposure_shows_named_peer(self):
+        """Network exposure uses peer name when available."""
+        context = _make_context(
+            exposure_history=[
+                ExposureRecord(
+                    timestep=1,
+                    channel="network",
+                    content="I heard it's great",
+                    credibility=0.85,
+                    source_agent_id="a5",
+                ),
+            ],
+            peer_opinions=[
+                PeerOpinion(
+                    agent_id="a5",
+                    peer_name="Jordan",
+                    relationship="colleague",
+                    sentiment=0.5,
+                    public_statement="It's great",
+                ),
+            ],
+        )
+        scenario = _make_scenario()
+        prompt = build_pass1_prompt(context, scenario)
+        assert "Jordan" in prompt
+
+    def test_network_exposure_fallback_no_name(self):
+        """Network exposure falls back to 'Someone I know' when no peer name."""
         context = _make_context(
             exposure_history=[
                 ExposureRecord(
@@ -174,21 +203,22 @@ class TestBuildPass1Prompt:
                     credibility=0.85,
                     source_agent_id="a5",
                 ),
-            ]
+            ],
+            peer_opinions=[],
         )
         scenario = _make_scenario()
         prompt = build_pass1_prompt(context, scenario)
-        assert "network" in prompt.lower()
+        assert "Someone I know" in prompt
 
     def test_no_memory_section_on_first_reasoning(self):
-        """Empty memory_trace → no 'Previous Thinking' section."""
+        """Empty memory_trace -> no 'What I've Been Thinking' section."""
         context = _make_context(memory_trace=[])
         scenario = _make_scenario()
         prompt = build_pass1_prompt(context, scenario)
-        assert "Previous Thinking" not in prompt
+        assert "What I've Been Thinking" not in prompt
 
     def test_memory_trace_included(self):
-        """Memory entries produce 'Your Previous Thinking' section."""
+        """Memory entries produce 'What I've Been Thinking' section."""
         context = _make_context(
             memory_trace=[
                 MemoryEntry(
@@ -207,7 +237,7 @@ class TestBuildPass1Prompt:
         )
         scenario = _make_scenario()
         prompt = build_pass1_prompt(context, scenario)
-        assert "Previous Thinking" in prompt
+        assert "What I've Been Thinking" in prompt
         assert "I think this could be useful" in prompt
         assert "After hearing more" in prompt
 
@@ -222,11 +252,11 @@ class TestBuildPass1Prompt:
         )
         scenario = _make_scenario()
         prompt = build_pass1_prompt(context, scenario)
-        # conviction 0.7 → "firm"
+        # conviction 0.7 -> "firm"
         assert "firm" in prompt
 
     def test_peer_opinions_included(self):
-        """Peer opinions produce 'What People Around You Are Saying' section."""
+        """Peer opinions produce 'What People Around Me Are Saying' section."""
         context = _make_context(
             peer_opinions=[
                 PeerOpinion(
@@ -239,7 +269,7 @@ class TestBuildPass1Prompt:
         )
         scenario = _make_scenario()
         prompt = build_pass1_prompt(context, scenario)
-        assert "People Around You Are Saying" in prompt
+        assert "People Around Me Are Saying" in prompt
         assert "This product will change everything" in prompt
 
     def test_peer_sentiment_fallback(self):
@@ -257,7 +287,7 @@ class TestBuildPass1Prompt:
         scenario = _make_scenario()
         prompt = build_pass1_prompt(context, scenario)
         assert "mentor" in prompt
-        # -0.7 → "strongly opposed"
+        # -0.7 -> "strongly opposed"
         assert "strongly opposed" in prompt
 
     def test_peer_position_not_in_prompt(self):
@@ -275,10 +305,6 @@ class TestBuildPass1Prompt:
         )
         scenario = _make_scenario()
         prompt = build_pass1_prompt(context, scenario)
-
-        # The position label "reject" should not appear as a structured field
-        # (the word "position" may appear in instruction text, but not as
-        # "position: reject" or similar structured label for the peer)
         assert "position: reject" not in prompt.lower()
         assert "position=reject" not in prompt.lower()
 
@@ -295,11 +321,213 @@ class TestBuildPass1Prompt:
         prompt_first = build_pass1_prompt(context_first, scenario)
         prompt_re = build_pass1_prompt(context_re, scenario)
 
-        # First reasoning has no "Previous Thinking" section
-        assert "Previous Thinking" not in prompt_first
-        # Re-reasoning has "Previous Thinking" section and asks about change
-        assert "Previous Thinking" in prompt_re
+        assert "What I've Been Thinking" not in prompt_first
+        assert "What I've Been Thinking" in prompt_re
         assert "changed" in prompt_re.lower() or "stand now" in prompt_re.lower()
+
+
+# ============================================================================
+# Phase A: Named, Temporal, Accountable Prompt Tests
+# ============================================================================
+
+
+class TestPhaseAPromptFeatures:
+    """Test Phase A prompt enhancements."""
+
+    def test_temporal_header(self):
+        """Timestep and unit appear in prompt header."""
+        context = _make_context(timestep=2, timestep_unit="week")
+        scenario = _make_scenario()
+        prompt = build_pass1_prompt(context, scenario)
+        assert "week 3" in prompt  # timestep + 1
+
+    def test_system_framing_uses_name(self):
+        """Agent name appears in system framing."""
+        context = _make_context(agent_name="Marcus")
+        scenario = _make_scenario()
+        prompt = build_pass1_prompt(context, scenario)
+        assert "Marcus" in prompt
+        assert "think as marcus" in prompt.lower()
+
+    def test_system_framing_fallback_no_name(self):
+        """Graceful fallback when agent_name is None."""
+        context = _make_context(agent_name=None)
+        scenario = _make_scenario()
+        prompt = build_pass1_prompt(context, scenario)
+        assert "Think as the person" in prompt
+
+    def test_intent_accountability(self):
+        """Prior action intent appears in re-reasoning prompt."""
+        context = _make_context(
+            prior_action_intent="cancel my subscription",
+            memory_trace=[
+                MemoryEntry(timestep=0, sentiment=-0.3, conviction=0.5, summary="test"),
+            ],
+        )
+        scenario = _make_scenario()
+        prompt = build_pass1_prompt(context, scenario)
+        assert "cancel my subscription" in prompt
+        assert "intended to" in prompt.lower()
+
+    def test_no_intent_on_first_reasoning(self):
+        """No intent accountability section when prior_action_intent is None."""
+        context = _make_context(prior_action_intent=None, memory_trace=[])
+        scenario = _make_scenario()
+        prompt = build_pass1_prompt(context, scenario)
+        assert "intended to" not in prompt.lower()
+
+    def test_macro_summary_included(self):
+        """Macro summary text appears in prompt."""
+        context = _make_context(macro_summary="Most people are still undecided.")
+        scenario = _make_scenario()
+        prompt = build_pass1_prompt(context, scenario)
+        assert "Most people are still undecided" in prompt
+
+    def test_local_mood_included(self):
+        """Local mood summary text appears in prompt."""
+        context = _make_context(
+            local_mood_summary="Most people I know are anxious about this."
+        )
+        scenario = _make_scenario()
+        prompt = build_pass1_prompt(context, scenario)
+        assert "Most people I know are anxious" in prompt
+
+    def test_background_context_included(self):
+        """Background context from scenario appears in prompt."""
+        context = _make_context(background_context="The economy has been struggling.")
+        scenario = _make_scenario()
+        prompt = build_pass1_prompt(context, scenario)
+        assert "The economy has been struggling" in prompt
+
+    def test_channel_experience_template(self):
+        """Channel experience template replaces generic channel display."""
+        scenario = _make_scenario(
+            seed_exposure=SeedExposure(
+                channels=[
+                    ExposureChannel(
+                        name="app_notification",
+                        description="App Notification",
+                        reach="broadcast",
+                        experience_template="I got a push notification from {channel_name}",
+                    )
+                ],
+                rules=[
+                    ExposureRule(
+                        channel="app_notification",
+                        timestep=0,
+                        when="true",
+                        probability=1.0,
+                    )
+                ],
+            )
+        )
+        context = _make_context(
+            exposure_history=[
+                ExposureRecord(
+                    timestep=0,
+                    channel="app_notification",
+                    content="test",
+                    credibility=0.9,
+                    source_agent_id=None,
+                ),
+            ]
+        )
+        prompt = build_pass1_prompt(context, scenario)
+        assert "push notification from App Notification" in prompt
+
+    def test_full_memory_no_cap(self):
+        """>3 memory entries all appear in prompt."""
+        memories = [
+            MemoryEntry(
+                timestep=i,
+                sentiment=0.1 * i,
+                conviction=0.3,
+                summary=f"Thought at step {i}",
+            )
+            for i in range(5)
+        ]
+        context = _make_context(memory_trace=memories)
+        scenario = _make_scenario()
+        prompt = build_pass1_prompt(context, scenario)
+        for i in range(5):
+            assert f"Thought at step {i}" in prompt
+
+    def test_memory_raw_excerpt_medium(self):
+        """Medium fidelity shows raw excerpt for recent steps."""
+        memories = [
+            MemoryEntry(
+                timestep=0,
+                sentiment=0.2,
+                conviction=0.3,
+                summary="Early thought",
+                raw_reasoning="I really don't know what to make of this product launch.",
+            ),
+            MemoryEntry(
+                timestep=1,
+                sentiment=0.4,
+                conviction=0.5,
+                summary="Later thought",
+                raw_reasoning="After talking to people I'm starting to see the value.",
+            ),
+        ]
+        context = _make_context(memory_trace=memories)
+        scenario = _make_scenario()
+        prompt = build_pass1_prompt(context, scenario, fidelity="medium")
+        assert "In my own words" in prompt
+        assert "starting to see the value" in prompt
+
+    def test_memory_no_raw_excerpt_low(self):
+        """Low fidelity shows summaries only, no raw excerpts."""
+        memories = [
+            MemoryEntry(
+                timestep=0,
+                sentiment=0.2,
+                conviction=0.3,
+                summary="Early thought",
+                raw_reasoning="Some detailed reasoning here.",
+            ),
+        ]
+        context = _make_context(memory_trace=memories)
+        scenario = _make_scenario()
+        prompt = build_pass1_prompt(context, scenario, fidelity="low")
+        assert "Early thought" in prompt
+        assert "In my own words" not in prompt
+
+    def test_memory_action_intent_accountability(self):
+        """Action intent from memory surfaces via prior_action_intent in prompt."""
+        context = _make_context(
+            prior_action_intent="wait and see what happens",
+            memory_trace=[
+                MemoryEntry(
+                    timestep=0,
+                    sentiment=0.1,
+                    conviction=0.3,
+                    summary="Not sure yet",
+                    action_intent="wait and see what happens",
+                ),
+            ],
+        )
+        scenario = _make_scenario()
+        prompt = build_pass1_prompt(context, scenario)
+        assert "wait and see what happens" in prompt
+
+    def test_named_peer_in_opinions(self):
+        """Named peer appears with name in peer opinions section."""
+        context = _make_context(
+            peer_opinions=[
+                PeerOpinion(
+                    agent_id="a5",
+                    peer_name="Sofia",
+                    relationship="colleague",
+                    public_statement="I'm going to buy it.",
+                    sentiment=0.7,
+                ),
+            ]
+        )
+        scenario = _make_scenario()
+        prompt = build_pass1_prompt(context, scenario)
+        assert "Sofia" in prompt
+        assert "my colleague" in prompt
 
 
 # ============================================================================
@@ -537,7 +765,7 @@ class TestGetPrimaryPositionOutcome:
         assert _get_primary_position_outcome(scenario) == "adoption"
 
     def test_no_categorical_returns_none(self):
-        """Scenario with only boolean outcomes → None."""
+        """Scenario with only boolean outcomes -> None."""
         outcomes = OutcomeConfig(
             suggested_outcomes=[
                 OutcomeDefinition(
@@ -568,7 +796,7 @@ class TestGetPrimaryPositionOutcome:
         assert _get_primary_position_outcome(scenario) == "preference"
 
     def test_first_required_categorical_preferred(self):
-        """Multiple categoricals — first required one is chosen."""
+        """Multiple categoricals -- first required one is chosen."""
         outcomes = OutcomeConfig(
             suggested_outcomes=[
                 OutcomeDefinition(

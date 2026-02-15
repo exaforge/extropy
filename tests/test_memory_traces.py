@@ -74,31 +74,29 @@ class TestMemoryTraceWindow:
         assert traces[0].timestep == 0
         assert traces[2].timestep == 2
 
-    def test_fourth_entry_evicts_oldest(self, state_mgr):
-        """After 4 inserts, only the latest 3 remain."""
+    def test_fourth_entry_retained(self, state_mgr):
+        """After 4 inserts, all 4 entries are retained (no eviction)."""
         for t in range(4):
             state_mgr.save_memory_entry(
                 "a0", _make_memory(timestep=t, summary=f"thought_{t}")
             )
 
         traces = state_mgr.get_memory_traces("a0")
-        assert len(traces) == 3
-        # Oldest (t=0) evicted
-        assert traces[0].timestep == 1
-        assert traces[1].timestep == 2
-        assert traces[2].timestep == 3
+        assert len(traces) == 4
+        assert traces[0].timestep == 0
+        assert traces[3].timestep == 3
 
-    def test_fifth_entry_still_three(self, state_mgr):
-        """After 5 inserts, still only 3 traces."""
+    def test_fifth_entry_all_retained(self, state_mgr):
+        """After 5 inserts, all 5 traces are retained."""
         for t in range(5):
             state_mgr.save_memory_entry(
                 "a0", _make_memory(timestep=t, summary=f"thought_{t}")
             )
 
         traces = state_mgr.get_memory_traces("a0")
-        assert len(traces) == 3
-        assert traces[0].timestep == 2
-        assert traces[2].timestep == 4
+        assert len(traces) == 5
+        assert traces[0].timestep == 0
+        assert traces[4].timestep == 4
 
     def test_separate_agents_independent(self, state_mgr):
         """Each agent has its own independent memory trace."""
@@ -106,7 +104,7 @@ class TestMemoryTraceWindow:
             state_mgr.save_memory_entry("a0", _make_memory(timestep=t))
         state_mgr.save_memory_entry("a1", _make_memory(timestep=10))
 
-        assert len(state_mgr.get_memory_traces("a0")) == 3
+        assert len(state_mgr.get_memory_traces("a0")) == 4
         assert len(state_mgr.get_memory_traces("a1")) == 1
 
     def test_no_traces_for_new_agent(self, state_mgr):

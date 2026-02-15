@@ -22,6 +22,8 @@ from ...utils.callbacks import ItemProgressCallback
 from .distributions import sample_distribution, coerce_to_type
 from .modifiers import apply_modifiers_and_sample
 from ...utils.eval_safe import eval_formula, FormulaError
+from ..names import generate_name
+from ..names.generator import age_to_birth_decade
 
 logger = logging.getLogger(__name__)
 
@@ -152,6 +154,22 @@ def _sample_single_agent(
 
         # Update stats
         _update_stats(attr, value, stats, numeric_values)
+
+    # Generate demographically-plausible name
+    gender = agent.get("gender") or agent.get("sex")
+    ethnicity = (
+        agent.get("race_ethnicity") or agent.get("ethnicity") or agent.get("race")
+    )
+    age = agent.get("age")
+    birth_decade = age_to_birth_decade(age) if age is not None else None
+    first_name, last_name = generate_name(
+        gender=str(gender) if gender is not None else None,
+        ethnicity=str(ethnicity) if ethnicity is not None else None,
+        birth_decade=birth_decade,
+        seed=index,
+    )
+    agent["first_name"] = first_name
+    agent["last_name"] = last_name
 
     return agent
 

@@ -652,7 +652,7 @@ class SimulationEngine:
         for agent_id in agents_to_reason:
             old_state = self.state_manager.get_agent_state(agent_id)
             old_states[agent_id] = old_state
-            context = self._build_reasoning_context(agent_id, old_state)
+            context = self._build_reasoning_context(agent_id, old_state, timestep)
             contexts.append(context)
 
         completed_chunks = self.study_db.get_completed_simulation_chunks(
@@ -1010,6 +1010,8 @@ class SimulationEngine:
                     sentiment=private_sentiment,
                     conviction=private_conviction,
                     summary=response.reasoning_summary,
+                    raw_reasoning=None if self.retention_lite else response.reasoning,
+                    action_intent=response.action_intent,
                 )
                 self.state_manager.save_memory_entry(agent_id, memory_entry)
 
@@ -1081,13 +1083,14 @@ class SimulationEngine:
         return min(options, key=self._position_action_friction)
 
     def _build_reasoning_context(
-        self, agent_id: str, state: AgentState
+        self, agent_id: str, state: AgentState, timestep: int = 0
     ) -> ReasoningContext:
         """Build reasoning context for an agent.
 
         Args:
             agent_id: Agent ID
             state: Current agent state
+            timestep: Current simulation timestep
 
         Returns:
             ReasoningContext for LLM call
@@ -1101,7 +1104,18 @@ class SimulationEngine:
         # Get memory trace
         memory_trace = self.state_manager.get_memory_traces(agent_id)
 
-        return create_reasoning_context(
+        # Derive prior action intent from most recent memory entry
+        prior_action_intent = None
+        if memory_trace:
+            prior_action_intent = memory_trace[-1].action_intent
+
+        # Build macro and local mood summaries (zero API calls)
+        macro_summary = None
+        if self.recent_summaries:
+            macro_summary = self._render_macro_summary(self.recent_summaries[-1])
+        local_mood_summary = self._render_local_mood(agent_id)
+
+        ctx = create_reasoning_context(
             agent_id=agent_id,
             agent=agent,
             persona=persona,
@@ -1111,6 +1125,15 @@ class SimulationEngine:
             current_state=state if state.last_reasoning_timestep >= 0 else None,
             memory_trace=memory_trace,
         )
+        # Populate Phase A fields
+        ctx.timestep = timestep
+        ctx.timestep_unit = self.scenario.simulation.timestep_unit.value
+        ctx.agent_name = agent.get("first_name")
+        ctx.prior_action_intent = prior_action_intent
+        ctx.macro_summary = macro_summary
+        ctx.local_mood_summary = local_mood_summary
+        ctx.background_context = self.scenario.background_context
+        return ctx
 
     def _get_peer_opinions(self, agent_id: str) -> list[PeerOpinion]:
         """Get opinions of connected peers.
@@ -1139,9 +1162,11 @@ class SimulationEngine:
 
             # Include peer if they have formed any public opinion.
             if peer_sentiment is not None or neighbor_state.public_statement:
+                peer_data = self.agent_map.get(neighbor_id, {})
                 opinions.append(
                     PeerOpinion(
                         agent_id=neighbor_id,
+                        peer_name=peer_data.get("first_name"),
                         relationship=edge_data.get("type", "contact"),
                         position=peer_position,  # kept for backwards compat
                         sentiment=peer_sentiment,
@@ -1151,6 +1176,76 @@ class SimulationEngine:
                 )
 
         return opinions
+
+    def _render_macro_summary(self, summary: TimestepSummary) -> str:
+        """Convert a TimestepSummary into a human-readable vibes sentence.
+
+        Pure string formatting from numeric aggregates — zero API calls.
+        """
+        parts = []
+
+        # Position distribution summary
+        dist = summary.position_distribution
+        if dist:
+            total = sum(dist.values()) or 1
+            top = sorted(dist.items(), key=lambda x: -x[1])
+            leader, leader_count = top[0]
+            leader_pct = leader_count / total * 100
+            if leader_pct > 60:
+                parts.append(f"Most people are leaning toward '{leader}'.")
+            elif leader_pct > 40:
+                parts.append(f"Opinion is split, with '{leader}' slightly ahead.")
+            else:
+                parts.append("People are still quite divided on this.")
+
+        # Sentiment summary
+        avg_sent = summary.average_sentiment
+        if avg_sent is not None:
+            if avg_sent > 0.3:
+                parts.append("The general sentiment is cautiously positive.")
+            elif avg_sent < -0.3:
+                parts.append("The general sentiment is cautiously negative.")
+            else:
+                parts.append("The general mood is mixed.")
+
+        # Exposure rate
+        if summary.exposure_rate is not None:
+            pct = summary.exposure_rate * 100
+            parts.append(f"About {pct:.0f}% have heard about this.")
+
+        return " ".join(parts) if parts else ""
+
+    def _render_local_mood(self, agent_id: str) -> str | None:
+        """Compute a mood summary from neighbor agent states.
+
+        Pure aggregation from stored states — zero API calls.
+        Returns None if no neighbors have reasoned yet.
+        """
+        neighbors = self.adjacency.get(agent_id, [])
+        if not neighbors:
+            return None
+
+        sentiments: list[float] = []
+        for neighbor_id, _ in neighbors[:10]:
+            ns = self.state_manager.get_agent_state(neighbor_id)
+            s = ns.public_sentiment if ns.public_sentiment is not None else ns.sentiment
+            if s is not None:
+                sentiments.append(s)
+
+        if not sentiments:
+            return None
+
+        avg = sum(sentiments) / len(sentiments)
+        if avg > 0.3:
+            mood = "optimistic"
+        elif avg > 0.0:
+            mood = "cautiously positive"
+        elif avg > -0.3:
+            mood = "uneasy"
+        else:
+            mood = "anxious"
+
+        return f"Most people I know are {mood} about this."
 
     def _state_changed(self, old: AgentState, new: AgentState) -> bool:
         """Check if agent state changed meaningfully.
