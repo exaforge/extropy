@@ -1180,9 +1180,10 @@ Ship this alone. Every simulation immediately feels more human, and the accounta
 ### Phase D: Conversations + Narrative Prompts (~2 weeks)
 
 **Files:** `engine.py`, new `conversation.py`, `reasoning.py`
+**Prerequisite:** DB schema for conversations/posts/action_history defined before starting.
 
 - Conversation resolution: priority queue using scenario `relationship_weights` × structural edge weight
-- Agent-agent conversations (2-3 turns, both states update)
+- Agent-agent conversations: 2 turns at medium fidelity (4 messages), 3 turns at high (6 messages). LLM told the turn limit upfront. Both agents keep their own independent final state.
 - Agent-NPC conversations (LLM-generated NPC responses from profile)
 - Phase 2 reasoning is provisional; Phase 3 conversation overrides
 - Mechanical rules (bounded confidence, flip resistance) only for agents who didn't converse
