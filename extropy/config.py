@@ -1,12 +1,14 @@
 """Configuration management for Extropy.
 
-Two-zone config system:
-- pipeline: provider + models for phases 1-2 (spec, extend, sample, network, persona, scenario)
-- simulation: provider + model for phase 3 (agent reasoning)
+Two-tier config system:
+- models: fast/strong model strings for pipeline phases 1-2
+- simulation: fast/strong model strings for phase 3 (agent reasoning)
+
+Model strings use "provider/model" format (e.g., "openai/gpt-5-mini").
 
 Config resolution order (highest priority first):
 1. Programmatic (ExtropyConfig constructed in code)
-2. Environment variables (PIPELINE_PROVIDER, SIMULATION_MODEL, etc.)
+2. Environment variables (MODELS_FAST, MODELS_STRONG, etc.)
 3. Config file (~/.config/extropy/config.json, managed by `extropy config`)
 4. Hardcoded defaults
 
@@ -16,6 +18,7 @@ API keys are ALWAYS from env vars — never stored in config file.
 import json
 import logging
 import os
+import warnings
 from dataclasses import dataclass, field, asdict
 from pathlib import Path
 from typing import Any
@@ -33,37 +36,113 @@ CONFIG_FILE = CONFIG_DIR / "config.json"
 
 
 # =============================================================================
-# Two-zone config dataclasses
+# Model string parsing
+# =============================================================================
+
+
+def parse_model_string(model_string: str) -> tuple[str, str]:
+    """Parse a "provider/model" string into (provider, model) tuple.
+
+    Examples:
+        "openai/gpt-5-mini" → ("openai", "gpt-5-mini")
+        "anthropic/claude-sonnet-4.5" → ("anthropic", "claude-sonnet-4.5")
+        "openrouter/anthropic/claude-sonnet-4.5" → ("openrouter", "anthropic/claude-sonnet-4.5")
+
+    Raises:
+        ValueError: If the string doesn't contain a '/' separator.
+    """
+    if "/" not in model_string:
+        raise ValueError(
+            f"Invalid model string: {model_string!r}. "
+            f"Expected format: 'provider/model' (e.g., 'openai/gpt-5-mini')"
+        )
+    provider, _, model = model_string.partition("/")
+    if not provider or not model:
+        raise ValueError(
+            f"Invalid model string: {model_string!r}. "
+            f"Both provider and model must be non-empty."
+        )
+    return provider, model
+
+
+# =============================================================================
+# New two-tier config dataclasses
+# =============================================================================
+
+
+@dataclass
+class ModelsConfig:
+    """Pipeline model configuration (phases 1-2).
+
+    Uses "provider/model" format strings.
+    - fast: used for simple_call (cheap, fast tasks)
+    - strong: used for reasoning_call, agentic_research (complex tasks)
+    """
+
+    fast: str = "openai/gpt-5-mini"
+    strong: str = "openai/gpt-5"
+
+
+@dataclass
+class SimulationConfig:
+    """Simulation model + tuning configuration (phase 3).
+
+    Uses "provider/model" format strings.
+    - fast: used for Pass 2 (classification/routine)
+    - strong: used for Pass 1 (pivotal/role-play reasoning)
+    """
+
+    fast: str = ""  # empty = same as models.fast
+    strong: str = ""  # empty = same as models.strong
+    max_concurrent: int = 50
+    rate_tier: int | None = None
+    rpm_override: int | None = None
+    tpm_override: int | None = None
+
+
+@dataclass
+class CustomProviderConfig:
+    """Configuration for a custom OpenAI-compatible provider endpoint."""
+
+    base_url: str = ""
+    api_key_env: str = ""
+
+
+
+
+# =============================================================================
+# Legacy config dataclasses (kept for migration)
 # =============================================================================
 
 
 @dataclass
 class PipelineConfig:
-    """Config for phases 1-2: spec, extend, sample, network, persona, scenario."""
+    """DEPRECATED: Config for phases 1-2. Use ModelsConfig instead."""
 
     provider: str = "openai"
-    model_simple: str = ""  # empty = provider default
-    model_reasoning: str = ""  # empty = provider default
-    model_research: str = ""  # empty = provider default
+    model_simple: str = ""
+    model_reasoning: str = ""
+    model_research: str = ""
 
 
 @dataclass
 class SimZoneConfig:
-    """Config for phase 3: agent reasoning during simulation."""
+    """DEPRECATED: Config for phase 3. Use SimulationConfig instead."""
 
     provider: str = "openai"
-    model: str = ""  # empty = provider default
-    pivotal_model: str = ""  # model for pivotal reasoning (default: same as model)
-    routine_model: str = (
-        ""  # cheap model for classification (default: provider cheap tier)
-    )
+    model: str = ""
+    pivotal_model: str = ""
+    routine_model: str = ""
     max_concurrent: int = 50
-    rate_tier: int | None = None  # rate limit tier (1-4, None = Tier 1)
-    rpm_override: int | None = None  # override RPM limit
-    tpm_override: int | None = None  # override TPM limit
-    api_format: str = (
-        ""  # empty = auto (responses for openai, chat_completions for azure)
-    )
+    rate_tier: int | None = None
+    rpm_override: int | None = None
+    tpm_override: int | None = None
+    api_format: str = ""
+
+
+# =============================================================================
+# Main config class
+# =============================================================================
 
 
 @dataclass
@@ -75,8 +154,7 @@ class ExtropyConfig:
     Examples:
         # Package use — no files needed
         config = ExtropyConfig(
-            pipeline=PipelineConfig(provider="claude"),
-            simulation=SimZoneConfig(provider="openai", model="gpt-5-mini"),
+            models=ModelsConfig(fast="openai/gpt-5-mini", strong="anthropic/claude-sonnet-4.5"),
         )
 
         # CLI use — loads from ~/.config/extropy/config.json
@@ -84,21 +162,19 @@ class ExtropyConfig:
 
         # Override just simulation
         config = ExtropyConfig.load()
-        config.simulation.model = "gpt-5-nano"
+        config.simulation.strong = "openrouter/anthropic/claude-sonnet-4.5"
     """
 
-    pipeline: PipelineConfig = field(default_factory=PipelineConfig)
-    simulation: SimZoneConfig = field(default_factory=SimZoneConfig)
-
-    # Non-zone settings
-    db_path: str = "./storage/extropy.db"
-    default_population_size: int = 1000
+    models: ModelsConfig = field(default_factory=ModelsConfig)
+    simulation: SimulationConfig = field(default_factory=SimulationConfig)
+    providers: dict[str, CustomProviderConfig] = field(default_factory=dict)
 
     @classmethod
     def load(cls) -> "ExtropyConfig":
         """Load config from file + env vars.
 
         Priority: env var values > config.json values > defaults.
+        Auto-migrates v1 config format if detected.
         """
         config = cls()
 
@@ -107,31 +183,35 @@ class ExtropyConfig:
             try:
                 with open(CONFIG_FILE) as f:
                     data = json.load(f)
+
+                # Auto-migrate v1 config
+                if _is_v1_config(data):
+                    warnings.warn(
+                        "Detected legacy config format. Migrating to v2. "
+                        "Run `extropy config show` to verify, then `extropy config set` to update.",
+                        DeprecationWarning,
+                        stacklevel=2,
+                    )
+                    data = _migrate_v1_to_v2(data)
+
                 _apply_dict(config, data)
             except (json.JSONDecodeError, OSError) as exc:
                 logger.warning("Failed to load config from %s: %s", CONFIG_FILE, exc)
 
-        # Layer 2: Env var overrides
-        if provider := os.environ.get("LLM_PROVIDER"):
-            # Legacy: single provider applied to both zones
-            config.pipeline.provider = provider
-            config.simulation.provider = provider
-        if val := os.environ.get("PIPELINE_PROVIDER"):
-            config.pipeline.provider = val
-        if val := os.environ.get("SIMULATION_PROVIDER"):
-            config.simulation.provider = val
-        if val := os.environ.get("MODEL_SIMPLE"):
-            config.pipeline.model_simple = val
-        if val := os.environ.get("MODEL_REASONING"):
-            config.pipeline.model_reasoning = val
-        if val := os.environ.get("MODEL_RESEARCH"):
-            config.pipeline.model_research = val
-        if val := os.environ.get("SIMULATION_MODEL"):
-            config.simulation.model = val
-        if val := os.environ.get("SIMULATION_PIVOTAL_MODEL"):
-            config.simulation.pivotal_model = val
-        if val := os.environ.get("SIMULATION_ROUTINE_MODEL"):
-            config.simulation.routine_model = val
+        # Layer 2: Env var overrides (new format)
+        if val := os.environ.get("MODELS_FAST"):
+            config.models.fast = val
+        if val := os.environ.get("MODELS_STRONG"):
+            config.models.strong = val
+        if val := os.environ.get("SIMULATION_FAST"):
+            config.simulation.fast = val
+        if val := os.environ.get("SIMULATION_STRONG"):
+            config.simulation.strong = val
+        if val := os.environ.get("SIMULATION_MAX_CONCURRENT"):
+            try:
+                config.simulation.max_concurrent = int(val)
+            except ValueError:
+                logger.warning("Invalid SIMULATION_MAX_CONCURRENT=%r, ignoring", val)
         if val := os.environ.get("SIMULATION_RATE_TIER"):
             try:
                 config.simulation.rate_tier = int(val)
@@ -147,38 +227,56 @@ class ExtropyConfig:
                 config.simulation.tpm_override = int(val)
             except ValueError:
                 logger.warning("Invalid SIMULATION_TPM_OVERRIDE=%r, ignoring", val)
-        if val := os.environ.get("SIMULATION_API_FORMAT"):
-            config.simulation.api_format = val
-        if val := os.environ.get("DB_PATH"):
-            config.db_path = val
-        if val := os.environ.get("DEFAULT_POPULATION_SIZE"):
-            try:
-                config.default_population_size = int(val)
-            except ValueError:
-                logger.warning("Invalid DEFAULT_POPULATION_SIZE=%r, ignoring", val)
+        # Layer 3: Legacy env var overrides (emit deprecation warnings)
+        _apply_legacy_env_vars(config)
 
         return config
 
     def save(self) -> None:
         """Save config to ~/.config/extropy/config.json."""
         CONFIG_DIR.mkdir(parents=True, exist_ok=True)
-        data = asdict(self)
-        # Don't persist non-zone settings that are better as env vars
-        data.pop("db_path", None)
-        data.pop("default_population_size", None)
+        data: dict[str, Any] = {
+            "models": asdict(self.models),
+            "simulation": asdict(self.simulation),
+        }
+        if self.providers:
+            data["providers"] = {
+                name: asdict(cfg) for name, cfg in self.providers.items()
+            }
         with open(CONFIG_FILE, "w") as f:
             json.dump(data, f, indent=2)
 
     def to_dict(self) -> dict[str, Any]:
         """Convert to dict for display."""
-        return asdict(self)
+        result = {
+            "models": asdict(self.models),
+            "simulation": asdict(self.simulation),
+        }
+        if self.providers:
+            result["providers"] = {
+                name: asdict(cfg) for name, cfg in self.providers.items()
+            }
+        return result
 
-    @property
-    def db_path_resolved(self) -> Path:
-        """Resolve database path."""
-        path = Path(self.db_path)
-        path.parent.mkdir(parents=True, exist_ok=True)
-        return path
+    # ── Convenience resolution methods ──
+
+    def resolve_pipeline_fast(self) -> str:
+        """Resolve the fast model string for pipeline use."""
+        return self.models.fast
+
+    def resolve_pipeline_strong(self) -> str:
+        """Resolve the strong model string for pipeline use."""
+        return self.models.strong
+
+    def resolve_sim_strong(self) -> str:
+        """Resolve the strong model string for simulation."""
+        return self.simulation.strong or self.models.strong
+
+    def resolve_sim_fast(self) -> str:
+        """Resolve the fast model string for simulation."""
+        return self.simulation.fast or self.models.fast
+
+    # ── Backward compat properties ──
 
     @property
     def cache_dir(self) -> Path:
@@ -188,24 +286,210 @@ class ExtropyConfig:
         return path
 
 
+# =============================================================================
+# Config dict application
+# =============================================================================
+
+
 def _apply_dict(config: ExtropyConfig, data: dict) -> None:
-    """Apply a dict of values onto an ExtropyConfig."""
-    if "pipeline" in data and isinstance(data["pipeline"], dict):
-        for k, v in data["pipeline"].items():
-            if hasattr(config.pipeline, k):
-                setattr(config.pipeline, k, v)
+    """Apply a dict of values onto an ExtropyConfig (v2 format)."""
+    if "models" in data and isinstance(data["models"], dict):
+        for k, v in data["models"].items():
+            if hasattr(config.models, k):
+                setattr(config.models, k, v)
     if "simulation" in data and isinstance(data["simulation"], dict):
         for k, v in data["simulation"].items():
             if hasattr(config.simulation, k):
                 setattr(config.simulation, k, v)
-    if "db_path" in data:
-        config.db_path = data["db_path"]
-    if "default_population_size" in data:
-        config.default_population_size = int(data["default_population_size"])
+    if "providers" in data and isinstance(data["providers"], dict):
+        for name, provider_data in data["providers"].items():
+            if isinstance(provider_data, dict):
+                config.providers[name] = CustomProviderConfig(
+                    base_url=provider_data.get("base_url", ""),
+                    api_key_env=provider_data.get("api_key_env", ""),
+                )
 
 
 # =============================================================================
-# API key resolution (env vars + .env file)
+# V1 → V2 migration
+# =============================================================================
+
+# Provider name mapping for migration
+_PROVIDER_CANONICAL = {
+    "openai": "openai",
+    "claude": "anthropic",
+    "anthropic": "anthropic",
+    "azure_openai": "azure",
+}
+
+# Default model names per old provider
+_V1_PROVIDER_DEFAULTS = {
+    "openai": {"fast": "gpt-5-mini", "strong": "gpt-5"},
+    "claude": {
+        "fast": "claude-haiku-4-5-20251001",
+        "strong": "claude-sonnet-4-5-20250929",
+    },
+    "anthropic": {
+        "fast": "claude-haiku-4-5-20251001",
+        "strong": "claude-sonnet-4-5-20250929",
+    },
+    "azure_openai": {"fast": "gpt-5-mini", "strong": "gpt-5"},
+}
+
+
+def _is_v1_config(data: dict) -> bool:
+    """Detect if config data is in v1 format (has 'pipeline' key)."""
+    return "pipeline" in data and "models" not in data
+
+
+def _migrate_v1_to_v2(data: dict) -> dict:
+    """Convert v1 config format to v2.
+
+    v1 format:
+        {"pipeline": {"provider": "openai", "model_simple": "...", ...},
+         "simulation": {"provider": "openai", "model": "...", ...}}
+
+    v2 format:
+        {"models": {"fast": "openai/gpt-5-mini", "strong": "openai/gpt-5"},
+         "simulation": {"fast": "...", "strong": "...", ...}}
+    """
+    result: dict[str, Any] = {}
+
+    # Migrate pipeline → models
+    pipeline = data.get("pipeline", {})
+    old_provider = pipeline.get("provider", "openai")
+    canonical = _PROVIDER_CANONICAL.get(old_provider, old_provider)
+    defaults = _V1_PROVIDER_DEFAULTS.get(old_provider, _V1_PROVIDER_DEFAULTS["openai"])
+
+    fast_model = pipeline.get("model_simple") or defaults["fast"]
+    strong_model = pipeline.get("model_reasoning") or defaults["strong"]
+
+    result["models"] = {
+        "fast": f"{canonical}/{fast_model}",
+        "strong": f"{canonical}/{strong_model}",
+    }
+
+    # Migrate simulation
+    sim = data.get("simulation", {})
+    sim_provider = sim.get("provider", "openai")
+    sim_canonical = _PROVIDER_CANONICAL.get(sim_provider, sim_provider)
+    sim_defaults = _V1_PROVIDER_DEFAULTS.get(
+        sim_provider, _V1_PROVIDER_DEFAULTS["openai"]
+    )
+
+    sim_result: dict[str, Any] = {}
+
+    # Map model/pivotal_model → strong, routine_model → fast
+    pivotal = sim.get("pivotal_model") or sim.get("model") or ""
+    routine = sim.get("routine_model") or ""
+
+    if pivotal:
+        sim_result["strong"] = f"{sim_canonical}/{pivotal}"
+    if routine:
+        sim_result["fast"] = f"{sim_canonical}/{routine}"
+
+    for k in ("max_concurrent", "rate_tier", "rpm_override", "tpm_override"):
+        if k in sim and sim[k] is not None:
+            sim_result[k] = sim[k]
+
+    result["simulation"] = sim_result
+
+    return result
+
+
+# =============================================================================
+# Legacy env var handling
+# =============================================================================
+
+_LEGACY_ENV_WARNED: set[str] = set()
+
+
+def _warn_legacy_env(name: str, replacement: str) -> None:
+    """Emit a one-time deprecation warning for a legacy env var."""
+    if name not in _LEGACY_ENV_WARNED:
+        _LEGACY_ENV_WARNED.add(name)
+        warnings.warn(
+            f"Environment variable {name} is deprecated. Use {replacement} instead.",
+            DeprecationWarning,
+            stacklevel=4,
+        )
+
+
+def _apply_legacy_env_vars(config: ExtropyConfig) -> None:
+    """Apply legacy env vars with deprecation warnings."""
+    # LLM_PROVIDER → both zones
+    if val := os.environ.get("LLM_PROVIDER"):
+        _warn_legacy_env("LLM_PROVIDER", "MODELS_FAST / MODELS_STRONG")
+        canonical = _PROVIDER_CANONICAL.get(val, val)
+        defaults = _V1_PROVIDER_DEFAULTS.get(val, _V1_PROVIDER_DEFAULTS["openai"])
+        # Only override if no new-format env vars set
+        if not os.environ.get("MODELS_FAST"):
+            config.models.fast = f"{canonical}/{defaults['fast']}"
+        if not os.environ.get("MODELS_STRONG"):
+            config.models.strong = f"{canonical}/{defaults['strong']}"
+
+    if val := os.environ.get("PIPELINE_PROVIDER"):
+        _warn_legacy_env("PIPELINE_PROVIDER", "MODELS_FAST / MODELS_STRONG")
+        canonical = _PROVIDER_CANONICAL.get(val, val)
+        defaults = _V1_PROVIDER_DEFAULTS.get(val, _V1_PROVIDER_DEFAULTS["openai"])
+        if not os.environ.get("MODELS_FAST"):
+            config.models.fast = f"{canonical}/{defaults['fast']}"
+        if not os.environ.get("MODELS_STRONG"):
+            config.models.strong = f"{canonical}/{defaults['strong']}"
+
+    if val := os.environ.get("SIMULATION_PROVIDER"):
+        _warn_legacy_env("SIMULATION_PROVIDER", "SIMULATION_FAST / SIMULATION_STRONG")
+        canonical = _PROVIDER_CANONICAL.get(val, val)
+        defaults = _V1_PROVIDER_DEFAULTS.get(val, _V1_PROVIDER_DEFAULTS["openai"])
+        if not os.environ.get("SIMULATION_FAST"):
+            config.simulation.fast = f"{canonical}/{defaults['fast']}"
+        if not os.environ.get("SIMULATION_STRONG"):
+            config.simulation.strong = f"{canonical}/{defaults['strong']}"
+
+    if val := os.environ.get("MODEL_SIMPLE"):
+        _warn_legacy_env("MODEL_SIMPLE", "MODELS_FAST")
+        if not os.environ.get("MODELS_FAST"):
+            provider, _ = parse_model_string(config.models.fast)
+            config.models.fast = f"{provider}/{val}"
+
+    if val := os.environ.get("MODEL_REASONING"):
+        _warn_legacy_env("MODEL_REASONING", "MODELS_STRONG")
+        if not os.environ.get("MODELS_STRONG"):
+            provider, _ = parse_model_string(config.models.strong)
+            config.models.strong = f"{provider}/{val}"
+
+    if val := os.environ.get("SIMULATION_MODEL"):
+        _warn_legacy_env("SIMULATION_MODEL", "SIMULATION_STRONG")
+        if not os.environ.get("SIMULATION_STRONG"):
+            # Resolve provider from sim strong or models strong
+            base = config.simulation.strong or config.models.strong
+            provider, _ = parse_model_string(base)
+            config.simulation.strong = f"{provider}/{val}"
+
+    if val := os.environ.get("SIMULATION_PIVOTAL_MODEL"):
+        _warn_legacy_env("SIMULATION_PIVOTAL_MODEL", "SIMULATION_STRONG")
+        if not os.environ.get("SIMULATION_STRONG"):
+            base = config.simulation.strong or config.models.strong
+            provider, _ = parse_model_string(base)
+            config.simulation.strong = f"{provider}/{val}"
+
+    if val := os.environ.get("SIMULATION_ROUTINE_MODEL"):
+        _warn_legacy_env("SIMULATION_ROUTINE_MODEL", "SIMULATION_FAST")
+        if not os.environ.get("SIMULATION_FAST"):
+            base = config.simulation.fast or config.models.fast
+            provider, _ = parse_model_string(base)
+            config.simulation.fast = f"{provider}/{val}"
+
+    # SIMULATION_API_FORMAT — no direct replacement, just warn
+    if os.environ.get("SIMULATION_API_FORMAT"):
+        _warn_legacy_env(
+            "SIMULATION_API_FORMAT",
+            "provider-based routing (api_format is now automatic)",
+        )
+
+
+# =============================================================================
+# API key resolution
 # =============================================================================
 
 _dotenv_loaded = False
@@ -219,52 +503,74 @@ def _ensure_dotenv() -> None:
         try:
             from dotenv import find_dotenv, load_dotenv
 
-            # Resolve from current working directory first so CLI commands run
-            # from study repos consistently pick up that repo's `.env`.
             dotenv_path = find_dotenv(usecwd=True)
             if dotenv_path:
                 load_dotenv(dotenv_path=dotenv_path, override=False)
             else:
-                # Fallback for environments where no discoverable .env exists.
                 load_dotenv(override=False)
         except ImportError:
-            pass  # python-dotenv not installed, skip
+            pass
         except Exception:
-            # Keep config loading resilient even if dotenv discovery has runtime issues.
             pass
 
 
-def get_api_key(provider: str) -> str:
-    """Get API key for a provider from environment variables or .env file.
+def get_api_key_for_provider(
+    provider_name: str,
+    custom_providers: dict[str, CustomProviderConfig] | None = None,
+) -> str:
+    """Get API key for a provider.
 
-    Supports:
-        - openai: OPENAI_API_KEY
-        - claude: ANTHROPIC_API_KEY
-        - azure_openai: AZURE_OPENAI_API_KEY
+    Resolution order:
+    1. Custom provider api_key_env override
+    2. Convention: {PROVIDER_UPPER}_API_KEY
 
-    Returns empty string if not found (providers will raise on missing keys).
+    Special cases:
+    - "anthropic" → ANTHROPIC_API_KEY
+    - "azure" → AZURE_OPENAI_API_KEY
+
+    Returns empty string if not found.
     """
     _ensure_dotenv()
-    if provider == "openai":
-        return os.environ.get("OPENAI_API_KEY", "")
-    elif provider == "claude":
-        return os.environ.get("ANTHROPIC_API_KEY", "")
-    elif provider == "azure_openai":
-        return os.environ.get("AZURE_OPENAI_API_KEY", "")
-    return ""
+
+    # Check custom provider override first
+    if custom_providers and provider_name in custom_providers:
+        custom = custom_providers[provider_name]
+        if custom.api_key_env:
+            return os.environ.get(custom.api_key_env, "")
+
+    # Convention: {PROVIDER}_API_KEY
+    # Special cases for backward compat
+    key_map = {
+        "azure": "AZURE_OPENAI_API_KEY",
+        "azure_openai": "AZURE_OPENAI_API_KEY",
+    }
+    env_var = key_map.get(
+        provider_name, f"{provider_name.upper()}_API_KEY"
+    )
+    return os.environ.get(env_var, "")
+
+
+def get_api_key(provider: str) -> str:
+    """DEPRECATED: Get API key for a provider. Use get_api_key_for_provider instead.
+
+    Kept for backward compatibility.
+    """
+    # Map old provider names
+    mapping = {
+        "claude": "anthropic",
+        "azure_openai": "azure",
+    }
+    canonical = mapping.get(provider, provider)
+    return get_api_key_for_provider(canonical)
 
 
 def get_azure_config(provider: str) -> dict[str, str]:
-    """Get Azure-specific configuration from environment variables.
+    """DEPRECATED: Get Azure-specific configuration.
 
-    Args:
-        provider: 'azure_openai'
-
-    Returns:
-        Dict of Azure config values (endpoint, api_version, deployment).
+    Azure is now handled as an OpenAI-compatible provider.
     """
     _ensure_dotenv()
-    if provider == "azure_openai":
+    if provider in ("azure_openai", "azure"):
         return {
             "azure_endpoint": os.environ.get("AZURE_OPENAI_ENDPOINT", ""),
             "api_version": os.environ.get(
@@ -298,8 +604,8 @@ def configure(config: ExtropyConfig) -> None:
     """Set the global ExtropyConfig programmatically.
 
     Use this when extropy is used as a package:
-        from extropy.config import configure, ExtropyConfig, PipelineConfig
-        configure(ExtropyConfig(pipeline=PipelineConfig(provider="claude")))
+        from extropy.config import configure, ExtropyConfig, ModelsConfig
+        configure(ExtropyConfig(models=ModelsConfig(fast="openai/gpt-5-mini")))
     """
     global _config
     _config = config
