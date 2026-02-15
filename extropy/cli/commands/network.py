@@ -418,6 +418,7 @@ def network_command(
     generation_start = time.time()
     network_run_id = str(uuid.uuid4())
     current_stage = ["Initializing", 0, 0]
+    console.print(f"[dim]network_run_id={network_run_id}[/dim]")
 
     def on_progress(stage: str, current: int, total: int):
         current_stage[0] = stage
@@ -578,6 +579,7 @@ def network_command(
         console.print(
             f"[red]✗[/red] Failed gates with best metrics: {quality_meta.get('best_metrics', {})}"
         )
+        console.print(f"[dim]inspect via: extropy inspect network-status --study-db {study_db} --network-run-id {network_run_id}[/dim]")
         raise typer.Exit(1)
     if strict_failed and not config.allow_quarantine:
         console.print(
@@ -595,6 +597,9 @@ def network_command(
     console.print(
         f"[green]✓[/green] Network saved to [bold]{study_db}[/bold] "
         f"(network_id={network_id})"
+    )
+    console.print(
+        f"[dim]Inspect status: extropy inspect network-status --study-db {study_db} --network-run-id {network_run_id}[/dim]"
     )
     if output is not None:
         console.print(f"[dim]Exported JSON: {output}[/dim]")
