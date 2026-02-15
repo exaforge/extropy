@@ -855,6 +855,57 @@ class TestSimulationMetadata:
         already_4 = engine.state_manager.get_agents_already_reasoned_this_timestep(4)
         assert "a0" not in already_4
 
+    def test_chunk_checkpoints_written_with_writer_pipeline(
+        self,
+        minimal_scenario,
+        simple_agents,
+        simple_network,
+        minimal_pop_spec,
+        tmp_path,
+    ):
+        """Writer pipeline should persist per-chunk checkpoints and last checkpoint marker."""
+        config = SimulationRunConfig(
+            scenario_path="test.yaml",
+            output_dir=str(tmp_path / "output"),
+            chunk_size=1,
+        )
+        engine = SimulationEngine(
+            scenario=minimal_scenario,
+            population_spec=minimal_pop_spec,
+            agents=simple_agents,
+            network=simple_network,
+            config=config,
+            chunk_size=1,
+            checkpoint_every_chunks=2,
+            writer_queue_size=2,
+            db_write_batch_size=2,
+        )
+
+        for aid in ["a0", "a1", "a2"]:
+            exposure = ExposureRecord(
+                timestep=0, channel="broadcast", content="Test", credibility=0.9
+            )
+            engine.state_manager.record_exposure(aid, exposure)
+
+        def fake_batch(contexts, scenario, cfg, rate_limiter=None, on_agent_done=None):
+            response = _make_reasoning_response()
+            results = []
+            for ctx in contexts:
+                if on_agent_done:
+                    on_agent_done(ctx.agent_id, response)
+                results.append((ctx.agent_id, response))
+            return results, BatchTokenUsage()
+
+        with patch(
+            "extropy.simulation.engine.batch_reason_agents", side_effect=fake_batch
+        ):
+            reasoned, _, _ = engine._reason_agents(0)
+
+        assert reasoned == 3
+        completed = engine.study_db.get_completed_simulation_chunks(engine.run_id, 0)
+        assert completed == {0, 1, 2}
+        assert engine.study_db.get_run_metadata(engine.run_id, "last_checkpoint") == "0:2"
+
 
 class TestResumeLogic:
     """Test engine resume/checkpoint logic."""

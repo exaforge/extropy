@@ -402,6 +402,34 @@ class TestStateManager:
             count = manager.get_population_count()
             assert count == 3
 
+    def test_run_scope_isolation(self, temp_db, agents):
+        """Different run_id views should not leak state into each other."""
+        exposure = ExposureRecord(
+            timestep=0,
+            channel="email",
+            content="Scoped exposure",
+            credibility=0.9,
+        )
+
+        with StateManager(temp_db, agents=agents, run_id="run_a") as run_a:
+            run_a.record_exposure("agent_000", exposure)
+            assert run_a.get_exposure_rate() == pytest.approx(1 / 3, abs=0.01)
+            assert run_a.get_checkpoint_timestep() is None
+            run_a.mark_timestep_started(2)
+            assert run_a.get_checkpoint_timestep() == 2
+
+        with StateManager(temp_db, agents=agents, run_id="run_b") as run_b:
+            assert run_b.get_exposure_rate() == 0.0
+            assert run_b.get_agent_state("agent_000").aware is False
+            assert run_b.get_checkpoint_timestep() is None
+            run_b.record_exposure("agent_001", exposure)
+            assert run_b.get_exposure_rate() == pytest.approx(1 / 3, abs=0.01)
+
+        with StateManager(temp_db, agents=agents, run_id="run_a") as run_a_again:
+            assert run_a_again.get_agent_state("agent_000").aware is True
+            assert run_a_again.get_agent_state("agent_001").aware is False
+            assert run_a_again.get_checkpoint_timestep() == 2
+
 
 class TestPersonaGeneration:
     """Tests for persona generation."""

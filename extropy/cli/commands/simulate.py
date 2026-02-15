@@ -153,13 +153,13 @@ def simulate_command(
         256,
         "--writer-queue-size",
         min=1,
-        help="Reserved writer queue size (future pipeline tuning)",
+        help="Max reasoning chunks buffered before DB writer backpressure",
     ),
     db_write_batch_size: int = typer.Option(
         100,
         "--db-write-batch-size",
         min=1,
-        help="Reserved DB write batch size (future pipeline tuning)",
+        help="Number of chunks applied per DB writer transaction",
     ),
     retention_lite: bool = typer.Option(
         False,
@@ -290,11 +290,6 @@ def simulate_command(
             f"Resources(auto): cpu={snap.cpu_count} mem={snap.total_memory_gb:.1f}GB "
             f"budget={snap.memory_budget_gb:.1f}GB chunk={tuned_chunk_size}"
         )
-    if writer_queue_size != 256 or db_write_batch_size != 100:
-        console.print(
-            "[dim]Note: writer queue/batch flags are accepted now and will be fully enforced "
-            "by the upcoming async writer pipeline.[/dim]"
-        )
     if verbose or debug:
         console.print(f"Logging: {'DEBUG' if debug else 'VERBOSE'}")
     console.print()
@@ -335,6 +330,8 @@ def simulate_command(
                 resume=resume,
                 checkpoint_every_chunks=checkpoint_every_chunks,
                 retention_lite=retention_lite,
+                writer_queue_size=writer_queue_size,
+                db_write_batch_size=db_write_batch_size,
             )
             simulation_error = None
         except Exception as e:
@@ -369,6 +366,8 @@ def simulate_command(
                     resume=resume,
                     checkpoint_every_chunks=checkpoint_every_chunks,
                     retention_lite=retention_lite,
+                    writer_queue_size=writer_queue_size,
+                    db_write_batch_size=db_write_batch_size,
                 )
             except Exception as e:
                 simulation_error = e

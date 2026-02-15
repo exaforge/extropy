@@ -29,7 +29,7 @@ class StudyDB:
     def __init__(self, path: Path | str):
         self.path = Path(path)
         self.path.parent.mkdir(parents=True, exist_ok=True)
-        self.conn = sqlite3.connect(str(self.path))
+        self.conn = sqlite3.connect(str(self.path), check_same_thread=False)
         self.conn.row_factory = sqlite3.Row
         self._set_pragmas()
         self.init_schema()
@@ -153,7 +153,8 @@ class StudyDB:
             );
 
             CREATE TABLE IF NOT EXISTS agent_states (
-                agent_id TEXT PRIMARY KEY,
+                run_id TEXT NOT NULL,
+                agent_id TEXT NOT NULL,
                 aware INTEGER DEFAULT 0,
                 exposure_count INTEGER DEFAULT 0,
                 last_reasoning_timestep INTEGER DEFAULT -1,
@@ -174,10 +175,12 @@ class StudyDB:
                 raw_reasoning TEXT,
                 committed INTEGER DEFAULT 0,
                 network_hop_depth INTEGER,
-                updated_at INTEGER DEFAULT 0
+                updated_at INTEGER DEFAULT 0,
+                PRIMARY KEY (run_id, agent_id)
             );
 
             CREATE TABLE IF NOT EXISTS exposures (
+                run_id TEXT NOT NULL,
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 agent_id TEXT,
                 timestep INTEGER,
@@ -185,20 +188,22 @@ class StudyDB:
                 source_agent_id TEXT,
                 content TEXT,
                 credibility REAL,
-                FOREIGN KEY (agent_id) REFERENCES agent_states(agent_id)
+                FOREIGN KEY (run_id, agent_id) REFERENCES agent_states(run_id, agent_id)
             );
 
             CREATE TABLE IF NOT EXISTS memory_traces (
+                run_id TEXT NOT NULL,
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 agent_id TEXT,
                 timestep INTEGER,
                 sentiment REAL,
                 conviction REAL,
                 summary TEXT,
-                FOREIGN KEY (agent_id) REFERENCES agent_states(agent_id)
+                FOREIGN KEY (run_id, agent_id) REFERENCES agent_states(run_id, agent_id)
             );
 
             CREATE TABLE IF NOT EXISTS timeline (
+                run_id TEXT NOT NULL,
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 timestep INTEGER,
                 event_type TEXT,
@@ -208,7 +213,8 @@ class StudyDB:
             );
 
             CREATE TABLE IF NOT EXISTS timestep_summaries (
-                timestep INTEGER PRIMARY KEY,
+                run_id TEXT NOT NULL,
+                timestep INTEGER NOT NULL,
                 new_exposures INTEGER,
                 agents_reasoned INTEGER,
                 shares_occurred INTEGER,
@@ -217,20 +223,25 @@ class StudyDB:
                 position_distribution_json TEXT,
                 average_sentiment REAL,
                 average_conviction REAL,
-                sentiment_variance REAL
+                sentiment_variance REAL,
+                PRIMARY KEY (run_id, timestep)
             );
 
             CREATE TABLE IF NOT EXISTS shared_to (
+                run_id TEXT NOT NULL,
                 source_agent_id TEXT,
                 target_agent_id TEXT,
                 timestep INTEGER,
                 position TEXT,
-                PRIMARY KEY (source_agent_id, target_agent_id)
+                PRIMARY KEY (run_id, source_agent_id, target_agent_id)
             );
 
             CREATE TABLE IF NOT EXISTS simulation_metadata (
-                key TEXT PRIMARY KEY,
+                run_id TEXT NOT NULL,
+                key TEXT NOT NULL,
                 value TEXT
+                ,
+                PRIMARY KEY (run_id, key)
             );
 
             CREATE TABLE IF NOT EXISTS run_metadata (
@@ -283,12 +294,12 @@ class StudyDB:
             CREATE INDEX IF NOT EXISTS idx_net_sim_chunks_status ON network_similarity_chunks(job_id, status);
             CREATE INDEX IF NOT EXISTS idx_sim_ckpt ON simulation_checkpoints(run_id, timestep, chunk_index);
             CREATE INDEX IF NOT EXISTS idx_chat_session_agent ON chat_sessions(run_id, agent_id);
-            CREATE INDEX IF NOT EXISTS idx_agent_states_aware ON agent_states(aware);
-            CREATE INDEX IF NOT EXISTS idx_agent_states_will_share ON agent_states(will_share);
-            CREATE INDEX IF NOT EXISTS idx_agent_states_last_reasoning ON agent_states(last_reasoning_timestep);
-            CREATE INDEX IF NOT EXISTS idx_exposures_agent_timestep ON exposures(agent_id, timestep);
-            CREATE INDEX IF NOT EXISTS idx_timeline_timestep ON timeline(timestep);
-            CREATE INDEX IF NOT EXISTS idx_shared_to_source ON shared_to(source_agent_id);
+            CREATE INDEX IF NOT EXISTS idx_agent_states_aware ON agent_states(run_id, aware);
+            CREATE INDEX IF NOT EXISTS idx_agent_states_will_share ON agent_states(run_id, will_share);
+            CREATE INDEX IF NOT EXISTS idx_agent_states_last_reasoning ON agent_states(run_id, last_reasoning_timestep);
+            CREATE INDEX IF NOT EXISTS idx_exposures_agent_timestep ON exposures(run_id, agent_id, timestep);
+            CREATE INDEX IF NOT EXISTS idx_timeline_timestep ON timeline(run_id, timestep);
+            CREATE INDEX IF NOT EXISTS idx_shared_to_source ON shared_to(run_id, source_agent_id);
             """
         )
         self.conn.commit()
