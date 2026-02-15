@@ -242,6 +242,10 @@ def evaluate_stopping_conditions(
             if evaluate_condition(condition, timestep, state_manager, recent_summaries):
                 return True, condition
 
+    # Convergence auto-stop: position distribution stable for 3 timesteps
+    if evaluate_convergence(recent_summaries, window=3, tolerance=0.005):
+        return True, "converged"
+
     # Quiescence auto-stop: no agents reasoned for last 3 timesteps
     if len(recent_summaries) >= 3:
         last_3 = recent_summaries[-3:]
