@@ -181,7 +181,7 @@ class SimulationEngine:
         self.config = config
         self.persona_config = persona_config
         self.rate_limiter = rate_limiter
-        self.chunk_size = chunk_size
+        self.chunk_size = chunk_size  # updated below after concurrency is resolved
         self.run_id = run_id or f"run_{uuid.uuid4().hex[:12]}"
         self.checkpoint_every_chunks = max(1, checkpoint_every_chunks)
         self.retention_lite = retention_lite
@@ -195,6 +195,14 @@ class SimulationEngine:
             self.reasoning_max_concurrency = rate_limiter.pivotal.max_safe_concurrent
         else:
             self.reasoning_max_concurrency = 50
+        # Auto-size chunk_size to match concurrency when using the default.
+        # Small explicit chunk sizes (for fine-grained checkpointing) are respected.
+        if chunk_size == 50 and self.chunk_size < self.reasoning_max_concurrency:
+            self.chunk_size = self.reasoning_max_concurrency
+            logger.info(
+                f"[ENGINE] Auto-sized chunk_size to {self.chunk_size} "
+                f"to match concurrency"
+            )
         self._last_guardrail_timestep = -1
 
         # Build agent map for quick lookup
