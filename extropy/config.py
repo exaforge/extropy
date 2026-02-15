@@ -96,7 +96,7 @@ class SimulationConfig(BaseModel):
 
     fast: str = ""  # empty = same as models.fast
     strong: str = ""  # empty = same as models.strong
-    max_concurrent: int = 50
+    max_concurrent: int | None = None  # None = auto from RPM (rpm // 2)
     rate_tier: int | None = None
     rpm_override: int | None = None
     tpm_override: int | None = None

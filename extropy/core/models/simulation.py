@@ -357,8 +357,9 @@ class SimulationRunConfig(BaseModel):
     chunk_size: int = Field(
         default=50, description="Agents per reasoning chunk for checkpointing"
     )
-    max_concurrent: int = Field(
-        default=50, description="Max concurrent async reasoning calls"
+    max_concurrent: int | None = Field(
+        default=None,
+        description="Max concurrent async reasoning calls (None = auto from RPM)",
     )
 
     # Backward compat aliases

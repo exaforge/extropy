@@ -97,7 +97,8 @@ def _show_config():
     fast_val = config.simulation.fast or "[dim](= models.fast)[/dim]"
     console.print(f"  strong          = {strong_val}")
     console.print(f"  fast            = {fast_val}")
-    console.print(f"  max_concurrent  = {config.simulation.max_concurrent}")
+    mc_val = config.simulation.max_concurrent or "[dim](auto from RPM)[/dim]"
+    console.print(f"  max_concurrent  = {mc_val}")
     console.print(
         f"  rate_tier       = {config.simulation.rate_tier or '[dim](tier 1)[/dim]'}"
     )

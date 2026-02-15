@@ -185,7 +185,13 @@ class SimulationEngine:
         self.writer_queue_size = max(1, writer_queue_size)
         self.db_write_batch_size = max(1, db_write_batch_size)
         self.resource_governor = resource_governor
-        self.reasoning_max_concurrency = config.max_concurrent
+        # Auto-derive from rate limiter RPM, or use explicit override
+        if config.max_concurrent is not None:
+            self.reasoning_max_concurrency = config.max_concurrent
+        elif rate_limiter:
+            self.reasoning_max_concurrency = rate_limiter.pivotal.max_safe_concurrent
+        else:
+            self.reasoning_max_concurrency = 50
         self._last_guardrail_timestep = -1
 
         # Build agent map for quick lookup

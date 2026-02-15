@@ -777,17 +777,19 @@ def batch_reason_agents(
 
     async def run_all():
         if rate_limiter:
-            target_concurrency = min(
-                max(1, rate_limiter.max_safe_concurrent),
-                max(1, max_concurrency),
-            )
+            rpm_derived = rate_limiter.max_safe_concurrent
+            if max_concurrency:
+                target_concurrency = min(max(1, rpm_derived), max(1, max_concurrency))
+            else:
+                target_concurrency = max(1, rpm_derived)
             stagger_interval = 60.0 / rate_limiter.pivotal.rpm
             logger.info(
-                f"[BATCH] Concurrency cap: {target_concurrency}, "
+                f"[BATCH] Concurrency cap: {target_concurrency} "
+                f"(rpm={rate_limiter.pivotal.rpm}, rpm_derived={rpm_derived}), "
                 f"stagger: {stagger_interval * 1000:.0f}ms between launches"
             )
         else:
-            target_concurrency = max(1, max_concurrency)
+            target_concurrency = max(1, max_concurrency or 50)
             stagger_interval = 0.0
         completed = [0]
 
@@ -817,29 +819,27 @@ def batch_reason_agents(
             return (idx, ctx.agent_id, result, elapsed)
 
         semaphore = asyncio.Semaphore(target_concurrency)
-        failures = [0]
 
         async def bounded_reason(idx: int, ctx: ReasoningContext):
             async with semaphore:
                 return await reason_with_pacing(idx, ctx)
 
         results: list[tuple[str, ReasoningResponse | None] | None] = [None] * total
-        tasks = []
-        for i, ctx in enumerate(contexts):
-            tasks.append(asyncio.create_task(bounded_reason(i, ctx)))
-            if stagger_interval > 0 and i < total - 1:
-                await asyncio.sleep(stagger_interval)
+        try:
+            tasks = []
+            for i, ctx in enumerate(contexts):
+                tasks.append(asyncio.create_task(bounded_reason(i, ctx)))
+                if stagger_interval > 0 and i < total - 1:
+                    await asyncio.sleep(stagger_interval)
 
-        raw_results = await asyncio.gather(*tasks)
-        for idx, agent_id, result, elapsed in raw_results:
-            results[idx] = (agent_id, result)
-            if result is None:
-                failures[0] += 1
-
-        # Close the async HTTP client before the event loop shuts down.
-        # Without this, orphaned httpx connections produce "Event loop is
-        # closed" errors during garbage collection.
-        await close_simulation_provider()
+            raw_results = await asyncio.gather(*tasks)
+            for idx, agent_id, result, elapsed in raw_results:
+                results[idx] = (agent_id, result)
+        finally:
+            # Close the async HTTP client before the event loop shuts down.
+            # Without this, orphaned httpx connections produce "Event loop is
+            # closed" errors during garbage collection.
+            await close_simulation_provider()
 
         return [r for r in results if r is not None]
 
