@@ -677,11 +677,125 @@ def _expand_candidate_map_undercovered(
     return expanded
 
 
+def _choose_partition_attributes(
+    agents: list[dict[str, Any]],
+    n: int,
+    preferred_attrs: list[str] | None = None,
+) -> list[str]:
+    """Choose stable categorical attributes for attribute-grounded communities."""
+    if not agents:
+        return []
+    chosen: list[str] = []
+    if preferred_attrs:
+        for attr in preferred_attrs:
+            if attr not in agents[0]:
+                continue
+            values = {a.get(attr) for a in agents if a.get(attr) is not None}
+            card = len(values)
+            if 2 <= card <= max(8, int(n * 0.2)):
+                chosen.append(attr)
+            if len(chosen) >= 3:
+                break
+    if len(chosen) >= 2:
+        return chosen[:3]
+
+    candidate_attrs: list[tuple[str, int]] = []
+    for key in agents[0].keys():
+        if key == "_id" or key.startswith("_"):
+            continue
+        first_val = agents[0].get(key)
+        if not isinstance(first_val, (str, int, float, bool)):
+            continue
+        values = {a.get(key) for a in agents if a.get(key) is not None}
+        card = len(values)
+        if 2 <= card <= max(8, int(n * 0.2)):
+            candidate_attrs.append((key, card))
+    candidate_attrs.sort(key=lambda x: (-x[1], x[0]))
+    fallback = [name for name, _ in candidate_attrs[:3]]
+    return (chosen + fallback)[:3]
+
+
+def _build_attribute_partition(
+    agents: list[dict[str, Any]],
+    n_communities: int,
+    attributes: list[str],
+) -> list[int] | None:
+    """Build deterministic, load-balanced partition from selected attributes."""
+    n = len(agents)
+    if n == 0 or n_communities <= 1 or not attributes:
+        return None
+    buckets: dict[tuple[Any, ...], list[int]] = defaultdict(list)
+    for idx, agent in enumerate(agents):
+        key = tuple(agent.get(attr) for attr in attributes)
+        buckets[key].append(idx)
+    if len(buckets) < 2:
+        return None
+
+    k = min(n_communities, n)
+    target_size = max(1, (n + k - 1) // k)
+    capacity = max(1, int(target_size * 1.25))
+    bucket_items = sorted(
+        ((bucket_key, sorted(members)) for bucket_key, members in buckets.items()),
+        key=lambda item: (-len(item[1]), str(item[0])),
+    )
+
+    reassigned = [0] * n
+    loads = [0] * k
+
+    for _bucket_key, members in bucket_items:
+        remaining = list(members)
+
+        # If this bucket can fit in one reasonably empty community, keep it intact.
+        if len(remaining) <= capacity:
+            cid = min(range(k), key=lambda idx: (loads[idx], idx))
+            for node in remaining:
+                reassigned[node] = cid
+            loads[cid] += len(remaining)
+            continue
+
+        # Large buckets are split deterministically across least-loaded communities.
+        while remaining:
+            cid = min(range(k), key=lambda idx: (loads[idx], idx))
+            room = max(1, capacity - loads[cid])
+            take = min(len(remaining), room)
+            chunk = remaining[:take]
+            remaining = remaining[take:]
+            for node in chunk:
+                reassigned[node] = cid
+            loads[cid] += len(chunk)
+
+    return reassigned
+
+
+def _community_signal(
+    similarities: dict[tuple[int, int], float],
+    assignments: list[int],
+) -> float:
+    """Higher is better: within-community similarity minus cross-community similarity."""
+    if not similarities:
+        return 0.0
+    within_sum = 0.0
+    cross_sum = 0.0
+    within_n = 0
+    cross_n = 0
+    for (i, j), sim in similarities.items():
+        if assignments[i] == assignments[j]:
+            within_sum += sim
+            within_n += 1
+        else:
+            cross_sum += sim
+            cross_n += 1
+    within_mean = within_sum / within_n if within_n else 0.0
+    cross_mean = cross_sum / cross_n if cross_n else 0.0
+    return within_mean - cross_mean
+
+
 def _assign_communities_with_diagnostics(
     agents: list[dict],
     similarities: dict[tuple[int, int], float],
     n_communities: int,
     rng: random.Random,
+    preferred_attrs: list[str] | None = None,
     progress: Callable[[str, int, int], None] | None = None,
 ) -> tuple[list[int], dict[str, float]]:
     """Assign communities using deterministic weighted label propagation."""
@@ -769,6 +883,20 @@ def _assign_communities_with_diagnostics(
             assignments[node] = node % k
 
     unique_labels = len(set(assignments))
+    label_signal = _community_signal(similarities, assignments)
+
+    selected_attrs = _choose_partition_attributes(agents, n, preferred_attrs)
+    attr_assignments = _build_attribute_partition(agents, k, selected_attrs)
+    attr_signal = -1.0
+    chose_attr_partition = 0.0
+    if attr_assignments is not None:
+        attr_signal = _community_signal(similarities, attr_assignments)
+        # Prefer attribute partition when it yields clearer assortative structure.
+        if attr_signal >= label_signal + 0.01:
+            assignments = attr_assignments
+            unique_labels = len(set(assignments))
+            label_signal = attr_signal
+            chose_attr_partition = 1.0
 
     # Guard against community collapse (e.g., all nodes in one label).
     # If collapsed, enforce a deterministic attribute-grounded partition first.
@@ -777,47 +905,11 @@ def _assign_communities_with_diagnostics(
     attribute_partition = 0.0
     min_required = max(2, min(k, n // 120))
     if unique_labels < min_required:
-        candidate_attrs: list[tuple[str, int]] = []
-        if agents:
-            keys = [
-                key
-                for key in agents[0].keys()
-                if key != "_id"
-                and not key.startswith("_")
-                and isinstance(agents[0].get(key), (str, int, float, bool))
-            ]
-            for key in keys:
-                values = {a.get(key) for a in agents if a.get(key) is not None}
-                card = len(values)
-                if 2 <= card <= max(8, int(n * 0.2)):
-                    candidate_attrs.append((key, card))
-        candidate_attrs.sort(key=lambda x: (-x[1], x[0]))
-        selected_attrs = [name for name, _card in candidate_attrs[:3]]
-
-        if selected_attrs:
-            buckets: dict[tuple[Any, ...], list[int]] = defaultdict(list)
-            for idx, agent in enumerate(agents):
-                key = tuple(agent.get(attr) for attr in selected_attrs)
-                buckets[key].append(idx)
-            if len(buckets) >= 2:
-                bucket_items = sorted(
-                    buckets.items(),
-                    key=lambda item: (-len(item[1]), str(item[0])),
-                )
-                reassigned = [0] * n
-                if len(bucket_items) <= k:
-                    for cid, (_bucket_key, members) in enumerate(bucket_items):
-                        for node in members:
-                            reassigned[node] = cid
-                else:
-                    for bucket_key, members in bucket_items:
-                        cid = abs(hash((bucket_key, k))) % k
-                        for node in members:
-                            reassigned[node] = cid
-                assignments = reassigned
-                unique_labels = len(set(assignments))
-                forced_partition = 1.0
-                attribute_partition = 1.0
+        if attr_assignments is not None:
+            assignments = attr_assignments
+            unique_labels = len(set(assignments))
+            forced_partition = 1.0
+            attribute_partition = 1.0
 
         if unique_labels < min_required:
             ordered_nodes = sorted(range(n), key=lambda i: (-len(adjacency[i]), i))
@@ -865,12 +957,16 @@ def _assign_communities_with_diagnostics(
             assignments = reassigned
             unique_labels = len(set(assignments))
             forced_partition = 1.0
+        label_signal = _community_signal(similarities, assignments)
 
     return assignments, {
         "low_signal": 0.0,
         "label_iterations": float(iters_used),
         "initial_labels": float(len(label_members)),
         "final_labels": float(unique_labels),
+        "community_signal": float(label_signal),
+        "attr_signal": float(attr_signal),
+        "chosen_attribute_partition": chose_attr_partition,
         "forced_partition": forced_partition,
         "attribute_partition": attribute_partition,
     }
@@ -999,6 +1095,7 @@ def _apply_bridge_swaps(
     communities: list[int],
     config: NetworkConfig,
     rng: random.Random,
+    max_swaps_override: int | None = None,
 ) -> list[Edge]:
     """Degree-preserving swaps that increase cross-community bridges."""
     if config.swap_passes <= 0 or len(edges) < 4:
@@ -1007,6 +1104,8 @@ def _apply_bridge_swaps(
     edge_pairs = [(id_to_idx[e.source], id_to_idx[e.target]) for e in edges]
     edge_set = {tuple(sorted(pair)) for pair in edge_pairs}
     max_swaps = max(4, int(len(edges) * config.bridge_budget_fraction))
+    if max_swaps_override is not None:
+        max_swaps = max(1, min(max_swaps, max_swaps_override))
 
     for _ in range(config.swap_passes):
         swaps = 0
@@ -1057,6 +1156,118 @@ def _apply_bridge_swaps(
     return edges
 
 
+def _target_intra_edge_fraction(
+    communities: list[int],
+    config: NetworkConfig,
+    intra_scale: float,
+    inter_scale: float,
+) -> float:
+    """Estimate intra-community edge fraction needed to hit target modularity.
+
+    Approximation:
+      Q ~= e_intra - sum_c (a_c^2)
+    where e_intra is the fraction of within-community edges and a_c is the
+    degree share for community c (approximated by size share).
+    """
+    n = len(communities)
+    if n <= 0:
+        return 0.5
+    counts: dict[int, int] = defaultdict(int)
+    for c in communities:
+        counts[c] += 1
+    sum_size_sq = sum((count / n) ** 2 for count in counts.values())
+
+    # Base fraction anchored to target modularity.
+    base = config.target_modularity + sum_size_sq + 0.02
+
+    # Let calibration scales nudge assortativity.
+    scale_delta = max(-2.0, min(2.0, intra_scale - inter_scale))
+    adjusted = base + (0.06 * scale_delta)
+
+    if config.quality_profile == "strict":
+        lo, hi = 0.22, 0.95
+    elif config.quality_profile == "fast":
+        lo, hi = 0.18, 0.88
+    else:
+        lo, hi = 0.20, 0.92
+    return max(lo, min(hi, adjusted))
+
+
+def _pair_seed_jitter(pair_seed: int, i: int, j: int) -> float:
+    """Small deterministic jitter so different seeds can produce different graphs."""
+    h = ((i + 1) * 73856093) ^ ((j + 1) * 19349663) ^ pair_seed
+    h &= 0xFFFFFFFF
+    return (h / 0xFFFFFFFF) * 1e-6
+
+
+def _ensure_intra_similarity_coverage(
+    agents: list[dict],
+    similarities: dict[tuple[int, int], float],
+    communities: list[int],
+    config: NetworkConfig,
+    rng_seed: int,
+    min_intra_candidates_per_node: int,
+) -> int:
+    """Backfill sparse within-community similarities for under-covered nodes.
+
+    This prevents blocked candidate mode from starving calibration when
+    community-local candidate coverage is too low.
+    """
+    n = len(agents)
+    if n <= 1 or min_intra_candidates_per_node <= 0:
+        return 0
+
+    members_by_community: dict[int, list[int]] = defaultdict(list)
+    for idx, c in enumerate(communities):
+        members_by_community[c].append(idx)
+
+    intra_counts = [0] * n
+    for (i, j) in similarities.keys():
+        if communities[i] == communities[j]:
+            intra_counts[i] += 1
+            intra_counts[j] += 1
+
+    added = 0
+    for i in range(n):
+        need = min_intra_candidates_per_node - intra_counts[i]
+        if need <= 0:
+            continue
+        peers = members_by_community.get(communities[i], [])
+        if len(peers) <= 1:
+            continue
+
+        # Keep augmentation bounded for runtime stability.
+        max_to_add = min(need, max(4, min_intra_candidates_per_node // 2))
+        node_rng = random.Random(rng_seed + (i + 1) * 911)
+        attempts = 0
+        added_for_node = 0
+        max_attempts = max_to_add * 10
+        while added_for_node < max_to_add and attempts < max_attempts:
+            attempts += 1
+            j = peers[node_rng.randrange(len(peers))]
+            if j == i:
+                continue
+            pair = (i, j) if i < j else (j, i)
+            if pair in similarities:
+                continue
+            sim = compute_similarity(
+                agents[i],
+                agents[j],
+                config.attribute_weights,
+                config.ordinal_levels,
+            )
+            # Keep weak ties only if they are not near-zero noise.
+            if sim <= 0.01:
+                continue
+            similarities[pair] = sim
+            intra_counts[i] += 1
+            intra_counts[j] += 1
+            added_for_node += 1
+            added += 1
+
+    return added
+
+
 def _sample_edges(
     agents: list[dict],
     agent_ids: list[str],
@@ -1068,27 +1279,19 @@ def _sample_edges(
     inter_scale: float,
     rng: random.Random,
 ) -> tuple[list[Edge], set[tuple[str, str]]]:
-    """Sample edges with local attachment for high clustering.
-
-    Uses a two-phase approach:
-    1. Sample initial edges based on similarity
-    2. Preferentially connect to friends-of-friends (local attachment)
-
-    This creates networks with naturally high clustering.
-    """
+    """Sample edges with deterministic community quotas and local attachment."""
     n = len(agents)
     edges: list[Edge] = []
     edge_set: set[tuple[str, str]] = set()
     added_pairs: set[tuple[int, int]] = set()
-
-    # Build index-based adjacency (updated as edges are added)
     adjacency: dict[int, set[int]] = {i: set() for i in range(n)}
+    node_degree = [0] * n
+    community_external: dict[int, int] = defaultdict(int)
 
-    def add_edge(i: int, j: int, sim: float) -> None:
-        """Add an edge between agents i and j."""
-        pair = (min(i, j), max(i, j))
-        if pair in added_pairs:
-            return
+    def add_edge(i: int, j: int, sim: float) -> bool:
+        pair = (i, j) if i < j else (j, i)
+        if i == j or pair in added_pairs:
+            return False
         added_pairs.add(pair)
 
         agent_a = agents[i]
@@ -1098,131 +1301,202 @@ def _sample_edges(
 
         edge_type = _infer_edge_type(agent_a, agent_b, config, is_rewired=False)
         influence_weights = _compute_influence_weights(agent_a, agent_b, sim, config)
-
-        edge = Edge(
-            source=id_a,
-            target=id_b,
-            weight=sim,
-            edge_type=edge_type,
-            influence_weight=influence_weights,
+        edges.append(
+            Edge(
+                source=id_a,
+                target=id_b,
+                weight=sim,
+                edge_type=edge_type,
+                influence_weight=influence_weights,
+            )
         )
-        edges.append(edge)
         edge_set.add((id_a, id_b))
         edge_set.add((id_b, id_a))
         adjacency[i].add(j)
         adjacency[j].add(i)
+        node_degree[i] += 1
+        node_degree[j] += 1
+        if communities[i] != communities[j]:
+            ci = communities[i]
+            cj = communities[j]
+            community_external[ci] += 1
+            community_external[cj] += 1
+        return True
 
-    # Separate intra and inter community pairs
-    intra_pairs = []
-    inter_pairs = []
-    for (i, j), sim in similarities.items():
-        if communities[i] == communities[j]:
-            intra_pairs.append((i, j, sim))
-        else:
-            inter_pairs.append((i, j, sim))
+    if not similarities:
+        return edges, edge_set
 
-    n_intra = len(intra_pairs)
-    n_inter = len(inter_pairs)
-
-    # Dynamic degree target so calibration scales can actually move edge count.
-    # Baseline scale corresponds to config defaults (intra=1.0, inter~0.3).
+    # Dynamic degree target so calibration scales can move degree.
     expected_edges = max(1, int(n * config.avg_degree / 2))
     baseline_scale = 0.65
     scale_mean = max(0.1, (intra_scale + inter_scale) / 2.0)
     target_multiplier = max(0.4, min(1.35, scale_mean / baseline_scale))
     target_edges = max(1, int(expected_edges * target_multiplier))
 
-    # Base probabilities calibrated for target edges
-    avg_sim_intra = sum(s for _, _, s in intra_pairs) / n_intra if n_intra > 0 else 0.5
-    avg_sim_inter = sum(s for _, _, s in inter_pairs) / n_inter if n_inter > 0 else 0.3
-
-    total_weighted_pairs = (
-        n_intra * avg_sim_intra * intra_scale + n_inter * avg_sim_inter * inter_scale
+    # Ensure within-community coverage is not starved by blocked candidates.
+    min_local_candidates = max(4, int(config.avg_degree * 1.1))
+    _ensure_intra_similarity_coverage(
+        agents=agents,
+        similarities=similarities,
+        communities=communities,
+        config=config,
+        rng_seed=rng.randrange(2**31 - 1),
+        min_intra_candidates_per_node=min_local_candidates,
     )
-    if total_weighted_pairs > 0:
-        base_prob = target_edges / total_weighted_pairs
-    else:
-        base_prob = 0.1
-    base_prob = min(0.8, max(0.01, base_prob))
 
-    # Phase 1: Sample initial edges based on similarity
-    # Sort by similarity (highest first) and sample top candidates
-    all_pairs = [
-        (i, j, sim, communities[i] == communities[j])
-        for (i, j), sim in similarities.items()
-    ]
-    all_pairs.sort(key=lambda x: x[2], reverse=True)
-
-    phase1_target = max(1, int(target_edges * 0.85))
-    for i, j, sim, same_community in all_pairs:
-        if len(edges) >= phase1_target:
-            break
-
-        scale = intra_scale if same_community else inter_scale
-        prob = base_prob * sim * scale * degree_factors[i] * degree_factors[j]
-        if same_community:
-            prob *= 1.25
+    pair_seed = rng.randrange(2**31 - 1)
+    intra_pairs: list[tuple[float, int, int, float]] = []
+    inter_pairs: list[tuple[float, int, int, float]] = []
+    for (i, j), sim in similarities.items():
+        base = sim * degree_factors[i] * degree_factors[j]
+        if communities[i] == communities[j]:
+            score = (base * intra_scale) + _pair_seed_jitter(pair_seed, i, j)
+            intra_pairs.append((score, i, j, sim))
         else:
-            prob *= 0.2
+            score = (base * inter_scale) + _pair_seed_jitter(pair_seed, i, j)
+            inter_pairs.append((score, i, j, sim))
 
-        # Boost probability for friends-of-friends (local attachment)
-        common_neighbors = len(adjacency[i] & adjacency[j])
-        if common_neighbors > 0:
-            # Significantly boost prob for pairs with common neighbors
-            prob = min(0.95, prob * (1 + common_neighbors * 0.5))
+    intra_pairs.sort(key=lambda x: (-x[0], x[1], x[2]))
+    inter_pairs.sort(key=lambda x: (-x[0], x[1], x[2]))
 
-        prob = min(0.95, prob)
+    intra_fraction = _target_intra_edge_fraction(
+        communities=communities,
+        config=config,
+        intra_scale=intra_scale,
+        inter_scale=inter_scale,
+    )
+    intra_target = int(round(target_edges * intra_fraction))
+    intra_target = max(0, min(target_edges, intra_target))
+    inter_target = target_edges - intra_target
 
-        if rng.random() < prob:
-            add_edge(i, j, sim)
+    intra_available = len(intra_pairs)
+    inter_available = len(inter_pairs)
+    if intra_target > intra_available:
+        intra_target = intra_available
+        inter_target = min(inter_available, target_edges - intra_target)
+    if inter_target > inter_available:
+        inter_target = inter_available
+        intra_target = min(intra_available, target_edges - inter_target)
 
-    # Phase 2: Local attachment - preferentially add edges to friends-of-friends
-    # This is key for high clustering
-    local_attachment_budget = max(0, target_edges - len(edges))
-    local_edges_added = 0
+    degree_soft_cap = max(2, int(config.avg_degree * 1.8 * max(0.8, target_multiplier)))
+    seed_k = max(1, min(12, int(config.avg_degree * 0.35 * max(0.8, intra_scale))))
 
-    # Build list of potential local attachments (pairs with common neighbors but no edge)
-    fof_candidates = []
+    # Seed local neighborhoods (kNN-like) for clustering.
+    intra_by_node: list[list[tuple[float, int, float]]] = [[] for _ in range(n)]
+    for score, i, j, sim in intra_pairs:
+        intra_by_node[i].append((score, j, sim))
+        intra_by_node[j].append((score, i, sim))
+    for node in range(n):
+        intra_by_node[node].sort(key=lambda x: (-x[0], x[1]))
+
+    intra_added = 0
     for i in range(n):
-        neighbors = adjacency[i]
-        for neighbor in neighbors:
-            for fof in adjacency[neighbor]:
-                if fof != i and fof not in neighbors:
-                    pair = (min(i, fof), max(i, fof))
-                    if pair not in added_pairs:
-                        sim = similarities.get(pair, 0.0)
-                        if sim > 0:
-                            common = len(adjacency[i] & adjacency[fof])
-                            same_community = communities[i] == communities[fof]
-                            score = sim * (1 + common * 0.3)
-                            if same_community:
-                                score *= 1.35
-                            else:
-                                score *= 0.5
-                            fof_candidates.append((score, i, fof, sim))
-
-    # Deduplicate and sort
-    seen_fof = set()
-    unique_fof = []
-    for score, i, j, sim in fof_candidates:
-        pair = (min(i, j), max(i, j))
-        if pair not in seen_fof:
-            seen_fof.add(pair)
-            unique_fof.append((score, i, j, sim))
-    unique_fof.sort(reverse=True, key=lambda x: x[0])
-
-    # Add top local attachment edges
-    for score, i, j, sim in unique_fof[: local_attachment_budget * 2]:
-        if local_edges_added >= local_attachment_budget:
+        if intra_added >= intra_target:
             break
-        if (min(i, j), max(i, j)) in added_pairs:
-            continue
+        picked = 0
+        for _score, j, sim in intra_by_node[i]:
+            if picked >= seed_k or intra_added >= intra_target:
+                break
+            if node_degree[i] >= degree_soft_cap and node_degree[j] >= degree_soft_cap:
+                continue
+            if add_edge(i, j, sim):
+                intra_added += 1
+                picked += 1
 
-        same_community = communities[i] == communities[j]
-        local_prob = 0.9 if same_community else 0.12
-        if rng.random() < local_prob:
+    # Fill remaining intra quota by highest-score pairs.
+    for _score, i, j, sim in intra_pairs:
+        if intra_added >= intra_target:
+            break
+        if node_degree[i] >= degree_soft_cap and node_degree[j] >= degree_soft_cap:
+            continue
+        if add_edge(i, j, sim):
+            intra_added += 1
+
+    # Guarantee at least one external bridge per community where possible.
+    unique_communities = sorted(set(communities))
+    min_bridges_per_community = 1 if len(unique_communities) > 1 else 0
+    best_bridge_for_community: dict[int, tuple[int, int, float]] = {}
+    for _score, i, j, sim in inter_pairs:
+        ci = communities[i]
+        cj = communities[j]
+        if ci not in best_bridge_for_community:
+            best_bridge_for_community[ci] = (i, j, sim)
+        if cj not in best_bridge_for_community:
+            best_bridge_for_community[cj] = (i, j, sim)
+        if len(best_bridge_for_community) >= len(unique_communities):
+            break
+
+    inter_added = 0
+    for community in unique_communities:
+        if inter_added >= inter_target:
+            break
+        if community_external[community] >= min_bridges_per_community:
+            continue
+        bridge = best_bridge_for_community.get(community)
+        if bridge is None:
+            continue
+        i, j, sim = bridge
+        if node_degree[i] >= degree_soft_cap and node_degree[j] >= degree_soft_cap:
+            continue
+        if add_edge(i, j, sim):
+            inter_added += 1
+
+    # Fill remaining inter quota.
+    for _score, i, j, sim in inter_pairs:
+        if inter_added >= inter_target:
+            break
+        if node_degree[i] >= degree_soft_cap and node_degree[j] >= degree_soft_cap:
+            continue
+        if add_edge(i, j, sim):
+            inter_added += 1
+
+    # Local attachment: close open triads first, then backfill to target.
+    if len(edges) < target_edges:
+        fof_candidates: list[tuple[float, int, int, float]] = []
+        seen_fof: set[tuple[int, int]] = set()
+        for i in range(n):
+            neighbors = adjacency[i]
+            if len(neighbors) < 2:
+                continue
+            for neighbor in neighbors:
+                for fof in adjacency[neighbor]:
+                    if fof == i or fof in neighbors:
+                        continue
+                    pair = (i, fof) if i < fof else (fof, i)
+                    if pair in added_pairs or pair in seen_fof:
+                        continue
+                    seen_fof.add(pair)
+                    sim = similarities.get(pair)
+                    if sim is None or sim <= 0.01:
+                        continue
+                    common = len(adjacency[i] & adjacency[fof])
+                    same_community = communities[i] == communities[fof]
+                    score = sim * (1.0 + (0.25 * common))
+                    if same_community:
+                        score *= 1.25
+                    else:
+                        score *= 0.55
+                    score += _pair_seed_jitter(pair_seed, pair[0], pair[1])
+                    fof_candidates.append((score, pair[0], pair[1], sim))
+
+        fof_candidates.sort(key=lambda x: (-x[0], x[1], x[2]))
+        for _score, i, j, sim in fof_candidates:
+            if len(edges) >= target_edges:
+                break
+            if node_degree[i] >= degree_soft_cap and node_degree[j] >= degree_soft_cap:
+                continue
             add_edge(i, j, sim)
-            local_edges_added += 1
+
+    # Final backfill if still short.
+    if len(edges) < target_edges:
+        all_pairs = intra_pairs + inter_pairs
+        all_pairs.sort(key=lambda x: (-x[0], x[1], x[2]))
+        for _score, i, j, sim in all_pairs:
+            if len(edges) >= target_edges:
+                break
+            if node_degree[i] >= degree_soft_cap and node_degree[j] >= degree_soft_cap:
+                continue
+            add_edge(i, j, sim)
 
     return edges, edge_set
 
@@ -1274,8 +1548,12 @@ def _triadic_closure(
     if not hubs:
         return edges, edge_set
 
-    # Aggressive but bounded closure budget.
-    closure_budget = min(available, max(500, int(available * 0.35)))
+    # Calibrate closure budget to the actual clustering gap.
+    # Small gaps should not trigger large structural shifts.
+    gap = max(0.0, target_clustering - current_clustering)
+    gap_ratio = gap / max(0.05, target_clustering)
+    budget_ratio = min(0.40, max(0.10, gap_ratio * 0.50))
+    closure_budget = min(available, max(200, int(available * budget_ratio)))
     attempts = max(closure_budget * 6, n)
     closures = 0
 
@@ -1304,10 +1582,14 @@ def _triadic_closure(
                 similarities[pair] = sim
 
         same_community = communities is not None and communities[a] == communities[c]
-        # Strong push toward closing likely triads, especially within-community.
-        effective_prob = config.triadic_closure_prob * (0.9 + sim * 0.6)
+        # Enforce assortative closure: cross-community triad closure tends to destroy
+        # modularity at scale and is better handled by explicit bridge logic.
+        if not same_community:
+            continue
+
+        effective_prob = config.triadic_closure_prob * (0.85 + sim * 0.55)
         if same_community:
-            effective_prob += 0.2
+            effective_prob += 0.25
         effective_prob = min(0.98, max(0.05, effective_prob))
 
         if rng.random() >= effective_prob:
@@ -1829,6 +2111,7 @@ def generate_network(
             similarities=similarities,
             n_communities=n_communities,
             rng=rng,
+            preferred_attrs=blocking_attrs,
             progress=lambda _s, c, t: emit_progress(
                 "Detecting communities",
                 c,
@@ -1909,16 +2192,27 @@ def generate_network(
                         iter_rng,
                     )
                 )
-                should_bridge_swap = (
-                    modularity > (mod_max + 0.02)
-                    or (
-                        largest_component_ratio < config.target_largest_component_ratio
-                        and modularity > mod_min
-                    )
+                lcc_deficit = max(
+                    0.0, config.target_largest_component_ratio - largest_component_ratio
+                )
+                should_bridge_swap = modularity > (mod_max + 0.02) or (
+                    lcc_deficit >= 0.03 and modularity > mod_min
                 )
                 if should_bridge_swap:
+                    if modularity > (mod_max + 0.02):
+                        swap_budget = max(4, int(len(edges) * config.bridge_budget_fraction))
+                    else:
+                        # Connectivity repair should be conservative so we do not
+                        # collapse modular structure while bridging components.
+                        ratio = min(config.bridge_budget_fraction * 0.25, lcc_deficit * 0.20)
+                        swap_budget = max(1, int(len(edges) * ratio))
                     edges = _apply_bridge_swaps(
-                        edges, agent_ids, communities, stage_cfg, iter_rng
+                        edges,
+                        agent_ids,
+                        communities,
+                        stage_cfg,
+                        iter_rng,
+                        max_swaps_override=swap_budget,
                     )
                 emit_progress(
                     "Repair pass",
@@ -2033,13 +2327,22 @@ def generate_network(
                     adj = max(0.6, deg_max / max(0.1, avg_degree))
                     intra_scale *= adj
                     inter_scale *= adj
+
+                # Only apply structure-shaping pushes when degree is not already above cap.
+                # Otherwise we can get trapped in a high-degree attractor.
+                degree_allows_growth = avg_degree <= deg_max
                 if modularity > mod_max:
                     inter_scale *= 1.2
                     intra_scale *= 0.92
                 elif modularity < mod_min:
-                    intra_scale *= 1.35
-                    inter_scale *= 0.55
-                if clustering < cluster_min:
+                    if degree_allows_growth:
+                        intra_scale *= 1.35
+                        inter_scale *= 0.55
+                    else:
+                        # If degree is high, increase assortativity mostly by suppressing inter edges.
+                        inter_scale *= 0.55
+                        intra_scale *= 1.02
+                if clustering < cluster_min and degree_allows_growth:
                     intra_scale *= 1.15
                 intra_scale = max(0.25, min(6.5, intra_scale))
                 inter_scale = max(0.25, min(6.5, inter_scale))

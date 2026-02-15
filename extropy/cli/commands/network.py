@@ -310,7 +310,7 @@ def network_command(
         )
 
     # Apply CLI overrides
-    updates = {
+    base_updates = {
         "avg_degree": avg_degree,
         "rewire_prob": rewire_prob,
         "seed": seed if seed is not None else config.seed,
@@ -324,15 +324,21 @@ def network_command(
         "auto_save_generated_config": auto_save_generated_config,
         "quarantine_suffix": quarantine_suffix,
     }
+    config = (
+        config.model_copy(update=base_updates).apply_quality_profile_defaults(force=True)
+    )
+
+    advanced_updates = {}
     if topology_gate is not None:
-        updates["topology_gate"] = topology_gate
+        advanced_updates["topology_gate"] = topology_gate
     if max_calibration_minutes is not None:
-        updates["max_calibration_minutes"] = max_calibration_minutes
+        advanced_updates["max_calibration_minutes"] = max_calibration_minutes
     if calibration_restarts is not None:
-        updates["calibration_restarts"] = calibration_restarts
+        advanced_updates["calibration_restarts"] = calibration_restarts
     if allow_quarantine is not None:
-        updates["allow_quarantine"] = allow_quarantine
-    config = config.model_copy(update=updates).apply_quality_profile_defaults()
+        advanced_updates["allow_quarantine"] = allow_quarantine
+    if advanced_updates:
+        config = config.model_copy(update=advanced_updates)
 
     if config.quality_profile not in {"fast", "balanced", "strict"}:
         console.print(
