@@ -320,6 +320,18 @@ class StudyDB:
                 PRIMARY KEY (session_id, key)
             );
 
+            CREATE TABLE IF NOT EXISTS households (
+                id TEXT NOT NULL,
+                population_id TEXT NOT NULL,
+                sample_run_id TEXT NOT NULL,
+                household_type TEXT,
+                adult_ids JSON,
+                dependent_data JSON,
+                shared_attributes JSON,
+                PRIMARY KEY (population_id, id)
+            );
+
+            CREATE INDEX IF NOT EXISTS idx_households_population ON households(population_id);
             CREATE INDEX IF NOT EXISTS idx_agents_population ON agents(population_id);
             CREATE INDEX IF NOT EXISTS idx_network_edges_src ON network_edges(network_id, source_id);
             CREATE INDEX IF NOT EXISTS idx_network_edges_tgt ON network_edges(network_id, target_id);
@@ -428,6 +440,64 @@ class StudyDB:
         self.conn.commit()
         return run_id
 
+    def save_households(
+        self,
+        population_id: str,
+        sample_run_id: str,
+        households: list[dict[str, Any]],
+    ) -> None:
+        """Save household records from household-based sampling."""
+        if not households:
+            return
+        cursor = self.conn.cursor()
+        cursor.execute(
+            "DELETE FROM households WHERE population_id = ?", (population_id,)
+        )
+        rows = []
+        for hh in households:
+            rows.append(
+                (
+                    hh["id"],
+                    population_id,
+                    sample_run_id,
+                    hh.get("household_type"),
+                    _dumps(hh.get("adult_ids", [])),
+                    _dumps(hh.get("dependent_data", [])),
+                    _dumps(hh.get("shared_attributes", {})),
+                )
+            )
+        cursor.executemany(
+            """
+            INSERT INTO households
+            (id, population_id, sample_run_id, household_type, adult_ids, dependent_data, shared_attributes)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+            """,
+            rows,
+        )
+        self.conn.commit()
+
+    def get_households(self, population_id: str) -> list[dict[str, Any]]:
+        """Load household records for a population."""
+        cursor = self.conn.cursor()
+        cursor.execute(
+            "SELECT * FROM households WHERE population_id = ? ORDER BY id",
+            (population_id,),
+        )
+        results = []
+        for row in cursor.fetchall():
+            results.append(
+                {
+                    "id": row["id"],
+                    "population_id": row["population_id"],
+                    "sample_run_id": row["sample_run_id"],
+                    "household_type": row["household_type"],
+                    "adult_ids": json.loads(row["adult_ids"]),
+                    "dependent_data": json.loads(row["dependent_data"]),
+                    "shared_attributes": json.loads(row["shared_attributes"]),
+                }
+            )
+        return results
+
     def get_agents(self, population_id: str) -> list[dict[str, Any]]:
         cursor = self.conn.cursor()
         cursor.execute(
@@ -504,8 +574,12 @@ class StudyDB:
                 target_id=str(edge.get("target", "")),
                 weight=float(edge.get("weight", 0.0)),
                 edge_type=str(edge.get("type", edge.get("edge_type", "unknown"))),
-                influence_st=float(infl.get("source_to_target", edge.get("weight", 0.0))),
-                influence_ts=float(infl.get("target_to_source", edge.get("weight", 0.0))),
+                influence_st=float(
+                    infl.get("source_to_target", edge.get("weight", 0.0))
+                ),
+                influence_ts=float(
+                    infl.get("target_to_source", edge.get("weight", 0.0))
+                ),
             )
             rows.append(
                 (
@@ -611,7 +685,9 @@ class StudyDB:
         self.conn.commit()
         return job
 
-    def get_network_similarity_job_signature(self, job_id: str) -> dict[str, Any] | None:
+    def get_network_similarity_job_signature(
+        self, job_id: str
+    ) -> dict[str, Any] | None:
         cursor = self.conn.cursor()
         cursor.execute(
             "SELECT signature_json FROM network_similarity_jobs WHERE job_id = ?",
@@ -649,7 +725,8 @@ class StudyDB:
             (job_id,),
         )
         return [
-            (int(row["chunk_start"]), int(row["chunk_end"])) for row in cursor.fetchall()
+            (int(row["chunk_start"]), int(row["chunk_end"]))
+            for row in cursor.fetchall()
         ]
 
     def save_similarity_chunk_rows(
@@ -712,9 +789,14 @@ class StudyDB:
             "SELECT i, j, sim FROM network_similarity_pairs WHERE job_id = ?",
             (job_id,),
         )
-        return {(int(row["i"]), int(row["j"])): float(row["sim"]) for row in cursor.fetchall()}
+        return {
+            (int(row["i"]), int(row["j"])): float(row["sim"])
+            for row in cursor.fetchall()
+        }
 
-    def mark_similarity_job_complete(self, job_id: str, drop_pairs: bool = False) -> None:
+    def mark_similarity_job_complete(
+        self, job_id: str, drop_pairs: bool = False
+    ) -> None:
         cursor = self.conn.cursor()
         cursor.execute(
             """
@@ -725,7 +807,9 @@ class StudyDB:
             (_now_iso(), job_id),
         )
         if drop_pairs:
-            cursor.execute("DELETE FROM network_similarity_pairs WHERE job_id = ?", (job_id,))
+            cursor.execute(
+                "DELETE FROM network_similarity_pairs WHERE job_id = ?", (job_id,)
+            )
         self.conn.commit()
 
     def upsert_network_generation_status(
@@ -855,7 +939,16 @@ class StudyDB:
             (run_id, scenario_name, population_id, network_id, config_json, seed, status, started_at)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             """,
-            (run_id, scenario_name, population_id, network_id, _dumps(config), seed, status, _now_iso()),
+            (
+                run_id,
+                scenario_name,
+                population_id,
+                network_id,
+                _dumps(config),
+                seed,
+                status,
+                _now_iso(),
+            ),
         )
         self.conn.commit()
 
@@ -866,7 +959,9 @@ class StudyDB:
         stopped_reason: str | None = None,
     ) -> None:
         cursor = self.conn.cursor()
-        completed_at = _now_iso() if status in {"completed", "failed", "stopped"} else None
+        completed_at = (
+            _now_iso() if status in {"completed", "failed", "stopped"} else None
+        )
         cursor.execute(
             """
             UPDATE simulation_runs

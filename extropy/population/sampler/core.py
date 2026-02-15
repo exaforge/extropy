@@ -2,6 +2,10 @@
 
 The sampler is a generic spec interpreter - it doesn't know about surgeons
 or farmers, it just executes whatever spec it's given.
+
+Supports two modes:
+- Independent sampling (legacy): each agent sampled independently
+- Household sampling: agents are grouped into households with correlated demographics
 """
 
 import json
@@ -20,6 +24,15 @@ from ...core.models import (
 )
 from ...utils.callbacks import ItemProgressCallback
 from .distributions import sample_distribution, coerce_to_type
+from .households import (
+    sample_household_type,
+    household_needs_partner,
+    household_needs_kids,
+    correlate_partner_attribute,
+    generate_dependents,
+    estimate_household_count,
+    PARTNER_CORRELATED_ATTRIBUTES,
+)
 from .modifiers import apply_modifiers_and_sample
 from ...utils.eval_safe import eval_formula, FormulaError
 from ..names import generate_name
@@ -34,6 +47,11 @@ class SamplingError(Exception):
     pass
 
 
+def _has_household_attributes(spec: PopulationSpec) -> bool:
+    """Check if the spec has household-scoped attributes, indicating household mode."""
+    return any(attr.scope == "household" for attr in spec.attributes)
+
+
 def sample_population(
     spec: PopulationSpec,
     count: int | None = None,
@@ -42,6 +60,10 @@ def sample_population(
 ) -> SamplingResult:
     """
     Generate agents from a PopulationSpec.
+
+    If the spec contains household-scoped attributes, agents are sampled in
+    household units with correlated demographics between partners.  Otherwise,
+    agents are sampled independently (legacy behavior).
 
     Args:
         spec: The population specification to sample from
@@ -91,32 +113,262 @@ def sample_population(
         attr.name: [] for attr in spec.attributes if attr.type in ("int", "float")
     }
 
-    agents: list[dict[str, Any]] = []
+    use_households = _has_household_attributes(spec)
 
-    for i in range(n):
-        agent = _sample_single_agent(
-            spec, attr_map, rng, i, id_width, stats, numeric_values
+    if use_households:
+        agents, households = _sample_population_households(
+            spec, attr_map, rng, n, id_width, stats, numeric_values, on_progress
         )
-        agents.append(agent)
-
-        if on_progress:
-            on_progress(i + 1, n)
+    else:
+        agents = _sample_population_independent(
+            spec, attr_map, rng, n, id_width, stats, numeric_values, on_progress
+        )
+        households = []
 
     # Compute final statistics
-    _finalize_stats(stats, numeric_values, n)
+    _finalize_stats(stats, numeric_values, len(agents))
 
     # Check expression constraints
     _check_expression_constraints(spec, agents, stats)
 
     # Build metadata
-    meta = {
+    meta: dict[str, Any] = {
         "spec": spec.meta.description,
-        "count": n,
+        "count": len(agents),
         "seed": seed,
         "generated_at": datetime.now().isoformat(),
     }
+    if households:
+        meta["household_count"] = len(households)
+        meta["household_mode"] = True
+        # Household type distribution
+        type_counts: dict[str, int] = {}
+        for hh in households:
+            ht = hh["household_type"]
+            type_counts[ht] = type_counts.get(ht, 0) + 1
+        meta["household_type_distribution"] = type_counts
 
-    return SamplingResult(agents=agents, meta=meta, stats=stats)
+    result = SamplingResult(agents=agents, meta=meta, stats=stats)
+    # Attach households for DB persistence (not part of SamplingResult model,
+    # but accessible as an ad-hoc attribute for save_sample_result)
+    result._households = households  # type: ignore[attr-defined]
+    return result
+
+
+def _sample_population_independent(
+    spec: PopulationSpec,
+    attr_map: dict[str, AttributeSpec],
+    rng: random.Random,
+    n: int,
+    id_width: int,
+    stats: SamplingStats,
+    numeric_values: dict[str, list[float]],
+    on_progress: ItemProgressCallback | None = None,
+) -> list[dict[str, Any]]:
+    """Sample N agents independently (legacy path)."""
+    agents: list[dict[str, Any]] = []
+    for i in range(n):
+        agent = _sample_single_agent(
+            spec, attr_map, rng, i, id_width, stats, numeric_values
+        )
+        agents.append(agent)
+        if on_progress:
+            on_progress(i + 1, n)
+    return agents
+
+
+def _sample_population_households(
+    spec: PopulationSpec,
+    attr_map: dict[str, AttributeSpec],
+    rng: random.Random,
+    target_n: int,
+    id_width: int,
+    stats: SamplingStats,
+    numeric_values: dict[str, list[float]],
+    on_progress: ItemProgressCallback | None = None,
+) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+    """Sample agents in household units with correlated demographics.
+
+    Returns (agents, households) where households is a list of household
+    metadata dicts for DB persistence.
+    """
+    num_households = estimate_household_count(target_n)
+    hh_id_width = len(str(num_households - 1))
+
+    agents: list[dict[str, Any]] = []
+    households: list[dict[str, Any]] = []
+    agent_index = 0
+
+    # Identify household-scoped attributes and collect categorical options
+    household_attrs = {
+        attr.name for attr in spec.attributes if attr.scope == "household"
+    }
+    categorical_options: dict[str, list[str]] = {}
+    for attr in spec.attributes:
+        if attr.type == "categorical" and attr.sampling.distribution:
+            dist = attr.sampling.distribution
+            if hasattr(dist, "options"):
+                categorical_options[attr.name] = dist.options
+
+    for hh_idx in range(num_households):
+        if agent_index >= target_n:
+            break
+
+        household_id = f"household_{hh_idx:0{hh_id_width}d}"
+
+        # Sample Adult 1 (primary)
+        adult1 = _sample_single_agent(
+            spec, attr_map, rng, agent_index, id_width, stats, numeric_values
+        )
+        adult1_age = adult1.get("age", 35)
+        agent_index += 1
+
+        # Determine household type
+        htype = sample_household_type(adult1_age, rng)
+
+        has_partner = household_needs_partner(htype)
+        has_kids = household_needs_kids(htype)
+        num_adults = 2 if has_partner else 1
+
+        # Determine household_size from agent if present, else estimate
+        household_size = adult1.get(
+            "household_size", num_adults + (1 if has_kids else 0)
+        )
+        if isinstance(household_size, (int, float)):
+            household_size = max(num_adults, int(household_size))
+        else:
+            household_size = num_adults + (1 if has_kids else 0)
+
+        # Annotate Adult 1 with household fields
+        adult1["household_id"] = household_id
+        adult1["household_role"] = "adult_primary"
+
+        adult_ids = [adult1["_id"]]
+
+        if has_partner and agent_index < target_n:
+            # Sample Adult 2 with correlated demographics
+            adult2 = _sample_partner_agent(
+                spec,
+                attr_map,
+                rng,
+                agent_index,
+                id_width,
+                stats,
+                numeric_values,
+                adult1,
+                household_attrs,
+                categorical_options,
+            )
+            adult2["household_id"] = household_id
+            adult2["household_role"] = "adult_secondary"
+            # Partners share a surname
+            if adult1.get("last_name"):
+                adult2["last_name"] = adult1["last_name"]
+            adult2["partner_id"] = adult1["_id"]
+            adult1["partner_id"] = adult2["_id"]
+            adult_ids.append(adult2["_id"])
+            agent_index += 1
+        else:
+            adult1["partner_id"] = None
+
+        # Generate NPC dependents
+        dependents = generate_dependents(
+            htype, household_size, num_adults, adult1_age, rng
+        )
+        dep_dicts = [d.model_dump() for d in dependents]
+
+        # Attach dependents to all adults
+        adult1["dependents"] = dep_dicts
+        agents.append(adult1)
+
+        if has_partner and len(adult_ids) > 1:
+            adult2["dependents"] = dep_dicts
+            agents.append(adult2)
+
+        # Build household record
+        shared_attrs = {}
+        for attr_name in household_attrs:
+            if attr_name in adult1:
+                shared_attrs[attr_name] = adult1[attr_name]
+
+        households.append(
+            {
+                "id": household_id,
+                "household_type": htype.value,
+                "adult_ids": adult_ids,
+                "dependent_data": dep_dicts,
+                "shared_attributes": shared_attrs,
+            }
+        )
+
+        if on_progress:
+            on_progress(min(agent_index, target_n), target_n)
+
+    return agents, households
+
+
+def _sample_partner_agent(
+    spec: PopulationSpec,
+    attr_map: dict[str, AttributeSpec],
+    rng: random.Random,
+    index: int,
+    id_width: int,
+    stats: SamplingStats,
+    numeric_values: dict[str, list[float]],
+    primary: dict[str, Any],
+    household_attrs: set[str],
+    categorical_options: dict[str, list[str]],
+) -> dict[str, Any]:
+    """Sample a partner agent with correlated demographics.
+
+    - Household-scoped attributes are copied from the primary.
+    - Correlated attributes (age, race, education, religion, politics)
+      use assortative mating tables.
+    - Everything else is sampled independently.
+    """
+    agent: dict[str, Any] = {"_id": f"agent_{index:0{id_width}d}"}
+
+    for attr_name in spec.sampling_order:
+        attr = attr_map.get(attr_name)
+        if attr is None:
+            continue
+
+        # Household-scoped: copy from primary
+        if attr_name in household_attrs and attr_name in primary:
+            value = primary[attr_name]
+        # Correlated: use partner correlation
+        elif attr_name in PARTNER_CORRELATED_ATTRIBUTES and attr_name in primary:
+            correlated = correlate_partner_attribute(
+                attr_name,
+                primary[attr_name],
+                rng,
+                available_options=categorical_options.get(attr_name),
+            )
+            if correlated is not None:
+                value = correlated
+            else:
+                # Fallback: sample independently
+                try:
+                    value = _sample_attribute(attr, rng, agent, stats)
+                except FormulaError as e:
+                    raise SamplingError(
+                        f"Agent {index}: Failed to sample '{attr_name}': {e}"
+                    ) from e
+        else:
+            # Independent sampling
+            try:
+                value = _sample_attribute(attr, rng, agent, stats)
+            except FormulaError as e:
+                raise SamplingError(
+                    f"Agent {index}: Failed to sample '{attr_name}': {e}"
+                ) from e
+
+        value = coerce_to_type(value, attr.type)
+        value = _apply_hard_constraints(value, attr)
+        agent[attr_name] = value
+        _update_stats(attr, value, stats, numeric_values)
+
+    return agent
 
 
 def _sample_single_agent(

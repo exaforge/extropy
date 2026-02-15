@@ -285,6 +285,33 @@ def sample_command(
             )
             out.blank()
 
+    # Household report (if applicable)
+    households = getattr(result, "_households", [])
+    if households and report and not get_json_mode():
+        out.header("HOUSEHOLD REPORT")
+        type_counts: dict[str, int] = {}
+        for hh in households:
+            ht = hh["household_type"]
+            type_counts[ht] = type_counts.get(ht, 0) + 1
+        hh_rows = [[htype, str(cnt)] for htype, cnt in sorted(type_counts.items())]
+        out.table(
+            "Household Types",
+            ["Type", "Count"],
+            hh_rows,
+            styles=["cyan", None],
+        )
+        out.text(
+            f"  Total households: {len(households)}, Total agents: {len(result.agents)}"
+        )
+        out.blank()
+
+    if households and get_json_mode():
+        out.set_data("household_count", len(households))
+        out.set_data(
+            "household_type_distribution",
+            result.meta.get("household_type_distribution", {}),
+        )
+
     # Save to canonical DB
     out.blank()
     if not get_json_mode():
@@ -301,6 +328,12 @@ def sample_command(
                     meta=result.meta,
                     seed=result.meta.get("seed"),
                 )
+                if households:
+                    db.save_households(
+                        population_id=population_id,
+                        sample_run_id=sample_run_id,
+                        households=households,
+                    )
     else:
         with open_study_db(study_db) as db:
             db.save_population_spec(
@@ -314,6 +347,12 @@ def sample_command(
                 meta=result.meta,
                 seed=result.meta.get("seed"),
             )
+            if households:
+                db.save_households(
+                    population_id=population_id,
+                    sample_run_id=sample_run_id,
+                    households=households,
+                )
 
     elapsed = time.time() - start_time
 

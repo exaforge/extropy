@@ -13,11 +13,48 @@ This module contains all Phase 1 (Population Creation) models:
 
 from collections import defaultdict
 from datetime import datetime
+from enum import Enum
 from pathlib import Path
 from typing import Literal
 
 import yaml
 from pydantic import BaseModel, Field
+
+
+# =============================================================================
+# Household Models
+# =============================================================================
+
+
+class HouseholdType(str, Enum):
+    SINGLE = "single"
+    COUPLE = "couple"
+    SINGLE_PARENT = "single_parent"
+    COUPLE_WITH_KIDS = "couple_with_kids"
+    MULTI_GENERATIONAL = "multi_generational"
+
+
+class Dependent(BaseModel):
+    """NPC dependent (child, elderly parent)."""
+
+    name: str
+    age: int
+    gender: str
+    relationship: str  # "son", "daughter", "mother", etc.
+    school_status: str | None = None  # "home", "elementary", "middle_school", etc.
+
+
+# Standard personality attributes that spec builders should include.
+# `conformity` (float, 0-1, correlated with agreeableness) is consumed by
+# Phase C for threshold behavior in simulation.
+STANDARD_PERSONALITY_ATTRIBUTES = [
+    "neuroticism",
+    "extraversion",
+    "openness",
+    "conscientiousness",
+    "agreeableness",
+    "conformity",
+]
 
 
 # =============================================================================
@@ -247,6 +284,10 @@ class AttributeSpec(BaseModel):
         "universal", "population_specific", "context_specific", "personality"
     ] = Field(description="Category of attribute")
     description: str = Field(description="What this attribute represents")
+    scope: Literal["individual", "household"] = Field(
+        default="individual",
+        description="Whether this attribute is sampled per-individual or shared across a household",
+    )
     sampling: SamplingConfig
     grounding: GroundingInfo
     constraints: list[Constraint] = Field(default_factory=list)
