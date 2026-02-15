@@ -18,7 +18,6 @@ from dataclasses import dataclass
 from typing import Any
 
 from ..core.llm import simple_call, simple_call_async, TokenUsage
-from ..core.providers import close_simulation_provider
 from ..core.models import (
     ExposureRecord,
     MemoryEntry,
@@ -825,21 +824,15 @@ def batch_reason_agents(
                 return await reason_with_pacing(idx, ctx)
 
         results: list[tuple[str, ReasoningResponse | None] | None] = [None] * total
-        try:
-            tasks = []
-            for i, ctx in enumerate(contexts):
-                tasks.append(asyncio.create_task(bounded_reason(i, ctx)))
-                if stagger_interval > 0 and i < total - 1:
-                    await asyncio.sleep(stagger_interval)
+        tasks = []
+        for i, ctx in enumerate(contexts):
+            tasks.append(asyncio.create_task(bounded_reason(i, ctx)))
+            if stagger_interval > 0 and i < total - 1:
+                await asyncio.sleep(stagger_interval)
 
-            raw_results = await asyncio.gather(*tasks)
-            for idx, agent_id, result, elapsed in raw_results:
-                results[idx] = (agent_id, result)
-        finally:
-            # Close the async HTTP client before the event loop shuts down.
-            # Without this, orphaned httpx connections produce "Event loop is
-            # closed" errors during garbage collection.
-            await close_simulation_provider()
+        raw_results = await asyncio.gather(*tasks)
+        for idx, agent_id, result, elapsed in raw_results:
+            results[idx] = (agent_id, result)
 
         return [r for r in results if r is not None]
 
