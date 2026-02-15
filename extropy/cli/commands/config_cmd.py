@@ -20,9 +20,7 @@ VALID_KEYS = {
     "simulation.rate_tier",
     "simulation.rpm_override",
     "simulation.tpm_override",
-    "defaults.population_size",
-    "defaults.db_path",
-    "defaults.show_cost",
+    "show_cost",
 }
 
 INT_FIELDS = {
@@ -30,11 +28,6 @@ INT_FIELDS = {
     "rate_tier",
     "rpm_override",
     "tpm_override",
-    "population_size",
-}
-
-BOOL_FIELDS = {
-    "show_cost",
 }
 
 
@@ -123,12 +116,10 @@ def _show_config():
             if provider_cfg.api_key_env:
                 console.print(f"    api_key_env = {provider_cfg.api_key_env}")
 
-    # Defaults
-    console.print()
-    console.print("[bold cyan]Defaults[/bold cyan]")
-    console.print(f"  population_size = {config.defaults.population_size}")
-    console.print(f"  db_path         = {config.defaults.db_path}")
-    console.print(f"  show_cost       = {config.defaults.show_cost}")
+    # Cost tracking
+    if config.show_cost:
+        console.print()
+        console.print(f"  show_cost = {config.show_cost}")
 
     # API keys status
     console.print()
@@ -190,14 +181,14 @@ def _set_config(key: str, value: str):
         if provider_name not in config.providers:
             config.providers[provider_name] = CustomProviderConfig()
         setattr(config.providers[provider_name], field, value)
+    elif key == "show_cost":
+        config.show_cost = value.lower() in ("true", "1", "yes")
     else:
         zone, field_name = key.split(".", 1)
         if zone == "models":
             target = config.models
         elif zone == "simulation":
             target = config.simulation
-        elif zone == "defaults":
-            target = config.defaults
         else:
             console.print(f"[red]Unknown zone:[/red] {zone}")
             raise typer.Exit(1)
@@ -209,8 +200,6 @@ def _set_config(key: str, value: str):
             except ValueError:
                 console.print(f"[red]Invalid integer value:[/red] {value}")
                 raise typer.Exit(1)
-        elif field_name in BOOL_FIELDS:
-            setattr(target, field_name, value.lower() in ("true", "1", "yes"))
         else:
             setattr(target, field_name, value)
 

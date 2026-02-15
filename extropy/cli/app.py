@@ -96,7 +96,7 @@ def main_callback(
         try:
             from ..config import get_config
 
-            show = get_config().defaults.show_cost
+            show = get_config().show_cost
         except Exception:
             pass
 

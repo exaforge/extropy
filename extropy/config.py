@@ -109,14 +109,6 @@ class CustomProviderConfig(BaseModel):
     api_key_env: str = ""
 
 
-class DefaultsConfig(BaseModel):
-    """Non-zone default settings."""
-
-    population_size: int = 1000
-    db_path: str = "./storage/extropy.db"
-    show_cost: bool = False  # Show cost footer after every CLI command
-
-
 # =============================================================================
 # Main config class
 # =============================================================================
@@ -146,7 +138,7 @@ class ExtropyConfig(BaseModel):
     models: ModelsConfig = Field(default_factory=ModelsConfig)
     simulation: SimulationConfig = Field(default_factory=SimulationConfig)
     providers: dict[str, CustomProviderConfig] = Field(default_factory=dict)
-    defaults: DefaultsConfig = Field(default_factory=DefaultsConfig)
+    show_cost: bool = False
 
     @classmethod
     def load(cls) -> "ExtropyConfig":
@@ -208,8 +200,8 @@ class ExtropyConfig(BaseModel):
             data["providers"] = {
                 name: cfg.model_dump() for name, cfg in self.providers.items()
             }
-        if self.defaults != DefaultsConfig():
-            data["defaults"] = self.defaults.model_dump()
+        if self.show_cost:
+            data["show_cost"] = True
         with open(CONFIG_FILE, "w") as f:
             json.dump(data, f, indent=2)
 
@@ -218,7 +210,6 @@ class ExtropyConfig(BaseModel):
         result = {
             "models": self.models.model_dump(),
             "simulation": self.simulation.model_dump(),
-            "defaults": self.defaults.model_dump(),
         }
         if self.providers:
             result["providers"] = {
@@ -276,14 +267,8 @@ def _apply_dict(config: ExtropyConfig, data: dict) -> None:
                     base_url=provider_data.get("base_url", ""),
                     api_key_env=provider_data.get("api_key_env", ""),
                 )
-    if "defaults" in data and isinstance(data["defaults"], dict):
-        for k, v in data["defaults"].items():
-            if hasattr(config.defaults, k):
-                if k == "population_size":
-                    v = int(v)
-                elif k == "show_cost":
-                    v = bool(v)
-                setattr(config.defaults, k, v)
+    if "show_cost" in data:
+        config.show_cost = bool(data["show_cost"])
 
 
 # =============================================================================
