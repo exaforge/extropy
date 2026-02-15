@@ -72,8 +72,9 @@ def _make_scenario(
             name="test",
             description="Test scenario",
             population_spec="test.yaml",
-            agents_file="test.json",
-            network_file="test_network.json",
+            study_db="study.db",
+            population_id="default",
+            network_id="default",
             created_at=datetime(2024, 1, 1),
         ),
         event=Event(

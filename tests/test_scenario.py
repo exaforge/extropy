@@ -342,8 +342,9 @@ class TestScenarioMeta:
             name="ai_tool_announcement",
             description="Hospital announces new AI diagnostic tool",
             population_spec="surgeons.yaml",
-            agents_file="agents.json",
-            network_file="network.json",
+            study_db="study.db",
+            population_id="default",
+            network_id="default",
         )
         assert meta.name == "ai_tool_announcement"
         assert meta.population_spec == "surgeons.yaml"
@@ -361,8 +362,9 @@ class TestScenarioSpec:
                 name="test_scenario",
                 description="Test scenario",
                 population_spec="pop.yaml",
-                agents_file="agents.json",
-                network_file="network.json",
+                study_db="study.db",
+                population_id="default",
+                network_id="default",
             ),
             event=Event(
                 type=EventType.ANNOUNCEMENT,
@@ -596,8 +598,9 @@ class TestComplexScenarios:
                 name="ai_tool_full_scenario",
                 description="Hospital announces mandatory AI diagnostic tool",
                 population_spec="german_surgeons.yaml",
-                agents_file="agents_500.json",
-                network_file="network_500.json",
+                study_db="study.db",
+                population_id="default",
+                network_id="default",
             ),
             event=Event(
                 type=EventType.ANNOUNCEMENT,

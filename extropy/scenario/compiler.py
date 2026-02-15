@@ -8,7 +8,6 @@ Orchestrates the full scenario compilation pipeline:
 5. Assemble and validate ScenarioSpec
 """
 
-import json
 import re
 from datetime import datetime
 from pathlib import Path
@@ -26,7 +25,8 @@ from .exposure import generate_seed_exposure
 from .interaction import determine_interaction_model
 from .outcomes import define_outcomes
 from ..utils.callbacks import StepProgressCallback
-from .validator import validate_scenario, get_agent_count
+from .validator import validate_scenario
+from ..storage import open_study_db
 
 
 def _generate_scenario_name(description: str) -> str:
@@ -57,43 +57,38 @@ def _determine_simulation_config(population_size: int) -> SimulationConfig:
     )
 
 
-def _load_network_summary(network_path: Path) -> dict | None:
-    """Load network summary for exposure generation."""
-    if not network_path.exists():
-        return None
+def _load_network_summary(network_data: dict[str, object]) -> dict[str, object]:
+    """Build network summary for exposure generation from network payload."""
+    edge_types = set()
+    node_count = 0
 
-    try:
-        with open(network_path) as f:
-            network = json.load(f)
+    meta = network_data.get("meta")
+    if isinstance(meta, dict):
+        raw_count = meta.get("node_count")
+        if isinstance(raw_count, int):
+            node_count = raw_count
 
-        # Extract summary information
-        edge_types = set()
-        node_count = 0
+    edges = network_data.get("edges")
+    if isinstance(edges, list):
+        for edge in edges:
+            if not isinstance(edge, dict):
+                continue
+            edge_type = edge.get("edge_type") or edge.get("type")
+            if isinstance(edge_type, str):
+                edge_types.add(edge_type)
 
-        if "meta" in network:
-            node_count = network["meta"].get("node_count", 0)
-
-        if "edges" in network:
-            for edge in network["edges"]:
-                # Check both 'edge_type' and 'type' fields (different network formats)
-                if "edge_type" in edge:
-                    edge_types.add(edge["edge_type"])
-                elif "type" in edge:
-                    edge_types.add(edge["type"])
-
-        return {
-            "node_count": node_count,
-            "edge_types": list(edge_types),
-        }
-    except (json.JSONDecodeError, KeyError, TypeError):
-        return None
+    return {
+        "node_count": node_count,
+        "edge_types": list(edge_types),
+    }
 
 
 def create_scenario(
     description: str,
     population_spec_path: str | Path,
-    agents_path: str | Path,
-    network_path: str | Path,
+    study_db_path: str | Path,
+    population_id: str = "default",
+    network_id: str = "default",
     output_path: str | Path | None = None,
     on_progress: StepProgressCallback | None = None,
 ) -> tuple[ScenarioSpec, ValidationResult]:
@@ -114,8 +109,9 @@ def create_scenario(
     Args:
         description: Natural language scenario description
         population_spec_path: Path to population YAML file
-        agents_path: Path to agents JSON file
-        network_path: Path to network JSON file
+        study_db_path: Path to canonical study DB
+        population_id: Population ID in study DB
+        network_id: Network ID in study DB
         output_path: Optional path to save scenario YAML
         on_progress: Optional callback(step, status) for progress updates
 
@@ -130,16 +126,16 @@ def create_scenario(
         >>> spec, result = create_scenario(
         ...     "Netflix announces $3 price increase",
         ...     "population.yaml",
-        ...     "agents.json",
-        ...     "network.json",
+        ...     "study.db",
+        ...     "default",
+        ...     "default",
         ...     "scenario.yaml"
         ... )
         >>> result.valid
         True
     """
     population_spec_path = Path(population_spec_path)
-    agents_path = Path(agents_path)
-    network_path = Path(network_path)
+    study_db_path = Path(study_db_path)
 
     def progress(step: str, status: str):
         if on_progress:
@@ -157,7 +153,13 @@ def create_scenario(
     population_spec = PopulationSpec.from_yaml(population_spec_path)
 
     # Load network summary for exposure generation
-    network_summary = _load_network_summary(network_path)
+    with open_study_db(study_db_path) as db:
+        network = db.get_network(network_id)
+        if not network.get("edges"):
+            raise FileNotFoundError(
+                f"Network '{network_id}' not found in study DB: {study_db_path}"
+            )
+        network_summary = _load_network_summary(network)
 
     # =========================================================================
     # Step 1: Parse scenario description
@@ -220,8 +222,9 @@ def create_scenario(
         name=scenario_name,
         description=description,
         population_spec=str(population_spec_path),
-        agents_file=str(agents_path),
-        network_file=str(network_path),
+        study_db=str(study_db_path),
+        population_id=population_id,
+        network_id=network_id,
         created_at=datetime.now(),
     )
 
@@ -240,18 +243,9 @@ def create_scenario(
     # Validate
     # =========================================================================
 
-    # Note: We validate agent count consistency, which requires loading the file.
-    # We use get_agent_count() to do this safely/robustly.
-    agent_count = get_agent_count(agents_path)
-
-    # Load network for validation (needed for edge type reference validation)
-    network = None
-    if network_path.exists():
-        try:
-            with open(network_path) as f:
-                network = json.load(f)
-        except (json.JSONDecodeError, OSError):
-            pass
+    with open_study_db(study_db_path) as db:
+        agent_count = db.get_agent_count(population_id)
+        network = db.get_network(network_id)
 
     validation_result = validate_scenario(spec, population_spec, agent_count, network)
 
@@ -268,8 +262,9 @@ def create_scenario(
 def compile_scenario_from_files(
     description: str,
     population_spec_path: str | Path,
-    agents_path: str | Path,
-    network_path: str | Path,
+    study_db_path: str | Path,
+    population_id: str = "default",
+    network_id: str = "default",
 ) -> ScenarioSpec:
     """
     Convenience function to create a scenario spec.
@@ -279,8 +274,9 @@ def compile_scenario_from_files(
     Args:
         description: Natural language scenario description
         population_spec_path: Path to population YAML file
-        agents_path: Path to agents JSON file
-        network_path: Path to network JSON file
+        study_db_path: Path to canonical study DB
+        population_id: Population ID in study DB
+        network_id: Network ID in study DB
 
     Returns:
         ScenarioSpec
@@ -292,8 +288,9 @@ def compile_scenario_from_files(
     spec, result = create_scenario(
         description,
         population_spec_path,
-        agents_path,
-        network_path,
+        study_db_path,
+        population_id,
+        network_id,
     )
 
     if not result.valid:

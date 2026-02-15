@@ -140,8 +140,9 @@ def small_scenario() -> ScenarioSpec:
             name="test_scenario",
             description="Test scenario for estimation",
             population_spec="pop.yaml",
-            agents_file="agents.json",
-            network_file="network.json",
+            study_db="study.db",
+            population_id="default",
+            network_id="default",
         ),
         event=Event(
             type=EventType.ANNOUNCEMENT,

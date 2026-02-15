@@ -125,8 +125,7 @@ $50-100k: drive_and_pay 40% | switch_to_transit 28% | shift_schedule 21%
 Each agent reasoned individually. A low-income commuter with no transit access reacts differently than a tech worker near a rail stop — not because we scripted it, but because their attributes, persona, and social context led them there.
 
 Simulation output directory (`austin/results/`) contains:
-- `simulation.db` (checkpointable state store)
-- `timeline.jsonl` (streaming event log)
+- `study.db` (canonical state + checkpoint store)
 - `agent_states.json` (final per-agent states)
 - `by_timestep.json` (time-series aggregates)
 - `outcome_distributions.json` (final distributions)

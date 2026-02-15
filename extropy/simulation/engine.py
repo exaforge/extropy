@@ -15,7 +15,9 @@ Implements Phase 0 redesign:
 import json
 import logging
 import random
+import sqlite3
 import time
+import uuid
 from datetime import datetime
 from pathlib import Path
 from typing import Any
@@ -36,15 +38,14 @@ from ..core.models import (
     float_to_conviction,
 )
 from ..core.rate_limiter import DualRateLimiter
-from ..population.network import load_agents_json
 from ..population.persona import PersonaConfig
+from ..storage import open_study_db
 from .progress import SimulationProgress
 from .state import StateManager
 from .persona import generate_persona
 from .reasoning import batch_reason_agents, create_reasoning_context
 from .propagation import apply_seed_exposures, propagate_through_network
 from .stopping import evaluate_stopping_conditions
-from .timeline import TimelineManager
 from ..utils.callbacks import TimestepProgressCallback
 from .aggregation import (
     compute_timestep_summary,
@@ -63,6 +64,22 @@ _CONVICTION_DECAY_RATE = 0.05
 _BOUNDED_CONFIDENCE_RHO = 0.35
 _PRIVATE_ADJUSTMENT_RHO = 0.12
 _PRIVATE_FLIP_CONVICTION = CONVICTION_MAP[ConvictionLevel.FIRM]
+
+
+class _StateTimelineAdapter:
+    """Timeline adapter that persists events into StateManager timeline table."""
+
+    def __init__(self, state_manager: StateManager):
+        self.state_manager = state_manager
+
+    def log_event(self, event: SimulationEvent) -> None:
+        self.state_manager.log_event(event)
+
+    def flush(self) -> None:
+        return
+
+    def close(self) -> None:
+        return
 
 
 class SimulationSummary:
@@ -128,6 +145,10 @@ class SimulationEngine:
         persona_config: PersonaConfig | None = None,
         rate_limiter: DualRateLimiter | None = None,
         chunk_size: int = 50,
+        state_db_path: Path | str | None = None,
+        run_id: str | None = None,
+        checkpoint_every_chunks: int = 1,
+        retention_lite: bool = False,
     ):
         """Initialize simulation engine.
 
@@ -149,6 +170,9 @@ class SimulationEngine:
         self.persona_config = persona_config
         self.rate_limiter = rate_limiter
         self.chunk_size = chunk_size
+        self.run_id = run_id or f"run_{uuid.uuid4().hex[:12]}"
+        self.checkpoint_every_chunks = max(1, checkpoint_every_chunks)
+        self.retention_lite = retention_lite
 
         # Build agent map for quick lookup
         self.agent_map = {a.get("_id", str(i)): a for i, a in enumerate(agents)}
@@ -174,13 +198,15 @@ class SimulationEngine:
         self.output_dir.mkdir(parents=True, exist_ok=True)
 
         # Initialize state manager
+        state_db_file = Path(state_db_path) if state_db_path else self.output_dir / "study.db"
         self.state_manager = StateManager(
-            self.output_dir / "simulation.db",
+            state_db_file,
             agents,
         )
+        self.study_db = open_study_db(state_db_file)
 
         # Initialize timeline manager
-        self.timeline = TimelineManager(self.output_dir / "timeline.jsonl")
+        self.timeline = _StateTimelineAdapter(self.state_manager)
 
         # Pre-generate personas for all agents
         # Extract decision-relevant attributes from outcome config (trait salience)
@@ -320,7 +346,7 @@ class SimulationEngine:
         """Execute the full simulation.
 
         Supports automatic resume: if the output directory contains a
-        simulation.db with partial progress, the engine picks up where
+        study.db with partial progress, the engine picks up where
         it left off.
 
         Returns:
@@ -379,6 +405,7 @@ class SimulationEngine:
             self._export_results()
         finally:
             self.state_manager.close()
+            self.study_db.close()
 
         return summary
 
@@ -552,7 +579,17 @@ class SimulationEngine:
         total_changes = 0
         total_shares = 0
 
+        completed_chunks = self.study_db.get_completed_simulation_chunks(
+            self.run_id, timestep
+        )
+
         for chunk_start in range(0, len(contexts), self.chunk_size):
+            chunk_index = chunk_start // self.chunk_size
+            if chunk_index in completed_chunks:
+                logger.info(
+                    f"[TIMESTEP {timestep}] Skipping completed chunk {chunk_index}"
+                )
+                continue
             chunk_contexts = contexts[chunk_start : chunk_start + self.chunk_size]
 
             reasoning_start = time.time()
@@ -583,6 +620,16 @@ class SimulationEngine:
             with self.state_manager.transaction():
                 reasoned, changes, shares = self._process_reasoning_chunk(
                     timestep, chunk_results, old_states
+                )
+            if (
+                ((chunk_index + 1) % self.checkpoint_every_chunks == 0)
+                or (chunk_start + self.chunk_size >= len(contexts))
+            ):
+                self.study_db.save_simulation_checkpoint(
+                    run_id=self.run_id,
+                    timestep=timestep,
+                    chunk_index=chunk_index,
+                    status="done",
                 )
 
             total_reasoned += reasoned
@@ -778,7 +825,7 @@ class SimulationEngine:
                 private_outcomes=private_outcomes,
                 committed=is_committed,
                 outcomes=private_outcomes,
-                raw_reasoning=response.reasoning,
+                raw_reasoning=None if self.retention_lite else response.reasoning,
                 updated_at=timestep,
             )
 
@@ -813,6 +860,9 @@ class SimulationEngine:
                         "public_conviction": new_state.public_conviction,
                         "private_conviction": new_state.private_conviction,
                         "will_share": new_state.will_share,
+                        "raw_reasoning": None
+                        if self.retention_lite
+                        else response.reasoning,
                     },
                 )
             )
@@ -1209,6 +1259,7 @@ class SimulationEngine:
 def run_simulation(
     scenario_path: str | Path,
     output_dir: str | Path,
+    study_db_path: str | Path | None = None,
     model: str = "",
     pivotal_model: str = "",
     routine_model: str = "",
@@ -1221,6 +1272,10 @@ def run_simulation(
     tpm_override: int | None = None,
     chunk_size: int = 50,
     progress: SimulationProgress | None = None,
+    run_id: str | None = None,
+    resume: bool = False,
+    checkpoint_every_chunks: int = 1,
+    retention_lite: bool = False,
 ) -> SimulationSummary:
     """Run a simulation from a scenario file.
 
@@ -1241,12 +1296,40 @@ def run_simulation(
         tpm_override: Override TPM limit
         chunk_size: Agents per reasoning chunk for checkpointing
         progress: Optional SimulationProgress for live display tracking
+        run_id: Optional run identifier for resume and bookkeeping
+        resume: Resume a prior run from DB checkpoints
+        checkpoint_every_chunks: Mark simulation checkpoint every N chunks
+        retention_lite: Reduce payload volume by dropping full raw reasoning text
 
     Returns:
         SimulationSummary with results
     """
     scenario_path = Path(scenario_path)
     output_dir = Path(output_dir)
+    if resume and not run_id:
+        raise ValueError("--resume requires --run-id")
+
+    def _reset_runtime_tables(path: Path) -> None:
+        conn = sqlite3.connect(str(path))
+        try:
+            cur = conn.cursor()
+            cur.executescript(
+                """
+                DELETE FROM agent_states;
+                DELETE FROM exposures;
+                DELETE FROM memory_traces;
+                DELETE FROM timeline;
+                DELETE FROM timestep_summaries;
+                DELETE FROM shared_to;
+                DELETE FROM simulation_metadata;
+                """
+            )
+            conn.commit()
+        except sqlite3.OperationalError:
+            # First run on this DB may not have simulation tables yet.
+            pass
+        finally:
+            conn.close()
 
     # Load scenario
     scenario = ScenarioSpec.from_yaml(scenario_path)
@@ -1257,18 +1340,62 @@ def run_simulation(
         pop_path = scenario_path.parent / pop_path
     population_spec = PopulationSpec.from_yaml(pop_path)
 
-    # Load agents
-    agents_path = Path(scenario.meta.agents_file)
-    if not agents_path.is_absolute():
-        agents_path = scenario_path.parent / agents_path
-    agents = load_agents_json(agents_path)
+    # Resolve canonical study DB
+    if study_db_path is None:
+        if not getattr(scenario.meta, "study_db", None):
+            raise ValueError(
+                "Legacy scenario format detected. Rebuild scenario with --study-db."
+            )
+        study_db_resolved = Path(scenario.meta.study_db)
+        if not study_db_resolved.is_absolute():
+            study_db_resolved = scenario_path.parent / study_db_resolved
+    else:
+        study_db_resolved = Path(study_db_path)
 
-    # Load network
-    network_path = Path(scenario.meta.network_file)
-    if not network_path.is_absolute():
-        network_path = scenario_path.parent / network_path
-    with open(network_path) as f:
-        network = json.load(f)
+    if not study_db_resolved.exists():
+        raise FileNotFoundError(f"Study DB not found: {study_db_resolved}")
+
+    resolved_run_id = (
+        run_id
+        or f"run_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{uuid.uuid4().hex[:8]}"
+    )
+
+    with open_study_db(study_db_resolved) as db:
+        agents = db.get_agents(scenario.meta.population_id)
+        if not agents:
+            raise ValueError(
+                f"No agents for population_id '{scenario.meta.population_id}' in {study_db_resolved}"
+            )
+        network = db.get_network(scenario.meta.network_id)
+        if not network.get("edges"):
+            raise ValueError(
+                f"No network edges for network_id '{scenario.meta.network_id}' in {study_db_resolved}"
+            )
+        db.create_simulation_run(
+            run_id=resolved_run_id,
+            scenario_name=scenario.meta.name,
+            population_id=scenario.meta.population_id,
+            network_id=scenario.meta.network_id,
+            config={
+                "scenario_path": str(scenario_path),
+                "output_dir": str(output_dir),
+                "model": model,
+                "pivotal_model": pivotal_model,
+                "routine_model": routine_model,
+                "multi_touch_threshold": multi_touch_threshold,
+                "chunk_size": chunk_size,
+                "checkpoint_every_chunks": checkpoint_every_chunks,
+                "retention_lite": retention_lite,
+                "resume": resume,
+            },
+            seed=random_seed,
+            status="running",
+        )
+        db.set_run_metadata(resolved_run_id, "output_dir", str(output_dir))
+        db.set_run_metadata(resolved_run_id, "study_db", str(study_db_resolved))
+
+    if not resume:
+        _reset_runtime_tables(study_db_resolved)
 
     # Load persona config if provided
     persona_config = None
@@ -1323,6 +1450,10 @@ def run_simulation(
         persona_config=persona_config,
         rate_limiter=rate_limiter,
         chunk_size=chunk_size,
+        state_db_path=study_db_resolved,
+        run_id=resolved_run_id,
+        checkpoint_every_chunks=checkpoint_every_chunks,
+        retention_lite=retention_lite,
     )
 
     if on_progress:
@@ -1331,4 +1462,23 @@ def run_simulation(
     if progress:
         engine.set_progress_state(progress)
 
-    return engine.run()
+    try:
+        summary = engine.run()
+    except Exception as e:
+        with open_study_db(study_db_resolved) as db:
+            db.update_simulation_run(
+                run_id=resolved_run_id,
+                status="failed",
+                stopped_reason=str(e),
+            )
+        raise
+
+    final_status = "stopped" if summary.stopped_reason else "completed"
+    with open_study_db(study_db_resolved) as db:
+        db.update_simulation_run(
+            run_id=resolved_run_id,
+            status=final_status,
+            stopped_reason=summary.stopped_reason,
+        )
+
+    return summary

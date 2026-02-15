@@ -103,8 +103,18 @@ class NetworkConfig(BaseModel):
     Attributes:
         avg_degree: Target average degree (connections per agent)
         rewire_prob: Watts-Strogatz rewiring probability
+        similarity_store_threshold: Minimum similarity retained in sparse matrix
         similarity_threshold: Sigmoid threshold for edge probability
         similarity_steepness: Sigmoid steepness for edge probability
+        candidate_mode: Similarity candidate strategy.
+            - "exact": all-pairs (highest fidelity, slowest)
+            - "blocked": block-based candidate pruning (near-equivalent, much faster)
+        candidate_pool_multiplier: Candidate pool size per node as a multiple of avg_degree
+        min_candidate_pool: Lower bound for candidate pool size per node in blocked mode
+        blocking_attributes: Attributes used for blocking. Auto-selected if empty.
+        similarity_workers: Worker processes for similarity stage (1 = serial)
+        similarity_chunk_size: Row chunk size per worker task
+        checkpoint_every_rows: Save similarity checkpoint every N rows
         triadic_closure_prob: Probability of closing open triads (A-B, B-C -> A-C).
             Higher values create more realistic clustering. Default 0.4.
         target_clustering: Target clustering coefficient (0.3-0.5 is realistic).
@@ -123,8 +133,16 @@ class NetworkConfig(BaseModel):
 
     avg_degree: float = 20.0
     rewire_prob: float = 0.05
+    similarity_store_threshold: float = 0.05
     similarity_threshold: float = 0.3
     similarity_steepness: float = 10.0
+    candidate_mode: Literal["exact", "blocked"] = "exact"
+    candidate_pool_multiplier: float = 12.0
+    min_candidate_pool: int = 80
+    blocking_attributes: list[str] = Field(default_factory=list)
+    similarity_workers: int = 1
+    similarity_chunk_size: int = 64
+    checkpoint_every_rows: int = 250
     triadic_closure_prob: float = 0.6
     target_clustering: float = 0.35
     target_modularity: float = 0.55  # Target modularity (0.4-0.7 range)

@@ -242,8 +242,9 @@ Auto-detection: if `{population_stem}.network-config.yaml` exists alongside the 
 Save a generated config for inspection/editing with `--save-config`:
 
 ```bash
-extropy network austin/agents.json -o austin/network.json \
-  -p austin/population.yaml --save-config austin/network-config.yaml
+extropy network --study-db austin/study.db --network-id baseline \
+  -p austin/population.yaml --save-config austin/network-config.yaml \
+  -o austin/network.json
 ```
 
 ### How connections form
@@ -260,7 +261,8 @@ The network uses a **Watts-Strogatz small-world model** with attribute-based sim
 Add `-v` to print network quality metrics:
 
 ```bash
-extropy network austin/agents.json -o austin/network.json -p austin/population.yaml --validate
+extropy network --study-db austin/study.db --network-id baseline \
+  -p austin/population.yaml --validate
 ```
 
 This shows clustering coefficient, average path length, modularity, and flags anything outside expected ranges for a realistic social network.
@@ -269,8 +271,10 @@ This shows clustering coefficient, average path length, modularity, and flags an
 
 | | Name | Description |
 |---|---|---|
-| **Arg** | `agents_file` | Agents JSON file |
-| **Opt** | `--output` / `-o` | Output network JSON file **(required)** |
+| **Opt** | `--study-db` | Canonical study DB path **(required)** |
+| **Opt** | `--population-id` | Population ID in study DB (default: `default`) |
+| **Opt** | `--network-id` | Network ID to write/read (default: `default`) |
+| **Opt** | `--output` / `-o` | Optional network JSON export path |
 | **Opt** | `--population` / `-p` | Population spec YAML — generates network config via LLM |
 | **Opt** | `--network-config` / `-c` | Custom network config YAML file |
 | **Opt** | `--save-config` | Save the generated/loaded config to YAML |
@@ -282,7 +286,7 @@ This shows clustering coefficient, average path length, modularity, and flags an
 
 ### Output
 
-A JSON file (`network.json`) containing nodes (agent IDs) and weighted, typed edges.
+Canonical output is `study.db` (`network_edges`, `network_runs`, `network_metrics`). Optional JSON export can be written with `--output`.
 
 ---
 
@@ -461,8 +465,7 @@ These aren't scripted responses. They emerge from each agent's unique combinatio
 ### Output
 
 A results directory containing:
-- `simulation.db` — SQLite database with full simulation state
-- `timeline.jsonl` — Event-by-event timeline
+- `study.db` — canonical SQLite state and checkpoint store
 - `agent_states.json` — Final state of every agent
 - `by_timestep.json` — Per-timestep metrics (exposure, sentiment, conviction, position distributions)
 - `outcome_distributions.json` — Aggregate outcome distributions
@@ -473,7 +476,7 @@ A results directory containing:
 ## Viewing Results
 
 ```bash
-extropy results austin/results/
+extropy results --study-db austin/study.db
 ```
 
 Display a summary of simulation outcomes — exposure rates, outcome distributions, and convergence information.

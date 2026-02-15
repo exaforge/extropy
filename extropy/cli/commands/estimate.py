@@ -1,6 +1,5 @@
 """Estimate command for predicting simulation costs before running."""
 
-import json
 from pathlib import Path
 
 import typer
@@ -11,6 +10,7 @@ from ..app import app, console
 @app.command("estimate")
 def estimate_command(
     scenario_file: Path = typer.Argument(..., help="Scenario spec YAML file"),
+    study_db: Path = typer.Option(..., "--study-db", help="Canonical study DB file"),
     model: str = typer.Option(
         "",
         "--model",
@@ -41,18 +41,21 @@ def estimate_command(
     model, and predicts LLM calls, tokens, and USD cost. No API keys required.
 
     Example:
-        extropy estimate scenario.yaml
-        extropy estimate scenario.yaml --model gpt-5-mini
-        extropy estimate scenario.yaml --pivotal-model gpt-5 --routine-model gpt-5-mini -v
+        extropy estimate scenario.yaml --study-db study.db
+        extropy estimate scenario.yaml --study-db study.db --model gpt-5-mini
+        extropy estimate scenario.yaml --study-db study.db --pivotal-model gpt-5 --routine-model gpt-5-mini -v
     """
     from ...config import get_config
     from ...core.models import ScenarioSpec, PopulationSpec
-    from ...population.network import load_agents_json
     from ...simulation.estimator import estimate_simulation_cost
+    from ...storage import open_study_db
 
     # Validate input file
     if not scenario_file.exists():
         console.print(f"[red]x[/red] Scenario file not found: {scenario_file}")
+        raise typer.Exit(1)
+    if not study_db.exists():
+        console.print(f"[red]x[/red] Study DB not found: {study_db}")
         raise typer.Exit(1)
 
     # Load scenario
@@ -71,24 +74,19 @@ def estimate_command(
         raise typer.Exit(1)
     population_spec = PopulationSpec.from_yaml(pop_path)
 
-    # Load agents
-    agents_path = Path(scenario.meta.agents_file)
-    if not agents_path.is_absolute():
-        agents_path = scenario_file.parent / agents_path
-    if not agents_path.exists():
-        console.print(f"[red]x[/red] Agents file not found: {agents_path}")
+    with open_study_db(study_db) as db:
+        agents = db.get_agents(scenario.meta.population_id)
+        network = db.get_network(scenario.meta.network_id)
+    if not agents:
+        console.print(
+            f"[red]x[/red] Population ID not found in study DB: {scenario.meta.population_id}"
+        )
         raise typer.Exit(1)
-    agents = load_agents_json(agents_path)
-
-    # Load network
-    network_path = Path(scenario.meta.network_file)
-    if not network_path.is_absolute():
-        network_path = scenario_file.parent / network_path
-    if not network_path.exists():
-        console.print(f"[red]x[/red] Network file not found: {network_path}")
+    if not network.get("edges"):
+        console.print(
+            f"[red]x[/red] Network ID not found in study DB: {scenario.meta.network_id}"
+        )
         raise typer.Exit(1)
-    with open(network_path) as f:
-        network = json.load(f)
 
     # Resolve config
     config = get_config()

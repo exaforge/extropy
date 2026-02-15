@@ -185,17 +185,13 @@ def _validate_scenario_spec(spec_file: Path, out: Output) -> int:
                 f"  [red]✗[/red] Population: {spec.meta.population_spec} (not found)"
             )
 
-        agents_path = resolve_relative_to(spec.meta.agents_file, spec_file)
-        if agents_path.exists():
-            out.text(f"  [green]✓[/green] Agents: {spec.meta.agents_file}")
+        study_db_path = resolve_relative_to(spec.meta.study_db, spec_file)
+        if study_db_path.exists():
+            out.text(f"  [green]✓[/green] Study DB: {spec.meta.study_db}")
         else:
-            out.text(f"  [red]✗[/red] Agents: {spec.meta.agents_file} (not found)")
-
-        network_path = resolve_relative_to(spec.meta.network_file, spec_file)
-        if network_path.exists():
-            out.text(f"  [green]✓[/green] Network: {spec.meta.network_file}")
-        else:
-            out.text(f"  [red]✗[/red] Network: {spec.meta.network_file} (not found)")
+            out.text(f"  [red]✗[/red] Study DB: {spec.meta.study_db} (not found)")
+        out.text(f"  [cyan]•[/cyan] population_id: {spec.meta.population_id}")
+        out.text(f"  [cyan]•[/cyan] network_id: {spec.meta.network_id}")
 
         out.blank()
 

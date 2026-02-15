@@ -158,8 +158,14 @@ class TestNetworkConfig:
 
         assert config.avg_degree == 20.0
         assert config.rewire_prob == 0.05
+        assert config.similarity_store_threshold == 0.05
         assert config.similarity_threshold == 0.3
         assert config.similarity_steepness == 10.0
+        assert config.candidate_mode == "exact"
+        assert config.candidate_pool_multiplier == 12.0
+        assert config.min_candidate_pool == 80
+        assert config.similarity_workers == 1
+        assert config.checkpoint_every_rows == 250
         assert config.seed is None
 
     def test_custom_config(self):
@@ -703,6 +709,72 @@ class TestGenerateNetwork:
         # Check various stages were reported
         stages = set(call[0] for call in progress_calls)
         assert "Computing similarities" in stages
+
+    def test_generate_network_blocked_mode_reproducibility(self, sample_agents):
+        """Blocked candidate mode should remain deterministic with fixed seed."""
+        config = REFERENCE_NETWORK_CONFIG.model_copy(
+            update={
+                "seed": 42,
+                "candidate_mode": "blocked",
+                "candidate_pool_multiplier": 8.0,
+                "blocking_attributes": ["employer_type", "federal_state"],
+            }
+        )
+
+        result1 = generate_network(sample_agents, config)
+        result2 = generate_network(sample_agents, config)
+
+        edges1 = {(e.source, e.target) for e in result1.edges}
+        edges2 = {(e.source, e.target) for e in result2.edges}
+
+        assert result1.meta["candidate_mode"] == "blocked"
+        assert result2.meta["candidate_mode"] == "blocked"
+        assert edges1 == edges2
+
+    def test_generate_network_resume_from_checkpoint_matches_fresh(self, sample_agents):
+        """Resuming from a saved similarity checkpoint should match a fresh run."""
+        import pickle
+
+        config = REFERENCE_NETWORK_CONFIG.model_copy(update={"seed": 42})
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            checkpoint_path = Path(tmpdir) / "network-similarity.pkl"
+
+            # Build and persist checkpoint from a full run.
+            result_checkpointed = generate_network(
+                sample_agents,
+                config,
+                checkpoint_path=checkpoint_path,
+            )
+            assert checkpoint_path.exists()
+
+            # Simulate interruption by truncating completed_rows in checkpoint metadata.
+            with open(checkpoint_path, "rb") as f:
+                payload = pickle.load(f)
+            completed_rows = max(1, len(sample_agents) // 2)
+            payload["completed_rows"] = completed_rows
+            payload["similarities"] = {
+                pair: sim
+                for pair, sim in payload["similarities"].items()
+                if pair[0] < completed_rows
+            }
+            with open(checkpoint_path, "wb") as f:
+                pickle.dump(payload, f, protocol=pickle.HIGHEST_PROTOCOL)
+
+            resumed = generate_network(
+                sample_agents,
+                config,
+                checkpoint_path=checkpoint_path,
+                resume_from_checkpoint=True,
+            )
+            fresh = generate_network(sample_agents, config)
+
+            resumed_edges = {(e.source, e.target) for e in resumed.edges}
+            fresh_edges = {(e.source, e.target) for e in fresh.edges}
+
+            assert resumed.meta["resumed_from_checkpoint"] is True
+            assert resumed_edges == fresh_edges
+            assert len(resumed.edges) == len(result_checkpointed.edges)
 
 
 class TestGenerateNetworkWithMetrics:

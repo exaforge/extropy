@@ -776,69 +776,85 @@ def batch_reason_agents(
     logger.info(f"[BATCH] Starting two-pass async reasoning for {total} agents")
 
     async def run_all():
-        # Always use a semaphore to cap concurrent tasks.
-        # When rate limiter is available, size it from max_safe_concurrent.
         if rate_limiter:
-            concurrency = rate_limiter.max_safe_concurrent
-            # Stagger interval: spread launches across the RPM window
-            # e.g. 500 RPM → 8.3 req/s → 120ms between launches
+            target_concurrency = max(1, rate_limiter.max_safe_concurrent)
             stagger_interval = 60.0 / rate_limiter.pivotal.rpm
             logger.info(
-                f"[BATCH] Concurrency cap: {concurrency}, "
+                f"[BATCH] Concurrency cap: {target_concurrency}, "
                 f"stagger: {stagger_interval * 1000:.0f}ms between launches"
             )
         else:
-            concurrency = max_concurrency
+            target_concurrency = max(1, max_concurrency)
             stagger_interval = 0.0
-        semaphore = asyncio.Semaphore(concurrency)
         completed = [0]
+        adaptive_concurrency = target_concurrency
 
         async def reason_with_pacing(
+            idx: int,
             ctx: ReasoningContext,
-        ) -> tuple[str, ReasoningResponse | None]:
-            async with semaphore:
-                start = time.time()
-                result = await _reason_agent_two_pass_async(
-                    ctx, scenario, config, rate_limiter
+        ) -> tuple[int, str, ReasoningResponse | None, float]:
+            start = time.time()
+            result = await _reason_agent_two_pass_async(ctx, scenario, config, rate_limiter)
+            elapsed = time.time() - start
+            completed[0] += 1
+
+            if result:
+                logger.info(
+                    f"[BATCH] {completed[0]}/{total}: {ctx.agent_id} done in {elapsed:.2f}s "
+                    f"(position={result.position}, sentiment={result.sentiment}, "
+                    f"conviction={float_to_conviction(result.conviction)})"
                 )
-                elapsed = time.time() - start
-                completed[0] += 1
+            else:
+                logger.warning(f"[BATCH] {completed[0]}/{total}: {ctx.agent_id} FAILED")
 
-                if result:
-                    logger.info(
-                        f"[BATCH] {completed[0]}/{total}: {ctx.agent_id} done in {elapsed:.2f}s "
-                        f"(position={result.position}, sentiment={result.sentiment}, "
-                        f"conviction={float_to_conviction(result.conviction)})"
-                    )
-                else:
-                    logger.warning(
-                        f"[BATCH] {completed[0]}/{total}: {ctx.agent_id} FAILED"
-                    )
+            if on_agent_done:
+                on_agent_done(ctx.agent_id, result)
 
-                if on_agent_done:
-                    on_agent_done(ctx.agent_id, result)
+            return (idx, ctx.agent_id, result, elapsed)
 
-                return (ctx.agent_id, result)
+        results: list[tuple[str, ReasoningResponse | None] | None] = [None] * total
+        next_idx = 0
+        while next_idx < total:
+            batch_end = min(total, next_idx + adaptive_concurrency)
+            batch_contexts = contexts[next_idx:batch_end]
+            tasks = []
+            for local_offset, ctx in enumerate(batch_contexts):
+                idx = next_idx + local_offset
+                tasks.append(asyncio.create_task(reason_with_pacing(idx, ctx)))
+                if stagger_interval > 0 and local_offset < len(batch_contexts) - 1:
+                    await asyncio.sleep(stagger_interval)
 
-        # Stagger task launches to avoid burst of requests hitting API at once.
-        # Each task is created with a small delay so they don't all enter
-        # the semaphore simultaneously.
-        tasks = []
-        for i, ctx in enumerate(contexts):
-            tasks.append(asyncio.create_task(reason_with_pacing(ctx)))
-            if stagger_interval > 0 and i < concurrency - 1:
-                # Only stagger the first batch — after that the semaphore
-                # naturally gates as tasks complete and new ones enter
-                await asyncio.sleep(stagger_interval)
+            batch_results = await asyncio.gather(*tasks)
+            latencies: list[float] = []
+            failures = 0
+            for idx, agent_id, result, elapsed in batch_results:
+                results[idx] = (agent_id, result)
+                latencies.append(elapsed)
+                if result is None:
+                    failures += 1
 
-        results = await asyncio.gather(*tasks)
+            # Adaptive concurrency control:
+            # - high error rate or high latency => downshift
+            # - clean/fast batches => cautiously upshift
+            avg_latency = sum(latencies) / len(latencies) if latencies else 0.0
+            fail_rate = failures / len(batch_results) if batch_results else 0.0
+            if fail_rate >= 0.2 or avg_latency >= 20.0:
+                adaptive_concurrency = max(1, int(adaptive_concurrency * 0.7))
+            elif fail_rate == 0 and avg_latency <= 8.0:
+                adaptive_concurrency = min(target_concurrency, adaptive_concurrency + 1)
+
+            logger.info(
+                f"[BATCH] Adaptive concurrency={adaptive_concurrency} "
+                f"(avg_latency={avg_latency:.2f}s, fail_rate={fail_rate:.0%})"
+            )
+            next_idx = batch_end
 
         # Close the async HTTP client before the event loop shuts down.
         # Without this, orphaned httpx connections produce "Event loop is
         # closed" errors during garbage collection.
         await close_simulation_provider()
 
-        return results
+        return [r for r in results if r is not None]
 
     batch_start = time.time()
     results = asyncio.run(run_all())

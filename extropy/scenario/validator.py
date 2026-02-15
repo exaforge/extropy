@@ -20,6 +20,7 @@ from ..utils.expressions import (
     extract_names_from_expression,
     validate_expression_syntax,
 )
+from ..storage import open_study_db
 
 
 # Helper functions to create ValidationIssue with appropriate severity
@@ -411,12 +412,10 @@ def validate_scenario(
 
         base_file = Path(spec_file)
         population_path = resolve_relative_to(spec.meta.population_spec, base_file)
-        agents_path = resolve_relative_to(spec.meta.agents_file, base_file)
-        network_path = resolve_relative_to(spec.meta.network_file, base_file)
+        study_db_path = resolve_relative_to(spec.meta.study_db, base_file)
     else:
         population_path = Path(spec.meta.population_spec)
-        agents_path = Path(spec.meta.agents_file)
-        network_path = Path(spec.meta.network_file)
+        study_db_path = Path(spec.meta.study_db)
 
     if not population_path.exists():
         errors.append(
@@ -428,22 +427,12 @@ def validate_scenario(
             )
         )
 
-    if not agents_path.exists():
+    if not study_db_path.exists():
         errors.append(
             ValidationError(
                 category="file_reference",
-                location="meta.agents_file",
-                message=f"Agents file not found: {spec.meta.agents_file}",
-                suggestion="Check the file path",
-            )
-        )
-
-    if not network_path.exists():
-        errors.append(
-            ValidationError(
-                category="file_reference",
-                location="meta.network_file",
-                message=f"Network file not found: {spec.meta.network_file}",
+                location="meta.study_db",
+                message=f"Study DB not found: {spec.meta.study_db}",
                 suggestion="Check the file path",
             )
         )
@@ -459,6 +448,38 @@ def validate_scenario(
                     category="consistency",
                     location="agents",
                     message=f"Agent count ({agent_count}) differs from population spec size ({population_spec.meta.size})",
+                )
+            )
+
+    # Validate IDs inside study DB when available.
+    if study_db_path.exists():
+        try:
+            with open_study_db(study_db_path) as db:
+                if db.get_agent_count(spec.meta.population_id) == 0:
+                    errors.append(
+                        ValidationError(
+                            category="file_reference",
+                            location="meta.population_id",
+                            message=f"Population ID not found in study DB: {spec.meta.population_id}",
+                            suggestion="Run `extropy sample ... --study-db ... --population-id ...` first",
+                        )
+                    )
+                if db.get_network_edge_count(spec.meta.network_id) == 0:
+                    errors.append(
+                        ValidationError(
+                            category="file_reference",
+                            location="meta.network_id",
+                            message=f"Network ID not found in study DB: {spec.meta.network_id}",
+                            suggestion="Run `extropy network ... --study-db ... --network-id ...` first",
+                        )
+                    )
+        except Exception:
+            errors.append(
+                ValidationError(
+                    category="file_reference",
+                    location="meta.study_db",
+                    message=f"Failed to read study DB: {spec.meta.study_db}",
+                    suggestion="Check that the file is a valid SQLite study DB",
                 )
             )
 
@@ -541,15 +562,12 @@ def load_and_validate_scenario(
         except Exception:
             pass  # Will be caught as validation error
 
-    agents_path = resolve_relative_to(spec.meta.agents_file, scenario_path)
-    if agents_path.exists():
-        agent_count = get_agent_count(agents_path)
-
-    network_path = resolve_relative_to(spec.meta.network_file, scenario_path)
-    if network_path.exists():
+    study_db_path = resolve_relative_to(spec.meta.study_db, scenario_path)
+    if study_db_path.exists():
         try:
-            with open(network_path) as f:
-                network = json.load(f)
+            with open_study_db(study_db_path) as db:
+                agent_count = db.get_agent_count(spec.meta.population_id)
+                network = db.get_network(spec.meta.network_id)
         except Exception:
             pass
 

@@ -268,8 +268,9 @@ class ScenarioMeta(BaseModel):
     name: str = Field(description="Short identifier for the scenario")
     description: str = Field(description="Full scenario description")
     population_spec: str = Field(description="Path to population YAML")
-    agents_file: str = Field(description="Path to sampled agents JSON")
-    network_file: str = Field(description="Path to network JSON")
+    study_db: str = Field(description="Path to canonical study DB")
+    population_id: str = Field(default="default", description="Population ID in study DB")
+    network_id: str = Field(default="default", description="Network ID in study DB")
     created_at: datetime = Field(default_factory=datetime.now)
 
 
@@ -305,7 +306,34 @@ class ScenarioSpec(BaseModel):
         with open(path) as f:
             data = yaml.safe_load(f)
 
-        return cls.model_validate(data)
+        if not isinstance(data, dict):
+            raise ValueError("Scenario YAML must parse to an object")
+
+        meta = data.get("meta", {})
+        if isinstance(meta, dict) and (
+            "agents_file" in meta or "network_file" in meta
+        ):
+            raise ValueError(
+                "Legacy scenario schema detected (meta.agents_file/meta.network_file). "
+                "Migrate with: extropy migrate scenario --input "
+                f"{path} --study-db study.db --population-id default --network-id default"
+            )
+
+        try:
+            return cls.model_validate(data)
+        except Exception as e:
+            if isinstance(meta, dict) and (
+                "study_db" not in meta
+                or "population_id" not in meta
+                or "network_id" not in meta
+            ):
+                raise ValueError(
+                    "Scenario metadata must include meta.study_db, meta.population_id, "
+                    "and meta.network_id. If this is an older scenario, run: "
+                    "extropy migrate scenario --input "
+                    f"{path} --study-db study.db --population-id default --network-id default"
+                ) from e
+            raise
 
     def summary(self) -> str:
         """Get a text summary of the scenario spec."""

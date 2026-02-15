@@ -14,10 +14,18 @@ from ..utils import format_elapsed
 
 @app.command("network")
 def network_command(
-    agents_file: Path = typer.Argument(
-        ..., help="Agents JSON file to generate network from"
+    study_db: Path = typer.Option(
+        ..., "--study-db", help="Canonical study DB file"
     ),
-    output: Path = typer.Option(..., "--output", "-o", help="Output network JSON file"),
+    population_id: str = typer.Option(
+        "default", "--population-id", help="Population ID in study DB"
+    ),
+    network_id: str = typer.Option(
+        "default", "--network-id", help="Network ID to write in study DB"
+    ),
+    output: Path | None = typer.Option(
+        None, "--output", "-o", help="Optional JSON export path (non-canonical)"
+    ),
     population: Path | None = typer.Option(
         None,
         "--population",
@@ -50,6 +58,65 @@ def network_command(
     no_metrics: bool = typer.Option(
         False, "--no-metrics", help="Skip computing node metrics (faster)"
     ),
+    candidate_mode: str = typer.Option(
+        "exact",
+        "--candidate-mode",
+        help="Similarity candidate mode: exact | blocked",
+    ),
+    candidate_pool_multiplier: float = typer.Option(
+        12.0,
+        "--candidate-pool-multiplier",
+        help="Blocked mode candidate pool size as multiple of avg_degree",
+    ),
+    block_attr: list[str] | None = typer.Option(
+        None,
+        "--block-attr",
+        help="Blocking attribute (repeatable). If omitted, auto-selects top attributes",
+    ),
+    similarity_workers: int = typer.Option(
+        1,
+        "--similarity-workers",
+        min=1,
+        help="Worker processes for similarity computation",
+    ),
+    similarity_chunk_size: int = typer.Option(
+        64,
+        "--similarity-chunk-size",
+        min=8,
+        help="Row chunk size for similarity worker tasks",
+    ),
+    checkpoint: Path | None = typer.Option(
+        None,
+        "--checkpoint",
+        help="Path to similarity checkpoint file (.pkl) or study DB (.db)",
+    ),
+    resume_checkpoint: bool = typer.Option(
+        False,
+        "--resume-checkpoint",
+        help="Resume similarity stage from --checkpoint file",
+    ),
+    checkpoint_every: int = typer.Option(
+        250,
+        "--checkpoint-every",
+        min=1,
+        help="Write checkpoint every N processed similarity rows",
+    ),
+    resource_mode: str = typer.Option(
+        "auto",
+        "--resource-mode",
+        help="Resource tuning mode: auto | manual",
+    ),
+    safe_auto_workers: bool = typer.Option(
+        True,
+        "--safe-auto-workers/--unsafe-auto-workers",
+        help="When auto mode is enabled, keep worker count conservative for laptops/VMs",
+    ),
+    max_memory_gb: float | None = typer.Option(
+        None,
+        "--max-memory-gb",
+        min=0.5,
+        help="Optional memory budget cap for auto resource tuning",
+    ),
 ):
     """
     Generate a social network from sampled agents.
@@ -65,37 +132,47 @@ def network_command(
       4. None of the above → empty config (flat network, no similarity structure)
 
     Example:
-        extropy network agents.json -o network.json
-        extropy network agents.json -o network.json -p population.yaml
-        extropy network agents.json -o network.json -c network-config.yaml
-        extropy network agents.json -o network.json -p population.yaml --save-config my-config.yaml
+        extropy network --study-db study.db
+        extropy network --study-db study.db --population-id main --network-id main
+        extropy network --study-db study.db -p population.yaml -c network-config.yaml
     """
     from ...population.network import (
         generate_network,
         generate_network_with_metrics,
-        load_agents_json,
         NetworkConfig,
         generate_network_config,
     )
     from ...core.models import PopulationSpec
+    from ...storage import open_study_db
+    from ...utils import ResourceGovernor
 
     start_time = time.time()
     console.print()
 
+    if resume_checkpoint and checkpoint is None:
+        checkpoint = study_db
+
     # Load Agents
-    if not agents_file.exists():
-        console.print(f"[red]✗[/red] Agents file not found: {agents_file}")
+    if not study_db.exists():
+        console.print(f"[red]✗[/red] Study DB not found: {study_db}")
         raise typer.Exit(1)
 
     with console.status("[cyan]Loading agents...[/cyan]"):
         try:
-            agents = load_agents_json(agents_file)
+            with open_study_db(study_db) as db:
+                agents = db.get_agents(population_id)
         except Exception as e:
             console.print(f"[red]✗[/red] Failed to load agents: {e}")
             raise typer.Exit(1)
+    if not agents:
+        console.print(
+            f"[red]✗[/red] No agents found for population_id '{population_id}' in {study_db}"
+        )
+        raise typer.Exit(1)
 
     console.print(
-        f"[green]✓[/green] Loaded {len(agents)} agents from [bold]{agents_file}[/bold]"
+        f"[green]✓[/green] Loaded {len(agents)} agents from [bold]{study_db}[/bold] "
+        f"(population_id={population_id})"
     )
 
     # =========================================================================
@@ -165,14 +242,64 @@ def network_command(
             "avg_degree": avg_degree,
             "rewire_prob": rewire_prob,
             "seed": seed if seed is not None else config.seed,
+            "candidate_mode": candidate_mode,
+            "candidate_pool_multiplier": candidate_pool_multiplier,
+            "blocking_attributes": block_attr or config.blocking_attributes,
+            "similarity_workers": similarity_workers,
+            "similarity_chunk_size": similarity_chunk_size,
+            "checkpoint_every_rows": checkpoint_every,
         }
     )
+
+    if resource_mode not in {"auto", "manual"}:
+        console.print("[red]✗[/red] --resource-mode must be 'auto' or 'manual'")
+        raise typer.Exit(1)
+
+    governor = ResourceGovernor(
+        resource_mode=resource_mode,
+        safe_auto_workers=safe_auto_workers,
+        max_memory_gb=max_memory_gb,
+    )
+    tuned_workers = governor.recommend_workers(
+        requested_workers=config.similarity_workers,
+        memory_per_worker_gb=0.75,
+    )
+    tuned_chunk = governor.recommend_chunk_size(
+        requested_chunk_size=config.similarity_chunk_size,
+        min_chunk_size=8,
+        max_chunk_size=2048,
+    )
+
+    config = config.model_copy(
+        update={
+            "similarity_workers": tuned_workers,
+            "similarity_chunk_size": tuned_chunk,
+        }
+    )
+
+    if config.candidate_mode not in {"exact", "blocked"}:
+        console.print(
+            f"[red]✗[/red] Invalid --candidate-mode '{config.candidate_mode}' "
+            "(expected: exact | blocked)"
+        )
+        raise typer.Exit(1)
 
     # Save config if requested
     if save_config:
         config.to_yaml(save_config)
         console.print(
             f"[green]✓[/green] Saved network config to [bold]{save_config}[/bold]"
+        )
+
+    console.print(
+        f"[dim]Mode: {config.candidate_mode} | workers={config.similarity_workers} "
+        f"| checkpoint={'on' if checkpoint else 'off'}[/dim]"
+    )
+    if resource_mode == "auto":
+        snap = governor.snapshot()
+        console.print(
+            f"[dim]Auto resources: cpu={snap.cpu_count}, "
+            f"total_mem={snap.total_memory_gb:.1f}GB, budget={snap.memory_budget_gb:.1f}GB[/dim]"
         )
 
     console.print()
@@ -192,9 +319,21 @@ def network_command(
         nonlocal result, generation_error
         try:
             if no_metrics:
-                result = generate_network(agents, config, on_progress)
+                result = generate_network(
+                    agents,
+                    config,
+                    on_progress,
+                    checkpoint_path=checkpoint,
+                    resume_from_checkpoint=resume_checkpoint,
+                )
             else:
-                result = generate_network_with_metrics(agents, config, on_progress)
+                result = generate_network_with_metrics(
+                    agents,
+                    config,
+                    on_progress,
+                    checkpoint_path=checkpoint,
+                    resume_from_checkpoint=resume_checkpoint,
+                )
         except Exception as e:
             generation_error = e
         finally:
@@ -274,14 +413,38 @@ def network_command(
             pct = count / len(result.edges) * 100 if result.edges else 0
             console.print(f"  {edge_type}: {count} ({pct:.1f}%)")
 
-    # Save Output
+    # Save canonical output to study DB
     console.print()
-    with console.status(f"[cyan]Saving to {output}...[/cyan]"):
-        result.save_json(output)
+    with console.status(f"[cyan]Saving network to {study_db}...[/cyan]"):
+        with open_study_db(study_db) as db:
+            network_metrics = (
+                result.network_metrics.model_dump(mode="json")
+                if result.network_metrics
+                else None
+            )
+            db.save_network_result(
+                population_id=population_id,
+                network_id=network_id,
+                config=config.model_dump(mode="json"),
+                result_meta=result.meta,
+                edges=[e.to_dict() for e in result.edges],
+                seed=config.seed,
+                candidate_mode=config.candidate_mode,
+                network_metrics=network_metrics,
+            )
+
+    if output is not None:
+        with console.status(f"[cyan]Exporting JSON to {output}...[/cyan]"):
+            result.save_json(output)
 
     elapsed = time.time() - start_time
 
     console.print("═" * 60)
-    console.print(f"[green]✓[/green] Network saved to [bold]{output}[/bold]")
+    console.print(
+        f"[green]✓[/green] Network saved to [bold]{study_db}[/bold] "
+        f"(network_id={network_id})"
+    )
+    if output is not None:
+        console.print(f"[dim]Exported JSON: {output}[/dim]")
     console.print(f"[dim]Total time: {format_elapsed(elapsed)}[/dim]")
     console.print("═" * 60)

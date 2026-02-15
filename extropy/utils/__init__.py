@@ -40,6 +40,10 @@ from .paths import (
     resolve_relative_to,
     make_relative_to,
 )
+from .resource_governor import (
+    ResourceGovernor,
+    ResourceSnapshot,
+)
 
 __all__ = [
     # Graphs
@@ -69,4 +73,7 @@ __all__ = [
     # Paths
     "resolve_relative_to",
     "make_relative_to",
+    # Resource governor
+    "ResourceGovernor",
+    "ResourceSnapshot",
 ]
