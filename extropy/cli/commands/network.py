@@ -1,6 +1,8 @@
 """Network command for generating social networks from agents."""
 
 import time
+import uuid
+from datetime import datetime
 from pathlib import Path
 from threading import Event, Thread
 
@@ -56,6 +58,11 @@ def network_command(
     no_metrics: bool = typer.Option(
         False, "--no-metrics", help="Skip computing node metrics (faster)"
     ),
+    quality_profile: str = typer.Option(
+        "balanced",
+        "--quality-profile",
+        help="Quality profile: fast | balanced | strict",
+    ),
     candidate_mode: str = typer.Option(
         "exact",
         "--candidate-mode",
@@ -88,10 +95,28 @@ def network_command(
         "--checkpoint",
         help="DB path for similarity checkpointing (must be the same as --study-db)",
     ),
+    resume: bool = typer.Option(
+        False,
+        "--resume",
+        help="Resume similarity and calibration checkpoints from --study-db",
+    ),
+    resume_similarity: bool = typer.Option(
+        False,
+        "--resume-similarity",
+        hidden=True,
+        help="Compatibility alias for --resume",
+    ),
     resume_checkpoint: bool = typer.Option(
         False,
         "--resume-checkpoint",
-        help="Resume similarity stage from checkpoint tables in --study-db",
+        hidden=True,
+        help="Compatibility alias for --resume",
+    ),
+    resume_calibration: bool = typer.Option(
+        False,
+        "--resume-calibration",
+        hidden=True,
+        help="Compatibility alias for --resume",
     ),
     checkpoint_every: int = typer.Option(
         250,
@@ -114,6 +139,44 @@ def network_command(
         "--max-memory-gb",
         min=0.5,
         help="Optional memory budget cap for auto resource tuning",
+    ),
+    topology_gate: str | None = typer.Option(
+        None,
+        "--topology-gate",
+        hidden=True,
+        help="Advanced: strict | warn",
+    ),
+    max_calibration_minutes: int | None = typer.Option(
+        None,
+        "--max-calibration-minutes",
+        hidden=True,
+        min=1,
+        help="Advanced: max calibration runtime budget in minutes",
+    ),
+    calibration_restarts: int | None = typer.Option(
+        None,
+        "--calibration-restarts",
+        hidden=True,
+        min=1,
+        help="Advanced: number of calibration restarts",
+    ),
+    allow_quarantine: bool | None = typer.Option(
+        None,
+        "--allow-quarantine/--no-allow-quarantine",
+        hidden=True,
+        help="Advanced: store rejected strict-run artifact under quarantine network id",
+    ),
+    quarantine_suffix: str = typer.Option(
+        "rejected",
+        "--quarantine-suffix",
+        hidden=True,
+        help="Advanced: suffix for quarantined network IDs",
+    ),
+    auto_save_generated_config: bool = typer.Option(
+        True,
+        "--auto-save-generated-config/--no-auto-save-generated-config",
+        hidden=True,
+        help="Auto-save generated config when using -p without -c",
     ),
 ):
     """
@@ -147,6 +210,9 @@ def network_command(
     start_time = time.time()
     console.print()
 
+    resume_requested = (
+        resume or resume_similarity or resume_calibration or resume_checkpoint
+    )
     if (
         checkpoint is not None
         and checkpoint.expanduser().resolve() != study_db.expanduser().resolve()
@@ -155,7 +221,7 @@ def network_command(
             "[red]✗[/red] --checkpoint must point to the same canonical file as --study-db"
         )
         raise typer.Exit(1)
-    checkpoint_db = study_db if (resume_checkpoint or checkpoint is not None) else None
+    checkpoint_db = study_db if (resume_requested or checkpoint is not None) else None
 
     # Load Agents
     if not study_db.exists():
@@ -185,6 +251,7 @@ def network_command(
     # =========================================================================
 
     config = None
+    generated_from_population = False
 
     # 1. Explicit --network-config file
     if network_config:
@@ -226,6 +293,7 @@ def network_command(
 
         with console.status("[cyan]Generating network config via LLM...[/cyan]"):
             config = generate_network_config(pop_spec, agents_sample)
+            generated_from_population = True
         console.print(
             f"[green]✓[/green] Generated network config: "
             f"{len(config.attribute_weights)} weights, "
@@ -242,19 +310,36 @@ def network_command(
         )
 
     # Apply CLI overrides
-    config = config.model_copy(
-        update={
-            "avg_degree": avg_degree,
-            "rewire_prob": rewire_prob,
-            "seed": seed if seed is not None else config.seed,
-            "candidate_mode": candidate_mode,
-            "candidate_pool_multiplier": candidate_pool_multiplier,
-            "blocking_attributes": block_attr or config.blocking_attributes,
-            "similarity_workers": similarity_workers,
-            "similarity_chunk_size": similarity_chunk_size,
-            "checkpoint_every_rows": checkpoint_every,
-        }
-    )
+    updates = {
+        "avg_degree": avg_degree,
+        "rewire_prob": rewire_prob,
+        "seed": seed if seed is not None else config.seed,
+        "candidate_mode": candidate_mode,
+        "candidate_pool_multiplier": candidate_pool_multiplier,
+        "blocking_attributes": block_attr or config.blocking_attributes,
+        "similarity_workers": similarity_workers,
+        "similarity_chunk_size": similarity_chunk_size,
+        "checkpoint_every_rows": checkpoint_every,
+        "quality_profile": quality_profile,
+        "auto_save_generated_config": auto_save_generated_config,
+        "quarantine_suffix": quarantine_suffix,
+    }
+    if topology_gate is not None:
+        updates["topology_gate"] = topology_gate
+    if max_calibration_minutes is not None:
+        updates["max_calibration_minutes"] = max_calibration_minutes
+    if calibration_restarts is not None:
+        updates["calibration_restarts"] = calibration_restarts
+    if allow_quarantine is not None:
+        updates["allow_quarantine"] = allow_quarantine
+    config = config.model_copy(update=updates).apply_quality_profile_defaults()
+
+    if config.quality_profile not in {"fast", "balanced", "strict"}:
+        console.print(
+            f"[red]✗[/red] Invalid --quality-profile '{config.quality_profile}' "
+            "(expected: fast | balanced | strict)"
+        )
+        raise typer.Exit(1)
 
     if resource_mode not in {"auto", "manual"}:
         console.print("[red]✗[/red] --resource-mode must be 'auto' or 'manual'")
@@ -288,6 +373,12 @@ def network_command(
             "(expected: exact | blocked)"
         )
         raise typer.Exit(1)
+    if config.topology_gate not in {"strict", "warn"}:
+        console.print(
+            f"[red]✗[/red] Invalid --topology-gate '{config.topology_gate}' "
+            "(expected: strict | warn)"
+        )
+        raise typer.Exit(1)
 
     # Save config if requested
     if save_config:
@@ -295,10 +386,26 @@ def network_command(
         console.print(
             f"[green]✓[/green] Saved network config to [bold]{save_config}[/bold]"
         )
+    if (
+        generated_from_population
+        and population is not None
+        and auto_save_generated_config
+        and network_config is None
+    ):
+        seed_label = str(config.seed) if config.seed is not None else "noseed"
+        ts = datetime.now().strftime("%Y%m%d-%H%M%S")
+        auto_path = population.parent / (
+            f"{population.stem}.network-config.{network_id}.seed{seed_label}.{ts}.yaml"
+        )
+        if save_config is None or save_config.resolve() != auto_path.resolve():
+            config.to_yaml(auto_path)
+            console.print(
+                f"[green]✓[/green] Auto-saved generated config to [bold]{auto_path}[/bold]"
+            )
 
     console.print(
         f"[dim]Mode: {config.candidate_mode} | workers={config.similarity_workers} "
-        f"| checkpoint={'on' if checkpoint_db else 'off'}[/dim]"
+        f"| profile={config.quality_profile} | checkpoint={'on' if checkpoint_db else 'off'}[/dim]"
     )
     if resource_mode == "auto":
         snap = governor.snapshot()
@@ -309,6 +416,7 @@ def network_command(
 
     console.print()
     generation_start = time.time()
+    network_run_id = str(uuid.uuid4())
     current_stage = ["Initializing", 0, 0]
 
     def on_progress(stage: str, current: int, total: int):
@@ -329,7 +437,10 @@ def network_command(
                     config,
                     on_progress,
                     checkpoint_path=checkpoint_db,
-                    resume_from_checkpoint=resume_checkpoint,
+                    resume_from_checkpoint=resume_requested,
+                    study_db_path=study_db,
+                    network_run_id=network_run_id,
+                    resume_calibration=resume_requested,
                 )
             else:
                 result = generate_network_with_metrics(
@@ -337,7 +448,10 @@ def network_command(
                     config,
                     on_progress,
                     checkpoint_path=checkpoint_db,
-                    resume_from_checkpoint=resume_checkpoint,
+                    resume_from_checkpoint=resume_requested,
+                    study_db_path=study_db,
+                    network_run_id=network_run_id,
+                    resume_calibration=resume_requested,
                 )
         except Exception as e:
             generation_error = e
@@ -418,7 +532,11 @@ def network_command(
             pct = count / len(result.edges) * 100 if result.edges else 0
             console.print(f"  {edge_type}: {count} ({pct:.1f}%)")
 
-    # Save canonical output to study DB
+    quality_meta = result.meta.get("quality", {})
+    accepted = bool(quality_meta.get("accepted", True))
+    strict_failed = config.topology_gate == "strict" and not accepted and len(agents) >= 50
+
+    # Save canonical output to study DB (or quarantine on strict failure)
     console.print()
     with console.status(f"[cyan]Saving network to {study_db}...[/cyan]"):
         with open_study_db(study_db) as db:
@@ -427,16 +545,45 @@ def network_command(
                 if result.network_metrics
                 else None
             )
+            target_network_id = network_id
+            if strict_failed and config.allow_quarantine:
+                target_network_id = (
+                    f"{network_id}__{config.quarantine_suffix}__{network_run_id[:12]}"
+                )
+                result.meta["outcome"] = "rejected_quarantined"
+                result.meta["canonical_network_id"] = network_id
+            elif strict_failed:
+                result.meta["outcome"] = "rejected"
+            elif accepted:
+                result.meta["outcome"] = "accepted"
+            else:
+                result.meta["outcome"] = "accepted_with_warnings"
+
             db.save_network_result(
                 population_id=population_id,
-                network_id=network_id,
+                network_id=target_network_id,
                 config=config.model_dump(mode="json"),
                 result_meta=result.meta,
                 edges=[e.to_dict() for e in result.edges],
                 seed=config.seed,
                 candidate_mode=config.candidate_mode,
                 network_metrics=network_metrics,
+                network_run_id=network_run_id,
             )
+
+    if strict_failed and config.allow_quarantine:
+        console.print(
+            "[yellow]![/yellow] Topology gate strict failed. Saved quarantined artifact; canonical network not overwritten."
+        )
+        console.print(
+            f"[red]✗[/red] Failed gates with best metrics: {quality_meta.get('best_metrics', {})}"
+        )
+        raise typer.Exit(1)
+    if strict_failed and not config.allow_quarantine:
+        console.print(
+            f"[red]✗[/red] Topology gate strict failed; no output saved for network_id={network_id}"
+        )
+        raise typer.Exit(1)
 
     if output is not None:
         with console.status(f"[cyan]Exporting JSON to {output}...[/cyan]"):

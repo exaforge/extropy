@@ -204,3 +204,75 @@ def inspect_network(
         console.print("top source degrees:")
         for r in top_rows:
             console.print(f"  - {r['source_id']}: {r['degree']}")
+
+
+@inspect_app.command("network-status")
+def inspect_network_status(
+    study_db: Path = typer.Option(..., "--study-db"),
+    network_run_id: str = typer.Option(..., "--network-run-id"),
+):
+    conn = sqlite3.connect(str(study_db))
+    conn.row_factory = sqlite3.Row
+    try:
+        cur = conn.cursor()
+        cur.execute(
+            """
+            SELECT phase, current, total, message, updated_at
+            FROM network_generation_status
+            WHERE network_run_id = ?
+            """,
+            (network_run_id,),
+        )
+        status = cur.fetchone()
+        cur.execute(
+            """
+            SELECT restart_index, status, best_score, best_metrics_json
+            FROM network_calibration_runs
+            WHERE network_run_id = ?
+            ORDER BY restart_index DESC
+            LIMIT 3
+            """,
+            (network_run_id,),
+        )
+        runs = cur.fetchall()
+        cur.execute(
+            """
+            SELECT calibration_run_id, iteration, score, accepted, created_at
+            FROM network_calibration_iterations
+            WHERE calibration_run_id IN (
+                SELECT calibration_run_id
+                FROM network_calibration_runs
+                WHERE network_run_id = ?
+            )
+            ORDER BY created_at DESC
+            LIMIT 5
+            """,
+            (network_run_id,),
+        )
+        iters = cur.fetchall()
+    finally:
+        conn.close()
+
+    console.print(f"[bold]Network Run Status[/bold] {network_run_id}")
+    if status:
+        console.print(
+            f"phase={status['phase']} progress={status['current']}/{status['total']} updated_at={status['updated_at']}"
+        )
+        if status["message"]:
+            console.print(f"message={status['message']}")
+    else:
+        console.print("[dim]No live status row found.[/dim]")
+
+    if runs:
+        console.print("[bold]Recent calibration runs[/bold]")
+        for row in runs:
+            metrics = row["best_metrics_json"] or "{}"
+            console.print(
+                f"  restart={row['restart_index']} status={row['status']} best_score={row['best_score']} metrics={metrics}"
+            )
+    if iters:
+        console.print("[bold]Recent calibration iterations[/bold]")
+        for row in iters:
+            console.print(
+                f"  run={row['calibration_run_id'][:8]} iter={row['iteration']} score={row['score']:.4f} accepted={bool(row['accepted'])} at={row['created_at']}"
+            )

@@ -67,7 +67,8 @@ STUDY_DB=austin/study.db
 extropy spec "500 Austin TX commuters who drive into downtown for work" -o austin/base.yaml
 extropy extend austin/base.yaml -s "Response to a $15/day downtown congestion tax" -o austin/population.yaml
 extropy sample austin/population.yaml --study-db "$STUDY_DB" --seed 42
-extropy network --study-db "$STUDY_DB" -p austin/population.yaml --seed 42 --checkpoint "$STUDY_DB"
+extropy network --study-db "$STUDY_DB" -p austin/population.yaml \
+  --quality-profile balanced --seed 42 --checkpoint "$STUDY_DB"
 
 # Compile and run a scenario
 extropy scenario -p austin/population.yaml --study-db "$STUDY_DB" -o austin/scenario.yaml

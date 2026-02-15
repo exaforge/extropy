@@ -221,9 +221,11 @@ A JSON file (`agents.json`) or SQLite database (`agents.db`) containing all samp
 ## Step 4: Build the Social Network
 
 ```bash
-extropy network austin/agents.json \
-  -o austin/network.json \
+extropy network --study-db austin/study.db \
+  --population-id default \
+  --network-id baseline \
   -p austin/population.yaml \
+  --quality-profile balanced \
   --seed 42
 ```
 
@@ -238,6 +240,9 @@ The network's social structure is driven by a `NetworkConfig` that defines which
 3. **No config** — Produces a flat network with no similarity structure (all edges are "peer" type).
 
 Auto-detection: if `{population_stem}.network-config.yaml` exists alongside the population file, it's loaded automatically.
+
+When using `-p` without `-c`, Extropy auto-saves the effective generated config (after CLI overrides/profile expansion) next to the population file:
+`<population_stem>.network-config.<network_id>.seed<seed>.<YYYYMMDD-HHMMSS>.yaml`.
 
 Save a generated config for inspection/editing with `--save-config`:
 
@@ -267,6 +272,14 @@ extropy network --study-db austin/study.db --network-id baseline \
 
 This shows clustering coefficient, average path length, modularity, and flags anything outside expected ranges for a realistic social network.
 
+### Quality profile (primary control)
+
+- `--quality-profile fast` — quickest runtime, looser gate defaults
+- `--quality-profile balanced` — default, strict gate with moderate budget
+- `--quality-profile strict` — strongest calibration effort and strict gating
+
+For most runs, only this flag should be adjusted.
+
 ### Arguments & options
 
 | | Name | Description |
@@ -278,15 +291,20 @@ This shows clustering coefficient, average path length, modularity, and flags an
 | **Opt** | `--population` / `-p` | Population spec YAML — generates network config via LLM |
 | **Opt** | `--network-config` / `-c` | Custom network config YAML file |
 | **Opt** | `--save-config` | Save the generated/loaded config to YAML |
+| **Opt** | `--quality-profile` | Primary quality control: `fast | balanced | strict` (default: `balanced`) |
 | **Opt** | `--avg-degree` | Target average connections per agent (default: `20`) |
 | **Opt** | `--rewire-prob` | Watts-Strogatz rewiring probability (default: `0.05`) |
 | **Opt** | `--seed` | Random seed for reproducibility |
 | **Opt** | `--validate` / `-v` | Print network validation metrics |
 | **Opt** | `--no-metrics` | Skip computing node metrics (faster for large populations) |
+| **Opt** | `--resume` | Resume similarity + calibration checkpoint state from study DB |
 
 ### Output
 
 Canonical output is `study.db` (`network_edges`, `network_runs`, `network_metrics`). Optional JSON export can be written with `--output`.
+
+If strict topology gate fails, Extropy writes a quarantined artifact network ID
+`<network_id>__rejected__<run_id_prefix>` and exits non-zero without overwriting the canonical `network_id`.
 
 ---
 

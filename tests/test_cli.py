@@ -136,6 +136,20 @@ class TestNetworkCommand:
         assert result.exit_code == 1
         assert "Study DB not found" in result.output
 
+    def test_network_supports_quality_profile_flag(self):
+        result = runner.invoke(
+            app,
+            [
+                "network",
+                "--study-db",
+                "study.db",
+                "--quality-profile",
+                "strict",
+            ],
+        )
+        assert result.exit_code == 1
+        assert "Study DB not found" in result.output
+
     def test_network_checkpoint_must_match_study_db(self, tmp_path):
         study_db = tmp_path / "study.db"
         other_db = tmp_path / "other.db"
@@ -226,6 +240,52 @@ class TestRunScopedCliReads:
         assert "run_id=run_new" in result.output
         assert "new_pos" in result.output
         assert "old_pos" not in result.output
+
+
+class TestInspectNetworkStatus:
+    def test_inspect_network_status(self, tmp_path):
+        study_db = tmp_path / "study.db"
+        with open_study_db(study_db) as db:
+            db.upsert_network_generation_status(
+                network_run_id="run_123",
+                phase="Calibrating network",
+                current=2,
+                total=8,
+                message="Calibration restart 1/4",
+            )
+            cal_id = db.create_network_calibration_run(
+                network_run_id="run_123",
+                restart_index=0,
+                seed=42,
+            )
+            db.append_network_calibration_iteration(
+                calibration_run_id=cal_id,
+                iteration=0,
+                phase="calibration",
+                intra_scale=1.0,
+                inter_scale=1.1,
+                edge_count=100,
+                avg_degree=2.0,
+                clustering=0.2,
+                modularity=0.7,
+                largest_component_ratio=0.9,
+                score=1.23,
+                accepted=False,
+            )
+        result = runner.invoke(
+            app,
+            [
+                "inspect",
+                "network-status",
+                "--study-db",
+                str(study_db),
+                "--network-run-id",
+                "run_123",
+            ],
+        )
+        assert result.exit_code == 0
+        assert "Network Run Status" in result.output
+        assert "run_123" in result.output
 
     def test_export_states_defaults_to_latest_run(self, tmp_path):
         study_db = tmp_path / "study.db"

@@ -211,6 +211,15 @@ class TestNetworkConfig:
         config = NetworkConfig()
         assert config.get_total_weight() == 0
 
+    def test_quality_profile_defaults_are_applied(self):
+        """Profile defaults should deterministically fill advanced settings."""
+        strict = NetworkConfig(quality_profile="strict").apply_quality_profile_defaults()
+        fast = NetworkConfig(quality_profile="fast").apply_quality_profile_defaults()
+        assert strict.calibration_restarts >= fast.calibration_restarts
+        assert strict.max_calibration_minutes >= fast.max_calibration_minutes
+        assert strict.topology_gate == "strict"
+        assert fast.topology_gate == "warn"
+
 
 class TestAttributeWeightConfig:
     """Tests for attribute weight configuration."""
