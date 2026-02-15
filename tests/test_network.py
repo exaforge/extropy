@@ -1,6 +1,7 @@
 """Tests for the network generation module."""
 
 import tempfile
+import random
 from pathlib import Path
 
 import pytest
@@ -25,6 +26,9 @@ from extropy.population.network.generator import (
     load_agents_json,
     Edge,
     NetworkResult,
+    _assign_communities_with_diagnostics,
+    _compute_similarity_coverage,
+    _coverage_needs_escalation,
 )
 
 _REFERENCE_SENIORITY_LEVELS = {
@@ -161,7 +165,7 @@ class TestNetworkConfig:
         assert config.similarity_store_threshold == 0.05
         assert config.similarity_threshold == 0.3
         assert config.similarity_steepness == 10.0
-        assert config.candidate_mode == "exact"
+        assert config.candidate_mode == "blocked"
         assert config.candidate_pool_multiplier == 12.0
         assert config.min_candidate_pool == 80
         assert config.similarity_workers == 1
@@ -739,6 +743,54 @@ class TestGenerateNetwork:
         assert result1.meta["candidate_mode"] == "blocked"
         assert result2.meta["candidate_mode"] == "blocked"
         assert edges1 == edges2
+
+    def test_similarity_coverage_and_escalation_guard(self):
+        """Low-coverage similarity should trigger escalation guard."""
+        n = 100
+        sparse = {(0, 1): 0.9, (2, 3): 0.8}
+        diagnostics = _compute_similarity_coverage(n, sparse)
+        assert diagnostics["pairs_per_node"] < 1.0
+        assert diagnostics["node_coverage_ratio"] < 0.1
+        cfg = NetworkConfig(avg_degree=20.0, candidate_mode="blocked")
+        assert _coverage_needs_escalation(diagnostics, cfg, n) is True
+
+    def test_assign_communities_with_diagnostics_deterministic(self):
+        """Community assignment should be deterministic for fixed seed + similarities."""
+        agents = [{"_id": f"a{i}"} for i in range(50)]
+        similarities: dict[tuple[int, int], float] = {}
+        for i in range(25):
+            for j in range(i + 1, 25):
+                similarities[(i, j)] = 0.8
+        for i in range(25, 50):
+            for j in range(i + 1, 50):
+                similarities[(i, j)] = 0.75
+        # Small cross ties
+        for i in range(5):
+            similarities[(i, 25 + i)] = 0.1
+
+        c1, d1 = _assign_communities_with_diagnostics(
+            agents, similarities, n_communities=2, rng=random.Random(42)
+        )
+        c2, d2 = _assign_communities_with_diagnostics(
+            agents, similarities, n_communities=2, rng=random.Random(42)
+        )
+        assert c1 == c2
+        assert d1 == d2
+
+    def test_generate_network_includes_ladder_stage_metadata(self, sample_agents):
+        """Result metadata should include stage-level quality diagnostics."""
+        config = REFERENCE_NETWORK_CONFIG.model_copy(
+            update={
+                "seed": 42,
+                "candidate_mode": "blocked",
+                "quality_profile": "fast",
+            }
+        )
+        result = generate_network(sample_agents, config)
+        quality = result.meta.get("quality", {})
+        assert "ladder_stages" in quality
+        assert isinstance(quality["ladder_stages"], list)
+        assert len(quality["ladder_stages"]) >= 1
 
     def test_generate_network_resume_from_checkpoint_matches_fresh(self, sample_agents):
         """Resuming from a saved similarity checkpoint should match a fresh run."""

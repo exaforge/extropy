@@ -9,10 +9,11 @@ import hashlib
 import multiprocessing as mp
 import random
 import time
+from collections import defaultdict
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from datetime import datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable
 
 from ...core.models import Edge, NetworkResult
 from ...storage import open_study_db
@@ -25,6 +26,7 @@ from .similarity import (
 )
 
 logger = logging.getLogger(__name__)
+_STATUS_HEARTBEAT_SECONDS = 5.0
 
 _SIM_WORKER_AGENTS: list[dict[str, Any]] | None = None
 _SIM_WORKER_ATTRIBUTE_WEIGHTS = None
@@ -593,77 +595,186 @@ def _assign_communities(
     n_communities: int,
     rng: random.Random,
 ) -> list[int]:
-    """Assign agents to communities using fast k-medoids-style clustering."""
-    n = len(agents)
-    k = min(n_communities, n)
+    """Backwards-compatible wrapper for deterministic graph clustering."""
+    communities, _ = _assign_communities_with_diagnostics(
+        agents=agents,
+        similarities=similarities,
+        n_communities=n_communities,
+        rng=rng,
+    )
+    return communities
 
-    if k <= 1:
-        return [0] * n
 
-    def get_sim(i: int, j: int) -> float:
-        if i == j:
-            return 1.0
-        key = (min(i, j), max(i, j))
-        return similarities.get(key, 0.0)
+def _compute_similarity_coverage(
+    n: int,
+    similarities: dict[tuple[int, int], float],
+) -> dict[str, float]:
+    """Compute sparsity diagnostics to decide whether escalation is required."""
+    if n <= 1:
+        return {
+            "pair_count": float(len(similarities)),
+            "pairs_per_node": 0.0,
+            "node_coverage_ratio": 1.0,
+            "density": 0.0,
+            "fragmentation": 0.0,
+        }
+    degree_counts = [0] * n
+    for i, j in similarities.keys():
+        degree_counts[i] += 1
+        degree_counts[j] += 1
+    covered = sum(1 for d in degree_counts if d > 0)
+    max_pairs = n * (n - 1) / 2.0
+    pair_count = float(len(similarities))
+    pairs_per_node = (2.0 * pair_count) / n
+    density = pair_count / max_pairs if max_pairs > 0 else 0.0
+    node_coverage_ratio = covered / n
+    return {
+        "pair_count": pair_count,
+        "pairs_per_node": pairs_per_node,
+        "node_coverage_ratio": node_coverage_ratio,
+        "density": density,
+        "fragmentation": 1.0 - node_coverage_ratio,
+    }
 
-    # Select k diverse initial centers using k-means++ style
-    centers = [rng.randint(0, n - 1)]
 
-    for _ in range(k - 1):
-        best_agent = -1
-        best_min_sim = float("inf")
+def _coverage_needs_escalation(
+    diagnostics: dict[str, float],
+    config: NetworkConfig,
+    n: int,
+) -> bool:
+    min_pairs_per_node = max(6.0, config.avg_degree * 0.85)
+    if n >= 5000:
+        min_pairs_per_node = max(min_pairs_per_node, 10.0)
+    return (
+        diagnostics["pairs_per_node"] < min_pairs_per_node
+        or diagnostics["node_coverage_ratio"] < 0.7
+    )
 
-        for i in range(n):
-            if i in centers:
+
+def _expand_candidate_map_undercovered(
+    candidate_map: list[list[int]],
+    n: int,
+    min_pool: int,
+    seed: int,
+) -> list[list[int]]:
+    """Deterministically expand sparse candidate rows for under-covered nodes."""
+    expanded = [list(row) for row in candidate_map]
+    capped_pool = max(1, min(n - 1, min_pool))
+    for i in range(n):
+        current = expanded[i]
+        if len(current) >= capped_pool:
+            continue
+        seen = set(current)
+        seen.add(i)
+        rng = random.Random(seed + (i + 1) * 13007)
+        while len(current) < capped_pool and len(seen) < n:
+            j = rng.randrange(n)
+            if j in seen:
                 continue
-            max_sim_to_centers = max(get_sim(i, c) for c in centers)
-            if max_sim_to_centers < best_min_sim:
-                best_min_sim = max_sim_to_centers
-                best_agent = i
+            seen.add(j)
+            current.append(j)
+        expanded[i] = sorted(current)
+    return expanded
 
-        if best_agent >= 0:
-            centers.append(best_agent)
 
-    # Iterative assignment and center update
-    assignments = [0] * n
-    max_iterations = 10
+def _assign_communities_with_diagnostics(
+    agents: list[dict],
+    similarities: dict[tuple[int, int], float],
+    n_communities: int,
+    rng: random.Random,
+    progress: Callable[[str, int, int], None] | None = None,
+) -> tuple[list[int], dict[str, float]]:
+    """Assign communities using deterministic weighted label propagation."""
+    n = len(agents)
+    k = min(max(1, n_communities), max(1, n))
+    if n <= 1 or k <= 1:
+        return [0] * n, {"low_signal": 0.0, "label_iterations": 0.0}
 
-    for _ in range(max_iterations):
-        changed = False
-        for i in range(n):
-            best_center = 0
-            best_sim = get_sim(i, centers[0])
-            for c_idx, c in enumerate(centers[1:], 1):
-                sim = get_sim(i, c)
-                if sim > best_sim:
-                    best_sim = sim
-                    best_center = c_idx
-            if assignments[i] != best_center:
-                changed = True
-                assignments[i] = best_center
+    coverage = _compute_similarity_coverage(n, similarities)
+    # Low-signal short-circuit: avoid expensive refinement when the graph is too sparse.
+    if coverage["pairs_per_node"] < 1.0 or coverage["node_coverage_ratio"] < 0.2:
+        assignments = [i % k for i in range(n)]
+        return assignments, {
+            "low_signal": 1.0,
+            "label_iterations": 0.0,
+            "initial_labels": float(k),
+            "final_labels": float(k),
+        }
 
-        if not changed:
+    adjacency: list[list[tuple[int, float]]] = [[] for _ in range(n)]
+    for (i, j), w in similarities.items():
+        adjacency[i].append((j, w))
+        adjacency[j].append((i, w))
+
+    labels = list(range(n))
+    max_iters = 8 if n >= 5000 else 12
+    iters_used = 0
+
+    for iteration in range(max_iters):
+        iters_used = iteration + 1
+        order = list(range(n))
+        iter_rng = random.Random(rng.randint(0, 2**31 - 1) + iteration * 1009)
+        iter_rng.shuffle(order)
+        changed = 0
+        for node in order:
+            neighbors = adjacency[node]
+            if not neighbors:
+                continue
+            scores: dict[int, float] = defaultdict(float)
+            for nei, weight in neighbors:
+                scores[labels[nei]] += weight
+            best_label = labels[node]
+            best_score = scores.get(best_label, -1.0)
+            for label, score in scores.items():
+                if score > best_score or (score == best_score and label < best_label):
+                    best_label = label
+                    best_score = score
+            if best_label != labels[node]:
+                labels[node] = best_label
+                changed += 1
+        if progress:
+            progress("Detecting communities", iters_used, max_iters)
+        if changed == 0:
             break
 
-        for c_idx in range(k):
-            cluster_members = [i for i in range(n) if assignments[i] == c_idx]
-            if not cluster_members:
-                continue
+    # Compress to top-k labels by size; reassign tiny groups to nearest dominant label.
+    label_members: dict[int, list[int]] = defaultdict(list)
+    for idx, label in enumerate(labels):
+        label_members[label].append(idx)
+    top_labels = [
+        label
+        for label, _members in sorted(
+            label_members.items(),
+            key=lambda x: (-len(x[1]), x[0]),
+        )[:k]
+    ]
+    top_label_set = set(top_labels)
 
-            best_medoid = cluster_members[0]
-            best_avg_sim = 0.0
+    major_index = {label: i for i, label in enumerate(top_labels)}
+    assignments = [0] * n
+    for node in range(n):
+        own_label = labels[node]
+        if own_label in top_label_set:
+            assignments[node] = major_index[own_label]
+            continue
+        scores: dict[int, float] = defaultdict(float)
+        for nei, weight in adjacency[node]:
+            nei_label = labels[nei]
+            if nei_label in top_label_set:
+                scores[nei_label] += weight
+        if scores:
+            chosen = max(scores.items(), key=lambda x: (x[1], -x[0]))[0]
+            assignments[node] = major_index[chosen]
+        else:
+            assignments[node] = node % k
 
-            for candidate in cluster_members:
-                avg_sim = sum(get_sim(candidate, m) for m in cluster_members) / len(
-                    cluster_members
-                )
-                if avg_sim > best_avg_sim:
-                    best_avg_sim = avg_sim
-                    best_medoid = candidate
-
-            centers[c_idx] = best_medoid
-
-    return assignments
+    unique_labels = len(set(assignments))
+    return assignments, {
+        "low_signal": 0.0,
+        "label_iterations": float(iters_used),
+        "initial_labels": float(len(label_members)),
+        "final_labels": float(unique_labels),
+    }
 
 
 def _compute_local_clustering(adjacency: dict[int, set[int]], node: int) -> float:
@@ -1312,286 +1423,514 @@ def generate_network(
         raise ValueError(
             "Network checkpoints are DB-only now. Use --study-db (or --checkpoint <study.db>)."
         )
+    if resume_from_checkpoint and checkpoint_file is None:
+        raise ValueError("--resume-checkpoint requires a checkpoint DB path")
 
-    def emit_progress(stage: str, current: int, total: int) -> None:
+    started_at = time.time()
+    last_heartbeat = [0.0]
+
+    def emit_progress(
+        stage: str,
+        current: int,
+        total: int,
+        message: str | dict[str, Any] | None = None,
+        force_db: bool = False,
+    ) -> None:
         if on_progress:
             on_progress(stage, current, total)
+        should_write = force_db
+        now = time.time()
+        if now - last_heartbeat[0] >= _STATUS_HEARTBEAT_SECONDS:
+            should_write = True
+            last_heartbeat[0] = now
+        if not should_write:
+            return
         if study_db_file is not None and network_run_id:
+            if isinstance(message, dict):
+                message_text = json.dumps(message, sort_keys=True, separators=(",", ":"))
+            else:
+                message_text = message or stage
             with open_study_db(study_db_file) as db:
                 db.upsert_network_generation_status(
                     network_run_id=network_run_id,
                     phase=stage,
                     current=current,
                     total=total,
-                    message=stage,
+                    message=message_text,
                 )
 
-    # Step 1: Compute degree factors
+    def _stage_plan() -> list[dict[str, Any]]:
+        if config.candidate_mode == "exact":
+            return [{"name": "exact", "candidate_mode": "exact", "pool_multiplier": 0.0}]
+        base_mult = max(6.0, config.candidate_pool_multiplier)
+        if config.quality_profile == "fast":
+            return [
+                {
+                    "name": "blocked",
+                    "candidate_mode": "blocked",
+                    "pool_multiplier": base_mult,
+                    "coverage_multiplier": 1.0,
+                },
+                {
+                    "name": "blocked-expanded",
+                    "candidate_mode": "blocked",
+                    "pool_multiplier": max(base_mult * 1.5, base_mult + 5.0),
+                    "coverage_multiplier": 1.5,
+                },
+            ]
+        return [
+            {
+                "name": "blocked",
+                "candidate_mode": "blocked",
+                "pool_multiplier": base_mult,
+                "coverage_multiplier": 1.0,
+            },
+            {
+                "name": "blocked-expanded",
+                "candidate_mode": "blocked",
+                "pool_multiplier": max(base_mult * 1.8, base_mult + 8.0),
+                "coverage_multiplier": 2.0,
+            },
+            {
+                "name": "hybrid-dense",
+                "candidate_mode": "blocked",
+                "pool_multiplier": max(base_mult * 2.6, base_mult + 14.0),
+                "coverage_multiplier": 2.8,
+                "hybrid_expand": True,
+            },
+        ]
+
+    # Step 1: Compute degree factors once.
     degree_factors = [compute_degree_factor(a, config) for a in agents]
 
-    # Step 2: Build similarity candidates (exact/blocked)
-    candidate_map: list[list[int]] | None = None
-    blocking_attrs: list[str] = []
-    candidate_mode = config.candidate_mode
-
-    if config.candidate_mode == "blocked":
-        emit_progress("Preparing candidate blocks", 0, n)
-        candidate_map, blocking_attrs = _build_blocked_candidate_map(
-            agents, config, seed
-        )
-        emit_progress("Preparing candidate blocks", n, n)
-        if candidate_map is None:
-            logger.warning(
-                "Blocked candidate mode could not be initialized. Falling back to exact mode."
-            )
-            candidate_mode = "exact"
-
-    emit_progress("Computing similarities", 0, n)
-
-    checkpoint_signature = _similarity_checkpoint_signature(
-        n=n,
-        seed=seed,
-        config=config,
-        blocking_attrs=blocking_attrs,
-    )
-    checkpoint_job_id: str | None = None
-    if checkpoint_file is not None:
-        checkpoint_job_id = _similarity_checkpoint_job_id(checkpoint_signature)
-        if not resume_from_checkpoint:
-            with open_study_db(checkpoint_file) as db:
-                db.init_network_similarity_job(
-                    network_run_id=f"checkpoint:{checkpoint_job_id}",
-                    signature=checkpoint_signature,
-                    job_id=checkpoint_job_id,
-                )
-                db.mark_similarity_job_running(checkpoint_job_id)
-
-    similarities: dict[tuple[int, int], float]
-    start_row = 0
-    completed_chunk_starts: set[int] = set()
-
-    if resume_from_checkpoint and checkpoint_file is None:
-        raise ValueError("--resume-checkpoint requires a checkpoint DB path")
-
-    if resume_from_checkpoint:
-        if checkpoint_file is None or not checkpoint_file.exists():
-            raise ValueError(f"Checkpoint not found: {checkpoint_file}")
-        similarities, start_row, completed_chunk_starts = _load_similarity_checkpoint(
-            checkpoint_file, checkpoint_signature
-        )
-        if checkpoint_job_id and checkpoint_file is not None:
-            with open_study_db(checkpoint_file) as db:
-                db.mark_similarity_job_running(checkpoint_job_id)
-        emit_progress("Computing similarities", min(start_row, n), n)
-    else:
-        similarities = {}
-
-    use_parallel_similarity = config.similarity_workers > 1
-
-    if use_parallel_similarity:
-        similarities = _compute_similarities_parallel(
-            agents=agents,
-            config=config,
-            candidate_map=candidate_map if candidate_mode == "blocked" else None,
-            on_progress=emit_progress,
-            checkpoint_path=checkpoint_file,
-            checkpoint_signature=checkpoint_signature,
-            initial_similarities=similarities,
-            completed_rows=start_row,
-            completed_chunk_starts=completed_chunk_starts,
-            checkpoint_job_id=checkpoint_job_id,
-        )
-    else:
-        similarities = _compute_similarities_serial(
-            agents=agents,
-            config=config,
-            candidate_map=candidate_map if candidate_mode == "blocked" else None,
-            on_progress=emit_progress,
-            checkpoint_path=checkpoint_file,
-            initial_similarities=similarities,
-            start_row=start_row,
-            checkpoint_signature=checkpoint_signature,
-            completed_chunk_starts=completed_chunk_starts,
-            checkpoint_job_id=checkpoint_job_id,
-        )
-
-    if checkpoint_job_id and checkpoint_file is not None:
-        with open_study_db(checkpoint_file) as db:
-            db.mark_similarity_job_complete(checkpoint_job_id)
-
-    emit_progress("Computing similarities", n, n)
-
-    # Step 3: Assign communities
-    emit_progress("Detecting communities", 0, 1)
-
-    n_communities = config.community_count
-    if n_communities is None:
-        # Target ~40 agents per community for balanced structure
-        n_communities = max(5, int(n / 40))
-
-    communities = _assign_communities(agents, similarities, n_communities, rng)
-
-    emit_progress("Detecting communities", 1, 1)
-
-    # Step 4: Multi-restart calibration with deterministic repairs and gating.
+    # Global gate bounds.
     deg_min, deg_max, cluster_min, mod_min, mod_max = _acceptance_bounds(config)
     min_edge_floor = _min_edge_floor(n, config)
-    best_edges: list[Edge] | None = None
-    best_score = float("inf")
-    best_metrics: dict[str, float] | None = None
-    accepted = False
+
+    stage_plan = _stage_plan()
     elapsed_budget = max(1, int(config.max_calibration_minutes * 60))
-    cal_start = time.time()
-    total_steps = max(1, config.calibration_restarts * config.max_calibration_iterations)
-    step_count = 0
+    stage_budget = max(30, elapsed_budget // max(1, len(stage_plan)))
 
-    for restart in range(config.calibration_restarts):
-        if time.time() - cal_start >= elapsed_budget:
+    accepted = False
+    best_score = float("inf")
+    best_edges: list[Edge] | None = None
+    best_metrics: dict[str, float] | None = None
+    best_stage = ""
+    final_candidate_mode = config.candidate_mode
+    final_blocking_attrs: list[str] = []
+    final_similarity_pairs = 0
+    stage_summaries: list[dict[str, Any]] = []
+    calibration_step = 0
+    calibration_total = max(
+        1, len(stage_plan) * config.calibration_restarts * config.max_calibration_iterations
+    )
+
+    for stage_idx, stage in enumerate(stage_plan):
+        if time.time() - started_at >= elapsed_budget:
             break
-        restart_seed = seed + restart * 1000003
-        intra_scale = 1.0
-        inter_scale = 1.2
-        calibration_run_id: str | None = None
-        if study_db_file is not None and network_run_id:
-            with open_study_db(study_db_file) as db:
-                calibration_run_id = db.create_network_calibration_run(
-                    network_run_id=network_run_id,
-                    restart_index=restart,
-                    seed=restart_seed,
-                )
-
-        for iteration in range(config.max_calibration_iterations):
-            if time.time() - cal_start >= elapsed_budget:
-                break
-            step_count += 1
-            emit_progress(
-                f"Calibration restart {restart + 1}/{config.calibration_restarts}",
-                step_count,
-                total_steps,
-            )
-            iter_rng = random.Random(restart_seed + iteration * 1000)
-            edges, avg_degree, clustering, modularity, largest_component_ratio = (
-                _generate_network_single_pass(
-                    agents,
-                    agent_ids,
-                    similarities,
-                    communities,
-                    degree_factors,
-                    config,
-                    intra_scale,
-                    inter_scale,
-                    iter_rng,
-                )
-            )
-            edges = _apply_bridge_swaps(edges, agent_ids, communities, config, iter_rng)
-            adjacency = _build_adjacency_from_edges(edges, agent_ids, n)
-            clustering = _compute_avg_clustering(adjacency, n)
-            modularity = _compute_modularity_fast(edges, agent_ids, communities)
-            largest_component_ratio = _compute_largest_component_ratio(adjacency, n)
-            edge_count = len(edges)
-
-            score = 0.0
-            if avg_degree < deg_min:
-                score += (deg_min - avg_degree) ** 2
-            elif avg_degree > deg_max:
-                score += (avg_degree - deg_max) ** 2
-            if clustering < cluster_min:
-                score += ((cluster_min - clustering) * 20.0) ** 2
-            if modularity < mod_min:
-                score += ((mod_min - modularity) * 10.0) ** 2
-            elif modularity > mod_max:
-                score += ((modularity - mod_max) * 10.0) ** 2
-            if largest_component_ratio < config.target_largest_component_ratio:
-                score += (
-                    (config.target_largest_component_ratio - largest_component_ratio) * 20.0
-                ) ** 2
-            if edge_count < min_edge_floor:
-                score += ((min_edge_floor - edge_count) / max(1.0, min_edge_floor)) ** 2 * 400
-
-            in_range = (
-                deg_min <= avg_degree <= deg_max
-                and clustering >= cluster_min
-                and mod_min <= modularity <= mod_max
-                and largest_component_ratio >= config.target_largest_component_ratio
-                and edge_count >= min_edge_floor
-            )
-
-            metrics_payload = {
-                "edge_count": edge_count,
-                "avg_degree": avg_degree,
-                "clustering": clustering,
-                "modularity": modularity,
-                "largest_component_ratio": largest_component_ratio,
+        stage_name = stage["name"]
+        stage_started = time.time()
+        stage_cfg = config.model_copy(
+            update={
+                "candidate_mode": stage["candidate_mode"],
+                "candidate_pool_multiplier": stage.get(
+                    "pool_multiplier", config.candidate_pool_multiplier
+                ),
+                "min_candidate_pool": max(
+                    config.min_candidate_pool,
+                    int(config.avg_degree * stage.get("coverage_multiplier", 1.0)),
+                ),
             }
-            if score < best_score:
-                best_score = score
-                best_edges = edges
-                best_metrics = metrics_payload
+        )
 
-            if calibration_run_id and study_db_file is not None:
+        emit_progress(
+            "Preparing candidates",
+            stage_idx + 1,
+            len(stage_plan),
+            message={"stage": stage_name, "elapsed_s": int(time.time() - started_at)},
+            force_db=True,
+        )
+        candidate_mode = stage_cfg.candidate_mode
+        candidate_map: list[list[int]] | None = None
+        blocking_attrs: list[str] = []
+        if stage_cfg.candidate_mode == "blocked":
+            candidate_map, blocking_attrs = _build_blocked_candidate_map(
+                agents, stage_cfg, seed + stage_idx * 104729
+            )
+            if candidate_map is None:
+                candidate_mode = "exact"
+            elif stage.get("hybrid_expand"):
+                expanded_pool = int(max(config.avg_degree * 20, stage_cfg.min_candidate_pool))
+                candidate_map = _expand_candidate_map_undercovered(
+                    candidate_map=candidate_map,
+                    n=n,
+                    min_pool=min(n - 1, expanded_pool),
+                    seed=seed + stage_idx * 193,
+                )
+
+        emit_progress(
+            "Computing similarities",
+            0,
+            n,
+            message={"stage": stage_name, "mode": candidate_mode},
+            force_db=True,
+        )
+        checkpoint_signature = _similarity_checkpoint_signature(
+            n=n,
+            seed=seed + stage_idx * 31,
+            config=stage_cfg,
+            blocking_attrs=blocking_attrs,
+        )
+        checkpoint_job_id: str | None = None
+        similarities: dict[tuple[int, int], float] = {}
+        start_row = 0
+        completed_chunk_starts: set[int] = set()
+        should_resume_similarity = resume_from_checkpoint and stage_idx == 0
+
+        if checkpoint_file is not None:
+            checkpoint_job_id = _similarity_checkpoint_job_id(checkpoint_signature)
+            if not should_resume_similarity:
+                with open_study_db(checkpoint_file) as db:
+                    db.init_network_similarity_job(
+                        network_run_id=f"checkpoint:{checkpoint_job_id}",
+                        signature=checkpoint_signature,
+                        job_id=checkpoint_job_id,
+                    )
+                    db.mark_similarity_job_running(checkpoint_job_id)
+
+        if should_resume_similarity:
+            if checkpoint_file is None or not checkpoint_file.exists():
+                raise ValueError(f"Checkpoint not found: {checkpoint_file}")
+            similarities, start_row, completed_chunk_starts = _load_similarity_checkpoint(
+                checkpoint_file, checkpoint_signature
+            )
+            if checkpoint_job_id and checkpoint_file is not None:
+                with open_study_db(checkpoint_file) as db:
+                    db.mark_similarity_job_running(checkpoint_job_id)
+
+        use_parallel_similarity = stage_cfg.similarity_workers > 1
+        def similarity_progress(_stage: str, current: int, total: int) -> None:
+            emit_progress(
+                "Computing similarities",
+                current,
+                total,
+                message={"stage": stage_name},
+                force_db=current == total,
+            )
+
+        if use_parallel_similarity:
+            similarities = _compute_similarities_parallel(
+                agents=agents,
+                config=stage_cfg,
+                candidate_map=candidate_map if candidate_mode == "blocked" else None,
+                on_progress=similarity_progress,
+                checkpoint_path=checkpoint_file,
+                checkpoint_signature=checkpoint_signature,
+                initial_similarities=similarities,
+                completed_rows=start_row,
+                completed_chunk_starts=completed_chunk_starts,
+                checkpoint_job_id=checkpoint_job_id,
+            )
+        else:
+            similarities = _compute_similarities_serial(
+                agents=agents,
+                config=stage_cfg,
+                candidate_map=candidate_map if candidate_mode == "blocked" else None,
+                on_progress=similarity_progress,
+                checkpoint_path=checkpoint_file,
+                initial_similarities=similarities,
+                start_row=start_row,
+                checkpoint_signature=checkpoint_signature,
+                completed_chunk_starts=completed_chunk_starts,
+                checkpoint_job_id=checkpoint_job_id,
+            )
+
+        if checkpoint_job_id and checkpoint_file is not None:
+            with open_study_db(checkpoint_file) as db:
+                db.mark_similarity_job_complete(checkpoint_job_id)
+
+        coverage = _compute_similarity_coverage(n, similarities)
+        needs_escalation = _coverage_needs_escalation(coverage, stage_cfg, n)
+        emit_progress(
+            "Computing similarities",
+            n,
+            n,
+            message={
+                "stage": stage_name,
+                "pairs_per_node": round(coverage["pairs_per_node"], 3),
+                "coverage": round(coverage["node_coverage_ratio"], 3),
+                "escalate": needs_escalation,
+            },
+            force_db=True,
+        )
+        final_candidate_mode = candidate_mode
+        final_blocking_attrs = blocking_attrs if candidate_mode == "blocked" else []
+        final_similarity_pairs = len(similarities)
+
+        if needs_escalation and stage_idx < len(stage_plan) - 1:
+            stage_summaries.append(
+                {
+                    "stage": stage_name,
+                    "candidate_mode": candidate_mode,
+                    "coverage": coverage,
+                    "escalated_before_calibration": True,
+                    "elapsed_s": round(time.time() - stage_started, 2),
+                }
+            )
+            continue
+
+        # Step 3: Assign communities with deterministic, scalable algorithm.
+        n_communities = config.community_count
+        if n_communities is None:
+            n_communities = max(5, int(n / 40))
+        emit_progress(
+            "Detecting communities",
+            0,
+            12,
+            message={"stage": stage_name},
+            force_db=True,
+        )
+        communities, community_diag = _assign_communities_with_diagnostics(
+            agents=agents,
+            similarities=similarities,
+            n_communities=n_communities,
+            rng=rng,
+            progress=lambda _s, c, t: emit_progress(
+                "Detecting communities",
+                c,
+                t,
+                message={"stage": stage_name},
+            ),
+        )
+        emit_progress(
+            "Detecting communities",
+            12,
+            12,
+            message={"stage": stage_name, **community_diag},
+            force_db=True,
+        )
+
+        if community_diag.get("low_signal", 0.0) >= 1.0 and stage_idx < len(stage_plan) - 1:
+            stage_summaries.append(
+                {
+                    "stage": stage_name,
+                    "candidate_mode": candidate_mode,
+                    "coverage": coverage,
+                    "community_diagnostics": community_diag,
+                    "escalated_before_calibration": True,
+                    "elapsed_s": round(time.time() - stage_started, 2),
+                }
+            )
+            continue
+
+        # Step 4: Calibrate for this stage.
+        stage_deadline = min(started_at + elapsed_budget, stage_started + stage_budget)
+        stage_accepted = False
+        stage_best_score = float("inf")
+        stage_best_metrics: dict[str, float] | None = None
+
+        for restart in range(config.calibration_restarts):
+            if time.time() >= stage_deadline:
+                break
+            restart_seed = seed + stage_idx * 100003 + restart * 1000003
+            intra_scale = 1.0
+            inter_scale = 1.2
+            calibration_run_id: str | None = None
+            if study_db_file is not None and network_run_id:
                 with open_study_db(study_db_file) as db:
-                    db.append_network_calibration_iteration(
-                        calibration_run_id=calibration_run_id,
-                        iteration=iteration,
-                        phase="calibration",
-                        intra_scale=intra_scale,
-                        inter_scale=inter_scale,
-                        edge_count=edge_count,
-                        avg_degree=avg_degree,
-                        clustering=clustering,
-                        modularity=modularity,
-                        largest_component_ratio=largest_component_ratio,
-                        score=score,
-                        accepted=in_range,
+                    calibration_run_id = db.create_network_calibration_run(
+                        network_run_id=network_run_id,
+                        restart_index=(stage_idx * config.calibration_restarts) + restart,
+                        seed=restart_seed,
                     )
 
-            if in_range:
-                accepted = True
+            for iteration in range(config.max_calibration_iterations):
+                if time.time() >= stage_deadline:
+                    break
+                calibration_step += 1
+                emit_progress(
+                    f"Calibration restart {restart + 1}/{config.calibration_restarts}",
+                    calibration_step,
+                    calibration_total,
+                    message={
+                        "stage": stage_name,
+                        "restart": restart + 1,
+                        "iteration": iteration + 1,
+                        "best_score": round(best_score, 4)
+                        if best_score != float("inf")
+                        else None,
+                    },
+                )
+                iter_rng = random.Random(restart_seed + iteration * 1000)
+                edges, avg_degree, clustering, modularity, largest_component_ratio = (
+                    _generate_network_single_pass(
+                        agents,
+                        agent_ids,
+                        similarities,
+                        communities,
+                        degree_factors,
+                        stage_cfg,
+                        intra_scale,
+                        inter_scale,
+                        iter_rng,
+                    )
+                )
+                edges = _apply_bridge_swaps(edges, agent_ids, communities, stage_cfg, iter_rng)
+                emit_progress(
+                    "Repair pass",
+                    iteration + 1,
+                    config.max_calibration_iterations,
+                    message={"stage": stage_name, "restart": restart + 1},
+                )
+                adjacency = _build_adjacency_from_edges(edges, agent_ids, n)
+                clustering = _compute_avg_clustering(adjacency, n)
+                modularity = _compute_modularity_fast(edges, agent_ids, communities)
+                largest_component_ratio = _compute_largest_component_ratio(adjacency, n)
+                edge_count = len(edges)
+
+                score = 0.0
+                if avg_degree < deg_min:
+                    score += (deg_min - avg_degree) ** 2
+                elif avg_degree > deg_max:
+                    score += (avg_degree - deg_max) ** 2
+                if clustering < cluster_min:
+                    score += ((cluster_min - clustering) * 20.0) ** 2
+                if modularity < mod_min:
+                    score += ((mod_min - modularity) * 10.0) ** 2
+                elif modularity > mod_max:
+                    score += ((modularity - mod_max) * 10.0) ** 2
+                if largest_component_ratio < config.target_largest_component_ratio:
+                    score += (
+                        (
+                            config.target_largest_component_ratio
+                            - largest_component_ratio
+                        )
+                        * 20.0
+                    ) ** 2
+                if edge_count < min_edge_floor:
+                    score += (
+                        ((min_edge_floor - edge_count) / max(1.0, min_edge_floor)) ** 2
+                    ) * 400
+
+                in_range = (
+                    deg_min <= avg_degree <= deg_max
+                    and clustering >= cluster_min
+                    and mod_min <= modularity <= mod_max
+                    and largest_component_ratio >= config.target_largest_component_ratio
+                    and edge_count >= min_edge_floor
+                )
+                metrics_payload = {
+                    "edge_count": edge_count,
+                    "avg_degree": avg_degree,
+                    "clustering": clustering,
+                    "modularity": modularity,
+                    "largest_component_ratio": largest_component_ratio,
+                }
+
+                if score < stage_best_score:
+                    stage_best_score = score
+                    stage_best_metrics = metrics_payload
+                if score < best_score:
+                    best_score = score
+                    best_edges = edges
+                    best_metrics = metrics_payload
+                    best_stage = stage_name
+
                 if calibration_run_id and study_db_file is not None:
                     with open_study_db(study_db_file) as db:
-                        db.complete_network_calibration_run(
+                        db.append_network_calibration_iteration(
                             calibration_run_id=calibration_run_id,
-                            status="accepted",
-                            best_score=score,
-                            best_metrics=metrics_payload,
+                            iteration=iteration,
+                            phase=f"{stage_name}:calibration",
+                            intra_scale=intra_scale,
+                            inter_scale=inter_scale,
+                            edge_count=edge_count,
+                            avg_degree=avg_degree,
+                            clustering=clustering,
+                            modularity=modularity,
+                            largest_component_ratio=largest_component_ratio,
+                            score=score,
+                            accepted=in_range,
                         )
+
+                emit_progress(
+                    "Gate validation",
+                    iteration + 1,
+                    config.max_calibration_iterations,
+                    message={
+                        "stage": stage_name,
+                        "accepted": in_range,
+                        "score": round(score, 4),
+                        "avg_degree": round(avg_degree, 4),
+                        "clustering": round(clustering, 4),
+                        "modularity": round(modularity, 4),
+                        "lcc": round(largest_component_ratio, 4),
+                    },
+                )
+
+                if in_range:
+                    stage_accepted = True
+                    accepted = True
+                    if calibration_run_id and study_db_file is not None:
+                        with open_study_db(study_db_file) as db:
+                            db.complete_network_calibration_run(
+                                calibration_run_id=calibration_run_id,
+                                status="accepted",
+                                best_score=score,
+                                best_metrics=metrics_payload,
+                            )
+                    break
+
+                if avg_degree < deg_min:
+                    adj = min(1.5, deg_min / max(0.1, avg_degree))
+                    intra_scale *= adj
+                    inter_scale *= adj
+                elif avg_degree > deg_max:
+                    adj = max(0.6, deg_max / max(0.1, avg_degree))
+                    intra_scale *= adj
+                    inter_scale *= adj
+                if modularity > mod_max:
+                    inter_scale *= 1.2
+                    intra_scale *= 0.92
+                elif modularity < mod_min:
+                    intra_scale *= 1.12
+                    inter_scale *= 0.9
+                if clustering < cluster_min:
+                    intra_scale *= 1.1
+                intra_scale = max(0.25, min(6.5, intra_scale))
+                inter_scale = max(0.25, min(6.5, inter_scale))
+
+            if calibration_run_id and study_db_file is not None and not stage_accepted:
+                with open_study_db(study_db_file) as db:
+                    db.complete_network_calibration_run(
+                        calibration_run_id=calibration_run_id,
+                        status="completed",
+                        best_score=stage_best_score
+                        if stage_best_score != float("inf")
+                        else None,
+                        best_metrics=stage_best_metrics,
+                    )
+            if stage_accepted:
                 break
 
-            # Deterministic scale updates.
-            if avg_degree < deg_min:
-                adj = min(1.5, deg_min / max(0.1, avg_degree))
-                intra_scale *= adj
-                inter_scale *= adj
-            elif avg_degree > deg_max:
-                adj = max(0.6, deg_max / max(0.1, avg_degree))
-                intra_scale *= adj
-                inter_scale *= adj
-            if modularity > mod_max:
-                inter_scale *= 1.2
-                intra_scale *= 0.92
-            elif modularity < mod_min:
-                intra_scale *= 1.12
-                inter_scale *= 0.9
-            if clustering < cluster_min:
-                intra_scale *= 1.1
-            intra_scale = max(0.25, min(6.5, intra_scale))
-            inter_scale = max(0.25, min(6.5, inter_scale))
-
-        if calibration_run_id and study_db_file is not None and not accepted:
-            with open_study_db(study_db_file) as db:
-                db.complete_network_calibration_run(
-                    calibration_run_id=calibration_run_id,
-                    status="completed",
-                    best_score=best_score if best_score != float("inf") else None,
-                    best_metrics=best_metrics,
-                )
-        if accepted:
+        stage_summaries.append(
+            {
+                "stage": stage_name,
+                "candidate_mode": candidate_mode,
+                "coverage": coverage,
+                "community_diagnostics": community_diag,
+                "accepted": stage_accepted,
+                "best_score": stage_best_score,
+                "best_metrics": stage_best_metrics or {},
+                "elapsed_s": round(time.time() - stage_started, 2),
+                "budget_s": stage_budget,
+            }
+        )
+        if stage_accepted:
             break
 
-    emit_progress("Calibrating network", total_steps, total_steps)
-    if best_edges is None:
-        best_edges = []
-    edges = best_edges
+    emit_progress("Calibrating network", calibration_total, calibration_total, force_db=True)
+    edges = best_edges or []
 
     # Rebuild edge_set from best edges
     edge_set: set[tuple[str, str]] = set()
@@ -1600,15 +1939,22 @@ def generate_network(
         edge_set.add((edge.target, edge.source))
 
     # Step 5: Watts-Strogatz rewiring
-    emit_progress("Rewiring edges", 0, len(edges))
-
+    emit_progress("Rewiring edges", 0, len(edges), force_db=True)
     edges, edge_set, rewired_count = _apply_rewiring(
         agents, agent_ids, edges, edge_set, config, rng
     )
+    emit_progress("Rewiring edges", len(edges), len(edges), force_db=True)
 
-    emit_progress("Rewiring edges", len(edges), len(edges))
+    quality_deltas = {
+        "degree_to_min": (best_metrics or {}).get("avg_degree", 0.0) - deg_min,
+        "degree_to_max": deg_max - (best_metrics or {}).get("avg_degree", 0.0),
+        "clustering_to_min": (best_metrics or {}).get("clustering", 0.0) - cluster_min,
+        "modularity_to_min": (best_metrics or {}).get("modularity", 0.0) - mod_min,
+        "modularity_to_max": mod_max - (best_metrics or {}).get("modularity", 0.0),
+        "lcc_to_min": (best_metrics or {}).get("largest_component_ratio", 0.0)
+        - config.target_largest_component_ratio,
+    }
 
-    # Build metadata
     meta = {
         "agent_count": n,
         "edge_count": len(edges),
@@ -1616,9 +1962,9 @@ def generate_network(
         "rewired_count": rewired_count,
         "algorithm": "adaptive_calibration",
         "seed": seed,
-        "candidate_mode": candidate_mode,
-        "similarity_pairs": len(similarities),
-        "blocking_attributes": blocking_attrs if candidate_mode == "blocked" else [],
+        "candidate_mode": final_candidate_mode,
+        "similarity_pairs": final_similarity_pairs,
+        "blocking_attributes": final_blocking_attrs,
         "resumed_from_checkpoint": resume_from_checkpoint,
         "config": {
             "avg_degree_target": config.avg_degree,
@@ -1632,6 +1978,8 @@ def generate_network(
             "accepted": accepted,
             "best_score": best_score,
             "best_metrics": best_metrics or {},
+            "best_stage": best_stage,
+            "gate_deltas": quality_deltas,
             "bounds": {
                 "degree_min": deg_min,
                 "degree_max": deg_max,
@@ -1641,6 +1989,7 @@ def generate_network(
                 "largest_component_min": config.target_largest_component_ratio,
                 "min_edge_floor": min_edge_floor,
             },
+            "ladder_stages": stage_summaries,
         },
         "resume_calibration_requested": resume_calibration,
         "generated_at": datetime.now().isoformat(),

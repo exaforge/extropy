@@ -136,7 +136,7 @@ class NetworkConfig(BaseModel):
     similarity_store_threshold: float = 0.05
     similarity_threshold: float = 0.3
     similarity_steepness: float = 10.0
-    candidate_mode: Literal["exact", "blocked"] = "exact"
+    candidate_mode: Literal["exact", "blocked"] = "blocked"
     candidate_pool_multiplier: float = 12.0
     min_candidate_pool: int = 80
     blocking_attributes: list[str] = Field(default_factory=list)
