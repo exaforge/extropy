@@ -259,7 +259,15 @@ def inspect_network_status(
             f"phase={status['phase']} progress={status['current']}/{status['total']} updated_at={status['updated_at']}"
         )
         if status["message"]:
-            console.print(f"message={status['message']}")
+            try:
+                payload = json.loads(status["message"])
+            except Exception:
+                payload = None
+            if isinstance(payload, dict):
+                details = ", ".join(f"{k}={v}" for k, v in payload.items())
+                console.print(f"message={details}")
+            else:
+                console.print(f"message={status['message']}")
     else:
         console.print("[dim]No live status row found.[/dim]")
 

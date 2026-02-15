@@ -64,7 +64,7 @@ def network_command(
         help="Quality profile: fast | balanced | strict",
     ),
     candidate_mode: str = typer.Option(
-        "exact",
+        "blocked",
         "--candidate-mode",
         help="Similarity candidate mode: exact | blocked",
     ),
@@ -573,12 +573,18 @@ def network_command(
             )
 
     if strict_failed and config.allow_quarantine:
+        gate_deltas = quality_meta.get("gate_deltas", {})
         console.print(
             "[yellow]![/yellow] Topology gate strict failed. Saved quarantined artifact; canonical network not overwritten."
         )
         console.print(
+            f"[yellow]![/yellow] Quarantined network_id={target_network_id}"
+        )
+        console.print(
             f"[red]✗[/red] Failed gates with best metrics: {quality_meta.get('best_metrics', {})}"
         )
+        if gate_deltas:
+            console.print(f"[dim]Gate deltas: {gate_deltas}[/dim]")
         console.print(f"[dim]inspect via: extropy inspect network-status --study-db {study_db} --network-run-id {network_run_id}[/dim]")
         raise typer.Exit(1)
     if strict_failed and not config.allow_quarantine:
@@ -596,7 +602,7 @@ def network_command(
     console.print("═" * 60)
     console.print(
         f"[green]✓[/green] Network saved to [bold]{study_db}[/bold] "
-        f"(network_id={network_id})"
+        f"(network_id={target_network_id})"
     )
     console.print(
         f"[dim]Inspect status: extropy inspect network-status --study-db {study_db} --network-run-id {network_run_id}[/dim]"
