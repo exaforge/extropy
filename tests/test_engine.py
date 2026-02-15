@@ -888,7 +888,7 @@ class TestSimulationMetadata:
             )
             engine.state_manager.record_exposure(aid, exposure)
 
-        def fake_batch(
+        async def fake_batch(
             contexts,
             scenario,
             cfg,
@@ -905,7 +905,7 @@ class TestSimulationMetadata:
             return results, BatchTokenUsage()
 
         with patch(
-            "extropy.simulation.engine.batch_reason_agents", side_effect=fake_batch
+            "extropy.simulation.engine.batch_reason_agents_async", side_effect=fake_batch
         ):
             reasoned, _, _ = engine._reason_agents(0)
 
@@ -1200,7 +1200,7 @@ class TestProgressState:
         response_a0 = _make_reasoning_response(position="adopt", conviction=0.5)
         response_a1 = _make_reasoning_response(position="reject", conviction=0.7)
 
-        def fake_batch(
+        async def fake_batch(
             contexts,
             scenario,
             cfg,
@@ -1229,7 +1229,7 @@ class TestProgressState:
             engine.state_manager.record_exposure(aid, exposure)
 
         with patch(
-            "extropy.simulation.engine.batch_reason_agents", side_effect=fake_batch
+            "extropy.simulation.engine.batch_reason_agents_async", side_effect=fake_batch
         ):
             engine._reason_agents(0)
 
@@ -1270,7 +1270,7 @@ class TestProgressState:
 
         received_kwargs = {}
 
-        def fake_batch(
+        async def fake_batch(
             contexts,
             scenario,
             cfg,
@@ -1283,7 +1283,7 @@ class TestProgressState:
             return [(ctx.agent_id, resp) for ctx in contexts], BatchTokenUsage()
 
         with patch(
-            "extropy.simulation.engine.batch_reason_agents", side_effect=fake_batch
+            "extropy.simulation.engine.batch_reason_agents_async", side_effect=fake_batch
         ):
             engine._reason_agents(0)
 
@@ -1472,7 +1472,7 @@ class TestTokenAccumulation:
 
         call_count = [0]
 
-        def fake_batch(
+        async def fake_batch(
             contexts,
             scenario,
             cfg,
@@ -1492,7 +1492,7 @@ class TestTokenAccumulation:
             return results, usage
 
         with patch(
-            "extropy.simulation.engine.batch_reason_agents", side_effect=fake_batch
+            "extropy.simulation.engine.batch_reason_agents_async", side_effect=fake_batch
         ):
             engine._reason_agents(0)
 

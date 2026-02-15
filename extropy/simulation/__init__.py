@@ -70,6 +70,7 @@ from .reasoning import (
     build_pass2_prompt,
     build_pass2_schema,
     batch_reason_agents,
+    batch_reason_agents_async,
     create_reasoning_context,
 )
 from .propagation import (
@@ -125,6 +126,7 @@ __all__ = [
     "build_pass2_prompt",
     "build_pass2_schema",
     "batch_reason_agents",
+    "batch_reason_agents_async",
     "create_reasoning_context",
     # Exposure
     "apply_seed_exposures",

@@ -18,7 +18,6 @@ from dataclasses import dataclass
 from typing import Any
 
 from ..core.llm import simple_call, simple_call_async, TokenUsage
-from ..core.providers import detach_simulation_provider
 from ..core.models import (
     ExposureRecord,
     MemoryEntry,
@@ -745,7 +744,7 @@ def reason_agent(
 # =============================================================================
 
 
-def batch_reason_agents(
+async def batch_reason_agents_async(
     contexts: list[ReasoningContext],
     scenario: ScenarioSpec,
     config: SimulationRunConfig,
@@ -753,13 +752,16 @@ def batch_reason_agents(
     rate_limiter: Any = None,
     on_agent_done: Callable[[str, ReasoningResponse | None], None] | None = None,
 ) -> tuple[list[tuple[str, ReasoningResponse | None]], BatchTokenUsage]:
-    """Reason multiple agents concurrently using asyncio with two-pass reasoning.
+    """Reason multiple agents concurrently with two-pass reasoning.
+
+    This is an async coroutine — call from within an existing event loop.
+    The caller is responsible for provider cleanup when the loop ends.
 
     Args:
         contexts: List of reasoning contexts
         scenario: Scenario specification
         config: Simulation run configuration
-        max_concurrency: Max concurrent API calls (default 50, fallback if no rate limiter)
+        max_concurrency: Max concurrent API calls (None/0 = auto from rate limiter)
         rate_limiter: Optional DualRateLimiter instance for API pacing
         on_agent_done: Optional callback(agent_id, response) called per agent after reasoning
 
@@ -767,86 +769,76 @@ def batch_reason_agents(
         Tuple of (results, batch_token_usage) where results is a list of
         (agent_id, response) tuples in original order.
     """
-    import asyncio
-
     if not contexts:
         return [], BatchTokenUsage()
 
     total = len(contexts)
     logger.info(f"[REASONING] Starting two-pass async reasoning for {total} agents")
 
-    async def run_all():
-        if rate_limiter:
-            rpm_derived = rate_limiter.max_safe_concurrent
-            if max_concurrency:
-                target_concurrency = min(max(1, rpm_derived), max(1, max_concurrency))
-            else:
-                target_concurrency = max(1, rpm_derived)
-            stagger_interval = 60.0 / rate_limiter.pivotal.rpm
+    if rate_limiter:
+        rpm_derived = rate_limiter.max_safe_concurrent
+        if max_concurrency:
+            target_concurrency = min(max(1, rpm_derived), max(1, max_concurrency))
+        else:
+            target_concurrency = max(1, rpm_derived)
+        stagger_interval = 60.0 / rate_limiter.pivotal.rpm
+        logger.info(
+            f"[REASONING] Concurrency cap: {target_concurrency} "
+            f"(rpm={rate_limiter.pivotal.rpm}, rpm_derived={rpm_derived}), "
+            f"stagger: {stagger_interval * 1000:.0f}ms between launches"
+        )
+    else:
+        target_concurrency = max(1, max_concurrency or 50)
+        stagger_interval = 0.0
+    completed = [0]
+
+    async def reason_with_pacing(
+        idx: int,
+        ctx: ReasoningContext,
+    ) -> tuple[int, str, ReasoningResponse | None, float]:
+        start = time.time()
+        result = await _reason_agent_two_pass_async(
+            ctx, scenario, config, rate_limiter
+        )
+        elapsed = time.time() - start
+        completed[0] += 1
+
+        if result:
             logger.info(
-                f"[REASONING] Concurrency cap: {target_concurrency} "
-                f"(rpm={rate_limiter.pivotal.rpm}, rpm_derived={rpm_derived}), "
-                f"stagger: {stagger_interval * 1000:.0f}ms between launches"
+                f"[REASONING] {completed[0]}/{total}: {ctx.agent_id} done in {elapsed:.2f}s "
+                f"(position={result.position}, sentiment={result.sentiment}, "
+                f"conviction={float_to_conviction(result.conviction)})"
             )
         else:
-            target_concurrency = max(1, max_concurrency or 50)
-            stagger_interval = 0.0
-        completed = [0]
+            logger.warning(f"[REASONING] {completed[0]}/{total}: {ctx.agent_id} FAILED")
 
-        async def reason_with_pacing(
-            idx: int,
-            ctx: ReasoningContext,
-        ) -> tuple[int, str, ReasoningResponse | None, float]:
-            start = time.time()
-            result = await _reason_agent_two_pass_async(
-                ctx, scenario, config, rate_limiter
-            )
-            elapsed = time.time() - start
-            completed[0] += 1
+        if on_agent_done:
+            on_agent_done(ctx.agent_id, result)
 
-            if result:
-                logger.info(
-                    f"[REASONING] {completed[0]}/{total}: {ctx.agent_id} done in {elapsed:.2f}s "
-                    f"(position={result.position}, sentiment={result.sentiment}, "
-                    f"conviction={float_to_conviction(result.conviction)})"
-                )
-            else:
-                logger.warning(f"[REASONING] {completed[0]}/{total}: {ctx.agent_id} FAILED")
+        return (idx, ctx.agent_id, result, elapsed)
 
-            if on_agent_done:
-                on_agent_done(ctx.agent_id, result)
+    semaphore = asyncio.Semaphore(target_concurrency)
 
-            return (idx, ctx.agent_id, result, elapsed)
+    async def bounded_reason(idx: int, ctx: ReasoningContext):
+        async with semaphore:
+            return await reason_with_pacing(idx, ctx)
 
-        semaphore = asyncio.Semaphore(target_concurrency)
+    results: list[tuple[str, ReasoningResponse | None] | None] = [None] * total
+    tasks = []
+    for i, ctx in enumerate(contexts):
+        tasks.append(asyncio.create_task(bounded_reason(i, ctx)))
+        if stagger_interval > 0 and i < total - 1:
+            await asyncio.sleep(stagger_interval)
 
-        async def bounded_reason(idx: int, ctx: ReasoningContext):
-            async with semaphore:
-                return await reason_with_pacing(idx, ctx)
+    raw_results = await asyncio.gather(*tasks)
+    for idx, agent_id, result, elapsed in raw_results:
+        results[idx] = (agent_id, result)
 
-        results: list[tuple[str, ReasoningResponse | None] | None] = [None] * total
-        tasks = []
-        for i, ctx in enumerate(contexts):
-            tasks.append(asyncio.create_task(bounded_reason(i, ctx)))
-            if stagger_interval > 0 and i < total - 1:
-                await asyncio.sleep(stagger_interval)
-
-        raw_results = await asyncio.gather(*tasks)
-        for idx, agent_id, result, elapsed in raw_results:
-            results[idx] = (agent_id, result)
-
-        # Detach async clients before asyncio.run() destroys the event loop.
-        # Prevents httpx __del__ from scheduling cleanup on the dead loop.
-        detach_simulation_provider()
-
-        return [r for r in results if r is not None]
-
-    batch_start = time.time()
-    results = asyncio.run(run_all())
-    batch_elapsed = time.time() - batch_start
+    pair_results = [r for r in results if r is not None]
 
     logger.info(
-        f"[REASONING] Completed {total} agents in {batch_elapsed:.2f}s ({batch_elapsed / total:.2f}s/agent avg)"
+        f"[REASONING] Completed {total} agents "
+        f"({len(pair_results)} succeeded, {total - len(pair_results)} failed)"
     )
 
     if rate_limiter:
@@ -866,14 +858,42 @@ def batch_reason_agents(
 
     # Accumulate token usage from all successful responses
     batch_usage = BatchTokenUsage()
-    for _, response in results:
+    for _, response in pair_results:
         if response is not None:
             batch_usage.pivotal_input_tokens += response.pass1_input_tokens
             batch_usage.pivotal_output_tokens += response.pass1_output_tokens
             batch_usage.routine_input_tokens += response.pass2_input_tokens
             batch_usage.routine_output_tokens += response.pass2_output_tokens
 
-    return list(results), batch_usage
+    return list(pair_results), batch_usage
+
+
+def batch_reason_agents(
+    contexts: list[ReasoningContext],
+    scenario: ScenarioSpec,
+    config: SimulationRunConfig,
+    max_concurrency: int = 50,
+    rate_limiter: Any = None,
+    on_agent_done: Callable[[str, ReasoningResponse | None], None] | None = None,
+) -> tuple[list[tuple[str, ReasoningResponse | None]], BatchTokenUsage]:
+    """Sync wrapper around batch_reason_agents_async.
+
+    Runs a single-use event loop. Prefer batch_reason_agents_async when
+    an event loop is already running (e.g. the engine's chunk loop).
+    """
+    import asyncio
+
+    from ..core.providers import close_simulation_provider
+
+    async def _run():
+        try:
+            return await batch_reason_agents_async(
+                contexts, scenario, config, max_concurrency, rate_limiter, on_agent_done
+            )
+        finally:
+            await close_simulation_provider()
+
+    return asyncio.run(_run())
 
 
 # =============================================================================

@@ -45,7 +45,10 @@ from ..storage import open_study_db
 from .progress import SimulationProgress
 from .state import StateManager
 from .persona import generate_persona
-from .reasoning import batch_reason_agents, create_reasoning_context
+from .reasoning import (
+    batch_reason_agents_async,
+    create_reasoning_context,
+)
 from .propagation import apply_seed_exposures, propagate_through_network
 from .stopping import evaluate_stopping_conditions
 from ..utils.callbacks import TimestepProgressCallback
@@ -724,43 +727,55 @@ class SimulationEngine:
         )
         writer_thread.start()
 
-        for chunk_start in range(0, len(contexts), self.chunk_size):
-            if writer_error:
-                break
-            self._apply_runtime_guardrails(timestep)
-            chunk_index = chunk_start // self.chunk_size
-            if chunk_index in completed_chunks:
-                logger.info(
-                    f"[TIMESTEP {timestep}] Skipping completed chunk {chunk_index}"
-                )
-                continue
-            chunk_contexts = contexts[chunk_start : chunk_start + self.chunk_size]
+        import asyncio
 
-            reasoning_start = time.time()
-            chunk_results, chunk_usage = batch_reason_agents(
-                chunk_contexts,
-                self.scenario,
-                self.config,
-                max_concurrency=self.reasoning_max_concurrency,
-                rate_limiter=self.rate_limiter,
-                on_agent_done=_on_agent_done,
-            )
-            reasoning_elapsed = time.time() - reasoning_start
-            self.total_reasoning_calls += len(chunk_results)
+        from ..core.providers import close_simulation_provider
 
-            self.pivotal_input_tokens += chunk_usage.pivotal_input_tokens
-            self.pivotal_output_tokens += chunk_usage.pivotal_output_tokens
-            self.routine_input_tokens += chunk_usage.routine_input_tokens
-            self.routine_output_tokens += chunk_usage.routine_output_tokens
+        async def _run_all_chunks():
+            try:
+                for chunk_start in range(0, len(contexts), self.chunk_size):
+                    if writer_error:
+                        break
+                    self._apply_runtime_guardrails(timestep)
+                    chunk_index = chunk_start // self.chunk_size
+                    if chunk_index in completed_chunks:
+                        logger.info(
+                            f"[TIMESTEP {timestep}] Skipping completed chunk {chunk_index}"
+                        )
+                        continue
+                    chunk_contexts = contexts[
+                        chunk_start : chunk_start + self.chunk_size
+                    ]
 
-            logger.info(
-                f"[TIMESTEP {timestep}] Chunk {chunk_start // self.chunk_size + 1}: "
-                f"{len(chunk_results)} agents in {reasoning_elapsed:.2f}s"
-                if chunk_results
-                else f"[TIMESTEP {timestep}] Chunk empty"
-            )
-            is_last_chunk = chunk_start + self.chunk_size >= len(contexts)
-            work_queue.put((chunk_index, chunk_results, is_last_chunk))
+                    reasoning_start = time.time()
+                    chunk_results, chunk_usage = await batch_reason_agents_async(
+                        chunk_contexts,
+                        self.scenario,
+                        self.config,
+                        max_concurrency=self.reasoning_max_concurrency,
+                        rate_limiter=self.rate_limiter,
+                        on_agent_done=_on_agent_done,
+                    )
+                    reasoning_elapsed = time.time() - reasoning_start
+                    self.total_reasoning_calls += len(chunk_results)
+
+                    self.pivotal_input_tokens += chunk_usage.pivotal_input_tokens
+                    self.pivotal_output_tokens += chunk_usage.pivotal_output_tokens
+                    self.routine_input_tokens += chunk_usage.routine_input_tokens
+                    self.routine_output_tokens += chunk_usage.routine_output_tokens
+
+                    logger.info(
+                        f"[TIMESTEP {timestep}] Chunk {chunk_start // self.chunk_size + 1}: "
+                        f"{len(chunk_results)} agents in {reasoning_elapsed:.2f}s"
+                        if chunk_results
+                        else f"[TIMESTEP {timestep}] Chunk empty"
+                    )
+                    is_last_chunk = chunk_start + self.chunk_size >= len(contexts)
+                    work_queue.put((chunk_index, chunk_results, is_last_chunk))
+            finally:
+                await close_simulation_provider()
+
+        asyncio.run(_run_all_chunks())
 
         work_queue.put(sentinel)
         while work_queue.unfinished_tasks > 0:
