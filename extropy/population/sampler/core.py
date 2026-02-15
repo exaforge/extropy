@@ -240,8 +240,6 @@ def _sample_population_households(
         # Annotate Adult 1 with household fields
         adult1["household_id"] = household_id
         adult1["household_role"] = "adult_primary"
-        adult1["first_name"] = None  # Phase A fills this
-        adult1["last_name"] = None  # Phase A fills this
 
         adult_ids = [adult1["_id"]]
 
@@ -261,8 +259,9 @@ def _sample_population_households(
             )
             adult2["household_id"] = household_id
             adult2["household_role"] = "adult_secondary"
-            adult2["first_name"] = None
-            adult2["last_name"] = None
+            # Partners share a surname
+            if adult1.get("last_name"):
+                adult2["last_name"] = adult1["last_name"]
             adult2["partner_id"] = adult1["_id"]
             adult1["partner_id"] = adult2["_id"]
             adult_ids.append(adult2["_id"])
@@ -366,6 +365,22 @@ def _sample_partner_agent(
         value = _apply_hard_constraints(value, attr)
         agent[attr_name] = value
         _update_stats(attr, value, stats, numeric_values)
+
+    # Generate first name for partner (last name shared from primary later)
+    gender = agent.get("gender") or agent.get("sex")
+    ethnicity = (
+        agent.get("race_ethnicity") or agent.get("ethnicity") or agent.get("race")
+    )
+    age = agent.get("age")
+    birth_decade = age_to_birth_decade(age) if age is not None else None
+    first_name, last_name = generate_name(
+        gender=str(gender) if gender is not None else None,
+        ethnicity=str(ethnicity) if ethnicity is not None else None,
+        birth_decade=birth_decade,
+        seed=index,
+    )
+    agent["first_name"] = first_name
+    agent["last_name"] = last_name
 
     return agent
 
