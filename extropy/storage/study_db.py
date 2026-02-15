@@ -133,6 +133,44 @@ class StudyDB:
                 PRIMARY KEY (job_id, i, j)
             ) WITHOUT ROWID;
 
+            CREATE TABLE IF NOT EXISTS network_calibration_runs (
+                calibration_run_id TEXT PRIMARY KEY,
+                network_run_id TEXT NOT NULL,
+                restart_index INTEGER NOT NULL,
+                seed INTEGER NOT NULL,
+                status TEXT NOT NULL,
+                started_at TEXT NOT NULL,
+                completed_at TEXT,
+                best_score REAL,
+                best_metrics_json TEXT
+            );
+
+            CREATE TABLE IF NOT EXISTS network_calibration_iterations (
+                calibration_run_id TEXT NOT NULL,
+                iteration INTEGER NOT NULL,
+                phase TEXT NOT NULL,
+                intra_scale REAL NOT NULL,
+                inter_scale REAL NOT NULL,
+                edge_count INTEGER NOT NULL,
+                avg_degree REAL NOT NULL,
+                clustering REAL NOT NULL,
+                modularity REAL NOT NULL,
+                largest_component_ratio REAL NOT NULL,
+                score REAL NOT NULL,
+                accepted INTEGER NOT NULL DEFAULT 0,
+                created_at TEXT NOT NULL,
+                PRIMARY KEY (calibration_run_id, iteration)
+            );
+
+            CREATE TABLE IF NOT EXISTS network_generation_status (
+                network_run_id TEXT PRIMARY KEY,
+                phase TEXT NOT NULL,
+                current INTEGER NOT NULL,
+                total INTEGER NOT NULL,
+                message TEXT,
+                updated_at TEXT NOT NULL
+            );
+
             CREATE TABLE IF NOT EXISTS simulation_runs (
                 run_id TEXT PRIMARY KEY,
                 scenario_name TEXT,
@@ -286,6 +324,9 @@ class StudyDB:
             CREATE INDEX IF NOT EXISTS idx_network_edges_src ON network_edges(network_id, source_id);
             CREATE INDEX IF NOT EXISTS idx_network_edges_tgt ON network_edges(network_id, target_id);
             CREATE INDEX IF NOT EXISTS idx_net_sim_chunks_status ON network_similarity_chunks(job_id, status);
+            CREATE INDEX IF NOT EXISTS idx_net_cal_iters ON network_calibration_iterations(calibration_run_id, iteration);
+            CREATE INDEX IF NOT EXISTS idx_net_cal_runs ON network_calibration_runs(network_run_id, restart_index);
+            CREATE INDEX IF NOT EXISTS idx_net_gen_status ON network_generation_status(network_run_id);
             CREATE INDEX IF NOT EXISTS idx_sim_ckpt ON simulation_checkpoints(run_id, timestep, chunk_index);
             CREATE INDEX IF NOT EXISTS idx_chat_session_agent ON chat_sessions(run_id, agent_id);
             CREATE INDEX IF NOT EXISTS idx_agent_states_aware ON agent_states(run_id, aware);
@@ -685,6 +726,116 @@ class StudyDB:
         )
         if drop_pairs:
             cursor.execute("DELETE FROM network_similarity_pairs WHERE job_id = ?", (job_id,))
+        self.conn.commit()
+
+    def upsert_network_generation_status(
+        self,
+        network_run_id: str,
+        phase: str,
+        current: int,
+        total: int,
+        message: str | None = None,
+    ) -> None:
+        cursor = self.conn.cursor()
+        cursor.execute(
+            """
+            INSERT OR REPLACE INTO network_generation_status
+            (network_run_id, phase, current, total, message, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?)
+            """,
+            (network_run_id, phase, current, total, message, _now_iso()),
+        )
+        self.conn.commit()
+
+    def create_network_calibration_run(
+        self,
+        network_run_id: str,
+        restart_index: int,
+        seed: int,
+    ) -> str:
+        calibration_run_id = str(uuid.uuid4())
+        cursor = self.conn.cursor()
+        cursor.execute(
+            """
+            INSERT INTO network_calibration_runs
+            (calibration_run_id, network_run_id, restart_index, seed, status, started_at)
+            VALUES (?, ?, ?, ?, ?, ?)
+            """,
+            (
+                calibration_run_id,
+                network_run_id,
+                restart_index,
+                seed,
+                "running",
+                _now_iso(),
+            ),
+        )
+        self.conn.commit()
+        return calibration_run_id
+
+    def append_network_calibration_iteration(
+        self,
+        calibration_run_id: str,
+        iteration: int,
+        phase: str,
+        intra_scale: float,
+        inter_scale: float,
+        edge_count: int,
+        avg_degree: float,
+        clustering: float,
+        modularity: float,
+        largest_component_ratio: float,
+        score: float,
+        accepted: bool,
+    ) -> None:
+        cursor = self.conn.cursor()
+        cursor.execute(
+            """
+            INSERT OR REPLACE INTO network_calibration_iterations
+            (calibration_run_id, iteration, phase, intra_scale, inter_scale, edge_count,
+             avg_degree, clustering, modularity, largest_component_ratio, score, accepted, created_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                calibration_run_id,
+                iteration,
+                phase,
+                intra_scale,
+                inter_scale,
+                edge_count,
+                avg_degree,
+                clustering,
+                modularity,
+                largest_component_ratio,
+                score,
+                1 if accepted else 0,
+                _now_iso(),
+            ),
+        )
+        self.conn.commit()
+
+    def complete_network_calibration_run(
+        self,
+        calibration_run_id: str,
+        status: str,
+        best_score: float | None = None,
+        best_metrics: dict[str, Any] | None = None,
+    ) -> None:
+        cursor = self.conn.cursor()
+        cursor.execute(
+            """
+            UPDATE network_calibration_runs
+            SET status = ?, completed_at = ?, best_score = ?, best_metrics_json = ?
+            WHERE calibration_run_id = ?
+            """,
+            (
+                status,
+                _now_iso(),
+                best_score,
+                _dumps(best_metrics) if best_metrics is not None else None,
+                calibration_run_id,
+            ),
+        )
         self.conn.commit()
 
     def create_simulation_run(

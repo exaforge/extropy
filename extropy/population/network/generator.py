@@ -8,6 +8,7 @@ import logging
 import hashlib
 import multiprocessing as mp
 import random
+import time
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from datetime import datetime
 from pathlib import Path
@@ -52,6 +53,26 @@ def _choose_blocking_attributes(config: NetworkConfig) -> list[str]:
     return [attr for attr, _ in weighted[:2]]
 
 
+def _filter_over_fragmented_attrs(
+    attrs: list[str],
+    agents: list[dict[str, Any]],
+    max_cardinality_ratio: float = 0.35,
+) -> list[str]:
+    """Drop block attrs that fragment almost every node into tiny groups."""
+    if not attrs:
+        return []
+    n = max(1, len(agents))
+    kept: list[str] = []
+    for attr in attrs:
+        values = {a.get(attr) for a in agents if a.get(attr) is not None}
+        if not values:
+            continue
+        ratio = len(values) / n
+        if ratio <= max_cardinality_ratio:
+            kept.append(attr)
+    return kept
+
+
 def _build_blocked_candidate_map(
     agents: list[dict[str, Any]],
     config: NetworkConfig,
@@ -59,6 +80,8 @@ def _build_blocked_candidate_map(
 ) -> tuple[list[list[int]] | None, list[str]]:
     """Build per-agent candidate lists for blocked similarity mode."""
     attrs = _choose_blocking_attributes(config)
+    if not config.blocking_attributes:
+        attrs = _filter_over_fragmented_attrs(attrs, agents)
     n = len(agents)
 
     if not attrs or n <= 1:
@@ -80,6 +103,7 @@ def _build_blocked_candidate_map(
     target_pool = max(1, min(n - 1, target_pool))
 
     candidate_map: list[list[int]] = [[] for _ in range(n)]
+    global_quota = max(2, int(target_pool * 0.1))
 
     for i, agent in enumerate(agents):
         scores: dict[int, int] = {}
@@ -96,10 +120,21 @@ def _build_blocked_candidate_map(
         ranked = sorted(scores.items(), key=lambda x: (-x[1], x[0]))
         chosen = [j for j, _ in ranked[:target_pool]]
 
+        rng = random.Random(seed + (i + 1) * 7919)
+        seen = set(chosen)
+        seen.add(i)
+
+        # Deterministic global bridge quota to avoid complete siloing in blocked mode.
+        bridge_added = 0
+        while bridge_added < global_quota and len(seen) < n:
+            j = rng.randrange(n)
+            if j in seen:
+                continue
+            seen.add(j)
+            chosen.append(j)
+            bridge_added += 1
+
         if len(chosen) < target_pool:
-            rng = random.Random(seed + (i + 1) * 7919)
-            seen = set(chosen)
-            seen.add(i)
             while len(chosen) < target_pool and len(seen) < n:
                 j = rng.randrange(n)
                 if j in seen:
@@ -657,6 +692,128 @@ def _compute_avg_clustering(adjacency: dict[int, set[int]], n: int) -> float:
     return total / n
 
 
+def _compute_largest_component_ratio(adjacency: dict[int, set[int]], n: int) -> float:
+    """Compute largest connected component size / n."""
+    if n <= 0:
+        return 0.0
+    visited = [False] * n
+    largest = 0
+    for start in range(n):
+        if visited[start]:
+            continue
+        stack = [start]
+        visited[start] = True
+        size = 0
+        while stack:
+            node = stack.pop()
+            size += 1
+            for nei in adjacency[node]:
+                if not visited[nei]:
+                    visited[nei] = True
+                    stack.append(nei)
+        if size > largest:
+            largest = size
+    return largest / n
+
+
+def _build_adjacency_from_edges(
+    edges: list[Edge], agent_ids: list[str], n: int
+) -> dict[int, set[int]]:
+    id_to_idx = {aid: i for i, aid in enumerate(agent_ids)}
+    adjacency: dict[int, set[int]] = {i: set() for i in range(n)}
+    for edge in edges:
+        i = id_to_idx[edge.source]
+        j = id_to_idx[edge.target]
+        adjacency[i].add(j)
+        adjacency[j].add(i)
+    return adjacency
+
+
+def _acceptance_bounds(config: NetworkConfig) -> tuple[float, float, float, float, float]:
+    degree_delta = max(1.0, config.avg_degree * config.target_degree_tolerance_pct)
+    deg_min = max(1.0, config.avg_degree - degree_delta)
+    deg_max = config.avg_degree + degree_delta
+    clust_min = max(0.0, config.target_clustering - config.target_clustering_tolerance)
+    mod_min = max(0.0, config.target_modularity - config.target_modularity_tolerance)
+    mod_max = min(1.0, config.target_modularity + config.target_modularity_tolerance)
+    return deg_min, deg_max, clust_min, mod_min, mod_max
+
+
+def _min_edge_floor(n: int, config: NetworkConfig) -> int:
+    expected = n * config.avg_degree / 2.0
+    if config.quality_profile == "strict":
+        ratio = 0.75
+    elif config.quality_profile == "fast":
+        ratio = 0.55
+    else:
+        ratio = 0.65
+    return max(1, int(expected * ratio))
+
+
+def _apply_bridge_swaps(
+    edges: list[Edge],
+    agent_ids: list[str],
+    communities: list[int],
+    config: NetworkConfig,
+    rng: random.Random,
+) -> list[Edge]:
+    """Degree-preserving swaps that increase cross-community bridges."""
+    if config.swap_passes <= 0 or len(edges) < 4:
+        return edges
+    id_to_idx = {aid: i for i, aid in enumerate(agent_ids)}
+    edge_pairs = [(id_to_idx[e.source], id_to_idx[e.target]) for e in edges]
+    edge_set = {tuple(sorted(pair)) for pair in edge_pairs}
+    max_swaps = max(4, int(len(edges) * config.bridge_budget_fraction))
+
+    for _ in range(config.swap_passes):
+        swaps = 0
+        for _attempt in range(max_swaps * 4):
+            if swaps >= max_swaps:
+                break
+            a_idx = rng.randrange(len(edges))
+            b_idx = rng.randrange(len(edges))
+            if a_idx == b_idx:
+                continue
+            e1 = edges[a_idx]
+            e2 = edges[b_idx]
+            u, v = id_to_idx[e1.source], id_to_idx[e1.target]
+            x, y = id_to_idx[e2.source], id_to_idx[e2.target]
+            if len({u, v, x, y}) < 4:
+                continue
+            old_cross = int(communities[u] != communities[v]) + int(
+                communities[x] != communities[y]
+            )
+            new_cross = int(communities[u] != communities[y]) + int(
+                communities[x] != communities[v]
+            )
+            if new_cross <= old_cross:
+                continue
+            p1 = tuple(sorted((u, y)))
+            p2 = tuple(sorted((x, v)))
+            if p1 in edge_set or p2 in edge_set:
+                continue
+            edge_set.discard(tuple(sorted((u, v))))
+            edge_set.discard(tuple(sorted((x, y))))
+            edge_set.add(p1)
+            edge_set.add(p2)
+            edges[a_idx] = Edge(
+                source=agent_ids[u],
+                target=agent_ids[y],
+                weight=e1.weight,
+                edge_type=e1.edge_type,
+                influence_weight=e1.influence_weight,
+            )
+            edges[b_idx] = Edge(
+                source=agent_ids[x],
+                target=agent_ids[v],
+                weight=e2.weight,
+                edge_type=e2.edge_type,
+                influence_weight=e2.influence_weight,
+            )
+            swaps += 1
+    return edges
+
+
 def _sample_edges(
     agents: list[dict],
     agent_ids: list[str],
@@ -1065,10 +1222,10 @@ def _generate_network_single_pass(
     intra_scale: float,
     inter_scale: float,
     rng: random.Random,
-) -> tuple[list[Edge], float, float, float]:
+) -> tuple[list[Edge], float, float, float, float]:
     """Generate network with given parameters and return metrics.
 
-    Returns (edges, avg_degree, clustering, modularity).
+    Returns (edges, avg_degree, clustering, modularity, largest_component_ratio).
     """
     n = len(agents)
 
@@ -1102,19 +1259,13 @@ def _generate_network_single_pass(
     # Compute metrics
     avg_degree = 2 * len(edges) / n if n > 0 else 0.0
 
-    # Build adjacency for clustering
-    id_to_idx = {aid: i for i, aid in enumerate(agent_ids)}
-    adjacency: dict[int, set[int]] = {i: set() for i in range(n)}
-    for edge in edges:
-        i = id_to_idx[edge.source]
-        j = id_to_idx[edge.target]
-        adjacency[i].add(j)
-        adjacency[j].add(i)
+    adjacency = _build_adjacency_from_edges(edges, agent_ids, n)
 
     clustering = _compute_avg_clustering(adjacency, n)
     modularity = _compute_modularity_fast(edges, agent_ids, communities)
+    largest_component_ratio = _compute_largest_component_ratio(adjacency, n)
 
-    return edges, avg_degree, clustering, modularity
+    return edges, avg_degree, clustering, modularity, largest_component_ratio
 
 
 def generate_network(
@@ -1123,6 +1274,9 @@ def generate_network(
     on_progress: NetworkProgressCallback | None = None,
     checkpoint_path: Path | str | None = None,
     resume_from_checkpoint: bool = False,
+    study_db_path: Path | str | None = None,
+    network_run_id: str | None = None,
+    resume_calibration: bool = False,
 ) -> NetworkResult:
     """Generate a social network from sampled agents.
 
@@ -1142,6 +1296,7 @@ def generate_network(
     """
     if config is None:
         config = NetworkConfig()
+    config = config.apply_quality_profile_defaults()
 
     # Initialize RNG
     seed = config.seed
@@ -1152,10 +1307,24 @@ def generate_network(
     n = len(agents)
     agent_ids = [a.get("_id", f"agent_{i}") for i, a in enumerate(agents)]
     checkpoint_file = Path(checkpoint_path) if checkpoint_path else None
+    study_db_file = Path(study_db_path) if study_db_path else None
     if checkpoint_file is not None and checkpoint_file.suffix.lower() != ".db":
         raise ValueError(
             "Network checkpoints are DB-only now. Use --study-db (or --checkpoint <study.db>)."
         )
+
+    def emit_progress(stage: str, current: int, total: int) -> None:
+        if on_progress:
+            on_progress(stage, current, total)
+        if study_db_file is not None and network_run_id:
+            with open_study_db(study_db_file) as db:
+                db.upsert_network_generation_status(
+                    network_run_id=network_run_id,
+                    phase=stage,
+                    current=current,
+                    total=total,
+                    message=stage,
+                )
 
     # Step 1: Compute degree factors
     degree_factors = [compute_degree_factor(a, config) for a in agents]
@@ -1166,21 +1335,18 @@ def generate_network(
     candidate_mode = config.candidate_mode
 
     if config.candidate_mode == "blocked":
-        if on_progress:
-            on_progress("Preparing candidate blocks", 0, n)
+        emit_progress("Preparing candidate blocks", 0, n)
         candidate_map, blocking_attrs = _build_blocked_candidate_map(
             agents, config, seed
         )
-        if on_progress:
-            on_progress("Preparing candidate blocks", n, n)
+        emit_progress("Preparing candidate blocks", n, n)
         if candidate_map is None:
             logger.warning(
                 "Blocked candidate mode could not be initialized. Falling back to exact mode."
             )
             candidate_mode = "exact"
 
-    if on_progress:
-        on_progress("Computing similarities", 0, n)
+    emit_progress("Computing similarities", 0, n)
 
     checkpoint_signature = _similarity_checkpoint_signature(
         n=n,
@@ -1216,8 +1382,7 @@ def generate_network(
         if checkpoint_job_id and checkpoint_file is not None:
             with open_study_db(checkpoint_file) as db:
                 db.mark_similarity_job_running(checkpoint_job_id)
-        if on_progress:
-            on_progress("Computing similarities", min(start_row, n), n)
+        emit_progress("Computing similarities", min(start_row, n), n)
     else:
         similarities = {}
 
@@ -1228,7 +1393,7 @@ def generate_network(
             agents=agents,
             config=config,
             candidate_map=candidate_map if candidate_mode == "blocked" else None,
-            on_progress=on_progress,
+            on_progress=emit_progress,
             checkpoint_path=checkpoint_file,
             checkpoint_signature=checkpoint_signature,
             initial_similarities=similarities,
@@ -1241,7 +1406,7 @@ def generate_network(
             agents=agents,
             config=config,
             candidate_map=candidate_map if candidate_mode == "blocked" else None,
-            on_progress=on_progress,
+            on_progress=emit_progress,
             checkpoint_path=checkpoint_file,
             initial_similarities=similarities,
             start_row=start_row,
@@ -1254,12 +1419,10 @@ def generate_network(
         with open_study_db(checkpoint_file) as db:
             db.mark_similarity_job_complete(checkpoint_job_id)
 
-    if on_progress:
-        on_progress("Computing similarities", n, n)
+    emit_progress("Computing similarities", n, n)
 
     # Step 3: Assign communities
-    if on_progress:
-        on_progress("Detecting communities", 0, 1)
+    emit_progress("Detecting communities", 0, 1)
 
     n_communities = config.community_count
     if n_communities is None:
@@ -1268,133 +1431,167 @@ def generate_network(
 
     communities = _assign_communities(agents, similarities, n_communities, rng)
 
-    if on_progress:
-        on_progress("Detecting communities", 1, 1)
+    emit_progress("Detecting communities", 1, 1)
 
-    # Step 4: Adaptive calibration loop
-    if on_progress:
-        on_progress("Calibrating network", 0, config.max_calibration_iterations)
-
-    # Initial scales: favor inter-community since triadic closure adds intra
-    intra_scale = 1.0
-    inter_scale = 1.2
-
-    # Target ranges
-    target_degree_min, target_degree_max = 15.0, 25.0
-    # Aim for LOWER modularity in sampling because triadic closure will increase it
-    target_mod_min, target_mod_max = 0.3, 0.55
-    target_cluster_min = 0.3
-
-    best_edges = None
+    # Step 4: Multi-restart calibration with deterministic repairs and gating.
+    deg_min, deg_max, cluster_min, mod_min, mod_max = _acceptance_bounds(config)
+    min_edge_floor = _min_edge_floor(n, config)
+    best_edges: list[Edge] | None = None
     best_score = float("inf")
+    best_metrics: dict[str, float] | None = None
+    accepted = False
+    elapsed_budget = max(1, int(config.max_calibration_minutes * 60))
+    cal_start = time.time()
+    total_steps = max(1, config.calibration_restarts * config.max_calibration_iterations)
+    step_count = 0
 
-    for iteration in range(config.max_calibration_iterations):
-        if on_progress:
-            on_progress(
-                "Calibrating network", iteration, config.max_calibration_iterations
+    for restart in range(config.calibration_restarts):
+        if time.time() - cal_start >= elapsed_budget:
+            break
+        restart_seed = seed + restart * 1000003
+        intra_scale = 1.0
+        inter_scale = 1.2
+        calibration_run_id: str | None = None
+        if study_db_file is not None and network_run_id:
+            with open_study_db(study_db_file) as db:
+                calibration_run_id = db.create_network_calibration_run(
+                    network_run_id=network_run_id,
+                    restart_index=restart,
+                    seed=restart_seed,
+                )
+
+        for iteration in range(config.max_calibration_iterations):
+            if time.time() - cal_start >= elapsed_budget:
+                break
+            step_count += 1
+            emit_progress(
+                f"Calibration restart {restart + 1}/{config.calibration_restarts}",
+                step_count,
+                total_steps,
+            )
+            iter_rng = random.Random(restart_seed + iteration * 1000)
+            edges, avg_degree, clustering, modularity, largest_component_ratio = (
+                _generate_network_single_pass(
+                    agents,
+                    agent_ids,
+                    similarities,
+                    communities,
+                    degree_factors,
+                    config,
+                    intra_scale,
+                    inter_scale,
+                    iter_rng,
+                )
+            )
+            edges = _apply_bridge_swaps(edges, agent_ids, communities, config, iter_rng)
+            adjacency = _build_adjacency_from_edges(edges, agent_ids, n)
+            clustering = _compute_avg_clustering(adjacency, n)
+            modularity = _compute_modularity_fast(edges, agent_ids, communities)
+            largest_component_ratio = _compute_largest_component_ratio(adjacency, n)
+            edge_count = len(edges)
+
+            score = 0.0
+            if avg_degree < deg_min:
+                score += (deg_min - avg_degree) ** 2
+            elif avg_degree > deg_max:
+                score += (avg_degree - deg_max) ** 2
+            if clustering < cluster_min:
+                score += ((cluster_min - clustering) * 20.0) ** 2
+            if modularity < mod_min:
+                score += ((mod_min - modularity) * 10.0) ** 2
+            elif modularity > mod_max:
+                score += ((modularity - mod_max) * 10.0) ** 2
+            if largest_component_ratio < config.target_largest_component_ratio:
+                score += (
+                    (config.target_largest_component_ratio - largest_component_ratio) * 20.0
+                ) ** 2
+            if edge_count < min_edge_floor:
+                score += ((min_edge_floor - edge_count) / max(1.0, min_edge_floor)) ** 2 * 400
+
+            in_range = (
+                deg_min <= avg_degree <= deg_max
+                and clustering >= cluster_min
+                and mod_min <= modularity <= mod_max
+                and largest_component_ratio >= config.target_largest_component_ratio
+                and edge_count >= min_edge_floor
             )
 
-        # Generate with current parameters
-        # Use a derived seed for reproducibility within calibration
-        iter_rng = random.Random(seed + iteration * 1000)
+            metrics_payload = {
+                "edge_count": edge_count,
+                "avg_degree": avg_degree,
+                "clustering": clustering,
+                "modularity": modularity,
+                "largest_component_ratio": largest_component_ratio,
+            }
+            if score < best_score:
+                best_score = score
+                best_edges = edges
+                best_metrics = metrics_payload
 
-        edges, avg_degree, clustering, modularity = _generate_network_single_pass(
-            agents,
-            agent_ids,
-            similarities,
-            communities,
-            degree_factors,
-            config,
-            intra_scale,
-            inter_scale,
-            iter_rng,
-        )
+            if calibration_run_id and study_db_file is not None:
+                with open_study_db(study_db_file) as db:
+                    db.append_network_calibration_iteration(
+                        calibration_run_id=calibration_run_id,
+                        iteration=iteration,
+                        phase="calibration",
+                        intra_scale=intra_scale,
+                        inter_scale=inter_scale,
+                        edge_count=edge_count,
+                        avg_degree=avg_degree,
+                        clustering=clustering,
+                        modularity=modularity,
+                        largest_component_ratio=largest_component_ratio,
+                        score=score,
+                        accepted=in_range,
+                    )
 
-        # Score: sum of squared deviations from target ranges
-        score = 0.0
+            if in_range:
+                accepted = True
+                if calibration_run_id and study_db_file is not None:
+                    with open_study_db(study_db_file) as db:
+                        db.complete_network_calibration_run(
+                            calibration_run_id=calibration_run_id,
+                            status="accepted",
+                            best_score=score,
+                            best_metrics=metrics_payload,
+                        )
+                break
 
-        # Degree deviation
-        if avg_degree < target_degree_min:
-            score += (target_degree_min - avg_degree) ** 2
-        elif avg_degree > target_degree_max:
-            score += (avg_degree - target_degree_max) ** 2
+            # Deterministic scale updates.
+            if avg_degree < deg_min:
+                adj = min(1.5, deg_min / max(0.1, avg_degree))
+                intra_scale *= adj
+                inter_scale *= adj
+            elif avg_degree > deg_max:
+                adj = max(0.6, deg_max / max(0.1, avg_degree))
+                intra_scale *= adj
+                inter_scale *= adj
+            if modularity > mod_max:
+                inter_scale *= 1.2
+                intra_scale *= 0.92
+            elif modularity < mod_min:
+                intra_scale *= 1.12
+                inter_scale *= 0.9
+            if clustering < cluster_min:
+                intra_scale *= 1.1
+            intra_scale = max(0.25, min(6.5, intra_scale))
+            inter_scale = max(0.25, min(6.5, inter_scale))
 
-        # Modularity deviation
-        if modularity < target_mod_min:
-            score += ((target_mod_min - modularity) * 10) ** 2  # Weight modularity
-        elif modularity > target_mod_max:
-            score += ((modularity - target_mod_max) * 10) ** 2
-
-        # Clustering deviation (heavily penalize if too low)
-        if clustering < target_cluster_min:
-            score += ((target_cluster_min - clustering) * 20) ** 2  # Strong weight
-
-        logger.debug(
-            f"Calibration iter {iteration}: degree={avg_degree:.1f}, "
-            f"clustering={clustering:.3f}, modularity={modularity:.3f}, score={score:.2f}"
-        )
-
-        # Track best result
-        if score < best_score:
-            best_score = score
-            best_edges = edges
-
-        # Check if we're in range
-        in_range = (
-            target_degree_min <= avg_degree <= target_degree_max
-            and target_mod_min <= modularity <= target_mod_max
-            and clustering >= target_cluster_min
-        )
-
-        if in_range:
-            logger.info(f"Calibration converged at iteration {iteration}")
-            best_edges = edges
+        if calibration_run_id and study_db_file is not None and not accepted:
+            with open_study_db(study_db_file) as db:
+                db.complete_network_calibration_run(
+                    calibration_run_id=calibration_run_id,
+                    status="completed",
+                    best_score=best_score if best_score != float("inf") else None,
+                    best_metrics=best_metrics,
+                )
+        if accepted:
             break
 
-        # Adjust parameters for next iteration
-        # Degree adjustment: scale both proportionally
-        if avg_degree < target_degree_min * 0.9:
-            scale_adj = (
-                min(1.5, target_degree_min / avg_degree) if avg_degree > 0 else 1.5
-            )
-            intra_scale *= scale_adj
-            inter_scale *= scale_adj
-        elif avg_degree > target_degree_max * 1.1:
-            scale_adj = max(0.6, target_degree_max / avg_degree)
-            intra_scale *= scale_adj
-            inter_scale *= scale_adj
-
-        # Modularity adjustment: change ratio of intra to inter
-        if modularity > target_mod_max + 0.05:
-            # Too modular: boost inter-community edges
-            inter_scale *= 1.3
-            intra_scale *= 0.9
-        elif modularity < target_mod_min - 0.05:
-            # Not modular enough: boost intra-community
-            intra_scale *= 1.2
-            inter_scale *= 0.85
-
-        # Clustering adjustment: more intra-community = more triads = higher clustering
-        if clustering < target_cluster_min - 0.05:
-            # Clustering too low: boost intra-community for more triadic closure potential
-            intra_scale *= 1.15
-            # Don't reduce inter too much or modularity will rise too high
-            if modularity < target_mod_max - 0.1:
-                inter_scale *= 0.95
-
-        # Clamp scales to reasonable range
-        intra_scale = max(0.3, min(6.0, intra_scale))
-        inter_scale = max(0.3, min(6.0, inter_scale))
-
-    if on_progress:
-        on_progress(
-            "Calibrating network",
-            config.max_calibration_iterations,
-            config.max_calibration_iterations,
-        )
-
-    # Use best result found
-    edges = best_edges if best_edges else edges
+    emit_progress("Calibrating network", total_steps, total_steps)
+    if best_edges is None:
+        best_edges = []
+    edges = best_edges
 
     # Rebuild edge_set from best edges
     edge_set: set[tuple[str, str]] = set()
@@ -1403,15 +1600,13 @@ def generate_network(
         edge_set.add((edge.target, edge.source))
 
     # Step 5: Watts-Strogatz rewiring
-    if on_progress:
-        on_progress("Rewiring edges", 0, len(edges))
+    emit_progress("Rewiring edges", 0, len(edges))
 
     edges, edge_set, rewired_count = _apply_rewiring(
         agents, agent_ids, edges, edge_set, config, rng
     )
 
-    if on_progress:
-        on_progress("Rewiring edges", len(edges), len(edges))
+    emit_progress("Rewiring edges", len(edges), len(edges))
 
     # Build metadata
     meta = {
@@ -1430,7 +1625,24 @@ def generate_network(
             "rewire_prob": config.rewire_prob,
             "target_clustering": config.target_clustering,
             "target_modularity": config.target_modularity,
+            "quality_profile": config.quality_profile,
         },
+        "quality": {
+            "topology_gate": config.topology_gate,
+            "accepted": accepted,
+            "best_score": best_score,
+            "best_metrics": best_metrics or {},
+            "bounds": {
+                "degree_min": deg_min,
+                "degree_max": deg_max,
+                "clustering_min": cluster_min,
+                "modularity_min": mod_min,
+                "modularity_max": mod_max,
+                "largest_component_min": config.target_largest_component_ratio,
+                "min_edge_floor": min_edge_floor,
+            },
+        },
+        "resume_calibration_requested": resume_calibration,
         "generated_at": datetime.now().isoformat(),
     }
 
@@ -1443,6 +1655,9 @@ def generate_network_with_metrics(
     on_progress: NetworkProgressCallback | None = None,
     checkpoint_path: Path | str | None = None,
     resume_from_checkpoint: bool = False,
+    study_db_path: Path | str | None = None,
+    network_run_id: str | None = None,
+    resume_calibration: bool = False,
 ) -> NetworkResult:
     """Generate network and compute all metrics.
 
@@ -1458,6 +1673,9 @@ def generate_network_with_metrics(
         on_progress,
         checkpoint_path=checkpoint_path,
         resume_from_checkpoint=resume_from_checkpoint,
+        study_db_path=study_db_path,
+        network_run_id=network_run_id,
+        resume_calibration=resume_calibration,
     )
 
     agent_ids = [a.get("_id", f"agent_{i}") for i, a in enumerate(agents)]

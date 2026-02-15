@@ -151,6 +151,19 @@ class NetworkConfig(BaseModel):
         0.3  # Initial edge prob between communities vs within
     )
     max_calibration_iterations: int = 12  # Max iterations for adaptive calibration
+    quality_profile: Literal["fast", "balanced", "strict"] = "balanced"
+    topology_gate: Literal["strict", "warn"] = "strict"
+    max_calibration_minutes: int = 45
+    calibration_restarts: int = 4
+    target_largest_component_ratio: float = 0.95
+    target_degree_tolerance_pct: float = 0.15
+    target_modularity_tolerance: float = 0.10
+    target_clustering_tolerance: float = 0.08
+    bridge_budget_fraction: float = 0.08
+    swap_passes: int = 3
+    auto_save_generated_config: bool = True
+    allow_quarantine: bool = True
+    quarantine_suffix: str = "rejected"
     attribute_weights: dict[str, AttributeWeightConfig] = Field(default_factory=dict)
     degree_multipliers: list[DegreeMultiplierConfig] = Field(default_factory=list)
     edge_type_rules: list[EdgeTypeRule] = Field(default_factory=list)
@@ -164,6 +177,46 @@ class NetworkConfig(BaseModel):
     def get_total_weight(self) -> float:
         """Get total weight for normalization."""
         return sum(cfg.weight for cfg in self.attribute_weights.values())
+
+    def apply_quality_profile_defaults(self) -> "NetworkConfig":
+        """Return config with quality-profile defaults applied deterministically."""
+        profile_defaults: dict[str, dict[str, Any]] = {
+            "fast": {
+                "topology_gate": "warn",
+                "calibration_restarts": 2,
+                "max_calibration_iterations": 8,
+                "max_calibration_minutes": 15,
+                "bridge_budget_fraction": 0.05,
+                "swap_passes": 1,
+                "target_largest_component_ratio": 0.90,
+            },
+            "balanced": {
+                "topology_gate": "strict",
+                "calibration_restarts": 4,
+                "max_calibration_iterations": 12,
+                "max_calibration_minutes": 30,
+                "bridge_budget_fraction": 0.08,
+                "swap_passes": 3,
+                "target_largest_component_ratio": 0.95,
+            },
+            "strict": {
+                "topology_gate": "strict",
+                "calibration_restarts": 8,
+                "max_calibration_iterations": 20,
+                "max_calibration_minutes": 45,
+                "bridge_budget_fraction": 0.12,
+                "swap_passes": 5,
+                "target_largest_component_ratio": 0.98,
+            },
+        }
+        defaults = profile_defaults[self.quality_profile]
+        updates: dict[str, Any] = {}
+        for key, value in defaults.items():
+            if getattr(self, key) == NetworkConfig.model_fields[key].default:
+                updates[key] = value
+        if not updates:
+            return self
+        return self.model_copy(update=updates)
 
     def get_ordinal_levels(self, attribute: str) -> dict[str, int] | None:
         """Get ordinal levels for an attribute.
