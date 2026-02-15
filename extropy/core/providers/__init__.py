@@ -127,7 +127,9 @@ def get_provider(
 
     # Check built-in registry
     if provider_name not in _BUILTIN_REGISTRY:
-        available = sorted(set(list(_BUILTIN_REGISTRY.keys()) + list((custom_providers or {}).keys())))
+        available = sorted(
+            set(list(_BUILTIN_REGISTRY.keys()) + list((custom_providers or {}).keys()))
+        )
         raise ValueError(
             f"Unknown LLM provider: {provider_name!r}. "
             f"Available: {', '.join(available)}"

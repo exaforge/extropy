@@ -123,9 +123,7 @@ def estimate_command(
     _print_model_line(
         console, "Pass 1 (strong)", est.pivotal_model, est.pivotal_pricing
     )
-    _print_model_line(
-        console, "Pass 2 (fast)", est.routine_model, est.routine_pricing
-    )
+    _print_model_line(console, "Pass 2 (fast)", est.routine_model, est.routine_pricing)
     console.print()
 
     # Calls table

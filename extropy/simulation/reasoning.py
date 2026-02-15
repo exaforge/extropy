@@ -794,7 +794,9 @@ def batch_reason_agents(
             ctx: ReasoningContext,
         ) -> tuple[int, str, ReasoningResponse | None, float]:
             start = time.time()
-            result = await _reason_agent_two_pass_async(ctx, scenario, config, rate_limiter)
+            result = await _reason_agent_two_pass_async(
+                ctx, scenario, config, rate_limiter
+            )
             elapsed = time.time() - start
             completed[0] += 1
 

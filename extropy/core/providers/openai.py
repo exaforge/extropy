@@ -110,6 +110,20 @@ class OpenAIProvider(LLMProvider):
                 return content
         return None
 
+    def _extract_usage(self, response, use_chat: bool = False) -> TokenUsage:
+        """Extract token usage from an OpenAI API response."""
+        if not hasattr(response, "usage") or response.usage is None:
+            return TokenUsage()
+        if use_chat:
+            return TokenUsage(
+                input_tokens=getattr(response.usage, "prompt_tokens", 0) or 0,
+                output_tokens=getattr(response.usage, "completion_tokens", 0) or 0,
+            )
+        return TokenUsage(
+            input_tokens=getattr(response.usage, "input_tokens", 0) or 0,
+            output_tokens=getattr(response.usage, "output_tokens", 0) or 0,
+        )
+
     def _build_responses_params(
         self,
         model: str,
@@ -274,6 +288,10 @@ class OpenAIProvider(LLMProvider):
             raw_text = self._extract_output_text(response)
         structured_data = json.loads(raw_text) if raw_text else None
 
+        # Extract and record token usage
+        usage = self._extract_usage(response, use_chat=use_chat)
+        self._record_usage(model, usage, call_type="simple")
+
         if log:
             log_request_response(
                 function_name="simple_call",
@@ -322,19 +340,9 @@ class OpenAIProvider(LLMProvider):
             raw_text = self._extract_output_text(response)
         structured_data = json.loads(raw_text) if raw_text else None
 
-        # Extract token usage
-        usage = TokenUsage()
-        if hasattr(response, "usage") and response.usage is not None:
-            if use_chat:
-                usage = TokenUsage(
-                    input_tokens=getattr(response.usage, "prompt_tokens", 0) or 0,
-                    output_tokens=getattr(response.usage, "completion_tokens", 0) or 0,
-                )
-            else:
-                usage = TokenUsage(
-                    input_tokens=getattr(response.usage, "input_tokens", 0) or 0,
-                    output_tokens=getattr(response.usage, "output_tokens", 0) or 0,
-                )
+        # Extract and record token usage
+        usage = self._extract_usage(response, use_chat=use_chat)
+        self._record_usage(model, usage, call_type="async")
 
         return structured_data or {}, usage
 
@@ -380,6 +388,11 @@ class OpenAIProvider(LLMProvider):
             )
             raw_text = self._extract_output_text(response)
             structured_data = json.loads(raw_text) if raw_text else None
+
+            # Record token usage
+            usage = self._extract_usage(response)
+            self._record_usage(model, usage, call_type="reasoning")
+
             if log:
                 log_request_response(
                     function_name="reasoning_call",
@@ -475,6 +488,10 @@ class OpenAIProvider(LLMProvider):
                                         sources.append(annotation.url)
 
             all_sources.extend(sources)
+
+            # Record token usage
+            usage = self._extract_usage(response)
+            self._record_usage(model, usage, call_type="agentic_research")
 
             if log:
                 log_request_response(

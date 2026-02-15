@@ -181,15 +181,17 @@ class OpenAICompatProvider(LLMProvider):
         self._acquire_rate_limit(prompt, model, max_output=max_tokens or 4096)
 
         params = self._build_params(
-            model, prompt, response_schema, schema_name, max_tokens,
+            model,
+            prompt,
+            response_schema,
+            schema_name,
+            max_tokens,
         )
         lbl = self.provider_name
         logger.info(f"[{lbl}] simple_call model={model} schema={schema_name}")
 
         api_start = time.time()
-        response = self._with_retry(
-            lambda: client.chat.completions.create(**params)
-        )
+        response = self._with_retry(lambda: client.chat.completions.create(**params))
         api_elapsed = time.time() - api_start
         logger.info(f"[{self.provider_name}] API response in {api_elapsed:.2f}s")
 
@@ -218,7 +220,11 @@ class OpenAICompatProvider(LLMProvider):
         client = self._get_async_client()
 
         params = self._build_params(
-            model, prompt, response_schema, schema_name, max_tokens,
+            model,
+            prompt,
+            response_schema,
+            schema_name,
+            max_tokens,
         )
 
         response = await self._with_retry_async(

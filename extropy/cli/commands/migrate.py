@@ -40,13 +40,17 @@ def migrate_legacy_artifacts(
 ):
     """Ingest legacy `agents.json`/`network.json` into `study.db`."""
     if agents_file is None and network_file is None:
-        console.print("[red]✗[/red] Provide at least one of --agents-file or --network-file")
+        console.print(
+            "[red]✗[/red] Provide at least one of --agents-file or --network-file"
+        )
         raise typer.Exit(1)
 
     with open_study_db(study_db) as db:
         if population_spec is not None:
             if not population_spec.exists():
-                console.print(f"[red]✗[/red] population spec not found: {population_spec}")
+                console.print(
+                    f"[red]✗[/red] population spec not found: {population_spec}"
+                )
                 raise typer.Exit(1)
             db.save_population_spec(
                 population_id=population_id,

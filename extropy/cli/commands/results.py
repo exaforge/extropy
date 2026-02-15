@@ -170,7 +170,9 @@ def _display_agent(conn: sqlite3.Connection, agent_id: str) -> None:
     )
     row = cur.fetchone()
     if not row:
-        console.print(f"[yellow]Agent not found in simulation state: {agent_id}[/yellow]")
+        console.print(
+            f"[yellow]Agent not found in simulation state: {agent_id}[/yellow]"
+        )
         return
 
     cur.execute("SELECT attrs_json FROM agents WHERE agent_id = ? LIMIT 1", (agent_id,))

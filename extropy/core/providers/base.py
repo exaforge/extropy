@@ -2,8 +2,9 @@
 
 import logging
 from abc import ABC, abstractmethod
-from dataclasses import dataclass
 from typing import Callable, TYPE_CHECKING
+
+from pydantic import BaseModel
 
 if TYPE_CHECKING:
     from ..rate_limiter import RateLimiter
@@ -11,8 +12,7 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
-@dataclass
-class TokenUsage:
+class TokenUsage(BaseModel):
     """Token usage from a single LLM API call."""
 
     input_tokens: int = 0
@@ -93,6 +93,22 @@ class LLMProvider(ABC):
             estimated_input_tokens=estimated_input,
             estimated_output_tokens=max_output,
         )
+
+    def _record_usage(self, model: str, usage: TokenUsage, call_type: str = "") -> None:
+        """Record token usage into the session CostTracker.
+
+        Called after each API call. Safe to call even if no CostTracker
+        is active (e.g., in tests or library use without CLI).
+        """
+        if usage.input_tokens == 0 and usage.output_tokens == 0:
+            return
+        try:
+            from ..cost.tracker import CostTracker
+
+            CostTracker.get().record(model=model, usage=usage, call_type=call_type)
+        except Exception:
+            # Never let cost tracking break actual LLM calls
+            pass
 
     async def close_async(self) -> None:
         """Close the cached async client to release connections cleanly.

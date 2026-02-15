@@ -1,6 +1,5 @@
 """Tests for scenario validation behavior."""
 
-import json
 from pathlib import Path
 
 from extropy.core.models.scenario import (
@@ -163,7 +162,9 @@ def test_validate_scenario_allows_edge_weight_in_spread_modifier(tmp_path: Path)
 
     population_path.write_text("placeholder: true\n")
     with open_study_db(study_db) as db:
-        db.save_sample_result(population_id="default", agents=[], meta={"source": "test"})
+        db.save_sample_result(
+            population_id="default", agents=[], meta={"source": "test"}
+        )
 
     spec = _make_scenario_spec(
         str(population_path),

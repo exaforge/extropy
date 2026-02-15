@@ -39,7 +39,9 @@ def query_sql(
     req = ReadOnlySQLRequest(sql=sql, limit=limit)
     normalized = req.sql.strip().lower()
     if not normalized.startswith(_ALLOWED_PREFIXES):
-        console.print("[red]✗[/red] Only read-only SELECT/WITH/EXPLAIN queries are allowed")
+        console.print(
+            "[red]✗[/red] Only read-only SELECT/WITH/EXPLAIN queries are allowed"
+        )
         raise typer.Exit(1)
     padded = f" {normalized} "
     if ";" in req.sql.strip().rstrip(";"):

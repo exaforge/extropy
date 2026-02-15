@@ -20,11 +20,21 @@ VALID_KEYS = {
     "simulation.rate_tier",
     "simulation.rpm_override",
     "simulation.tpm_override",
+    "defaults.population_size",
+    "defaults.db_path",
+    "defaults.show_cost",
 }
 
 INT_FIELDS = {
-    "max_concurrent", "rate_tier", "rpm_override",
+    "max_concurrent",
+    "rate_tier",
+    "rpm_override",
     "tpm_override",
+    "population_size",
+}
+
+BOOL_FIELDS = {
+    "show_cost",
 }
 
 
@@ -82,8 +92,7 @@ def _show_config():
     # Models (pipeline)
     console.print()
     console.print(
-        "[bold cyan]Models[/bold cyan] "
-        "(pipeline: spec, extend, persona, scenario)"
+        "[bold cyan]Models[/bold cyan] (pipeline: spec, extend, persona, scenario)"
     )
     console.print(f"  fast   = {config.models.fast}")
     console.print(f"  strong = {config.models.strong}")
@@ -94,8 +103,7 @@ def _show_config():
     strong_val = config.simulation.strong or "[dim](= models.strong)[/dim]"
     fast_val = config.simulation.fast or "[dim](= models.fast)[/dim]"
     console.print(f"  strong          = {strong_val}")
-    console.print(f"  fast            = {fast_val}"
-    )
+    console.print(f"  fast            = {fast_val}")
     console.print(f"  max_concurrent  = {config.simulation.max_concurrent}")
     console.print(
         f"  rate_tier       = {config.simulation.rate_tier or '[dim](tier 1)[/dim]'}"
@@ -114,6 +122,13 @@ def _show_config():
             console.print(f"    base_url    = {provider_cfg.base_url}")
             if provider_cfg.api_key_env:
                 console.print(f"    api_key_env = {provider_cfg.api_key_env}")
+
+    # Defaults
+    console.print()
+    console.print("[bold cyan]Defaults[/bold cyan]")
+    console.print(f"  population_size = {config.defaults.population_size}")
+    console.print(f"  db_path         = {config.defaults.db_path}")
+    console.print(f"  show_cost       = {config.defaults.show_cost}")
 
     # API keys status
     console.print()
@@ -171,6 +186,7 @@ def _set_config(key: str, value: str):
         provider_name = parts[1]
         field = parts[2]
         from ...config import CustomProviderConfig
+
         if provider_name not in config.providers:
             config.providers[provider_name] = CustomProviderConfig()
         setattr(config.providers[provider_name], field, value)
@@ -180,6 +196,8 @@ def _set_config(key: str, value: str):
             target = config.models
         elif zone == "simulation":
             target = config.simulation
+        elif zone == "defaults":
+            target = config.defaults
         else:
             console.print(f"[red]Unknown zone:[/red] {zone}")
             raise typer.Exit(1)
@@ -191,6 +209,8 @@ def _set_config(key: str, value: str):
             except ValueError:
                 console.print(f"[red]Invalid integer value:[/red] {value}")
                 raise typer.Exit(1)
+        elif field_name in BOOL_FIELDS:
+            setattr(target, field_name, value.lower() in ("true", "1", "yes"))
         else:
             setattr(target, field_name, value)
 

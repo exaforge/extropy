@@ -100,7 +100,9 @@ def _summarize_context(context: dict[str, Any], prompt: str) -> str:
         top_attrs = [(k, v) for k, v in attrs.items() if not str(k).startswith("_")]
         top_attrs = sorted(top_attrs)[:8]
         if top_attrs:
-            lines.append("- Key attributes: " + ", ".join(f"{k}={v}" for k, v in top_attrs))
+            lines.append(
+                "- Key attributes: " + ", ".join(f"{k}={v}" for k, v in top_attrs)
+            )
 
     if timeline:
         lines.append("- Recent timeline events:")
@@ -184,19 +186,25 @@ def chat_interactive(
                     n = int(parts[1]) if len(parts) > 1 else 10
                 except ValueError:
                     n = 10
-                context, _ = _load_agent_chat_context(conn, run_id, agent_id, timeline_n=max(1, n))
+                context, _ = _load_agent_chat_context(
+                    conn, run_id, agent_id, timeline_n=max(1, n)
+                )
                 for item in context.get("timeline", []):
                     console.print(
                         f"t={item.get('timestep')} {item.get('event_type')} {item.get('details_json') or '{}'}"
                     )
                 continue
             if prompt == "/context":
-                context, _ = _load_agent_chat_context(conn, run_id, agent_id, timeline_n=10)
+                context, _ = _load_agent_chat_context(
+                    conn, run_id, agent_id, timeline_n=10
+                )
                 console.print_json(data=context)
                 continue
 
             started = time.time()
-            context, citations = _load_agent_chat_context(conn, run_id, agent_id, timeline_n=12)
+            context, citations = _load_agent_chat_context(
+                conn, run_id, agent_id, timeline_n=12
+            )
             answer = _summarize_context(context, prompt)
             latency_ms = int((time.time() - started) * 1000)
 
@@ -207,7 +215,11 @@ def chat_interactive(
                     "assistant",
                     answer,
                     citations={"sources": citations},
-                    token_usage={"input_tokens": 0, "output_tokens": 0, "latency_ms": latency_ms},
+                    token_usage={
+                        "input_tokens": 0,
+                        "output_tokens": 0,
+                        "latency_ms": latency_ms,
+                    },
                 )
 
             console.print(answer)
@@ -247,7 +259,9 @@ def chat_ask(
     conn = sqlite3.connect(str(study_db))
     conn.row_factory = sqlite3.Row
     try:
-        context, citations = _load_agent_chat_context(conn, run_id, agent_id, timeline_n=12)
+        context, citations = _load_agent_chat_context(
+            conn, run_id, agent_id, timeline_n=12
+        )
         answer = _summarize_context(context, prompt)
     finally:
         conn.close()
@@ -261,7 +275,11 @@ def chat_ask(
             "assistant",
             answer,
             citations={"sources": citations},
-            token_usage={"input_tokens": 0, "output_tokens": 0, "latency_ms": latency_ms},
+            token_usage={
+                "input_tokens": 0,
+                "output_tokens": 0,
+                "latency_ms": latency_ms,
+            },
         )
 
     payload = {

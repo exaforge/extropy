@@ -564,10 +564,7 @@ class DualRateLimiter:
 
         # If same provider+model, share the limiter
         effective_fast_model = fast_model or strong_model
-        if (
-            fast_provider == strong_provider
-            and effective_fast_model == strong_model
-        ):
+        if fast_provider == strong_provider and effective_fast_model == strong_model:
             return cls(pivotal=pivotal_limiter, routine=pivotal_limiter)
 
         if not effective_fast_model and not fast_provider:

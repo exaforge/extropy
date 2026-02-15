@@ -204,7 +204,9 @@ class SimulationEngine:
         self.output_dir.mkdir(parents=True, exist_ok=True)
 
         # Initialize state manager
-        state_db_file = Path(state_db_path) if state_db_path else self.output_dir / "study.db"
+        state_db_file = (
+            Path(state_db_path) if state_db_path else self.output_dir / "study.db"
+        )
         self.state_manager = StateManager(
             state_db_file,
             agents,
@@ -641,7 +643,9 @@ class SimulationEngine:
                         chunk_index, chunk_results, is_last_chunk = item
                         if chunk_index in completed_chunks:
                             continue
-                        pending_chunks.append((chunk_index, chunk_results, is_last_chunk))
+                        pending_chunks.append(
+                            (chunk_index, chunk_results, is_last_chunk)
+                        )
                         if (
                             len(pending_chunks) >= self.db_write_batch_size
                             or is_last_chunk
@@ -1198,7 +1202,7 @@ class SimulationEngine:
         Returns:
             Cost dictionary with token counts and estimated USD.
         """
-        from ..core.pricing import get_pricing, resolve_default_model
+        from ..core.pricing import get_pricing
         from ..config import get_config
 
         cost: dict[str, Any] = {

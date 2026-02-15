@@ -69,6 +69,16 @@ def _extract_tool_input(response) -> dict | None:
     return None
 
 
+def _extract_usage(response) -> TokenUsage:
+    """Extract token usage from an Anthropic API response."""
+    if not hasattr(response, "usage") or response.usage is None:
+        return TokenUsage()
+    return TokenUsage(
+        input_tokens=getattr(response.usage, "input_tokens", 0) or 0,
+        output_tokens=getattr(response.usage, "output_tokens", 0) or 0,
+    )
+
+
 class AnthropicProvider(LLMProvider):
     """Anthropic (Claude) LLM provider.
 
@@ -167,6 +177,10 @@ class AnthropicProvider(LLMProvider):
 
         structured_data = _extract_tool_input(response)
 
+        # Record token usage
+        usage = _extract_usage(response)
+        self._record_usage(model, usage, call_type="simple")
+
         if log:
             log_request_response(
                 function_name="simple_call",
@@ -199,13 +213,9 @@ class AnthropicProvider(LLMProvider):
             )
         )
 
-        # Extract token usage
-        usage = TokenUsage()
-        if hasattr(response, "usage") and response.usage is not None:
-            usage = TokenUsage(
-                input_tokens=getattr(response.usage, "input_tokens", 0) or 0,
-                output_tokens=getattr(response.usage, "output_tokens", 0) or 0,
-            )
+        # Extract and record token usage
+        usage = _extract_usage(response)
+        self._record_usage(model, usage, call_type="async")
 
         return _extract_tool_input(response) or {}, usage
 
@@ -245,6 +255,11 @@ class AnthropicProvider(LLMProvider):
                 )
             )
             structured_data = _extract_tool_input(response)
+
+            # Record token usage
+            ru = _extract_usage(response)
+            self._record_usage(model, ru, call_type="reasoning")
+
             if log:
                 log_request_response(
                     function_name="reasoning_call",
@@ -340,6 +355,10 @@ class AnthropicProvider(LLMProvider):
 
             all_sources.extend(sources)
             logger.info(f"[Claude] Web search completed, found {len(sources)} sources")
+
+            # Record token usage
+            ru = _extract_usage(response)
+            self._record_usage(model, ru, call_type="agentic_research")
 
             if log:
                 log_request_response(
