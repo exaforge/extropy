@@ -473,16 +473,6 @@ class SimulationEngine:
             summary = self._finalize(final_timestep, stopped_reason, runtime)
             self._export_results()
         finally:
-            # Close async HTTP clients before process exit to avoid
-            # "Event loop is closed" noise from orphaned httpx connections.
-            import asyncio
-
-            from ..core.providers import close_simulation_provider
-
-            try:
-                asyncio.run(close_simulation_provider())
-            except Exception:
-                pass
             self.state_manager.close()
             self.study_db.close()
 

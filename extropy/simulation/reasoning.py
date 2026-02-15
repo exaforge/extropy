@@ -18,6 +18,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from ..core.llm import simple_call, simple_call_async, TokenUsage
+from ..core.providers import detach_simulation_provider
 from ..core.models import (
     ExposureRecord,
     MemoryEntry,
@@ -833,6 +834,10 @@ def batch_reason_agents(
         raw_results = await asyncio.gather(*tasks)
         for idx, agent_id, result, elapsed in raw_results:
             results[idx] = (agent_id, result)
+
+        # Detach async clients before asyncio.run() destroys the event loop.
+        # Prevents httpx __del__ from scheduling cleanup on the dead loop.
+        detach_simulation_provider()
 
         return [r for r in results if r is not None]
 

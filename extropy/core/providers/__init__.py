@@ -200,6 +200,22 @@ async def close_simulation_provider() -> None:
     _cached_providers.clear()
 
 
+def detach_simulation_provider() -> None:
+    """Detach cached async clients without awaiting close.
+
+    Use this when the event loop is about to be destroyed (e.g. at the
+    end of asyncio.run()) to prevent httpx __del__ from scheduling
+    cleanup tasks on the dead loop.  TCP sockets are reclaimed by the OS.
+    """
+    for provider in _cached_providers.values():
+        provider._cached_async_client = None
+        # Azure provider has sub-providers with their own clients
+        for attr in ("_openai_sub", "_anthropic_sub"):
+            sub = getattr(provider, attr, None)
+            if sub is not None:
+                sub._cached_async_client = None
+
+
 def reset_provider_cache() -> None:
     """Reset the provider cache (for testing)."""
     _cached_providers.clear()
