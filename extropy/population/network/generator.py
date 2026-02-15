@@ -7,7 +7,6 @@ import json
 import logging
 import hashlib
 import multiprocessing as mp
-import pickle
 import random
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from datetime import datetime
@@ -31,10 +30,6 @@ _SIM_WORKER_ATTRIBUTE_WEIGHTS = None
 _SIM_WORKER_ORDINAL_LEVELS: dict[str, dict[str, int]] | None = None
 _SIM_WORKER_THRESHOLD: float = 0.05
 _SIM_WORKER_CANDIDATE_MAP: list[list[int]] | None = None
-
-
-def _is_db_checkpoint(path: Path | None) -> bool:
-    return path is not None and path.suffix.lower() == ".db"
 
 
 def _choose_blocking_attributes(config: NetworkConfig) -> list[str]:
@@ -137,104 +132,33 @@ def _similarity_checkpoint_job_id(signature: dict[str, Any]) -> str:
     return hashlib.sha256(raw.encode("utf-8")).hexdigest()[:24]
 
 
-def _save_similarity_checkpoint(
-    path: Path,
-    similarities: dict[tuple[int, int], float],
-    completed_rows: int,
-    signature: dict[str, Any],
-    completed_chunks: list[tuple[int, int]] | None = None,
-) -> None:
-    """Persist sparse similarities so generation can resume after interruption."""
-    payload = {
-        "version": 1,
-        "completed_rows": completed_rows,
-        "completed_chunks": completed_chunks or [],
-        "signature": signature,
-        "similarities": similarities,
-        "saved_at": datetime.now().isoformat(),
-    }
-    if _is_db_checkpoint(path):
-        job_id = _similarity_checkpoint_job_id(signature)
-        with open_study_db(path) as db:
-            db.init_network_similarity_job(
-                network_run_id=f"checkpoint:{job_id}",
-                signature=signature,
-                job_id=job_id,
-            )
-            db.save_similarity_snapshot(job_id=job_id, payload=pickle.dumps(payload))
-        return
-
-    path.parent.mkdir(parents=True, exist_ok=True)
-    tmp_path = path.with_suffix(path.suffix + ".tmp")
-    with open(tmp_path, "wb") as f:
-        pickle.dump(payload, f, protocol=pickle.HIGHEST_PROTOCOL)
-    tmp_path.replace(path)
-
-
 def _load_similarity_checkpoint(
-    path: Path,
+    checkpoint_db: Path,
     expected_signature: dict[str, Any],
 ) -> tuple[dict[tuple[int, int], float], int, set[int]]:
     """Load checkpoint and validate compatibility with current run settings."""
-    if _is_db_checkpoint(path):
-        job_id = _similarity_checkpoint_job_id(expected_signature)
-        with open_study_db(path) as db:
-            signature = db.get_network_similarity_job_signature(job_id)
-            if signature is not None:
-                if signature != expected_signature:
-                    raise ValueError(
-                        "Checkpoint settings do not match current run. "
-                        "Delete checkpoint or run with matching config."
-                    )
+    job_id = _similarity_checkpoint_job_id(expected_signature)
+    with open_study_db(checkpoint_db) as db:
+        signature = db.get_network_similarity_job_signature(job_id)
+        if signature is None:
+            raise ValueError(f"Checkpoint not found in study DB: job_id={job_id}")
+        if signature != expected_signature:
+            raise ValueError(
+                "Checkpoint settings do not match current run. "
+                "Delete checkpoint or run with matching config."
+            )
 
-                done_chunks = db.list_completed_similarity_chunks(job_id)
-                done_starts = {start for start, _ in done_chunks}
-                similarities = db.load_similarity_pairs(job_id)
+        done_chunks = db.list_completed_similarity_chunks(job_id)
+        done_starts = {start for start, _ in done_chunks}
+        similarities = db.load_similarity_pairs(job_id)
 
-                # Resume serial fallback only from contiguous completed prefix.
-                contiguous_rows = 0
-                for start, end in done_chunks:
-                    if start != contiguous_rows:
-                        break
-                    contiguous_rows = end
+    contiguous_rows = 0
+    for start, end in done_chunks:
+        if start != contiguous_rows:
+            break
+        contiguous_rows = end
 
-                return similarities, max(0, contiguous_rows), done_starts
-
-            payload_bytes = db.get_similarity_snapshot(job_id)
-            if payload_bytes is None:
-                raise ValueError(f"Checkpoint not found in study DB: job_id={job_id}")
-            payload = pickle.loads(payload_bytes)
-    else:
-        with open(path, "rb") as f:
-            payload = pickle.load(f)
-
-    signature = payload.get("signature", {})
-    if signature != expected_signature:
-        raise ValueError(
-            "Checkpoint settings do not match current run. "
-            "Delete checkpoint or run with matching config."
-        )
-
-    similarities = payload.get("similarities", {})
-    completed_rows = int(payload.get("completed_rows", 0))
-    completed_chunk_starts: set[int] = set()
-    allowed_completed_rows = max(0, completed_rows)
-    for item in payload.get("completed_chunks", []):
-        if (
-            isinstance(item, (list, tuple))
-            and len(item) == 2
-            and isinstance(item[0], int)
-            and isinstance(item[1], int)
-        ):
-            # Guard against stale/inconsistent payloads where completed_chunks
-            # were not truncated with completed_rows.
-            if item[0] < allowed_completed_rows and item[1] <= allowed_completed_rows:
-                completed_chunk_starts.add(item[0])
-
-    if not isinstance(similarities, dict):
-        raise ValueError("Invalid checkpoint similarities payload")
-
-    return similarities, max(0, completed_rows), completed_chunk_starts
+    return similarities, max(0, contiguous_rows), done_starts
 
 
 def _init_similarity_worker(
@@ -364,25 +288,14 @@ def _compute_similarities_parallel(
                     if (
                         checkpoint_path is not None
                         and checkpoint_signature is not None
+                        and checkpoint_job_id is not None
                     ):
-                        if _is_db_checkpoint(checkpoint_path) and checkpoint_job_id:
-                            with open_study_db(checkpoint_path) as db:
-                                db.save_similarity_chunk_rows(
-                                    job_id=checkpoint_job_id,
-                                    chunk_start=current_start,
-                                    chunk_end=current_end,
-                                    rows=chunk_rows,
-                                )
-                        else:
-                            completed_chunks = [
-                                (s, e) for s, e in tasks if s in completed_starts
-                            ]
-                            _save_similarity_checkpoint(
-                                path=checkpoint_path,
-                                similarities=similarities,
-                                completed_rows=min(completed_row_count, n),
-                                signature=checkpoint_signature,
-                                completed_chunks=completed_chunks,
+                        with open_study_db(checkpoint_path) as db:
+                            db.save_similarity_chunk_rows(
+                                job_id=checkpoint_job_id,
+                                chunk_start=current_start,
+                                chunk_end=current_end,
+                                rows=chunk_rows,
                             )
 
                     if on_progress:
@@ -392,12 +305,22 @@ def _compute_similarities_parallel(
                     next_commit_idx += 1
 
     except Exception as e:
+        downgraded_config = config.model_copy(
+            update={
+                "similarity_workers": 1,
+                "similarity_chunk_size": max(8, config.similarity_chunk_size // 2),
+            }
+        )
         logger.warning(
-            "Parallel similarity failed (%s). Falling back to serial mode.", e
+            "Parallel similarity failed (%s). Falling back to serial mode "
+            "(chunk_size %d -> %d).",
+            e,
+            config.similarity_chunk_size,
+            downgraded_config.similarity_chunk_size,
         )
         return _compute_similarities_serial(
             agents=agents,
-            config=config,
+            config=downgraded_config,
             candidate_map=candidate_map,
             on_progress=on_progress,
             checkpoint_path=checkpoint_path,
@@ -460,8 +383,15 @@ def _compute_similarities_serial(
         completed_starts.add(start)
         completed_row_count += end - start
 
-        if checkpoint_path is not None and checkpoint_signature is not None:
-            if _is_db_checkpoint(checkpoint_path) and checkpoint_job_id:
+        if (
+            checkpoint_path is not None
+            and checkpoint_signature is not None
+            and checkpoint_job_id is not None
+        ):
+            if (
+                completed_row_count % checkpoint_every == 0
+                or chunk_idx == len(tasks) - 1
+            ):
                 with open_study_db(checkpoint_path) as db:
                     db.save_similarity_chunk_rows(
                         job_id=checkpoint_job_id,
@@ -469,18 +399,6 @@ def _compute_similarities_serial(
                         chunk_end=end,
                         rows=local_rows,
                     )
-            elif (
-                completed_row_count % checkpoint_every == 0
-                or chunk_idx == len(tasks) - 1
-            ):
-                completed_chunks = [(s, e) for s, e in tasks if s in completed_starts]
-                _save_similarity_checkpoint(
-                    path=checkpoint_path,
-                    similarities=similarities,
-                    completed_rows=min(completed_row_count, n),
-                    signature=checkpoint_signature,
-                    completed_chunks=completed_chunks,
-                )
 
         if on_progress:
             on_progress("Computing similarities", min(completed_row_count, n), n)
@@ -1225,6 +1143,10 @@ def generate_network(
     n = len(agents)
     agent_ids = [a.get("_id", f"agent_{i}") for i, a in enumerate(agents)]
     checkpoint_file = Path(checkpoint_path) if checkpoint_path else None
+    if checkpoint_file is not None and checkpoint_file.suffix.lower() != ".db":
+        raise ValueError(
+            "Network checkpoints are DB-only now. Use --study-db (or --checkpoint <study.db>)."
+        )
 
     # Step 1: Compute degree factors
     degree_factors = [compute_degree_factor(a, config) for a in agents]
@@ -1256,7 +1178,7 @@ def generate_network(
         blocking_attrs=blocking_attrs,
     )
     checkpoint_job_id: str | None = None
-    if _is_db_checkpoint(checkpoint_file):
+    if checkpoint_file is not None:
         checkpoint_job_id = _similarity_checkpoint_job_id(checkpoint_signature)
         if not resume_from_checkpoint:
             with open_study_db(checkpoint_file) as db:
@@ -1272,7 +1194,7 @@ def generate_network(
     completed_chunk_starts: set[int] = set()
 
     if resume_from_checkpoint and checkpoint_file is None:
-        raise ValueError("--resume-checkpoint requires --checkpoint path")
+        raise ValueError("--resume-checkpoint requires a checkpoint DB path")
 
     if resume_from_checkpoint:
         if checkpoint_file is None or not checkpoint_file.exists():

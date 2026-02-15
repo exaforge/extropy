@@ -733,12 +733,18 @@ class TestGenerateNetwork:
 
     def test_generate_network_resume_from_checkpoint_matches_fresh(self, sample_agents):
         """Resuming from a saved similarity checkpoint should match a fresh run."""
-        import pickle
+        import sqlite3
 
-        config = REFERENCE_NETWORK_CONFIG.model_copy(update={"seed": 42})
+        config = REFERENCE_NETWORK_CONFIG.model_copy(
+            update={
+                "seed": 42,
+                "similarity_chunk_size": 8,
+                "checkpoint_every_rows": 1,
+            }
+        )
 
         with tempfile.TemporaryDirectory() as tmpdir:
-            checkpoint_path = Path(tmpdir) / "network-similarity.pkl"
+            checkpoint_path = Path(tmpdir) / "study.db"
 
             # Build and persist checkpoint from a full run.
             result_checkpointed = generate_network(
@@ -748,18 +754,39 @@ class TestGenerateNetwork:
             )
             assert checkpoint_path.exists()
 
-            # Simulate interruption by truncating completed_rows in checkpoint metadata.
-            with open(checkpoint_path, "rb") as f:
-                payload = pickle.load(f)
-            completed_rows = max(1, len(sample_agents) // 2)
-            payload["completed_rows"] = completed_rows
-            payload["similarities"] = {
-                pair: sim
-                for pair, sim in payload["similarities"].items()
-                if pair[0] < completed_rows
-            }
-            with open(checkpoint_path, "wb") as f:
-                pickle.dump(payload, f, protocol=pickle.HIGHEST_PROTOCOL)
+            # Simulate interruption by dropping the latter half of completed chunks.
+            conn = sqlite3.connect(str(checkpoint_path))
+            cur = conn.cursor()
+            cur.execute(
+                "SELECT job_id FROM network_similarity_jobs ORDER BY created_at DESC LIMIT 1"
+            )
+            job_id = cur.fetchone()[0]
+            cutoff = max(8, (len(sample_agents) // 2))
+            cur.execute(
+                """
+                SELECT MIN(chunk_start)
+                FROM network_similarity_chunks
+                WHERE job_id = ? AND chunk_start >= ?
+                """,
+                (job_id, cutoff),
+            )
+            drop_start = cur.fetchone()[0]
+            if drop_start is None:
+                drop_start = 0
+            cur.execute(
+                "DELETE FROM network_similarity_chunks WHERE job_id = ? AND chunk_start >= ?",
+                (job_id, drop_start),
+            )
+            cur.execute(
+                "DELETE FROM network_similarity_pairs WHERE job_id = ? AND i >= ?",
+                (job_id, drop_start),
+            )
+            cur.execute(
+                "UPDATE network_similarity_jobs SET status = 'running' WHERE job_id = ?",
+                (job_id,),
+            )
+            conn.commit()
+            conn.close()
 
             resumed = generate_network(
                 sample_agents,
@@ -775,6 +802,18 @@ class TestGenerateNetwork:
             assert resumed.meta["resumed_from_checkpoint"] is True
             assert resumed_edges == fresh_edges
             assert len(resumed.edges) == len(result_checkpointed.edges)
+
+    def test_generate_network_checkpoint_requires_db_path(self, sample_agents):
+        """Checkpoint path must be a SQLite DB path."""
+        config = REFERENCE_NETWORK_CONFIG.model_copy(update={"seed": 42})
+        with tempfile.TemporaryDirectory() as tmpdir:
+            checkpoint_path = Path(tmpdir) / "network-similarity.pkl"
+            with pytest.raises(ValueError, match="DB-only"):
+                generate_network(
+                    sample_agents,
+                    config,
+                    checkpoint_path=checkpoint_path,
+                )
 
 
 class TestGenerateNetworkWithMetrics:

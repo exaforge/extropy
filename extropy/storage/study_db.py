@@ -133,12 +133,6 @@ class StudyDB:
                 PRIMARY KEY (job_id, i, j)
             ) WITHOUT ROWID;
 
-            CREATE TABLE IF NOT EXISTS network_similarity_snapshots (
-                job_id TEXT PRIMARY KEY,
-                payload BLOB NOT NULL,
-                updated_at TEXT NOT NULL
-            );
-
             CREATE TABLE IF NOT EXISTS simulation_runs (
                 run_id TEXT PRIMARY KEY,
                 scenario_name TEXT,
@@ -297,6 +291,8 @@ class StudyDB:
             CREATE INDEX IF NOT EXISTS idx_agent_states_aware ON agent_states(run_id, aware);
             CREATE INDEX IF NOT EXISTS idx_agent_states_will_share ON agent_states(run_id, will_share);
             CREATE INDEX IF NOT EXISTS idx_agent_states_last_reasoning ON agent_states(run_id, last_reasoning_timestep);
+            CREATE INDEX IF NOT EXISTS idx_agent_states_run_awws
+            ON agent_states(run_id, aware, will_share, last_reasoning_timestep);
             CREATE INDEX IF NOT EXISTS idx_exposures_agent_timestep ON exposures(run_id, agent_id, timestep);
             CREATE INDEX IF NOT EXISTS idx_timeline_timestep ON timeline(run_id, timestep);
             CREATE INDEX IF NOT EXISTS idx_shared_to_source ON shared_to(run_id, source_agent_id);
@@ -690,26 +686,6 @@ class StudyDB:
         if drop_pairs:
             cursor.execute("DELETE FROM network_similarity_pairs WHERE job_id = ?", (job_id,))
         self.conn.commit()
-
-    def save_similarity_snapshot(self, job_id: str, payload: bytes) -> None:
-        cursor = self.conn.cursor()
-        cursor.execute(
-            """
-            INSERT OR REPLACE INTO network_similarity_snapshots (job_id, payload, updated_at)
-            VALUES (?, ?, ?)
-            """,
-            (job_id, payload, _now_iso()),
-        )
-        self.conn.commit()
-
-    def get_similarity_snapshot(self, job_id: str) -> bytes | None:
-        cursor = self.conn.cursor()
-        cursor.execute(
-            "SELECT payload FROM network_similarity_snapshots WHERE job_id = ?",
-            (job_id,),
-        )
-        row = cursor.fetchone()
-        return bytes(row["payload"]) if row else None
 
     def create_simulation_run(
         self,

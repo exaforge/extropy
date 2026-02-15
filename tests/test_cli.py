@@ -71,7 +71,6 @@ class TestNetworkCommand:
         study_db = tmp_path / "study.db"
         config_path = tmp_path / "network-config.yaml"
         output_path = tmp_path / "network.json"
-        checkpoint_path = tmp_path / "network-checkpoint.pkl"
 
         agents = [
             {"_id": "a0", "role": "x", "team": "alpha"},
@@ -106,7 +105,7 @@ class TestNetworkCommand:
                 "--similarity-chunk-size",
                 "8",
                 "--checkpoint",
-                str(checkpoint_path),
+                str(study_db),
                 "--checkpoint-every",
                 "1",
             ],
@@ -114,7 +113,9 @@ class TestNetworkCommand:
 
         assert result.exit_code == 0
         assert output_path.exists()
-        assert checkpoint_path.exists()
+        with open_study_db(study_db) as db:
+            rows = db.run_select("SELECT COUNT(*) AS cnt FROM network_similarity_jobs")
+            assert rows and int(rows[0]["cnt"]) >= 1
 
     def test_network_resume_requires_checkpoint(self):
         result = runner.invoke(
@@ -130,6 +131,25 @@ class TestNetworkCommand:
         )
         assert result.exit_code == 1
         assert "Study DB not found" in result.output
+
+    def test_network_checkpoint_must_match_study_db(self, tmp_path):
+        study_db = tmp_path / "study.db"
+        other_db = tmp_path / "other.db"
+        with open_study_db(study_db) as db:
+            db.save_sample_result(population_id="default", agents=[{"_id": "a0"}], meta={})
+
+        result = runner.invoke(
+            app,
+            [
+                "network",
+                "--study-db",
+                str(study_db),
+                "--checkpoint",
+                str(other_db),
+            ],
+        )
+        assert result.exit_code == 1
+        assert "--checkpoint must point to the same canonical file as --study-db" in result.output
 
 
 def _seed_run_scoped_state(study_db: Path) -> None:

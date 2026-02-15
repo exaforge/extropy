@@ -88,12 +88,12 @@ def network_command(
     checkpoint: Path | None = typer.Option(
         None,
         "--checkpoint",
-        help="Path to similarity checkpoint file (.pkl) or study DB (.db)",
+        help="DB path for similarity checkpointing (must be the same as --study-db)",
     ),
     resume_checkpoint: bool = typer.Option(
         False,
         "--resume-checkpoint",
-        help="Resume similarity stage from --checkpoint file",
+        help="Resume similarity stage from checkpoint tables in --study-db",
     ),
     checkpoint_every: int = typer.Option(
         250,
@@ -149,8 +149,15 @@ def network_command(
     start_time = time.time()
     console.print()
 
-    if resume_checkpoint and checkpoint is None:
-        checkpoint = study_db
+    if (
+        checkpoint is not None
+        and checkpoint.expanduser().resolve() != study_db.expanduser().resolve()
+    ):
+        console.print(
+            "[red]✗[/red] --checkpoint must point to the same canonical file as --study-db"
+        )
+        raise typer.Exit(1)
+    checkpoint_db = study_db if (resume_checkpoint or checkpoint is not None) else None
 
     # Load Agents
     if not study_db.exists():
@@ -293,7 +300,7 @@ def network_command(
 
     console.print(
         f"[dim]Mode: {config.candidate_mode} | workers={config.similarity_workers} "
-        f"| checkpoint={'on' if checkpoint else 'off'}[/dim]"
+        f"| checkpoint={'on' if checkpoint_db else 'off'}[/dim]"
     )
     if resource_mode == "auto":
         snap = governor.snapshot()
@@ -323,7 +330,7 @@ def network_command(
                     agents,
                     config,
                     on_progress,
-                    checkpoint_path=checkpoint,
+                    checkpoint_path=checkpoint_db,
                     resume_from_checkpoint=resume_checkpoint,
                 )
             else:
@@ -331,7 +338,7 @@ def network_command(
                     agents,
                     config,
                     on_progress,
-                    checkpoint_path=checkpoint,
+                    checkpoint_path=checkpoint_db,
                     resume_from_checkpoint=resume_checkpoint,
                 )
         except Exception as e:

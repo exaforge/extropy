@@ -61,22 +61,22 @@ extropy config show
 
 ```bash
 mkdir -p austin
+STUDY_DB=austin/study.db
 
 # Build a population
 extropy spec "500 Austin TX commuters who drive into downtown for work" -o austin/base.yaml
 extropy extend austin/base.yaml -s "Response to a $15/day downtown congestion tax" -o austin/population.yaml
-extropy sample austin/population.yaml -o austin/agents.json --seed 42
-extropy network austin/agents.json -o austin/network.json -p austin/population.yaml --seed 42
-extropy persona austin/population.yaml --agents austin/agents.json -o austin/population.persona.yaml
+extropy sample austin/population.yaml --study-db "$STUDY_DB" --seed 42
+extropy network --study-db "$STUDY_DB" -p austin/population.yaml --seed 42 --checkpoint "$STUDY_DB"
 
 # Compile and run a scenario
-extropy scenario -p austin/population.yaml -a austin/agents.json -n austin/network.json -o austin/scenario.yaml
-extropy estimate austin/scenario.yaml
-extropy simulate austin/scenario.yaml -o austin/results/ --seed 42
+extropy scenario -p austin/population.yaml --study-db "$STUDY_DB" -o austin/scenario.yaml
+extropy estimate austin/scenario.yaml --study-db "$STUDY_DB"
+extropy simulate austin/scenario.yaml --study-db "$STUDY_DB" -o austin/results/ --seed 42
 
 # View results
-extropy results austin/results/
-extropy results austin/results/ --segment income
+extropy results --study-db "$STUDY_DB"
+extropy results --study-db "$STUDY_DB" --segment income
 ```
 
 ### What Comes Out
@@ -126,10 +126,13 @@ Each agent reasoned individually. A low-income commuter with no transit access r
 
 Simulation output directory (`austin/results/`) contains:
 - `study.db` (canonical state + checkpoint store)
-- `agent_states.json` (final per-agent states)
 - `by_timestep.json` (time-series aggregates)
-- `outcome_distributions.json` (final distributions)
 - `meta.json` (run metadata + token/cost summary)
+
+For full datasets, use explicit exports from `study.db`:
+- `extropy export states --study-db "$STUDY_DB" --to austin/results/states.jsonl`
+- `extropy export agents --study-db "$STUDY_DB" --to austin/results/agents.jsonl`
+- `extropy export edges --study-db "$STUDY_DB" --to austin/results/edges.jsonl`
 
 The scenario YAML controls what gets tracked:
 
