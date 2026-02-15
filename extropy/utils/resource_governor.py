@@ -91,7 +91,9 @@ class ResourceGovernor:
             return requested_workers
 
         snap = self.snapshot()
-        cpu_cap = max(1, snap.cpu_count - 1) if self.safe_auto_workers else snap.cpu_count
+        cpu_cap = (
+            max(1, snap.cpu_count - 1) if self.safe_auto_workers else snap.cpu_count
+        )
         mem_cap = max(1, int(snap.memory_budget_gb / max(0.1, memory_per_worker_gb)))
 
         if self.safe_auto_workers:

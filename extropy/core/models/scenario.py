@@ -269,7 +269,9 @@ class ScenarioMeta(BaseModel):
     description: str = Field(description="Full scenario description")
     population_spec: str = Field(description="Path to population YAML")
     study_db: str = Field(description="Path to canonical study DB")
-    population_id: str = Field(default="default", description="Population ID in study DB")
+    population_id: str = Field(
+        default="default", description="Population ID in study DB"
+    )
     network_id: str = Field(default="default", description="Network ID in study DB")
     created_at: datetime = Field(default_factory=datetime.now)
 
@@ -310,9 +312,7 @@ class ScenarioSpec(BaseModel):
             raise ValueError("Scenario YAML must parse to an object")
 
         meta = data.get("meta", {})
-        if isinstance(meta, dict) and (
-            "agents_file" in meta or "network_file" in meta
-        ):
+        if isinstance(meta, dict) and ("agents_file" in meta or "network_file" in meta):
             raise ValueError(
                 "Legacy scenario schema detected (meta.agents_file/meta.network_file). "
                 "Migrate with: extropy migrate scenario --input "

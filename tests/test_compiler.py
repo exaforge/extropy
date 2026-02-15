@@ -85,7 +85,10 @@ class TestCreateScenario:
         pop_path = tmp_path / "population.yaml"
         minimal_population_spec.to_yaml(pop_path)
 
-        agents = [{"_id": f"agent_{i:03d}", "age": 30 + i, "gender": "male"} for i in range(10)]
+        agents = [
+            {"_id": f"agent_{i:03d}", "age": 30 + i, "gender": "male"}
+            for i in range(10)
+        ]
         edges = [
             {
                 "source": f"agent_{i:03d}",

@@ -1,4 +1,5 @@
 """CLI smoke tests using typer's CliRunner."""
+
 import json
 import sqlite3
 from types import SimpleNamespace
@@ -20,7 +21,7 @@ class TestConfigCommand:
     def test_config_show(self):
         result = runner.invoke(app, ["config", "show"])
         assert result.exit_code == 0
-        assert "Pipeline" in result.output
+        assert "Models" in result.output
         assert "Simulation" in result.output
 
     def test_config_set_invalid_key(self):
@@ -80,7 +81,9 @@ class TestNetworkCommand:
             {"_id": "a3", "role": "y", "team": "beta"},
         ]
         with open_study_db(study_db) as db:
-            db.save_sample_result(population_id="default", agents=agents, meta={"source": "test"})
+            db.save_sample_result(
+                population_id="default", agents=agents, meta={"source": "test"}
+            )
 
         NetworkConfig(seed=42, avg_degree=2.0).to_yaml(config_path)
 
@@ -137,7 +140,9 @@ class TestNetworkCommand:
         study_db = tmp_path / "study.db"
         other_db = tmp_path / "other.db"
         with open_study_db(study_db) as db:
-            db.save_sample_result(population_id="default", agents=[{"_id": "a0"}], meta={})
+            db.save_sample_result(
+                population_id="default", agents=[{"_id": "a0"}], meta={}
+            )
 
         result = runner.invoke(
             app,
@@ -150,7 +155,10 @@ class TestNetworkCommand:
             ],
         )
         assert result.exit_code == 1
-        assert "--checkpoint must point to the same canonical file as --study-db" in result.output
+        assert (
+            "--checkpoint must point to the same canonical file as --study-db"
+            in result.output
+        )
 
 
 def _seed_run_scoped_state(study_db: Path) -> None:
@@ -159,7 +167,9 @@ def _seed_run_scoped_state(study_db: Path) -> None:
         {"_id": "a1", "team": "beta"},
     ]
     with open_study_db(study_db) as db:
-        db.save_sample_result(population_id="default", agents=agents, meta={"source": "test"})
+        db.save_sample_result(
+            population_id="default", agents=agents, meta={"source": "test"}
+        )
         db.create_simulation_run(
             run_id="run_old",
             scenario_name="s",
@@ -227,7 +237,9 @@ class TestRunScopedCliReads:
             ["export", "states", "--study-db", str(study_db), "--to", str(out)],
         )
         assert result.exit_code == 0
-        rows = [json.loads(line) for line in out.read_text(encoding="utf-8").splitlines()]
+        rows = [
+            json.loads(line) for line in out.read_text(encoding="utf-8").splitlines()
+        ]
         assert len(rows) == 1
         assert rows[0]["run_id"] == "run_new"
         assert rows[0]["private_position"] == "new_pos"
@@ -333,7 +345,9 @@ class TestPersonaCommand:
         agents_file.write_text("[]\n", encoding="utf-8")
         study_db = tmp_path / "study.db"
         with open_study_db(study_db) as db:
-            db.save_sample_result(population_id="default", agents=[{"_id": "a0"}], meta={})
+            db.save_sample_result(
+                population_id="default", agents=[{"_id": "a0"}], meta={}
+            )
 
         result = runner.invoke(
             app,

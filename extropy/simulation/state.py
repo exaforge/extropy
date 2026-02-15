@@ -462,7 +462,9 @@ class StateManager:
     def get_all_agent_ids(self) -> list[str]:
         """Get all agent IDs in the database."""
         cursor = self.conn.cursor()
-        cursor.execute("SELECT agent_id FROM agent_states WHERE run_id = ?", (self.run_id,))
+        cursor.execute(
+            "SELECT agent_id FROM agent_states WHERE run_id = ?", (self.run_id,)
+        )
         return [row["agent_id"] for row in cursor.fetchall()]
 
     def get_network_hop_depth(self, agent_id: str) -> int | None:
@@ -500,8 +502,7 @@ class StateManager:
             """
             SELECT agent_id FROM agent_states
             WHERE run_id = ? AND aware = 1 AND last_reasoning_timestep < 0
-        """
-            ,
+        """,
             (self.run_id,),
         )
         never_reasoned = [row["agent_id"] for row in cursor.fetchall()]
@@ -523,8 +524,7 @@ class StateManager:
               AND s.last_reasoning_timestep >= 0
               AND s.committed = 0
             GROUP BY s.agent_id
-        """
-            ,
+        """,
             (self.run_id,),
         )
 

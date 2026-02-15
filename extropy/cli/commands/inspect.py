@@ -147,7 +147,9 @@ def inspect_agent(
 
     if state:
         console.print("[bold]State[/bold]")
-        console.print(f"  aware={bool(state['aware'])} will_share={bool(state['will_share'])}")
+        console.print(
+            f"  aware={bool(state['aware'])} will_share={bool(state['will_share'])}"
+        )
         console.print(
             f"  position={state['private_position'] or state['position']} "
             f"sentiment={state['private_sentiment'] if state['private_sentiment'] is not None else state['sentiment']}"

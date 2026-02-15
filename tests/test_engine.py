@@ -912,7 +912,9 @@ class TestSimulationMetadata:
         assert reasoned == 3
         completed = engine.study_db.get_completed_simulation_chunks(engine.run_id, 0)
         assert completed == {0, 1, 2}
-        assert engine.study_db.get_run_metadata(engine.run_id, "last_checkpoint") == "0:2"
+        assert (
+            engine.study_db.get_run_metadata(engine.run_id, "last_checkpoint") == "0:2"
+        )
 
 
 class TestResumeLogic:
@@ -1564,8 +1566,8 @@ class TestTokenAccumulation:
         config = SimulationRunConfig(
             scenario_path="test.yaml",
             output_dir=str(tmp_path / "output"),
-            model="unknown-model-xyz",
-            routine_model="unknown-model-abc",
+            strong="unknown-provider/unknown-model-xyz",
+            fast="unknown-provider/unknown-model-abc",
         )
         engine = SimulationEngine(
             scenario=minimal_scenario,

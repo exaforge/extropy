@@ -185,7 +185,9 @@ def persona_command(
         console.print()
 
         if not agents:
-            console.print("[red]✗[/red] Need --study-db or --agents to preview personas")
+            console.print(
+                "[red]✗[/red] Need --study-db or --agents to preview personas"
+            )
             raise typer.Exit(1)
 
         if agent_index >= len(agents):

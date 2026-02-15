@@ -217,7 +217,9 @@ class SimulationEngine:
         self.output_dir.mkdir(parents=True, exist_ok=True)
 
         # Initialize state manager
-        state_db_file = Path(state_db_path) if state_db_path else self.output_dir / "study.db"
+        state_db_file = (
+            Path(state_db_path) if state_db_path else self.output_dir / "study.db"
+        )
         self.state_manager = StateManager(
             state_db_file,
             agents,
@@ -306,7 +308,10 @@ class SimulationEngine:
 
     def _apply_runtime_guardrails(self, timestep: int) -> None:
         """Downshift runtime knobs when process memory nears configured budget."""
-        if self.resource_governor is None or self.resource_governor.resource_mode != "auto":
+        if (
+            self.resource_governor is None
+            or self.resource_governor.resource_mode != "auto"
+        ):
             return
 
         ratio = self.resource_governor.memory_pressure_ratio()
@@ -698,7 +703,9 @@ class SimulationEngine:
                         chunk_index, chunk_results, is_last_chunk = item
                         if chunk_index in completed_chunks:
                             continue
-                        pending_chunks.append((chunk_index, chunk_results, is_last_chunk))
+                        pending_chunks.append(
+                            (chunk_index, chunk_results, is_last_chunk)
+                        )
                         if (
                             len(pending_chunks) >= self.db_write_batch_size
                             or is_last_chunk
@@ -740,7 +747,6 @@ class SimulationEngine:
             reasoning_elapsed = time.time() - reasoning_start
             self.total_reasoning_calls += len(chunk_results)
 
-            # Accumulate token usage
             self.pivotal_input_tokens += chunk_usage.pivotal_input_tokens
             self.pivotal_output_tokens += chunk_usage.pivotal_output_tokens
             self.routine_input_tokens += chunk_usage.routine_input_tokens
@@ -1249,7 +1255,7 @@ class SimulationEngine:
             final_exposure_rate=self.state_manager.get_exposure_rate(),
             outcome_distributions=outcome_dists,
             runtime_seconds=runtime,
-            model_used=self.config.model,
+            model_used=self.config.strong,
             completed_at=datetime.now(),
         )
 
@@ -1259,7 +1265,7 @@ class SimulationEngine:
         Returns:
             Cost dictionary with token counts and estimated USD.
         """
-        from ..core.pricing import get_pricing, resolve_default_model
+        from ..core.pricing import get_pricing
         from ..config import get_config
 
         cost: dict[str, Any] = {
@@ -1274,19 +1280,14 @@ class SimulationEngine:
 
         # Resolve effective model names for pricing
         config = get_config()
-        provider = config.simulation.provider
-        pivotal_model = (
-            self.config.pivotal_model
-            or self.config.model
-            or config.simulation.pivotal_model
-            or config.simulation.model
-            or resolve_default_model(provider, "reasoning")
-        )
-        routine_model = (
-            self.config.routine_model
-            or config.simulation.routine_model
-            or resolve_default_model(provider, "simple")
-        )
+        from ..config import parse_model_string
+
+        strong_model_str = self.config.strong or config.resolve_sim_strong()
+        fast_model_str = self.config.fast or config.resolve_sim_fast()
+
+        # Strip provider prefix for pricing lookup (pricing is keyed by bare model name)
+        _, pivotal_model = parse_model_string(strong_model_str)
+        _, routine_model = parse_model_string(fast_model_str)
 
         cost["pivotal_model"] = pivotal_model
         cost["routine_model"] = routine_model
@@ -1341,9 +1342,8 @@ class SimulationEngine:
             "scenario_name": self.scenario.meta.name,
             "scenario_path": self.config.scenario_path,
             "population_size": len(self.agents),
-            "model": self.config.model,
-            "pivotal_model": self.config.pivotal_model,
-            "routine_model": self.config.routine_model,
+            "strong_model": self.config.strong,
+            "fast_model": self.config.fast,
             "seed": self.seed,
             "multi_touch_threshold": self.config.multi_touch_threshold,
             "completed_at": datetime.now().isoformat(),
@@ -1363,9 +1363,8 @@ def run_simulation(
     scenario_path: str | Path,
     output_dir: str | Path,
     study_db_path: str | Path | None = None,
-    model: str = "",
-    pivotal_model: str = "",
-    routine_model: str = "",
+    strong: str = "",
+    fast: str = "",
     multi_touch_threshold: int = 3,
     random_seed: int | None = None,
     on_progress: TimestepProgressCallback | None = None,
@@ -1390,9 +1389,8 @@ def run_simulation(
     Args:
         scenario_path: Path to scenario YAML file
         output_dir: Directory for results output
-        model: LLM model for agent reasoning
-        pivotal_model: Model for pivotal reasoning (default: same as model)
-        routine_model: Cheap model for routine + classification
+        strong: Strong model for Pass 1 reasoning (provider/model format)
+        fast: Fast model for Pass 2 classification (provider/model format)
         multi_touch_threshold: Re-reason after N new exposures
         random_seed: Random seed for reproducibility
         on_progress: Progress callback(timestep, max, status)
@@ -1493,9 +1491,8 @@ def run_simulation(
             config={
                 "scenario_path": str(scenario_path),
                 "output_dir": str(output_dir),
-                "model": model,
-                "pivotal_model": pivotal_model,
-                "routine_model": routine_model,
+                "strong": strong,
+                "fast": fast,
                 "multi_touch_threshold": multi_touch_threshold,
                 "chunk_size": chunk_size,
                 "checkpoint_every_chunks": checkpoint_every_chunks,
@@ -1531,26 +1528,22 @@ def run_simulation(
     config = SimulationRunConfig(
         scenario_path=str(scenario_path),
         output_dir=str(output_dir),
-        model=model,
-        pivotal_model=pivotal_model,
-        routine_model=routine_model,
+        strong=strong,
+        fast=fast,
         multi_touch_threshold=multi_touch_threshold,
         random_seed=random_seed,
     )
 
-    # Create dual rate limiter (separate limiters for pivotal and routine models)
+    # Resolve effective model strings for rate limiting
     from ..config import get_config
 
     entropy_config = get_config()
-    provider = entropy_config.simulation.provider
-    effective_model = model or entropy_config.simulation.model or ""
-    effective_pivotal = pivotal_model or effective_model
-    effective_routine = routine_model or entropy_config.simulation.routine_model or ""
+    effective_strong = strong or entropy_config.resolve_sim_strong()
+    effective_fast = fast or entropy_config.resolve_sim_fast()
 
     rate_limiter = DualRateLimiter.create(
-        provider=provider,
-        pivotal_model=effective_pivotal,
-        routine_model=effective_routine,
+        strong_model_string=effective_strong,
+        fast_model_string=effective_fast,
         tier=rate_tier,
         rpm_override=rpm_override,
         tpm_override=tpm_override,

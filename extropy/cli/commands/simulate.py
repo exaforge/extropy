@@ -102,21 +102,16 @@ def simulate_command(
     scenario_file: Path = typer.Argument(..., help="Scenario spec YAML file"),
     output: Path = typer.Option(..., "--output", "-o", help="Output results directory"),
     study_db: Path = typer.Option(..., "--study-db", help="Canonical study DB file"),
-    model: str = typer.Option(
+    strong: str = typer.Option(
         "",
-        "--model",
+        "--strong",
         "-m",
-        help="LLM model for agent reasoning (empty = use config default)",
+        help="Strong model for Pass 1 (provider/model format)",
     ),
-    pivotal_model: str = typer.Option(
+    fast: str = typer.Option(
         "",
-        "--pivotal-model",
-        help="Model for pivotal/first-pass reasoning (default: same as --model)",
-    ),
-    routine_model: str = typer.Option(
-        "",
-        "--routine-model",
-        help="Cheap model for classification pass (default: provider cheap tier)",
+        "--fast",
+        help="Fast model for Pass 2 (provider/model format)",
     ),
     threshold: int = typer.Option(
         3, "--threshold", "-t", help="Multi-touch threshold for re-reasoning"
@@ -240,29 +235,18 @@ def simulate_command(
     config = get_config()
 
     # Resolve models from CLI args > config > defaults
-    effective_model = model or config.simulation.model
-    effective_pivotal = pivotal_model or config.simulation.pivotal_model
-    effective_routine = routine_model or config.simulation.routine_model
+    effective_strong = strong or config.resolve_sim_strong()
+    effective_fast = fast or config.resolve_sim_fast()
     effective_tier = rate_tier or config.simulation.rate_tier
     effective_rpm = rpm_override or config.simulation.rpm_override
     effective_tpm = tpm_override or config.simulation.tpm_override
-
-    display_model = effective_model or f"({config.simulation.provider} default)"
-    display_provider = config.simulation.provider
 
     console.print(f"Simulating: [bold]{scenario_file}[/bold]")
     console.print(f"Output: {output}")
     console.print(f"Study DB: {study_db}")
     console.print(
-        f"Provider: {display_provider} | Model: {display_model} | Threshold: {threshold}"
+        f"Strong: {effective_strong} | Fast: {effective_fast} | Threshold: {threshold}"
     )
-    if effective_pivotal or effective_routine:
-        parts = []
-        if effective_pivotal:
-            parts.append(f"Pivotal: {effective_pivotal}")
-        if effective_routine:
-            parts.append(f"Routine: {effective_routine}")
-        console.print(" | ".join(parts))
     if effective_tier:
         console.print(f"Rate tier: {effective_tier}")
     if effective_rpm or effective_tpm:
@@ -314,9 +298,8 @@ def simulate_command(
                 scenario_path=scenario_file,
                 output_dir=output,
                 study_db_path=study_db,
-                model=effective_model,
-                pivotal_model=effective_pivotal,
-                routine_model=effective_routine,
+                strong=effective_strong,
+                fast=effective_fast,
                 multi_touch_threshold=threshold,
                 random_seed=seed,
                 on_progress=on_progress,
@@ -351,9 +334,8 @@ def simulate_command(
                     scenario_path=scenario_file,
                     output_dir=output,
                     study_db_path=study_db,
-                    model=effective_model,
-                    pivotal_model=effective_pivotal,
-                    routine_model=effective_routine,
+                    strong=effective_strong,
+                    fast=effective_fast,
                     multi_touch_threshold=threshold,
                     random_seed=seed,
                     on_progress=on_progress if not quiet else None,

@@ -205,7 +205,9 @@ def _display_agent(
     )
     row = cur.fetchone()
     if not row:
-        console.print(f"[yellow]Agent not found in simulation state: {agent_id}[/yellow]")
+        console.print(
+            f"[yellow]Agent not found in simulation state: {agent_id}[/yellow]"
+        )
         return
 
     cur.execute(

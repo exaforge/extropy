@@ -23,4 +23,3 @@ def test_memory_pressure_ratio_uses_budget(monkeypatch):
 
     # Budget is 80% of capped memory => 6.4 GB, so ratio should be 0.5.
     assert governor.memory_pressure_ratio() == 0.5
-
