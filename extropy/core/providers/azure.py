@@ -14,21 +14,6 @@ from .base import LLMProvider, TokenUsage, ValidatorCallback, RetryCallback
 logger = logging.getLogger(__name__)
 
 
-class UnsupportedCapabilityError(ValueError):
-    """Raised when a model doesn't support the requested capability."""
-
-
-_BACKEND_CAPABILITIES = {
-    "anthropic": {
-        "simple_call",
-        "simple_call_async",
-        "reasoning_call",
-        "agentic_research",
-    },
-    "openai": {"simple_call", "simple_call_async"},
-}
-
-
 def _detect_backend(model: str) -> str:
     """Detect which backend SDK to use based on model name."""
     if model.startswith("claude"):
@@ -94,18 +79,6 @@ class AzureProvider(LLMProvider):
             return self._get_anthropic_sub()
         return self._get_openai_sub()
 
-    def _check_capability(self, model: str, capability: str) -> None:
-        """Raise UnsupportedCapabilityError if the model's backend can't do this."""
-        backend = _detect_backend(model)
-        if capability not in _BACKEND_CAPABILITIES.get(backend, set()):
-            raise UnsupportedCapabilityError(
-                f"azure/{model} does not support {capability}.\n"
-                f"Use a model that supports this feature, e.g.:\n"
-                f"  - azure/claude-sonnet-4-5\n"
-                f"  - openai/gpt-5\n"
-                f"  - anthropic/claude-sonnet-4-5"
-            )
-
     def simple_call(
         self,
         prompt: str,
@@ -116,7 +89,7 @@ class AzureProvider(LLMProvider):
         max_tokens: int | None = None,
     ) -> dict:
         model = model or self.default_fast_model
-        self._check_capability(model, "simple_call")
+
         return self._get_sub(model).simple_call(
             prompt=prompt,
             response_schema=response_schema,
@@ -135,7 +108,7 @@ class AzureProvider(LLMProvider):
         max_tokens: int | None = None,
     ) -> tuple[dict, TokenUsage]:
         model = model or self.default_fast_model
-        self._check_capability(model, "simple_call_async")
+
         return await self._get_sub(model).simple_call_async(
             prompt=prompt,
             response_schema=response_schema,
@@ -158,7 +131,7 @@ class AzureProvider(LLMProvider):
         on_retry: RetryCallback | None = None,
     ) -> dict:
         model = model or self.default_strong_model
-        self._check_capability(model, "reasoning_call")
+
         return self._get_sub(model).reasoning_call(
             prompt=prompt,
             response_schema=response_schema,
@@ -186,7 +159,7 @@ class AzureProvider(LLMProvider):
         on_retry: RetryCallback | None = None,
     ) -> tuple[dict, list[str]]:
         model = model or self.default_strong_model
-        self._check_capability(model, "agentic_research")
+
         return self._get_sub(model).agentic_research(
             prompt=prompt,
             response_schema=response_schema,

@@ -760,43 +760,53 @@ class TestAzureProvider:
         assert result == {"result": "claude_ok"}
         mock_sub.simple_call.assert_called_once()
 
-    def test_reasoning_call_blocked_for_openai_backend(self):
-        from extropy.core.providers.azure import (
-            AzureProvider,
-            UnsupportedCapabilityError,
-        )
+    def test_reasoning_call_delegates_to_openai_sub(self):
+        from extropy.core.providers.azure import AzureProvider
 
         provider = AzureProvider(
             api_key="test-key",
             endpoint="https://my-resource.services.ai.azure.com",
         )
 
-        with pytest.raises(UnsupportedCapabilityError, match="reasoning_call"):
-            provider.reasoning_call(
-                prompt="test",
-                response_schema={"type": "object"},
-                model="DeepSeek-V3.2",
-            )
+        mock_sub = MagicMock()
+        mock_sub.reasoning_call.return_value = {"result": "reasoned_gpt"}
+        provider._openai_sub = mock_sub
 
-    def test_agentic_research_blocked_for_openai_backend(self):
-        from extropy.core.providers.azure import (
-            AzureProvider,
-            UnsupportedCapabilityError,
+        result = provider.reasoning_call(
+            prompt="test",
+            response_schema={"type": "object"},
+            model="DeepSeek-V3.2",
         )
+
+        assert result == {"result": "reasoned_gpt"}
+        mock_sub.reasoning_call.assert_called_once()
+
+    def test_agentic_research_delegates_to_openai_sub(self):
+        from extropy.core.providers.azure import AzureProvider
 
         provider = AzureProvider(
             api_key="test-key",
             endpoint="https://my-resource.services.ai.azure.com",
         )
 
-        with pytest.raises(UnsupportedCapabilityError, match="agentic_research"):
-            provider.agentic_research(
-                prompt="test",
-                response_schema={"type": "object"},
-                model="Kimi-K2.5",
-            )
+        mock_sub = MagicMock()
+        mock_sub.agentic_research.return_value = (
+            {"finding": "data"},
+            ["https://src.com"],
+        )
+        provider._openai_sub = mock_sub
 
-    def test_reasoning_call_allowed_for_claude(self):
+        result, sources = provider.agentic_research(
+            prompt="test",
+            response_schema={"type": "object"},
+            model="Kimi-K2.5",
+        )
+
+        assert result == {"finding": "data"}
+        assert sources == ["https://src.com"]
+        mock_sub.agentic_research.assert_called_once()
+
+    def test_reasoning_call_delegates_to_anthropic_sub(self):
         from extropy.core.providers.azure import AzureProvider
 
         provider = AzureProvider(
