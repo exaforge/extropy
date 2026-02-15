@@ -957,22 +957,23 @@ Conversation themes (clustered):
 | **high** reasoning | ~4.5k | ~700 |
 | **high** conversation turn | ~2k | ~200 |
 
-**Total cost (5-mini: $0.15/$0.60 per 1M tokens, 15 timesteps):**
+**Total cost (gpt-5-mini: $0.30/$1.50 per 1M tokens, 15 timesteps):**
 
 | | 2k agents | 10k agents |
 |---|---|---|
-| **Current system** | ~$8 | ~$40 |
-| **low** | ~$18 | ~$90 |
-| **medium** | ~$30 | ~$150 |
-| **high** | ~$44 | ~$220 |
+| **Current system** | ~$40 | ~$200 |
+| **low** | ~$59 | ~$295 |
+| **medium** | ~$72 | ~$360 |
+| **high** | ~$99 | ~$495 |
 
 **Total cost (Sonnet-class: ~$3/$15 per 1M tokens, 15 timesteps):**
 
 | | 2k agents | 10k agents |
 |---|---|---|
-| **low** | ~$360 | ~$1,800 |
-| **medium** | ~$600 | ~$3,000 |
-| **high** | ~$900 | ~$4,500 |
+| **Current system** | ~$480 | ~$2,400 |
+| **low** | ~$700 | ~$3,500 |
+| **medium** | ~$860 | ~$4,300 |
+| **high** | ~$1,180 | ~$5,900 |
 
 **Wall time (1k RPM, conservative):**
 
@@ -983,7 +984,7 @@ Conversation themes (clustered):
 | **medium** | ~1.2 hrs | ~6 hrs |
 | **high** | ~1.5 hrs | ~8 hrs |
 
-**Default:** `medium`. Best cost/quality tradeoff. Names, narrative, temporal awareness, full memory, the one conversation that matters most (partner), aggregate mood. ~$150 for 10k agents on 5-mini. ~3.5x current cost for a fundamentally better simulation.
+**Default:** `medium`. Best cost/quality tradeoff. Names, narrative, temporal awareness, full memory, the one conversation that matters most (partner), aggregate mood. ~$360 for 10k agents on gpt-5-mini. ~1.8x current cost for a fundamentally better simulation.
 
 ---
 
@@ -1120,9 +1121,9 @@ These are the minimum changes needed to move every tenet to **Strong**. Listed i
 
 7. **Demographic consistency:** An agent with `digital_literacy: basic` should not describe a plan involving "fine-tuning open-source models." Elaborations should reflect the agent's actual capabilities and constraints.
 
-### Clustering Validation
+### Exploratory Outcome Validation
 
-8. **Cluster coherence:** For exploratory outcomes, verify clusters are semantically meaningful. Silhouette scores on embeddings. Human review of cluster labels vs representative samples. Bad clusters = too heterogeneous or too small.
+8. **Export completeness:** For exploratory outcomes, verify all agent elaborations are exported with correct agent_id, demographics, and timestep. Downstream analysis (clustering, thematic coding) is done by the agentic harness or manual DS workflows — not validated by the engine.
 
 ---
 
