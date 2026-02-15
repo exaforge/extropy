@@ -193,15 +193,11 @@ class OpenAIProvider(LLMProvider):
                 await asyncio.sleep(wait)
 
     @property
-    def default_simple_model(self) -> str:
+    def default_fast_model(self) -> str:
         return "gpt-5-mini"
 
     @property
-    def default_reasoning_model(self) -> str:
-        return "gpt-5"
-
-    @property
-    def default_research_model(self) -> str:
+    def default_strong_model(self) -> str:
         return "gpt-5"
 
     def _get_client(self) -> OpenAI:

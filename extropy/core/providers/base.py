@@ -1,11 +1,14 @@
 """Abstract base class for LLM providers."""
 
+import logging
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import Callable, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from ..rate_limiter import RateLimiter
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -33,6 +36,8 @@ class LLMProvider(ABC):
 
     All providers must implement these methods with the same signatures
     to ensure drop-in compatibility.
+
+    Automatically records token usage into CostTracker after each call.
 
     Args:
         api_key: API key or access token for the provider.
@@ -101,21 +106,28 @@ class LLMProvider(ABC):
 
     @property
     @abstractmethod
+    def default_fast_model(self) -> str:
+        """Default model for fast/cheap calls (simple_call, Pass 2)."""
+        ...
+
+    @property
+    @abstractmethod
+    def default_strong_model(self) -> str:
+        """Default model for strong/reasoning calls (reasoning_call, agentic_research, Pass 1)."""
+        ...
+
+    # Backward-compat aliases (read-only)
+    @property
     def default_simple_model(self) -> str:
-        """Default model for simple_call (fast, cheap)."""
-        ...
+        return self.default_fast_model
 
     @property
-    @abstractmethod
     def default_reasoning_model(self) -> str:
-        """Default model for reasoning_call (balanced)."""
-        ...
+        return self.default_strong_model
 
     @property
-    @abstractmethod
     def default_research_model(self) -> str:
-        """Default model for agentic_research (with web search)."""
-        ...
+        return self.default_strong_model
 
     @abstractmethod
     def simple_call(
