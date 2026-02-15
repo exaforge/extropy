@@ -324,8 +324,8 @@ def network_command(
         "auto_save_generated_config": auto_save_generated_config,
         "quarantine_suffix": quarantine_suffix,
     }
-    config = (
-        config.model_copy(update=base_updates).apply_quality_profile_defaults(force=True)
+    config = config.model_copy(update=base_updates).apply_quality_profile_defaults(
+        force=True
     )
 
     advanced_updates = {}
@@ -541,7 +541,9 @@ def network_command(
 
     quality_meta = result.meta.get("quality", {})
     accepted = bool(quality_meta.get("accepted", True))
-    strict_failed = config.topology_gate == "strict" and not accepted and len(agents) >= 50
+    strict_failed = (
+        config.topology_gate == "strict" and not accepted and len(agents) >= 50
+    )
 
     # Save canonical output to study DB (or quarantine on strict failure)
     console.print()
@@ -583,15 +585,15 @@ def network_command(
         console.print(
             "[yellow]![/yellow] Topology gate strict failed. Saved quarantined artifact; canonical network not overwritten."
         )
-        console.print(
-            f"[yellow]![/yellow] Quarantined network_id={target_network_id}"
-        )
+        console.print(f"[yellow]![/yellow] Quarantined network_id={target_network_id}")
         console.print(
             f"[red]✗[/red] Failed gates with best metrics: {quality_meta.get('best_metrics', {})}"
         )
         if gate_deltas:
             console.print(f"[dim]Gate deltas: {gate_deltas}[/dim]")
-        console.print(f"[dim]inspect via: extropy inspect network-status --study-db {study_db} --network-run-id {network_run_id}[/dim]")
+        console.print(
+            f"[dim]inspect via: extropy inspect network-status --study-db {study_db} --network-run-id {network_run_id}[/dim]"
+        )
         raise typer.Exit(1)
     if strict_failed and not config.allow_quarantine:
         console.print(

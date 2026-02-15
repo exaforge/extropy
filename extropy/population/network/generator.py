@@ -1035,7 +1035,9 @@ def _build_adjacency_from_edges(
     return adjacency
 
 
-def _acceptance_bounds(config: NetworkConfig) -> tuple[float, float, float, float, float]:
+def _acceptance_bounds(
+    config: NetworkConfig,
+) -> tuple[float, float, float, float, float]:
     degree_delta = max(1.0, config.avg_degree * config.target_degree_tolerance_pct)
     deg_min = max(1.0, config.avg_degree - degree_delta)
     deg_max = config.avg_degree + degree_delta
@@ -1222,7 +1224,7 @@ def _ensure_intra_similarity_coverage(
         members_by_community[c].append(idx)
 
     intra_counts = [0] * n
-    for (i, j) in similarities.keys():
+    for i, j in similarities.keys():
         if communities[i] == communities[j]:
             intra_counts[i] += 1
             intra_counts[j] += 1
@@ -1862,7 +1864,9 @@ def generate_network(
             return
         if study_db_file is not None and network_run_id:
             if isinstance(message, dict):
-                message_text = json.dumps(message, sort_keys=True, separators=(",", ":"))
+                message_text = json.dumps(
+                    message, sort_keys=True, separators=(",", ":")
+                )
             else:
                 message_text = message or stage
             with open_study_db(study_db_file) as db:
@@ -1876,7 +1880,9 @@ def generate_network(
 
     def _stage_plan() -> list[dict[str, Any]]:
         if config.candidate_mode == "exact":
-            return [{"name": "exact", "candidate_mode": "exact", "pool_multiplier": 0.0}]
+            return [
+                {"name": "exact", "candidate_mode": "exact", "pool_multiplier": 0.0}
+            ]
         base_mult = max(6.0, config.candidate_pool_multiplier)
         if config.quality_profile == "fast":
             return [
@@ -1937,7 +1943,10 @@ def generate_network(
     stage_summaries: list[dict[str, Any]] = []
     calibration_step = 0
     calibration_total = max(
-        1, len(stage_plan) * config.calibration_restarts * config.max_calibration_iterations
+        1,
+        len(stage_plan)
+        * config.calibration_restarts
+        * config.max_calibration_iterations,
     )
 
     for stage_idx, stage in enumerate(stage_plan):
@@ -1975,7 +1984,9 @@ def generate_network(
             if candidate_map is None:
                 candidate_mode = "exact"
             elif stage.get("hybrid_expand"):
-                expanded_pool = int(max(config.avg_degree * 20, stage_cfg.min_candidate_pool))
+                expanded_pool = int(
+                    max(config.avg_degree * 20, stage_cfg.min_candidate_pool)
+                )
                 candidate_map = _expand_candidate_map_undercovered(
                     candidate_map=candidate_map,
                     n=n,
@@ -2016,14 +2027,15 @@ def generate_network(
         if should_resume_similarity:
             if checkpoint_file is None or not checkpoint_file.exists():
                 raise ValueError(f"Checkpoint not found: {checkpoint_file}")
-            similarities, start_row, completed_chunk_starts = _load_similarity_checkpoint(
-                checkpoint_file, checkpoint_signature
+            similarities, start_row, completed_chunk_starts = (
+                _load_similarity_checkpoint(checkpoint_file, checkpoint_signature)
             )
             if checkpoint_job_id and checkpoint_file is not None:
                 with open_study_db(checkpoint_file) as db:
                     db.mark_similarity_job_running(checkpoint_job_id)
 
         use_parallel_similarity = stage_cfg.similarity_workers > 1
+
         def similarity_progress(_stage: str, current: int, total: int) -> None:
             emit_progress(
                 "Computing similarities",
@@ -2127,7 +2139,10 @@ def generate_network(
             force_db=True,
         )
 
-        if community_diag.get("low_signal", 0.0) >= 1.0 and stage_idx < len(stage_plan) - 1:
+        if (
+            community_diag.get("low_signal", 0.0) >= 1.0
+            and stage_idx < len(stage_plan) - 1
+        ):
             stage_summaries.append(
                 {
                     "stage": stage_name,
@@ -2157,7 +2172,8 @@ def generate_network(
                 with open_study_db(study_db_file) as db:
                     calibration_run_id = db.create_network_calibration_run(
                         network_run_id=network_run_id,
-                        restart_index=(stage_idx * config.calibration_restarts) + restart,
+                        restart_index=(stage_idx * config.calibration_restarts)
+                        + restart,
                         seed=restart_seed,
                     )
 
@@ -2200,11 +2216,15 @@ def generate_network(
                 )
                 if should_bridge_swap:
                     if modularity > (mod_max + 0.02):
-                        swap_budget = max(4, int(len(edges) * config.bridge_budget_fraction))
+                        swap_budget = max(
+                            4, int(len(edges) * config.bridge_budget_fraction)
+                        )
                     else:
                         # Connectivity repair should be conservative so we do not
                         # collapse modular structure while bridging components.
-                        ratio = min(config.bridge_budget_fraction * 0.25, lcc_deficit * 0.20)
+                        ratio = min(
+                            config.bridge_budget_fraction * 0.25, lcc_deficit * 0.20
+                        )
                         swap_budget = max(1, int(len(edges) * ratio))
                     edges = _apply_bridge_swaps(
                         edges,
@@ -2376,7 +2396,9 @@ def generate_network(
         if stage_accepted:
             break
 
-    emit_progress("Calibrating network", calibration_total, calibration_total, force_db=True)
+    emit_progress(
+        "Calibrating network", calibration_total, calibration_total, force_db=True
+    )
     edges = best_edges or []
 
     # Rebuild edge_set from best edges
