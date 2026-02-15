@@ -30,6 +30,7 @@ from extropy.population.network.generator import (
     _compute_similarity_coverage,
     _coverage_needs_escalation,
     _compute_modularity_fast,
+    _apply_scale_target_caps,
 )
 
 _REFERENCE_SENIORITY_LEVELS = {
@@ -224,6 +225,18 @@ class TestNetworkConfig:
         assert strict.max_calibration_minutes >= fast.max_calibration_minutes
         assert strict.topology_gate == "strict"
         assert fast.topology_gate == "warn"
+
+    def test_scale_target_caps_large_graph(self):
+        cfg = NetworkConfig(
+            quality_profile="balanced",
+            target_clustering=0.35,
+            target_modularity=0.55,
+        )
+        capped, caps = _apply_scale_target_caps(cfg, n=10000)
+        assert capped.target_clustering <= 0.22
+        assert capped.target_modularity <= 0.40
+        assert "target_clustering" in caps
+        assert "target_modularity" in caps
 
 
 class TestAttributeWeightConfig:

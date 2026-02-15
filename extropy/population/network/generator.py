@@ -949,6 +949,39 @@ def _acceptance_bounds(config: NetworkConfig) -> tuple[float, float, float, floa
     return deg_min, deg_max, clust_min, mod_min, mod_max
 
 
+def _apply_scale_target_caps(
+    config: NetworkConfig,
+    n: int,
+) -> tuple[NetworkConfig, dict[str, float]]:
+    """Cap strict topology targets to scale-feasible envelopes.
+
+    This prevents large runs from chasing unrealistic clustering/modularity
+    values produced by first-pass generated configs.
+    """
+    if n < 2000:
+        return config, {}
+
+    if n >= 5000:
+        cluster_cap = 0.25 if config.quality_profile == "strict" else 0.22
+        modularity_cap = 0.45 if config.quality_profile == "strict" else 0.40
+    else:
+        cluster_cap = 0.33 if config.quality_profile == "strict" else 0.30
+        modularity_cap = 0.55 if config.quality_profile == "strict" else 0.50
+
+    updates: dict[str, float] = {}
+    caps: dict[str, float] = {}
+    if config.target_clustering > cluster_cap:
+        updates["target_clustering"] = cluster_cap
+        caps["target_clustering"] = cluster_cap
+    if config.target_modularity > modularity_cap:
+        updates["target_modularity"] = modularity_cap
+        caps["target_modularity"] = modularity_cap
+
+    if not updates:
+        return config, {}
+    return config.model_copy(update=updates), caps
+
+
 def _min_edge_floor(n: int, config: NetworkConfig) -> int:
     expected = n * config.avg_degree / 2.0
     if config.quality_profile == "strict":
@@ -1228,8 +1261,11 @@ def _triadic_closure(
     if current_clustering >= target_clustering:
         return edges, edge_set
 
-    # Edge budget: do not exceed the configured expansion factor.
+    # Edge budget: do not exceed expansion factor and keep degree near target envelope.
     max_edges = int(len(edges) * max_edge_increase)
+    degree_cap_edges = int(n * config.avg_degree / 2 * 1.2)
+    if degree_cap_edges > 0:
+        max_edges = min(max_edges, degree_cap_edges)
     available = max(0, max_edges - len(edges))
     if available <= 0:
         return edges, edge_set
@@ -1512,6 +1548,7 @@ def generate_network(
     rng = random.Random(seed)
 
     n = len(agents)
+    config, target_caps = _apply_scale_target_caps(config, n)
     agent_ids = [a.get("_id", f"agent_{i}") for i, a in enumerate(agents)]
     checkpoint_file = Path(checkpoint_path) if checkpoint_path else None
     study_db_file = Path(study_db_path) if study_db_path else None
@@ -2087,6 +2124,7 @@ def generate_network(
             "best_metrics": best_metrics or {},
             "best_stage": best_stage,
             "gate_deltas": quality_deltas,
+            "target_caps_applied": target_caps,
             "bounds": {
                 "degree_min": deg_min,
                 "degree_max": deg_max,
