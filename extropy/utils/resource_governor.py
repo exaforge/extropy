@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import os
 import platform
+import resource
 import subprocess
 from dataclasses import dataclass
 
@@ -60,6 +61,25 @@ class ResourceGovernor:
             total_memory_gb=round(total_mem, 2),
             memory_budget_gb=round(budget, 2),
         )
+
+    @staticmethod
+    def _current_process_memory_gb() -> float:
+        usage = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
+        system = platform.system().lower()
+        # Linux reports KB, macOS reports bytes.
+        if system == "darwin":
+            return float(usage) / (1024**3)
+        return float(usage) / (1024**2)
+
+    def memory_pressure_ratio(self) -> float:
+        snap = self.snapshot()
+        current = self._current_process_memory_gb()
+        budget = max(0.1, snap.memory_budget_gb)
+        return current / budget
+
+    @staticmethod
+    def downshift_int(current: int, factor: float, minimum: int = 1) -> int:
+        return max(minimum, int(max(1, current) * factor))
 
     def recommend_workers(
         self,

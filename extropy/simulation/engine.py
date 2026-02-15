@@ -49,6 +49,7 @@ from .reasoning import batch_reason_agents, create_reasoning_context
 from .propagation import apply_seed_exposures, propagate_through_network
 from .stopping import evaluate_stopping_conditions
 from ..utils.callbacks import TimestepProgressCallback
+from ..utils.resource_governor import ResourceGovernor
 from .aggregation import (
     compute_timestep_summary,
     compute_final_aggregates,
@@ -156,6 +157,7 @@ class SimulationEngine:
         retention_lite: bool = False,
         writer_queue_size: int = 256,
         db_write_batch_size: int = 100,
+        resource_governor: ResourceGovernor | None = None,
     ):
         """Initialize simulation engine.
 
@@ -182,6 +184,14 @@ class SimulationEngine:
         self.retention_lite = retention_lite
         self.writer_queue_size = max(1, writer_queue_size)
         self.db_write_batch_size = max(1, db_write_batch_size)
+        self.resource_governor = resource_governor
+        self.reasoning_max_concurrency = 50
+        if self.resource_governor is not None:
+            self.reasoning_max_concurrency = self.resource_governor.recommend_workers(
+                requested_workers=50,
+                memory_per_worker_gb=0.2,
+            )
+        self._last_guardrail_timestep = -1
 
         # Build agent map for quick lookup
         self.agent_map = {a.get("_id", str(i)): a for i, a in enumerate(agents)}
@@ -293,6 +303,49 @@ class SimulationEngine:
             progress: Thread-safe SimulationProgress instance
         """
         self._progress = progress
+
+    def _apply_runtime_guardrails(self, timestep: int) -> None:
+        """Downshift runtime knobs when process memory nears configured budget."""
+        if self.resource_governor is None or self.resource_governor.resource_mode != "auto":
+            return
+
+        ratio = self.resource_governor.memory_pressure_ratio()
+        if ratio < 0.85:
+            return
+
+        factor = 0.5 if ratio >= 0.98 else 0.75
+        old_concurrency = self.reasoning_max_concurrency
+        old_batch = self.db_write_batch_size
+        old_queue = self.writer_queue_size
+
+        self.reasoning_max_concurrency = self.resource_governor.downshift_int(
+            self.reasoning_max_concurrency, factor=factor, minimum=1
+        )
+        self.db_write_batch_size = self.resource_governor.downshift_int(
+            self.db_write_batch_size, factor=factor, minimum=1
+        )
+        self.writer_queue_size = self.resource_governor.downshift_int(
+            self.writer_queue_size, factor=factor, minimum=4
+        )
+
+        changed = (
+            old_concurrency != self.reasoning_max_concurrency
+            or old_batch != self.db_write_batch_size
+            or old_queue != self.writer_queue_size
+        )
+        if changed and timestep != self._last_guardrail_timestep:
+            self._last_guardrail_timestep = timestep
+            logger.warning(
+                "[RESOURCE] Memory pressure %.2fx budget; "
+                "reasoning_concurrency %d->%d, writer_batch %d->%d, writer_queue %d->%d",
+                ratio,
+                old_concurrency,
+                self.reasoning_max_concurrency,
+                old_batch,
+                self.db_write_batch_size,
+                old_queue,
+                self.writer_queue_size,
+            )
 
     def _report_progress(self, timestep: int, status: str) -> None:
         """Report progress to callback."""
@@ -528,6 +581,7 @@ class SimulationEngine:
         Returns:
             Tuple of (agents_reasoned, state_changes, shares_occurred).
         """
+        self._apply_runtime_guardrails(timestep)
         agents_to_reason = self.state_manager.get_agents_to_reason(
             timestep,
             self.config.multi_touch_threshold,
@@ -665,6 +719,7 @@ class SimulationEngine:
         for chunk_start in range(0, len(contexts), self.chunk_size):
             if writer_error:
                 break
+            self._apply_runtime_guardrails(timestep)
             chunk_index = chunk_start // self.chunk_size
             if chunk_index in completed_chunks:
                 logger.info(
@@ -678,6 +733,7 @@ class SimulationEngine:
                 chunk_contexts,
                 self.scenario,
                 self.config,
+                max_concurrency=self.reasoning_max_concurrency,
                 rate_limiter=self.rate_limiter,
                 on_agent_done=_on_agent_done,
             )
@@ -1272,47 +1328,13 @@ class SimulationEngine:
         return cost
 
     def _export_results(self) -> None:
-        """Export all results to output directory."""
+        """Export compact default artifacts to output directory."""
         # Export summary
         summaries = self.state_manager.get_timestep_summaries()
         timeline_agg = compute_timeline_aggregates(summaries)
 
         with open(self.output_dir / "by_timestep.json", "w") as f:
             json.dump(timeline_agg, f, indent=2)
-
-        # Export final agent states
-        final_states = self.state_manager.export_final_states()
-
-        # Merge with agent attributes
-        agent_results = []
-        for state in final_states:
-            agent_id = state["agent_id"]
-            agent = self.agent_map.get(agent_id, {})
-
-            agent_results.append(
-                {
-                    "agent_id": agent_id,
-                    "attributes": {
-                        k: v for k, v in agent.items() if not k.startswith("_")
-                    },
-                    "final_state": state,
-                    "reasoning_count": (
-                        1 if state["last_reasoning_timestep"] >= 0 else 0
-                    ),
-                }
-            )
-
-        with open(self.output_dir / "agent_states.json", "w") as f:
-            json.dump(agent_results, f, indent=2)
-
-        # Export outcome distributions
-        outcome_dists = compute_outcome_distributions(
-            self.state_manager,
-            self.scenario.outcomes.suggested_outcomes,
-        )
-
-        with open(self.output_dir / "outcome_distributions.json", "w") as f:
-            json.dump(outcome_dists, f, indent=2)
 
         # Export meta information
         meta = {
@@ -1359,6 +1381,7 @@ def run_simulation(
     retention_lite: bool = False,
     writer_queue_size: int = 256,
     db_write_batch_size: int = 100,
+    resource_governor: ResourceGovernor | None = None,
 ) -> SimulationSummary:
     """Run a simulation from a scenario file.
 
@@ -1385,6 +1408,7 @@ def run_simulation(
         retention_lite: Reduce payload volume by dropping full raw reasoning text
         writer_queue_size: Maximum buffered chunks waiting for DB writer
         db_write_batch_size: Number of chunks applied per DB writer transaction
+        resource_governor: Optional governor for runtime downshift guardrails
 
     Returns:
         SimulationSummary with results
@@ -1548,6 +1572,7 @@ def run_simulation(
         retention_lite=retention_lite,
         writer_queue_size=writer_queue_size,
         db_write_batch_size=db_write_batch_size,
+        resource_governor=resource_governor,
     )
 
     if on_progress:

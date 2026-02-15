@@ -777,7 +777,10 @@ def batch_reason_agents(
 
     async def run_all():
         if rate_limiter:
-            target_concurrency = max(1, rate_limiter.max_safe_concurrent)
+            target_concurrency = min(
+                max(1, rate_limiter.max_safe_concurrent),
+                max(1, max_concurrency),
+            )
             stagger_interval = 60.0 / rate_limiter.pivotal.rpm
             logger.info(
                 f"[BATCH] Concurrency cap: {target_concurrency}, "

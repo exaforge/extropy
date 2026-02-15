@@ -332,6 +332,7 @@ def simulate_command(
                 retention_lite=retention_lite,
                 writer_queue_size=writer_queue_size,
                 db_write_batch_size=db_write_batch_size,
+                resource_governor=governor,
             )
             simulation_error = None
         except Exception as e:
@@ -368,6 +369,7 @@ def simulate_command(
                     retention_lite=retention_lite,
                     writer_queue_size=writer_queue_size,
                     db_write_batch_size=db_write_batch_size,
+                    resource_governor=governor,
                 )
             except Exception as e:
                 simulation_error = e

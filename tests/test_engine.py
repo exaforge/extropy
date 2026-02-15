@@ -20,6 +20,7 @@ from extropy.core.models import (
     SimulationRunConfig,
 )
 from extropy.simulation.progress import SimulationProgress
+from extropy.utils.resource_governor import ResourceGovernor
 from extropy.core.models.scenario import (
     Event,
     EventType,
@@ -887,7 +888,14 @@ class TestSimulationMetadata:
             )
             engine.state_manager.record_exposure(aid, exposure)
 
-        def fake_batch(contexts, scenario, cfg, rate_limiter=None, on_agent_done=None):
+        def fake_batch(
+            contexts,
+            scenario,
+            cfg,
+            max_concurrency=50,
+            rate_limiter=None,
+            on_agent_done=None,
+        ):
             response = _make_reasoning_response()
             results = []
             for ctx in contexts:
@@ -1190,7 +1198,14 @@ class TestProgressState:
         response_a0 = _make_reasoning_response(position="adopt", conviction=0.5)
         response_a1 = _make_reasoning_response(position="reject", conviction=0.7)
 
-        def fake_batch(contexts, scenario, cfg, rate_limiter=None, on_agent_done=None):
+        def fake_batch(
+            contexts,
+            scenario,
+            cfg,
+            max_concurrency=50,
+            rate_limiter=None,
+            on_agent_done=None,
+        ):
             results = []
             for ctx in contexts:
                 if ctx.agent_id == "a0":
@@ -1253,7 +1268,14 @@ class TestProgressState:
 
         received_kwargs = {}
 
-        def fake_batch(contexts, scenario, cfg, rate_limiter=None, on_agent_done=None):
+        def fake_batch(
+            contexts,
+            scenario,
+            cfg,
+            max_concurrency=50,
+            rate_limiter=None,
+            on_agent_done=None,
+        ):
             received_kwargs["on_agent_done"] = on_agent_done
             resp = _make_reasoning_response()
             return [(ctx.agent_id, resp) for ctx in contexts], BatchTokenUsage()
@@ -1448,7 +1470,14 @@ class TestTokenAccumulation:
 
         call_count = [0]
 
-        def fake_batch(contexts, scenario, cfg, rate_limiter=None, on_agent_done=None):
+        def fake_batch(
+            contexts,
+            scenario,
+            cfg,
+            max_concurrency=50,
+            rate_limiter=None,
+            on_agent_done=None,
+        ):
             call_count[0] += 1
             resp = _make_reasoning_response()
             results = [(ctx.agent_id, resp) for ctx in contexts]
@@ -1557,3 +1586,75 @@ class TestTokenAccumulation:
             meta = json.load(f)
 
         assert meta["cost"]["estimated_usd"] is None
+
+    def test_export_results_keeps_compact_default_artifacts(
+        self,
+        minimal_scenario,
+        simple_agents,
+        simple_network,
+        minimal_pop_spec,
+        tmp_path,
+    ):
+        """Default export should keep compact summaries and skip large JSON dumps."""
+        config = SimulationRunConfig(
+            scenario_path="test.yaml",
+            output_dir=str(tmp_path / "output"),
+        )
+        engine = SimulationEngine(
+            scenario=minimal_scenario,
+            population_spec=minimal_pop_spec,
+            agents=simple_agents,
+            network=simple_network,
+            config=config,
+        )
+
+        engine._export_results()
+
+        assert (tmp_path / "output" / "meta.json").exists()
+        assert (tmp_path / "output" / "by_timestep.json").exists()
+        assert not (tmp_path / "output" / "agent_states.json").exists()
+        assert not (tmp_path / "output" / "outcome_distributions.json").exists()
+
+    def test_runtime_guardrails_downshift_under_pressure(
+        self,
+        minimal_scenario,
+        simple_agents,
+        simple_network,
+        minimal_pop_spec,
+        tmp_path,
+    ):
+        """Runtime memory pressure should downshift concurrency/write knobs."""
+
+        class HighPressureGovernor(ResourceGovernor):
+            def memory_pressure_ratio(self) -> float:
+                return 1.1
+
+        config = SimulationRunConfig(
+            scenario_path="test.yaml",
+            output_dir=str(tmp_path / "output"),
+        )
+        governor = HighPressureGovernor(resource_mode="auto")
+        engine = SimulationEngine(
+            scenario=minimal_scenario,
+            population_spec=minimal_pop_spec,
+            agents=simple_agents,
+            network=simple_network,
+            config=config,
+            writer_queue_size=64,
+            db_write_batch_size=16,
+            resource_governor=governor,
+        )
+        before = (
+            engine.reasoning_max_concurrency,
+            engine.db_write_batch_size,
+            engine.writer_queue_size,
+        )
+        engine._apply_runtime_guardrails(timestep=0)
+        after = (
+            engine.reasoning_max_concurrency,
+            engine.db_write_batch_size,
+            engine.writer_queue_size,
+        )
+        assert after[0] < before[0]
+        assert after[1] < before[1]
+        assert after[2] < before[2]
