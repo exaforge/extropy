@@ -12,10 +12,43 @@ This document specifies every change across the entire Extropy pipeline, from `e
 4. **Names carry culture.** Every agent has a name. Names are demographically appropriate (SSA baby names + Census surname data, bundled CSVs, US-only for now). Partners, kids, and peers are named. Non-US populations use country-specific name data added later behind the same `generate_name(gender, ethnicity, birth_decade, country="US")` interface.
 5. **Time is felt.** Agents know what day/week it is, how long ago they heard the news, whether things are getting better or worse.
 6. **Conversations are real.** Agents talk to each other. Both sides are real agents (or NPC dependents). The conversation changes both participants.
-7. **Outcomes emerge, not imposed.** For exploratory scenarios, outcomes are open-ended. Categories are discovered post-hoc through clustering, not pre-defined dropdowns.
+7. **Outcomes emerge, not imposed.** For exploratory scenarios, outcomes are open-ended. Categories are discovered post-hoc by downstream DS tooling (agentic harness), not pre-defined dropdowns or built-in clustering.
 8. **Scenarios evolve.** Events develop over time. New information arrives at specified timesteps. The world isn't frozen at t=0.
 9. **Deterministic where possible.** Names, family, temporal framing, mood rendering, channel experience — all deterministic. LLM calls only for reasoning and conversations.
 10. **Fidelity is tunable.** `--fidelity low/medium/high` controls prompt richness and conversation depth without changing the underlying data model.
+
+---
+
+## Locked Decisions
+
+Decisions confirmed before implementation. These override any conflicting detail elsewhere in this document.
+
+### Pre-Phase Decisions (all phases)
+
+| # | Decision | Resolution |
+|---|----------|------------|
+| 1 | Pipeline ordering | Network stays scenario-agnostic. Optional "scenario-conditioned network" mode is future work, not v2 core. |
+| 2 | `talk_to` target identity | `agent_id` in schema, render names only in prompt. |
+| 3 | Merged-pass default | 2-pass is default. Merged pass behind `--merged-pass` flag. A/B test later. |
+| 4 | Token budget for memory | Uncapped for now. Deterministic token cap with oldest-to-newest compression deferred. |
+| 5 | Timeline merge semantics | Timeline entry overrides base event for that timestep. |
+| 6 | DB schema for new artifacts | Define conversations/posts/action_history tables before Phase D. |
+| 7 | Name data | Local SSA baby names + Census surnames, bundled CSVs (~500KB), US-only. Non-US via country-specific CSVs later behind same interface: `generate_name(gender, ethnicity, birth_decade, country="US")`. |
+| 8 | Conformity/threshold mechanics | Soft prompt signal only (inject local adoption ratio + conformity phrasing). No hard numeric gate. |
+| 9 | Backtesting ground-truth | Define one validation dataset schema before Phase G. |
+
+### Phase-Specific Decisions
+
+| # | Decision | Resolution | Phase |
+|---|----------|------------|-------|
+| 10 | Conversation turns | 2 turns / 4 messages (medium), 3 turns / 6 messages (high). LLM told the limit so it wraps up. | D |
+| 11 | Conversation state | Both agents keep their own independent final state. No conflict. | D |
+| 12 | Household joint distributions | Pre-processed cross-tab CSVs from Census PUMS, not raw PUMS. | B |
+| 13 | Neighbor edge inference | TBD at spec/extend phase — needs generalized attribute. Not blocking B core. | B |
+| 14 | Fidelity flag location | `SimulationRunConfig` (runtime choice, not scenario-intrinsic). | F |
+| 15 | Post-hoc clustering | Not building. Agentic harness does DS on exported data. | F |
+| 16 | Repetition detection metric | Jaccard similarity on word-level trigrams, >70% threshold. | E |
+| 17 | Channel experience | `experience_template` field on `ExposureChannel`. Scenario compiler generates it. Fallback: humanize channel name. | A |
 
 ---
 
