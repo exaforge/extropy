@@ -17,7 +17,7 @@ class TestConfigCommand:
     def test_config_show(self):
         result = runner.invoke(app, ["config", "show"])
         assert result.exit_code == 0
-        assert "Pipeline" in result.output
+        assert "Models" in result.output
         assert "Simulation" in result.output
 
     def test_config_set_invalid_key(self):

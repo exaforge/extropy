@@ -11,21 +11,16 @@ from ..app import app, console
 def estimate_command(
     scenario_file: Path = typer.Argument(..., help="Scenario spec YAML file"),
     study_db: Path = typer.Option(..., "--study-db", help="Canonical study DB file"),
-    model: str = typer.Option(
+    strong: str = typer.Option(
         "",
-        "--model",
+        "--strong",
         "-m",
-        help="LLM model for agent reasoning (empty = use config default)",
+        help="Strong model for Pass 1 (provider/model format)",
     ),
-    pivotal_model: str = typer.Option(
+    fast: str = typer.Option(
         "",
-        "--pivotal-model",
-        help="Model for pivotal/first-pass reasoning (default: same as --model)",
-    ),
-    routine_model: str = typer.Option(
-        "",
-        "--routine-model",
-        help="Cheap model for classification pass (default: provider cheap tier)",
+        "--fast",
+        help="Fast model for Pass 2 (provider/model format)",
     ),
     threshold: int = typer.Option(
         3, "--threshold", "-t", help="Multi-touch threshold for re-reasoning"
@@ -42,8 +37,9 @@ def estimate_command(
 
     Example:
         extropy estimate scenario.yaml --study-db study.db
-        extropy estimate scenario.yaml --study-db study.db --model gpt-5-mini
-        extropy estimate scenario.yaml --study-db study.db --pivotal-model gpt-5 --routine-model gpt-5-mini -v
+        extropy estimate scenario.yaml --study-db study.db --strong openai/gpt-5
+        extropy estimate scenario.yaml --study-db study.db \\
+            --strong openai/gpt-5 --fast openai/gpt-5-mini -v
     """
     from ...config import get_config
     from ...core.models import ScenarioSpec, PopulationSpec
@@ -90,11 +86,8 @@ def estimate_command(
 
     # Resolve config
     config = get_config()
-    provider = config.simulation.provider
-
-    eff_model = model or config.simulation.model
-    eff_pivotal = pivotal_model or config.simulation.pivotal_model or eff_model
-    eff_routine = routine_model or config.simulation.routine_model
+    effective_strong = strong or config.resolve_sim_strong()
+    effective_fast = fast or config.resolve_sim_fast()
 
     # Run estimation
     est = estimate_simulation_cost(
@@ -102,9 +95,8 @@ def estimate_command(
         population_spec=population_spec,
         agents=agents,
         network=network,
-        provider=provider,
-        pivotal_model=eff_pivotal,
-        routine_model=eff_routine,
+        strong_model=effective_strong,
+        fast_model=effective_fast,
         multi_touch_threshold=threshold,
     )
 
@@ -129,10 +121,10 @@ def estimate_command(
     # Models section
     console.print("[bold]Models[/bold]")
     _print_model_line(
-        console, "Pass 1 (pivotal)", est.pivotal_model, est.pivotal_pricing
+        console, "Pass 1 (strong)", est.pivotal_model, est.pivotal_pricing
     )
     _print_model_line(
-        console, "Pass 2 (routine)", est.routine_model, est.routine_pricing
+        console, "Pass 2 (fast)", est.routine_model, est.routine_pricing
     )
     console.print()
 
