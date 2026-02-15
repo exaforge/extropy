@@ -4,12 +4,14 @@ import json
 import time
 from pathlib import Path
 from threading import Event, Thread
+from typing import Any
 
 import typer
 from rich.live import Live
 from rich.spinner import Spinner
 
 from ...core.models import PopulationSpec
+from ...storage import open_study_db
 from ..app import app, console
 from ..utils import (
     format_elapsed,
@@ -21,6 +23,16 @@ def persona_command(
     spec_file: Path = typer.Argument(..., help="Population spec YAML file"),
     agents_file: Path = typer.Option(
         None, "--agents", "-a", help="Sampled agents JSON file (for population stats)"
+    ),
+    study_db: Path | None = typer.Option(
+        None,
+        "--study-db",
+        help="Canonical study DB file (preferred; loads sampled agents by population id)",
+    ),
+    population_id: str = typer.Option(
+        "default",
+        "--population-id",
+        help="Population id when loading agents from --study-db",
     ),
     output: Path = typer.Option(
         None,
@@ -65,10 +77,11 @@ def persona_command(
         3 = Generation error
 
     EXAMPLES:
-        extropy persona population.yaml --agents agents.json
-        extropy persona population.yaml -a agents.json -o persona_config.yaml
-        extropy persona population.yaml -a agents.json --agent 42 -y
-        extropy persona population.yaml -a agents.json --show  # preview existing
+        extropy persona population.yaml --study-db study.db --population-id default
+        extropy persona population.yaml --study-db study.db -o persona_config.yaml
+        extropy persona population.yaml --study-db study.db --agent 42 -y
+        extropy persona population.yaml --study-db study.db --show
+        extropy persona population.yaml --agents agents.json  # legacy input
     """
     from ...population.persona import (
         generate_persona_config,
@@ -96,7 +109,11 @@ def persona_command(
     )
 
     # Load Agents (optional but recommended)
-    agents = None
+    agents: list[dict[str, Any]] | None = None
+    if agents_file and study_db:
+        console.print("[red]✗[/red] Use either --agents or --study-db, not both")
+        raise typer.Exit(1)
+
     if agents_file:
         if not agents_file.exists():
             console.print(f"[red]✗[/red] Agents file not found: {agents_file}")
@@ -119,9 +136,28 @@ def persona_command(
                 raise typer.Exit(1)
 
         console.print(f"[green]✓[/green] Loaded {len(agents)} agents")
+    elif study_db:
+        if not study_db.exists():
+            console.print(f"[red]✗[/red] Study DB not found: {study_db}")
+            raise typer.Exit(2)
+        with console.status("[cyan]Loading agents from study DB...[/cyan]"):
+            try:
+                with open_study_db(study_db) as db:
+                    agents = db.get_agents(population_id)
+            except Exception as e:
+                console.print(f"[red]✗[/red] Failed to load agents from study DB: {e}")
+                raise typer.Exit(1)
+        if not agents:
+            console.print(
+                f"[red]✗[/red] No agents found for population_id '{population_id}' in {study_db}"
+            )
+            raise typer.Exit(1)
+        console.print(
+            f"[green]✓[/green] Loaded {len(agents)} agents from study DB population_id={population_id}"
+        )
     else:
         console.print(
-            "[yellow]⚠[/yellow] No agents file - population stats will use defaults"
+            "[yellow]⚠[/yellow] No agent source provided (--study-db or --agents) - population stats will use defaults"
         )
 
     # Handle --show mode: preview existing config without regenerating
@@ -149,7 +185,7 @@ def persona_command(
         console.print()
 
         if not agents:
-            console.print("[red]✗[/red] Need --agents to preview personas")
+            console.print("[red]✗[/red] Need --study-db or --agents to preview personas")
             raise typer.Exit(1)
 
         if agent_index >= len(agents):

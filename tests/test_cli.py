@@ -1,6 +1,7 @@
 """CLI smoke tests using typer's CliRunner."""
 import json
 import sqlite3
+from types import SimpleNamespace
 from pathlib import Path
 
 from typer.testing import CliRunner
@@ -256,3 +257,94 @@ class TestRunScopedCliReads:
         assert payload["session_id"]
         assert "old_pos" in payload["assistant_text"]
         assert "new_pos" not in payload["assistant_text"]
+
+
+class TestPersonaCommand:
+    def test_persona_show_loads_agents_from_study_db(self, tmp_path, monkeypatch):
+        import extropy.cli.commands.persona as persona_cmd
+        import extropy.population.persona as persona_pkg
+
+        class DummyPopulationSpec:
+            @classmethod
+            def from_yaml(cls, _path):
+                return SimpleNamespace(
+                    meta=SimpleNamespace(description="test population"),
+                    attributes=[{"name": "age"}],
+                )
+
+        class DummyPersonaConfig:
+            @classmethod
+            def from_file(cls, _path):
+                return object()
+
+        monkeypatch.setattr(persona_cmd, "PopulationSpec", DummyPopulationSpec)
+        monkeypatch.setattr(persona_pkg, "PersonaConfig", DummyPersonaConfig)
+        monkeypatch.setattr(
+            persona_pkg,
+            "preview_persona",
+            lambda _agent, _config, max_width=80: "I am a test persona.",
+        )
+
+        spec_file = tmp_path / "population.yaml"
+        spec_file.write_text("meta: {}\n", encoding="utf-8")
+        persona_file = spec_file.with_suffix(".persona.yaml")
+        persona_file.write_text("dummy: true\n", encoding="utf-8")
+
+        study_db = tmp_path / "study.db"
+        with open_study_db(study_db) as db:
+            db.save_sample_result(
+                population_id="default",
+                agents=[{"_id": "a0", "age": 30}, {"_id": "a1", "age": 41}],
+                meta={"source": "test"},
+            )
+
+        result = runner.invoke(
+            app,
+            [
+                "persona",
+                str(spec_file),
+                "--study-db",
+                str(study_db),
+                "--population-id",
+                "default",
+                "--show",
+            ],
+        )
+        assert result.exit_code == 0
+        assert "Loaded 2 agents from study DB population_id=default" in result.output
+        assert "Persona for Agent a0" in result.output
+
+    def test_persona_rejects_agents_and_study_db_together(self, tmp_path, monkeypatch):
+        import extropy.cli.commands.persona as persona_cmd
+
+        monkeypatch.setattr(
+            persona_cmd.PopulationSpec,
+            "from_yaml",
+            classmethod(
+                lambda cls, _path: SimpleNamespace(
+                    meta=SimpleNamespace(description="test population"),
+                    attributes=[{"name": "age"}],
+                )
+            ),
+        )
+        spec_file = tmp_path / "population.yaml"
+        spec_file.write_text("meta: {}\n", encoding="utf-8")
+        agents_file = tmp_path / "agents.json"
+        agents_file.write_text("[]\n", encoding="utf-8")
+        study_db = tmp_path / "study.db"
+        with open_study_db(study_db) as db:
+            db.save_sample_result(population_id="default", agents=[{"_id": "a0"}], meta={})
+
+        result = runner.invoke(
+            app,
+            [
+                "persona",
+                str(spec_file),
+                "--agents",
+                str(agents_file),
+                "--study-db",
+                str(study_db),
+            ],
+        )
+        assert result.exit_code == 1
+        assert "Use either --agents or --study-db, not both" in result.output
