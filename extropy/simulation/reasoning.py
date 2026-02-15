@@ -773,7 +773,7 @@ def batch_reason_agents(
         return [], BatchTokenUsage()
 
     total = len(contexts)
-    logger.info(f"[BATCH] Starting two-pass async reasoning for {total} agents")
+    logger.info(f"[REASONING] Starting two-pass async reasoning for {total} agents")
 
     async def run_all():
         if rate_limiter:
@@ -784,7 +784,7 @@ def batch_reason_agents(
                 target_concurrency = max(1, rpm_derived)
             stagger_interval = 60.0 / rate_limiter.pivotal.rpm
             logger.info(
-                f"[BATCH] Concurrency cap: {target_concurrency} "
+                f"[REASONING] Concurrency cap: {target_concurrency} "
                 f"(rpm={rate_limiter.pivotal.rpm}, rpm_derived={rpm_derived}), "
                 f"stagger: {stagger_interval * 1000:.0f}ms between launches"
             )
@@ -806,12 +806,12 @@ def batch_reason_agents(
 
             if result:
                 logger.info(
-                    f"[BATCH] {completed[0]}/{total}: {ctx.agent_id} done in {elapsed:.2f}s "
+                    f"[REASONING] {completed[0]}/{total}: {ctx.agent_id} done in {elapsed:.2f}s "
                     f"(position={result.position}, sentiment={result.sentiment}, "
                     f"conviction={float_to_conviction(result.conviction)})"
                 )
             else:
-                logger.warning(f"[BATCH] {completed[0]}/{total}: {ctx.agent_id} FAILED")
+                logger.warning(f"[REASONING] {completed[0]}/{total}: {ctx.agent_id} FAILED")
 
             if on_agent_done:
                 on_agent_done(ctx.agent_id, result)
@@ -848,7 +848,7 @@ def batch_reason_agents(
     batch_elapsed = time.time() - batch_start
 
     logger.info(
-        f"[BATCH] Completed {total} agents in {batch_elapsed:.2f}s ({batch_elapsed / total:.2f}s/agent avg)"
+        f"[REASONING] Completed {total} agents in {batch_elapsed:.2f}s ({batch_elapsed / total:.2f}s/agent avg)"
     )
 
     if rate_limiter:
@@ -862,7 +862,7 @@ def batch_reason_agents(
             "total_wait_time_seconds", 0
         ) + routine_stats.get("total_wait_time_seconds", 0)
         logger.info(
-            f"[BATCH] Rate limiter: {total_acquired} acquired, "
+            f"[REASONING] Rate limiter: {total_acquired} acquired, "
             f"{total_wait:.2f}s total wait"
         )
 
