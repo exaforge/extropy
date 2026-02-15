@@ -160,24 +160,16 @@ class RateLimiter:
 
     @property
     def max_safe_concurrent(self) -> int:
-        """Calculate max safe concurrent requests.
+        """Max in-flight requests that RPM can sustain.
 
-        Sized to match what the API can absorb in a 2-second window,
-        since asyncio.gather fires all permitted tasks near-simultaneously.
-        With 500 RPM, that's ~8 RPM/60*2 ≈ 16 requests per 2s burst.
+        With stagger pacing (1 launch per 60/rpm seconds), the number of
+        calls in-flight at steady state = rpm/60 * avg_latency.
+        We don't know latency upfront, so use RPM-derived ceiling:
+        allow up to rpm/2 in-flight (30s worth of launches).
+
+        TPM is already enforced by token buckets during acquire().
         """
-        burst_window = 2.0  # seconds — tasks fire within this window
-        avg_tokens_per_call = 800  # input + output estimate
-
-        rpm_concurrent = self.rpm / 60.0 * burst_window
-
-        if self._has_split_tokens:
-            tpm_concurrent = self.itpm / avg_tokens_per_call * (burst_window / 60.0)
-        else:
-            effective_tpm = self.tpm or 100_000
-            tpm_concurrent = effective_tpm / avg_tokens_per_call * (burst_window / 60.0)
-
-        return max(1, int(min(rpm_concurrent, tpm_concurrent)))
+        return max(1, self.rpm // 2)
 
     async def acquire(
         self,

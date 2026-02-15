@@ -790,7 +790,6 @@ def batch_reason_agents(
             target_concurrency = max(1, max_concurrency)
             stagger_interval = 0.0
         completed = [0]
-        adaptive_concurrency = target_concurrency
 
         async def reason_with_pacing(
             idx: int,
@@ -817,42 +816,25 @@ def batch_reason_agents(
 
             return (idx, ctx.agent_id, result, elapsed)
 
+        semaphore = asyncio.Semaphore(target_concurrency)
+        failures = [0]
+
+        async def bounded_reason(idx: int, ctx: ReasoningContext):
+            async with semaphore:
+                return await reason_with_pacing(idx, ctx)
+
         results: list[tuple[str, ReasoningResponse | None] | None] = [None] * total
-        next_idx = 0
-        while next_idx < total:
-            batch_end = min(total, next_idx + adaptive_concurrency)
-            batch_contexts = contexts[next_idx:batch_end]
-            tasks = []
-            for local_offset, ctx in enumerate(batch_contexts):
-                idx = next_idx + local_offset
-                tasks.append(asyncio.create_task(reason_with_pacing(idx, ctx)))
-                if stagger_interval > 0 and local_offset < len(batch_contexts) - 1:
-                    await asyncio.sleep(stagger_interval)
+        tasks = []
+        for i, ctx in enumerate(contexts):
+            tasks.append(asyncio.create_task(bounded_reason(i, ctx)))
+            if stagger_interval > 0 and i < total - 1:
+                await asyncio.sleep(stagger_interval)
 
-            batch_results = await asyncio.gather(*tasks)
-            latencies: list[float] = []
-            failures = 0
-            for idx, agent_id, result, elapsed in batch_results:
-                results[idx] = (agent_id, result)
-                latencies.append(elapsed)
-                if result is None:
-                    failures += 1
-
-            # Adaptive concurrency control:
-            # - high error rate or high latency => downshift
-            # - clean/fast batches => cautiously upshift
-            avg_latency = sum(latencies) / len(latencies) if latencies else 0.0
-            fail_rate = failures / len(batch_results) if batch_results else 0.0
-            if fail_rate >= 0.2 or avg_latency >= 20.0:
-                adaptive_concurrency = max(1, int(adaptive_concurrency * 0.7))
-            elif fail_rate == 0 and avg_latency <= 8.0:
-                adaptive_concurrency = min(target_concurrency, adaptive_concurrency + 1)
-
-            logger.info(
-                f"[BATCH] Adaptive concurrency={adaptive_concurrency} "
-                f"(avg_latency={avg_latency:.2f}s, fail_rate={fail_rate:.0%})"
-            )
-            next_idx = batch_end
+        raw_results = await asyncio.gather(*tasks)
+        for idx, agent_id, result, elapsed in raw_results:
+            results[idx] = (agent_id, result)
+            if result is None:
+                failures[0] += 1
 
         # Close the async HTTP client before the event loop shuts down.
         # Without this, orphaned httpx connections produce "Event loop is

@@ -185,12 +185,7 @@ class SimulationEngine:
         self.writer_queue_size = max(1, writer_queue_size)
         self.db_write_batch_size = max(1, db_write_batch_size)
         self.resource_governor = resource_governor
-        self.reasoning_max_concurrency = 50
-        if self.resource_governor is not None:
-            self.reasoning_max_concurrency = self.resource_governor.recommend_workers(
-                requested_workers=50,
-                memory_per_worker_gb=0.2,
-            )
+        self.reasoning_max_concurrency = config.max_concurrent
         self._last_guardrail_timestep = -1
 
         # Build agent map for quick lookup
@@ -1525,6 +1520,11 @@ def run_simulation(
             persona_config = PersonaConfig.from_file(str(auto_config_path))
 
     # Create config
+    # Resolve effective model strings for rate limiting
+    from ..config import get_config
+
+    entropy_config = get_config()
+
     config = SimulationRunConfig(
         scenario_path=str(scenario_path),
         output_dir=str(output_dir),
@@ -1532,12 +1532,8 @@ def run_simulation(
         fast=fast,
         multi_touch_threshold=multi_touch_threshold,
         random_seed=random_seed,
+        max_concurrent=entropy_config.simulation.max_concurrent,
     )
-
-    # Resolve effective model strings for rate limiting
-    from ..config import get_config
-
-    entropy_config = get_config()
     effective_strong = strong or entropy_config.resolve_sim_strong()
     effective_fast = fast or entropy_config.resolve_sim_fast()
 
