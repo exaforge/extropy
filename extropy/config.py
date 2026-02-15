@@ -323,11 +323,13 @@ def get_api_key_for_provider(
 
     # Convention: {PROVIDER}_API_KEY
     # Special cases for backward compat
-    key_map = {
-        "azure": "AZURE_OPENAI_API_KEY",
-        "azure_openai": "AZURE_OPENAI_API_KEY",
-    }
-    env_var = key_map.get(provider_name, f"{provider_name.upper()}_API_KEY")
+    # Azure: check new var first, fall back to legacy
+    if provider_name in ("azure", "azure_openai"):
+        return os.environ.get("AZURE_API_KEY") or os.environ.get(
+            "AZURE_OPENAI_API_KEY", ""
+        )
+
+    env_var = f"{provider_name.upper()}_API_KEY"
     return os.environ.get(env_var, "")
 
 

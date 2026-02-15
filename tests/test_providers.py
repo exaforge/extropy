@@ -673,119 +673,215 @@ class TestBaseRetryWithValidation:
 
 
 # =============================================================================
-# Azure OpenAI Provider Tests
+# Azure AI Foundry Provider Tests
 # =============================================================================
 
 
-class TestAzureOpenAIProvider:
-    """Test Azure OpenAI provider client construction and model resolution."""
+class TestAzureProvider:
+    """Test Azure AI Foundry delegating provider."""
 
-    def test_azure_client_construction(self):
-        provider = OpenAIProvider(
+    def test_construction(self):
+        from extropy.core.providers.azure import AzureProvider
+
+        provider = AzureProvider(
             api_key="test-key",
-            azure_endpoint="https://my-resource.openai.azure.com",
-            api_version="2024-12-01-preview",
-            azure_deployment="my-deployment",
+            endpoint="https://my-resource.services.ai.azure.com/",
         )
-        assert provider._is_azure is True
-        assert provider._azure_endpoint == "https://my-resource.openai.azure.com"
-        assert provider._api_version == "2024-12-01-preview"
-        assert provider._azure_deployment == "my-deployment"
-        assert provider.provider_name == "azure_openai"
+        assert provider._endpoint == "https://my-resource.services.ai.azure.com"
+        assert provider._openai_sub is None
+        assert provider._anthropic_sub is None
 
-    def test_non_azure_is_azure_false(self):
-        provider = OpenAIProvider(api_key="test-key")
-        assert provider._is_azure is False
-        assert provider.provider_name == "openai"
+    def test_missing_api_key_raises(self):
+        from extropy.core.providers.azure import AzureProvider
 
-    def test_azure_get_client_returns_azure_type(self):
-        from openai import AzureOpenAI
+        with pytest.raises(ValueError, match="AZURE_API_KEY"):
+            AzureProvider(api_key="", endpoint="https://example.com")
 
-        provider = OpenAIProvider(
+    def test_missing_endpoint_raises(self):
+        from extropy.core.providers.azure import AzureProvider
+
+        with pytest.raises(ValueError, match="AZURE_ENDPOINT"):
+            AzureProvider(api_key="test-key", endpoint="")
+
+    def test_claude_model_routes_to_anthropic(self):
+        from extropy.core.providers.azure import _detect_backend
+
+        assert _detect_backend("claude-sonnet-4-5") == "anthropic"
+        assert _detect_backend("claude-haiku-4-5") == "anthropic"
+
+    def test_non_claude_model_routes_to_openai(self):
+        from extropy.core.providers.azure import _detect_backend
+
+        assert _detect_backend("gpt-5-mini") == "openai"
+        assert _detect_backend("DeepSeek-V3.2") == "openai"
+        assert _detect_backend("Kimi-K2.5") == "openai"
+
+    def test_simple_call_delegates_to_openai_sub(self):
+        from extropy.core.providers.azure import AzureProvider
+
+        provider = AzureProvider(
             api_key="test-key",
-            azure_endpoint="https://my-resource.openai.azure.com",
-            api_version="2024-12-01-preview",
-        )
-        client = provider._get_client()
-        assert isinstance(client, AzureOpenAI)
-
-    def test_azure_get_async_client_returns_azure_type(self):
-        from openai import AsyncAzureOpenAI
-
-        provider = OpenAIProvider(
-            api_key="test-key",
-            azure_endpoint="https://my-resource.openai.azure.com",
-            api_version="2024-12-01-preview",
-        )
-        client = provider._get_async_client()
-        assert isinstance(client, AsyncAzureOpenAI)
-
-    def test_resolve_model_uses_deployment(self):
-        """When no model is specified, Azure deployment name is used."""
-        provider = OpenAIProvider(
-            api_key="test-key",
-            azure_endpoint="https://my-resource.openai.azure.com",
-            api_version="2024-12-01-preview",
-            azure_deployment="gpt-5-deployment",
-        )
-        result = provider._resolve_model(None, "gpt-5-mini")
-        assert result == "gpt-5-deployment"
-
-    def test_resolve_model_explicit_overrides_deployment(self):
-        """Explicit model wins over deployment name."""
-        provider = OpenAIProvider(
-            api_key="test-key",
-            azure_endpoint="https://my-resource.openai.azure.com",
-            api_version="2024-12-01-preview",
-            azure_deployment="gpt-5-deployment",
-        )
-        result = provider._resolve_model("gpt-5", "gpt-5-mini")
-        assert result == "gpt-5"
-
-    def test_resolve_model_no_deployment_uses_default(self):
-        """Without deployment or explicit model, falls back to default."""
-        provider = OpenAIProvider(
-            api_key="test-key",
-            azure_endpoint="https://my-resource.openai.azure.com",
-            api_version="2024-12-01-preview",
-        )
-        result = provider._resolve_model(None, "gpt-5-mini")
-        assert result == "gpt-5-mini"
-
-    @patch.object(OpenAIProvider, "_get_client")
-    def test_azure_simple_call(self, mock_get_client):
-        """Verify Azure provider simple_call works through mocked client."""
-        provider = _make_openai_provider(
-            _is_azure=True,
-            _azure_endpoint="https://test.openai.azure.com",
-            _api_version="2024-12-01-preview",
-            _azure_deployment="my-deploy",
+            endpoint="https://my-resource.services.ai.azure.com",
         )
 
-        mock_client = MagicMock()
-        mock_client.responses.create.return_value = _make_openai_response(
-            '{"result": "azure_ok"}'
-        )
-        mock_get_client.return_value = mock_client
+        mock_sub = MagicMock()
+        mock_sub.simple_call.return_value = {"result": "ok"}
+        provider._openai_sub = mock_sub
 
         result = provider.simple_call(
-            prompt="test prompt",
-            response_schema={"type": "object", "properties": {}},
+            prompt="test",
+            response_schema={"type": "object"},
+            model="gpt-5-mini",
             log=False,
         )
 
-        assert result == {"result": "azure_ok"}
+        assert result == {"result": "ok"}
+        mock_sub.simple_call.assert_called_once()
 
-    def test_azure_missing_api_key_raises(self):
-        with pytest.raises(ValueError, match="AZURE_OPENAI_API_KEY"):
-            OpenAIProvider(
-                api_key="",
-                azure_endpoint="https://my-resource.openai.azure.com",
+    def test_simple_call_delegates_to_anthropic_sub(self):
+        from extropy.core.providers.azure import AzureProvider
+
+        provider = AzureProvider(
+            api_key="test-key",
+            endpoint="https://my-resource.services.ai.azure.com",
+        )
+
+        mock_sub = MagicMock()
+        mock_sub.simple_call.return_value = {"result": "claude_ok"}
+        provider._anthropic_sub = mock_sub
+
+        result = provider.simple_call(
+            prompt="test",
+            response_schema={"type": "object"},
+            model="claude-sonnet-4-5",
+            log=False,
+        )
+
+        assert result == {"result": "claude_ok"}
+        mock_sub.simple_call.assert_called_once()
+
+    def test_reasoning_call_blocked_for_openai_backend(self):
+        from extropy.core.providers.azure import (
+            AzureProvider,
+            UnsupportedCapabilityError,
+        )
+
+        provider = AzureProvider(
+            api_key="test-key",
+            endpoint="https://my-resource.services.ai.azure.com",
+        )
+
+        with pytest.raises(UnsupportedCapabilityError, match="reasoning_call"):
+            provider.reasoning_call(
+                prompt="test",
+                response_schema={"type": "object"},
+                model="DeepSeek-V3.2",
             )
 
-    def test_non_azure_missing_api_key_raises(self):
-        with pytest.raises(ValueError, match="OPENAI_API_KEY"):
-            OpenAIProvider(api_key="")
+    def test_agentic_research_blocked_for_openai_backend(self):
+        from extropy.core.providers.azure import (
+            AzureProvider,
+            UnsupportedCapabilityError,
+        )
+
+        provider = AzureProvider(
+            api_key="test-key",
+            endpoint="https://my-resource.services.ai.azure.com",
+        )
+
+        with pytest.raises(UnsupportedCapabilityError, match="agentic_research"):
+            provider.agentic_research(
+                prompt="test",
+                response_schema={"type": "object"},
+                model="Kimi-K2.5",
+            )
+
+    def test_reasoning_call_allowed_for_claude(self):
+        from extropy.core.providers.azure import AzureProvider
+
+        provider = AzureProvider(
+            api_key="test-key",
+            endpoint="https://my-resource.services.ai.azure.com",
+        )
+
+        mock_sub = MagicMock()
+        mock_sub.reasoning_call.return_value = {"result": "reasoned"}
+        provider._anthropic_sub = mock_sub
+
+        result = provider.reasoning_call(
+            prompt="test",
+            response_schema={"type": "object"},
+            model="claude-sonnet-4-5",
+        )
+
+        assert result == {"result": "reasoned"}
+
+    def test_lazy_sub_provider_creation(self):
+        from extropy.core.providers.azure import AzureProvider
+
+        provider = AzureProvider(
+            api_key="test-key",
+            endpoint="https://my-resource.services.ai.azure.com",
+        )
+
+        # Sub-providers should not be created until needed
+        assert provider._openai_sub is None
+        assert provider._anthropic_sub is None
+
+        # Access openai sub
+        openai_sub = provider._get_openai_sub()
+        assert openai_sub is not None
+        assert provider._anthropic_sub is None  # still lazy
+
+        # Access anthropic sub
+        anthropic_sub = provider._get_anthropic_sub()
+        assert anthropic_sub is not None
+
+    def test_sub_provider_base_urls(self):
+        from extropy.core.providers.azure import AzureProvider
+        from extropy.core.providers.openai_compat import OpenAICompatProvider
+        from extropy.core.providers.anthropic import AnthropicProvider
+
+        provider = AzureProvider(
+            api_key="test-key",
+            endpoint="https://my-resource.services.ai.azure.com",
+        )
+
+        openai_sub = provider._get_openai_sub()
+        assert isinstance(openai_sub, OpenAICompatProvider)
+        assert (
+            openai_sub._base_url
+            == "https://my-resource.services.ai.azure.com/openai/v1/"
+        )
+
+        anthropic_sub = provider._get_anthropic_sub()
+        assert isinstance(anthropic_sub, AnthropicProvider)
+        assert (
+            anthropic_sub._base_url
+            == "https://my-resource.services.ai.azure.com/anthropic/"
+        )
+
+    def test_close_async_closes_both_subs(self):
+        import asyncio
+        from extropy.core.providers.azure import AzureProvider
+
+        provider = AzureProvider(
+            api_key="test-key",
+            endpoint="https://my-resource.services.ai.azure.com",
+        )
+
+        mock_openai = MagicMock()
+        mock_openai.close_async = AsyncMock()
+        mock_anthropic = MagicMock()
+        mock_anthropic.close_async = AsyncMock()
+
+        provider._openai_sub = mock_openai
+        provider._anthropic_sub = mock_anthropic
+
+        asyncio.run(provider.close_async())
+
+        mock_openai.close_async.assert_called_once()
+        mock_anthropic.close_async.assert_called_once()
 
 
 # =============================================================================
@@ -794,36 +890,50 @@ class TestAzureOpenAIProvider:
 
 
 class TestProviderFactoryAzure:
-    """Test provider factory with Azure OpenAI provider creation."""
+    """Test provider factory with Azure provider creation."""
 
     @patch.dict(
         "os.environ",
         {
-            "AZURE_OPENAI_API_KEY": "test-azure-key",
-            "AZURE_OPENAI_ENDPOINT": "https://my-resource.openai.azure.com",
-            "AZURE_OPENAI_API_VERSION": "2025-03-01-preview",
-            "AZURE_OPENAI_DEPLOYMENT": "my-deployment",
+            "AZURE_API_KEY": "test-azure-key",
+            "AZURE_ENDPOINT": "https://my-resource.services.ai.azure.com",
         },
     )
-    def test_create_azure_openai_provider(self):
-        from extropy.core.providers import _create_provider
-        from extropy.core.providers.openai_compat import OpenAICompatProvider
+    def test_create_azure_provider(self):
+        from extropy.core.providers import get_provider
+        from extropy.core.providers.azure import AzureProvider
 
-        provider = _create_provider("azure_openai")
-        assert isinstance(provider, OpenAICompatProvider)
+        provider = get_provider("azure")
+        assert isinstance(provider, AzureProvider)
 
     @patch.dict(
         "os.environ",
         {
             "AZURE_OPENAI_API_KEY": "test-azure-key",
+            "AZURE_OPENAI_ENDPOINT": "https://my-resource.services.ai.azure.com",
+        },
+    )
+    def test_create_azure_provider_legacy_env_vars(self):
+        """Legacy AZURE_OPENAI_* env vars still work."""
+        from extropy.core.providers import get_provider
+        from extropy.core.providers.azure import AzureProvider
+
+        provider = get_provider("azure")
+        assert isinstance(provider, AzureProvider)
+
+    @patch.dict(
+        "os.environ",
+        {
+            "AZURE_API_KEY": "test-azure-key",
+            "AZURE_ENDPOINT": "",
             "AZURE_OPENAI_ENDPOINT": "",
         },
     )
-    def test_azure_openai_missing_endpoint_raises(self):
-        from extropy.core.providers import _create_provider
+    def test_azure_missing_endpoint_raises(self):
+        from extropy.core.providers import get_provider
 
-        with pytest.raises(ValueError, match="AZURE_OPENAI_ENDPOINT"):
-            _create_provider("azure_openai")
+        with pytest.raises(ValueError, match="AZURE_ENDPOINT"):
+            get_provider("azure")
 
 
 # =============================================================================

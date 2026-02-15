@@ -47,15 +47,8 @@ _BUILTIN_REGISTRY: dict[str, dict] = {
         },
     },
     "azure": {
-        "module": ".openai_compat",
-        "class": "OpenAICompatProvider",
-        "kwargs": {
-            "base_url": "",  # resolved from env
-            "supports_search": False,
-            "provider_label": "azure",
-            "default_fast": "gpt-5-mini",
-            "default_strong": "gpt-5",
-        },
+        "module": ".azure",
+        "class": "AzureProvider",
     },
     "deepseek": {
         "module": ".openai_compat",
@@ -139,15 +132,11 @@ def get_provider(
 
     # Special case: Azure needs endpoint from env
     if provider_name == "azure":
-        endpoint = os.environ.get("AZURE_OPENAI_ENDPOINT", "")
-        if not endpoint:
-            raise ValueError(
-                "AZURE_OPENAI_ENDPOINT not found. Set it as an environment variable.\n"
-                "  export AZURE_OPENAI_ENDPOINT=https://<resource>.cognitiveservices.azure.com/"
-            )
+        endpoint = os.environ.get("AZURE_ENDPOINT") or os.environ.get(
+            "AZURE_OPENAI_ENDPOINT", ""
+        )
         entry = dict(entry)
-        entry["kwargs"] = dict(entry.get("kwargs", {}))
-        entry["kwargs"]["base_url"] = endpoint
+        entry["kwargs"] = {"endpoint": endpoint}
 
     # Lazy import
     import importlib

@@ -88,7 +88,7 @@ class AnthropicProvider(LLMProvider):
 
     provider_name = "anthropic"
 
-    def __init__(self, api_key: str = "") -> None:
+    def __init__(self, api_key: str = "", *, base_url: str = "") -> None:
         if not api_key:
             raise ValueError(
                 "Anthropic API key not found. Set it via:\n"
@@ -96,6 +96,7 @@ class AnthropicProvider(LLMProvider):
                 "Get your key from: https://console.anthropic.com/settings/keys"
             )
         super().__init__(api_key)
+        self._base_url = base_url
 
     def _with_retry(self, fn, max_retries: int = _MAX_API_RETRIES):
         """Retry a sync API call on transient errors with exponential backoff."""
@@ -138,11 +139,17 @@ class AnthropicProvider(LLMProvider):
         return "claude-sonnet-4-5-20250929"
 
     def _get_client(self) -> anthropic.Anthropic:
-        return anthropic.Anthropic(api_key=self._api_key)
+        kwargs: dict = {"api_key": self._api_key}
+        if self._base_url:
+            kwargs["base_url"] = self._base_url
+        return anthropic.Anthropic(**kwargs)
 
     def _get_async_client(self) -> anthropic.AsyncAnthropic:
         if self._cached_async_client is None:
-            self._cached_async_client = anthropic.AsyncAnthropic(api_key=self._api_key)
+            kwargs: dict = {"api_key": self._api_key}
+            if self._base_url:
+                kwargs["base_url"] = self._base_url
+            self._cached_async_client = anthropic.AsyncAnthropic(**kwargs)
         return self._cached_async_client
 
     def simple_call(
