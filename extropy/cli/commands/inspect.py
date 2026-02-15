@@ -15,11 +15,35 @@ inspect_app = typer.Typer(help="Inspect study DB entities")
 app.add_typer(inspect_app, name="inspect")
 
 
+def _resolve_run(conn: sqlite3.Connection, run_id: str | None) -> sqlite3.Row | None:
+    cur = conn.cursor()
+    if run_id:
+        cur.execute(
+            """
+            SELECT run_id, population_id, network_id, status, started_at, completed_at
+            FROM simulation_runs
+            WHERE run_id = ?
+            """,
+            (run_id,),
+        )
+    else:
+        cur.execute(
+            """
+            SELECT run_id, population_id, network_id, status, started_at, completed_at
+            FROM simulation_runs
+            ORDER BY started_at DESC
+            LIMIT 1
+            """
+        )
+    return cur.fetchone()
+
+
 @inspect_app.command("summary")
 def inspect_summary(
     study_db: Path = typer.Option(..., "--study-db", help="Canonical study DB file"),
     population_id: str = typer.Option("default", "--population-id"),
     network_id: str = typer.Option("default", "--network-id"),
+    run_id: str | None = typer.Option(None, "--run-id"),
 ):
     with open_study_db(study_db) as db:
         agent_count = db.get_agent_count(population_id)
@@ -28,13 +52,33 @@ def inspect_summary(
     conn = sqlite3.connect(str(study_db))
     conn.row_factory = sqlite3.Row
     try:
+        run_row = _resolve_run(conn, run_id)
+        resolved_run_id = str(run_row["run_id"]) if run_row else None
+        if run_row:
+            population_id = str(run_row["population_id"])
+            network_id = str(run_row["network_id"])
+
         cur = conn.cursor()
-        cur.execute("SELECT COUNT(*) AS cnt FROM agent_states")
-        sim_agents = int(cur.fetchone()["cnt"])
-        cur.execute("SELECT COUNT(*) AS cnt FROM timestep_summaries")
-        timesteps = int(cur.fetchone()["cnt"])
-        cur.execute("SELECT COUNT(*) AS cnt FROM timeline")
-        events = int(cur.fetchone()["cnt"])
+        if resolved_run_id:
+            cur.execute(
+                "SELECT COUNT(*) AS cnt FROM agent_states WHERE run_id = ?",
+                (resolved_run_id,),
+            )
+            sim_agents = int(cur.fetchone()["cnt"])
+            cur.execute(
+                "SELECT COUNT(*) AS cnt FROM timestep_summaries WHERE run_id = ?",
+                (resolved_run_id,),
+            )
+            timesteps = int(cur.fetchone()["cnt"])
+            cur.execute(
+                "SELECT COUNT(*) AS cnt FROM timeline WHERE run_id = ?",
+                (resolved_run_id,),
+            )
+            events = int(cur.fetchone()["cnt"])
+        else:
+            sim_agents = 0
+            timesteps = 0
+            events = 0
     finally:
         conn.close()
 
@@ -42,6 +86,8 @@ def inspect_summary(
     console.print(f"study_db: {study_db}")
     console.print(f"population_id={population_id} agents={agent_count}")
     console.print(f"network_id={network_id} edges={edge_count}")
+    if resolved_run_id:
+        console.print(f"run_id={resolved_run_id}")
     console.print(f"simulation.agent_states={sim_agents}")
     console.print(f"simulation.timesteps={timesteps}")
     console.print(f"simulation.events={events}")
@@ -51,21 +97,41 @@ def inspect_summary(
 def inspect_agent(
     study_db: Path = typer.Option(..., "--study-db"),
     agent_id: str = typer.Option(..., "--agent-id"),
+    run_id: str | None = typer.Option(None, "--run-id"),
 ):
     conn = sqlite3.connect(str(study_db))
     conn.row_factory = sqlite3.Row
     try:
+        run_row = _resolve_run(conn, run_id)
+        if not run_row:
+            console.print("[yellow]No simulation runs found.[/yellow]")
+            return
+        resolved_run_id = str(run_row["run_id"])
+        population_id = str(run_row["population_id"])
+
         cur = conn.cursor()
-        cur.execute("SELECT attrs_json FROM agents WHERE agent_id = ? LIMIT 1", (agent_id,))
+        cur.execute(
+            "SELECT attrs_json FROM agents WHERE population_id = ? AND agent_id = ? LIMIT 1",
+            (population_id, agent_id),
+        )
         attrs_row = cur.fetchone()
         attrs = json.loads(attrs_row["attrs_json"]) if attrs_row else {}
 
-        cur.execute("SELECT * FROM agent_states WHERE agent_id = ? LIMIT 1", (agent_id,))
+        cur.execute(
+            "SELECT * FROM agent_states WHERE run_id = ? AND agent_id = ? LIMIT 1",
+            (resolved_run_id, agent_id),
+        )
         state = cur.fetchone()
 
         cur.execute(
-            "SELECT timestep, event_type, details_json FROM timeline WHERE agent_id = ? ORDER BY id DESC LIMIT 10",
-            (agent_id,),
+            """
+            SELECT timestep, event_type, details_json
+            FROM timeline
+            WHERE run_id = ? AND agent_id = ?
+            ORDER BY id DESC
+            LIMIT 10
+            """,
+            (resolved_run_id, agent_id),
         )
         events = cur.fetchall()
     finally:

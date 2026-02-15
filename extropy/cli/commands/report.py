@@ -17,29 +17,59 @@ app.add_typer(report_app, name="report")
 @report_app.command("run")
 def report_run(
     study_db: Path = typer.Option(..., "--study-db"),
+    run_id: str | None = typer.Option(None, "--run-id"),
     output: Path = typer.Option(..., "--output", "-o"),
 ):
     conn = sqlite3.connect(str(study_db))
     conn.row_factory = sqlite3.Row
     try:
         cur = conn.cursor()
-        cur.execute("SELECT COUNT(*) AS cnt FROM agent_states")
+        if run_id:
+            cur.execute(
+                "SELECT run_id, population_id FROM simulation_runs WHERE run_id = ?",
+                (run_id,),
+            )
+        else:
+            cur.execute(
+                """
+                SELECT run_id, population_id
+                FROM simulation_runs
+                ORDER BY started_at DESC
+                LIMIT 1
+                """
+            )
+        run_row = cur.fetchone()
+        if not run_row:
+            console.print("[yellow]No simulation runs found.[/yellow]")
+            raise typer.Exit(1)
+        resolved_run_id = str(run_row["run_id"])
+
+        cur.execute(
+            "SELECT COUNT(*) AS cnt FROM agent_states WHERE run_id = ?",
+            (resolved_run_id,),
+        )
         total = int(cur.fetchone()["cnt"])
-        cur.execute("SELECT COUNT(*) AS cnt FROM agent_states WHERE aware = 1")
+        cur.execute(
+            "SELECT COUNT(*) AS cnt FROM agent_states WHERE run_id = ? AND aware = 1",
+            (resolved_run_id,),
+        )
         aware = int(cur.fetchone()["cnt"])
         cur.execute(
             """
             SELECT COALESCE(private_position, position) AS position, COUNT(*) AS cnt
             FROM agent_states
-            WHERE COALESCE(private_position, position) IS NOT NULL
+            WHERE run_id = ?
+              AND COALESCE(private_position, position) IS NOT NULL
             GROUP BY COALESCE(private_position, position)
-            """
+            """,
+            (resolved_run_id,),
         )
         positions = {row["position"]: int(row["cnt"]) for row in cur.fetchall()}
     finally:
         conn.close()
 
     payload = {
+        "run_id": resolved_run_id,
         "agent_count": total,
         "aware_count": aware,
         "aware_rate": (aware / total) if total else 0.0,

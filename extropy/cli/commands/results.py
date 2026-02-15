@@ -14,9 +14,7 @@ from ..app import app, console
 @app.command("results")
 def results_command(
     study_db: Path = typer.Option(..., "--study-db", help="Canonical study DB file"),
-    run_id: str | None = typer.Option(
-        None, "--run-id", help="Run ID (reserved for multi-run support)"
-    ),
+    run_id: str | None = typer.Option(None, "--run-id", help="Simulation run id"),
     segment: str | None = typer.Option(
         None, "--segment", "-s", help="Attribute to segment by"
     ),
@@ -34,53 +32,73 @@ def results_command(
     conn.row_factory = sqlite3.Row
 
     try:
+        cur = conn.cursor()
         if run_id:
-            cur = conn.cursor()
             cur.execute(
-                "SELECT status, started_at, completed_at, stopped_reason FROM simulation_runs WHERE run_id = ?",
+                """
+                SELECT run_id, status, started_at, completed_at, stopped_reason, population_id
+                FROM simulation_runs
+                WHERE run_id = ?
+                """,
                 (run_id,),
             )
-            run_row = cur.fetchone()
-            if not run_row:
-                console.print(f"[red]✗[/red] run_id not found: {run_id}")
-                raise typer.Exit(1)
-            console.print(
-                f"[dim]run_id={run_id} status={run_row['status']} "
-                f"started_at={run_row['started_at']} completed_at={run_row['completed_at'] or '-'}[/dim]"
+        else:
+            cur.execute(
+                """
+                SELECT run_id, status, started_at, completed_at, stopped_reason, population_id
+                FROM simulation_runs
+                ORDER BY started_at DESC
+                LIMIT 1
+                """
             )
+        run_row = cur.fetchone()
+        if not run_row:
+            console.print("[yellow]No simulation runs found in study DB.[/yellow]")
+            raise typer.Exit(0)
+        resolved_run_id = str(run_row["run_id"])
+        population_id = str(run_row["population_id"])
+        console.print(
+            f"[dim]run_id={resolved_run_id} status={run_row['status']} "
+            f"started_at={run_row['started_at']} completed_at={run_row['completed_at'] or '-'}[/dim]"
+        )
         if agent:
-            _display_agent(conn, agent)
+            _display_agent(conn, resolved_run_id, population_id, agent)
             return
         if segment:
-            _display_segment(conn, segment)
+            _display_segment(conn, resolved_run_id, population_id, segment)
             return
         if timeline:
-            _display_timeline(conn)
+            _display_timeline(conn, resolved_run_id)
             return
-        _display_summary(conn)
+        _display_summary(conn, resolved_run_id)
     finally:
         conn.close()
 
 
-def _display_summary(conn: sqlite3.Connection) -> None:
+def _display_summary(conn: sqlite3.Connection, run_id: str) -> None:
     cur = conn.cursor()
-    cur.execute("SELECT COUNT(*) AS cnt FROM agent_states")
+    cur.execute("SELECT COUNT(*) AS cnt FROM agent_states WHERE run_id = ?", (run_id,))
     total = int(cur.fetchone()["cnt"])
     if total == 0:
         console.print("[yellow]No simulation state found in study DB.[/yellow]")
         return
 
-    cur.execute("SELECT COUNT(*) AS cnt FROM agent_states WHERE aware = 1")
+    cur.execute(
+        "SELECT COUNT(*) AS cnt FROM agent_states WHERE run_id = ? AND aware = 1",
+        (run_id,),
+    )
     aware = int(cur.fetchone()["cnt"])
 
     cur.execute(
         """
         SELECT COALESCE(private_position, position) AS position, COUNT(*) AS cnt
         FROM agent_states
-        WHERE COALESCE(private_position, position) IS NOT NULL
+        WHERE run_id = ?
+          AND COALESCE(private_position, position) IS NOT NULL
         GROUP BY COALESCE(private_position, position)
         ORDER BY cnt DESC
-        """
+        """,
+        (run_id,),
     )
     rows = cur.fetchall()
 
@@ -94,14 +112,16 @@ def _display_summary(conn: sqlite3.Connection) -> None:
         console.print(f"  - {row['position']}: {row['cnt']} ({pct:.1%})")
 
 
-def _display_timeline(conn: sqlite3.Connection) -> None:
+def _display_timeline(conn: sqlite3.Connection, run_id: str) -> None:
     cur = conn.cursor()
     cur.execute(
         """
         SELECT timestep, new_exposures, agents_reasoned, shares_occurred, exposure_rate
         FROM timestep_summaries
+        WHERE run_id = ?
         ORDER BY timestep
-        """
+        """,
+        (run_id,),
     )
     rows = cur.fetchall()
     if not rows:
@@ -118,9 +138,17 @@ def _display_timeline(conn: sqlite3.Connection) -> None:
         )
 
 
-def _display_segment(conn: sqlite3.Connection, attribute: str) -> None:
+def _display_segment(
+    conn: sqlite3.Connection,
+    run_id: str,
+    population_id: str,
+    attribute: str,
+) -> None:
     cur = conn.cursor()
-    cur.execute("SELECT agent_id, attrs_json FROM agents")
+    cur.execute(
+        "SELECT agent_id, attrs_json FROM agents WHERE population_id = ?",
+        (population_id,),
+    )
     attr_by_agent: dict[str, str] = {}
     for row in cur.fetchall():
         try:
@@ -137,7 +165,9 @@ def _display_segment(conn: sqlite3.Connection, attribute: str) -> None:
         """
         SELECT agent_id, aware, COALESCE(private_position, position) AS position
         FROM agent_states
-        """
+        WHERE run_id = ?
+        """,
+        (run_id,),
     )
     groups: dict[str, dict[str, int]] = {}
     for row in cur.fetchall():
@@ -158,22 +188,30 @@ def _display_segment(conn: sqlite3.Connection, attribute: str) -> None:
         console.print(f"  - {key}: {total} agents, aware={aware} ({pct:.1%})")
 
 
-def _display_agent(conn: sqlite3.Connection, agent_id: str) -> None:
+def _display_agent(
+    conn: sqlite3.Connection,
+    run_id: str,
+    population_id: str,
+    agent_id: str,
+) -> None:
     cur = conn.cursor()
     cur.execute(
         """
         SELECT *
         FROM agent_states
-        WHERE agent_id = ?
+        WHERE run_id = ? AND agent_id = ?
         """,
-        (agent_id,),
+        (run_id, agent_id),
     )
     row = cur.fetchone()
     if not row:
         console.print(f"[yellow]Agent not found in simulation state: {agent_id}[/yellow]")
         return
 
-    cur.execute("SELECT attrs_json FROM agents WHERE agent_id = ? LIMIT 1", (agent_id,))
+    cur.execute(
+        "SELECT attrs_json FROM agents WHERE population_id = ? AND agent_id = ? LIMIT 1",
+        (population_id, agent_id),
+    )
     attrs_row = cur.fetchone()
     attrs = {}
     if attrs_row:

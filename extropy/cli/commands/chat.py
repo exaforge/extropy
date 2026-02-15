@@ -24,10 +24,24 @@ def _load_agent_chat_context(
     timeline_n: int = 10,
 ) -> tuple[dict[str, Any], list[dict[str, Any]]]:
     cur = conn.cursor()
+    cur.execute(
+        "SELECT population_id FROM simulation_runs WHERE run_id = ? LIMIT 1",
+        (run_id,),
+    )
+    run_row = cur.fetchone()
+    if not run_row:
+        return {"run_id": run_id, "agent_id": agent_id, "error": "run_id not found"}, []
+    population_id = str(run_row["population_id"])
 
     cur.execute(
-        "SELECT attrs_json FROM agents WHERE agent_id = ? ORDER BY rowid DESC LIMIT 1",
-        (agent_id,),
+        """
+        SELECT attrs_json
+        FROM agents
+        WHERE population_id = ? AND agent_id = ?
+        ORDER BY rowid DESC
+        LIMIT 1
+        """,
+        (population_id, agent_id),
     )
     attrs_row = cur.fetchone()
     attrs = {}
@@ -37,7 +51,10 @@ def _load_agent_chat_context(
         except json.JSONDecodeError:
             attrs = {}
 
-    cur.execute("SELECT * FROM agent_states WHERE agent_id = ? LIMIT 1", (agent_id,))
+    cur.execute(
+        "SELECT * FROM agent_states WHERE run_id = ? AND agent_id = ? LIMIT 1",
+        (run_id, agent_id),
+    )
     state_row = cur.fetchone()
     state = dict(state_row) if state_row else {}
 
@@ -45,16 +62,17 @@ def _load_agent_chat_context(
         """
         SELECT timestep, event_type, details_json
         FROM timeline
-        WHERE agent_id = ?
+        WHERE run_id = ? AND agent_id = ?
         ORDER BY id DESC
         LIMIT ?
         """,
-        (agent_id, timeline_n),
+        (run_id, agent_id, timeline_n),
     )
     timeline_rows = [dict(r) for r in cur.fetchall()]
 
     context = {
         "run_id": run_id,
+        "population_id": population_id,
         "agent_id": agent_id,
         "attributes": attrs,
         "state": state,
@@ -62,9 +80,9 @@ def _load_agent_chat_context(
     }
 
     citations = [
-        {"table": "agents", "agent_id": agent_id},
-        {"table": "agent_states", "agent_id": agent_id},
-        {"table": "timeline", "agent_id": agent_id, "limit": timeline_n},
+        {"table": "agents", "population_id": population_id, "agent_id": agent_id},
+        {"table": "agent_states", "run_id": run_id, "agent_id": agent_id},
+        {"table": "timeline", "run_id": run_id, "agent_id": agent_id, "limit": timeline_n},
     ]
     return context, citations
 
@@ -147,6 +165,15 @@ def chat_interactive(
         console.print(f"[red]✗[/red] Study DB not found: {study_db}")
         raise typer.Exit(1)
 
+    conn = sqlite3.connect(str(study_db))
+    conn.row_factory = sqlite3.Row
+    cur = conn.cursor()
+    cur.execute("SELECT 1 FROM simulation_runs WHERE run_id = ? LIMIT 1", (run_id,))
+    if not cur.fetchone():
+        conn.close()
+        console.print(f"[red]✗[/red] run_id not found: {run_id}")
+        raise typer.Exit(1)
+
     with open_study_db(study_db) as db:
         sid = session_id or db.create_chat_session(
             run_id=run_id,
@@ -154,9 +181,6 @@ def chat_interactive(
             mode="interactive",
             meta={"entrypoint": "repl"},
         )
-
-    conn = sqlite3.connect(str(study_db))
-    conn.row_factory = sqlite3.Row
 
     console.print(f"[bold]Chat session[/bold] {sid}")
     _print_repl_help()
@@ -235,6 +259,16 @@ def chat_ask(
         raise typer.Exit(1)
 
     started = time.time()
+    conn = sqlite3.connect(str(study_db))
+    conn.row_factory = sqlite3.Row
+    try:
+        cur = conn.cursor()
+        cur.execute("SELECT 1 FROM simulation_runs WHERE run_id = ? LIMIT 1", (run_id,))
+        if not cur.fetchone():
+            console.print(f"[red]✗[/red] run_id not found: {run_id}")
+            raise typer.Exit(1)
+    finally:
+        conn.close()
 
     with open_study_db(study_db) as db:
         sid = session_id or db.create_chat_session(

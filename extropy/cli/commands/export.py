@@ -78,13 +78,32 @@ def export_edges(
 @export_app.command("states")
 def export_states(
     study_db: Path = typer.Option(..., "--study-db"),
+    run_id: str | None = typer.Option(None, "--run-id"),
     output: Path = typer.Option(..., "--to"),
 ):
     conn = sqlite3.connect(str(study_db))
     conn.row_factory = sqlite3.Row
     try:
         cur = conn.cursor()
-        cur.execute("SELECT * FROM agent_states ORDER BY agent_id")
+        if run_id:
+            cur.execute(
+                "SELECT run_id FROM simulation_runs WHERE run_id = ?",
+                (run_id,),
+            )
+        else:
+            cur.execute(
+                "SELECT run_id FROM simulation_runs ORDER BY started_at DESC LIMIT 1"
+            )
+        run_row = cur.fetchone()
+        if not run_row:
+            console.print("[yellow]No simulation runs found.[/yellow]")
+            raise typer.Exit(1)
+        resolved_run_id = str(run_row["run_id"])
+
+        cur.execute(
+            "SELECT * FROM agent_states WHERE run_id = ? ORDER BY agent_id",
+            (resolved_run_id,),
+        )
         rows = [dict(row) for row in cur.fetchall()]
     finally:
         conn.close()

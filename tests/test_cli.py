@@ -1,4 +1,6 @@
 """CLI smoke tests using typer's CliRunner."""
+import json
+import sqlite3
 from pathlib import Path
 
 from typer.testing import CliRunner
@@ -128,3 +130,109 @@ class TestNetworkCommand:
         )
         assert result.exit_code == 1
         assert "Study DB not found" in result.output
+
+
+def _seed_run_scoped_state(study_db: Path) -> None:
+    agents = [
+        {"_id": "a0", "team": "alpha"},
+        {"_id": "a1", "team": "beta"},
+    ]
+    with open_study_db(study_db) as db:
+        db.save_sample_result(population_id="default", agents=agents, meta={"source": "test"})
+        db.create_simulation_run(
+            run_id="run_old",
+            scenario_name="s",
+            population_id="default",
+            network_id="default",
+            config={},
+            seed=1,
+            status="completed",
+        )
+        db.create_simulation_run(
+            run_id="run_new",
+            scenario_name="s",
+            population_id="default",
+            network_id="default",
+            config={},
+            seed=2,
+            status="running",
+        )
+
+    conn = sqlite3.connect(str(study_db))
+    cur = conn.cursor()
+    cur.execute(
+        """
+        INSERT INTO agent_states (run_id, agent_id, aware, position, private_position, updated_at)
+        VALUES ('run_old', 'a0', 1, 'old_pos', 'old_pos', 0)
+        """
+    )
+    cur.execute(
+        """
+        INSERT INTO agent_states (run_id, agent_id, aware, position, private_position, updated_at)
+        VALUES ('run_new', 'a0', 1, 'new_pos', 'new_pos', 0)
+        """
+    )
+    cur.execute(
+        """
+        INSERT INTO timestep_summaries (
+            run_id, timestep, new_exposures, agents_reasoned, shares_occurred,
+            state_changes, exposure_rate, position_distribution_json
+        )
+        VALUES ('run_new', 0, 1, 1, 0, 1, 0.5, '{}')
+        """
+    )
+    conn.commit()
+    conn.close()
+
+
+class TestRunScopedCliReads:
+    def test_results_defaults_to_latest_run(self, tmp_path):
+        study_db = tmp_path / "study.db"
+        _seed_run_scoped_state(study_db)
+
+        result = runner.invoke(app, ["results", "--study-db", str(study_db)])
+        assert result.exit_code == 0
+        assert "run_id=run_new" in result.output
+        assert "new_pos" in result.output
+        assert "old_pos" not in result.output
+
+    def test_export_states_defaults_to_latest_run(self, tmp_path):
+        study_db = tmp_path / "study.db"
+        out = tmp_path / "states.jsonl"
+        _seed_run_scoped_state(study_db)
+
+        result = runner.invoke(
+            app,
+            ["export", "states", "--study-db", str(study_db), "--to", str(out)],
+        )
+        assert result.exit_code == 0
+        rows = [json.loads(line) for line in out.read_text(encoding="utf-8").splitlines()]
+        assert len(rows) == 1
+        assert rows[0]["run_id"] == "run_new"
+        assert rows[0]["private_position"] == "new_pos"
+
+    def test_chat_ask_reads_state_for_requested_run(self, tmp_path):
+        study_db = tmp_path / "study.db"
+        _seed_run_scoped_state(study_db)
+
+        result = runner.invoke(
+            app,
+            [
+                "chat",
+                "ask",
+                "--study-db",
+                str(study_db),
+                "--run-id",
+                "run_old",
+                "--agent-id",
+                "a0",
+                "--prompt",
+                "what is my stance",
+                "--json",
+            ],
+        )
+        assert result.exit_code == 0
+        payload = json.loads(result.stdout.strip())
+        assert payload["session_id"]
+        assert "old_pos" in payload["assistant_text"]
+        assert "new_pos" not in payload["assistant_text"]
