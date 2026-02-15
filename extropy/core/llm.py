@@ -1,20 +1,19 @@
 """LLM clients for Extropy - Facade Layer.
 
-This module provides a unified interface to LLM providers with two-zone routing:
-- Pipeline (sync calls): simple_call, reasoning_call, agentic_research
-  → Uses the pipeline provider (configured for phases 1-2)
-- Simulation (async calls): simple_call_async
-  → Uses the simulation provider (configured for phase 3)
+This module provides a unified interface to LLM providers with two-tier routing:
+- fast: simple_call → uses models.fast (cheap, fast tasks)
+- strong: reasoning_call, agentic_research → uses models.strong (complex tasks)
+- simulation: simple_call_async → uses simulation.strong/fast
+
+Model strings use "provider/model" format. The provider is extracted to route
+to the correct backend; the model name is passed through.
 
 Configure via `extropy config` CLI or programmatically via extropy.config.configure().
-
-Each function supports retry with error feedback via the `previous_errors` parameter.
-When validation fails, pass the error message back to let the LLM self-correct.
 """
 
-from .providers import get_pipeline_provider, get_simulation_provider
+from .providers import get_provider
 from .providers.base import TokenUsage, ValidatorCallback, RetryCallback
-from ..config import get_config
+from ..config import get_config, parse_model_string
 
 
 __all__ = [
@@ -28,25 +27,14 @@ __all__ = [
 ]
 
 
-def _get_pipeline_model_override(tier: str) -> str | None:
-    """Get pipeline model override from config if configured."""
+def _resolve_provider_and_model(
+    model_string: str,
+) -> tuple:
+    """Resolve a "provider/model" string to (provider_instance, model_name)."""
     config = get_config()
-    pipeline = config.pipeline
-    if tier == "simple" and pipeline.model_simple:
-        return pipeline.model_simple
-    elif tier == "reasoning" and pipeline.model_reasoning:
-        return pipeline.model_reasoning
-    elif tier == "research" and pipeline.model_research:
-        return pipeline.model_research
-    return None
-
-
-def _get_simulation_model_override() -> str | None:
-    """Get simulation model override from config if configured."""
-    config = get_config()
-    if config.simulation.model:
-        return config.simulation.model
-    return None
+    provider_name, model_name = parse_model_string(model_string)
+    provider = get_provider(provider_name, config.providers)
+    return provider, model_name
 
 
 def simple_call(
@@ -59,20 +47,21 @@ def simple_call(
 ) -> dict:
     """Simple LLM call with structured output, no reasoning, no web search.
 
-    Routed through the PIPELINE provider.
+    Uses the FAST tier (config.models.fast).
 
     Use for fast, cheap tasks:
     - Context sufficiency checks
     - Simple classification
     - Validation
     """
-    provider = get_pipeline_provider()
-    effective_model = model or _get_pipeline_model_override("simple")
+    config = get_config()
+    model_string = model or config.resolve_pipeline_fast()
+    provider, model_name = _resolve_provider_and_model(model_string)
     return provider.simple_call(
         prompt=prompt,
         response_schema=response_schema,
         schema_name=schema_name,
-        model=effective_model,
+        model=model_name,
         log=log,
         max_tokens=max_tokens,
     )
@@ -87,18 +76,21 @@ async def simple_call_async(
 ) -> tuple[dict, TokenUsage]:
     """Async version of simple_call for concurrent API requests.
 
-    Routed through the SIMULATION provider.
-
     Used for batch agent reasoning during simulation.
+    Model is passed explicitly from simulation caller (provider/model format).
     Returns (structured_data, token_usage) tuple.
     """
-    provider = get_simulation_provider()
-    effective_model = model or _get_simulation_model_override()
+    if model:
+        provider, model_name = _resolve_provider_and_model(model)
+    else:
+        config = get_config()
+        model_string = config.resolve_sim_strong()
+        provider, model_name = _resolve_provider_and_model(model_string)
     return await provider.simple_call_async(
         prompt=prompt,
         response_schema=response_schema,
         schema_name=schema_name,
-        model=effective_model,
+        model=model_name,
         max_tokens=max_tokens,
     )
 
@@ -117,20 +109,21 @@ def reasoning_call(
 ) -> dict:
     """LLM call with reasoning and structured output, but NO web search.
 
-    Routed through the PIPELINE provider.
+    Uses the STRONG tier (config.models.strong).
 
     Use for tasks that require reasoning but not external data:
     - Attribute selection/categorization
     - Schema design
     - Logical analysis
     """
-    provider = get_pipeline_provider()
-    effective_model = model or _get_pipeline_model_override("reasoning")
+    config = get_config()
+    model_string = model or config.resolve_pipeline_strong()
+    provider, model_name = _resolve_provider_and_model(model_string)
     return provider.reasoning_call(
         prompt=prompt,
         response_schema=response_schema,
         schema_name=schema_name,
-        model=effective_model,
+        model=model_name,
         reasoning_effort=reasoning_effort,
         log=log,
         previous_errors=previous_errors,
@@ -154,21 +147,17 @@ def agentic_research(
 ) -> tuple[dict, list[str]]:
     """Perform agentic research with web search and structured output.
 
-    Routed through the PIPELINE provider.
-
-    The model will:
-    1. Decide what to search for
-    2. Search the web (possibly multiple times)
-    3. Reason about the results
-    4. Return structured data matching the schema
+    Uses the STRONG tier (config.models.strong).
+    Web search is a provider capability, not a tier distinction.
     """
-    provider = get_pipeline_provider()
-    effective_model = model or _get_pipeline_model_override("research")
+    config = get_config()
+    model_string = model or config.resolve_pipeline_strong()
+    provider, model_name = _resolve_provider_and_model(model_string)
     return provider.agentic_research(
         prompt=prompt,
         response_schema=response_schema,
         schema_name=schema_name,
-        model=effective_model,
+        model=model_name,
         reasoning_effort=reasoning_effort,
         log=log,
         previous_errors=previous_errors,

@@ -138,9 +138,8 @@ def estimate_simulation_cost(
     population_spec: PopulationSpec,
     agents: list[dict[str, Any]],
     network: dict[str, Any],
-    provider: str = "openai",
-    pivotal_model: str = "",
-    routine_model: str = "",
+    strong_model: str = "",
+    fast_model: str = "",
     multi_touch_threshold: int = 3,
 ) -> CostEstimate:
     """Estimate the cost of running a simulation.
@@ -153,9 +152,8 @@ def estimate_simulation_cost(
         population_spec: Population specification
         agents: List of agent dictionaries
         network: Network data dict
-        provider: LLM provider name
-        pivotal_model: Model for Pass 1 (empty = provider default)
-        routine_model: Model for Pass 2 (empty = provider cheap tier)
+        strong_model: Model for Pass 1 (provider/model format, empty = config default)
+        fast_model: Model for Pass 2 (provider/model format, empty = config default)
         multi_touch_threshold: Re-reasoning threshold
 
     Returns:
@@ -167,9 +165,14 @@ def estimate_simulation_cost(
     share_prob = scenario.spread.share_probability
     will_share_rate = 0.55  # accounts for conviction-gated sharing
 
-    # Resolve models
-    eff_pivotal = pivotal_model or resolve_default_model(provider, "reasoning")
-    eff_routine = routine_model or resolve_default_model(provider, "simple")
+    # Resolve models — strip provider prefix for pricing lookup
+    from ..config import get_config, parse_model_string
+
+    config = get_config()
+    eff_strong_str = strong_model or config.resolve_sim_strong()
+    eff_fast_str = fast_model or config.resolve_sim_fast()
+    _, eff_pivotal = parse_model_string(eff_strong_str)
+    _, eff_routine = parse_model_string(eff_fast_str)
 
     # Pre-compute seed exposure schedule: timestep -> expected new seed exposures
     seed_schedule: dict[int, float] = {}

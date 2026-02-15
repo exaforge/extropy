@@ -486,10 +486,11 @@ class RateLimiter:
 
 
 class DualRateLimiter:
-    """Manages separate rate limiters for pivotal (Pass 1) and routine (Pass 2) models.
+    """Manages separate rate limiters for strong (Pass 1) and fast (Pass 2) models.
 
-    When pivotal and routine models are the same, uses a single shared limiter.
+    When strong and fast models are the same, uses a single shared limiter.
     When they differ, uses independent limiters since API limits are per-model.
+    Supports mixed providers (e.g., strong=anthropic, fast=openai).
     """
 
     def __init__(
@@ -499,51 +500,82 @@ class DualRateLimiter:
     ):
         self.pivotal = pivotal
         self.routine = routine
+        # Aliases for new naming convention
+        self.strong = pivotal
+        self.fast = routine
 
     @classmethod
     def create(
         cls,
-        provider: str,
+        provider: str = "",
         pivotal_model: str = "",
         routine_model: str = "",
         tier: int | None = None,
         rpm_override: int | None = None,
         tpm_override: int | None = None,
+        *,
+        strong_model_string: str = "",
+        fast_model_string: str = "",
     ) -> "DualRateLimiter":
         """Create dual rate limiter for two-pass reasoning.
 
-        If both models are the same (or routine is empty), a single
-        shared limiter is used for both passes.
+        Accepts either:
+        - Legacy: provider + pivotal_model + routine_model (single provider)
+        - New: strong_model_string + fast_model_string (provider/model format, mixed providers)
 
         Args:
-            provider: Provider name
-            pivotal_model: Model for Pass 1 (role-play reasoning)
-            routine_model: Model for Pass 2 (classification)
+            provider: Provider name (legacy, used if model strings not provided)
+            pivotal_model: Model for Pass 1 (legacy)
+            routine_model: Model for Pass 2 (legacy)
             tier: Rate limit tier (1-4)
-            rpm_override: Override RPM (applies to pivotal limiter)
-            tpm_override: Override TPM (applies to pivotal limiter)
+            rpm_override: Override RPM
+            tpm_override: Override TPM
+            strong_model_string: "provider/model" for strong/pivotal (new)
+            fast_model_string: "provider/model" for fast/routine (new)
 
         Returns:
             DualRateLimiter instance
         """
+        # Resolve strong limiter
+        if strong_model_string and "/" in strong_model_string:
+            from ..config import parse_model_string
+
+            strong_provider, strong_model = parse_model_string(strong_model_string)
+        else:
+            strong_provider = provider
+            strong_model = pivotal_model
+
         pivotal_limiter = RateLimiter.for_provider(
-            provider=provider,
-            model=pivotal_model,
+            provider=strong_provider,
+            model=strong_model,
             tier=tier,
             rpm_override=rpm_override,
             tpm_override=tpm_override,
         )
 
-        # If routine model is the same as pivotal (or not specified), share the limiter
-        effective_routine = routine_model or pivotal_model
-        if effective_routine == pivotal_model or not effective_routine:
+        # Resolve fast limiter
+        if fast_model_string and "/" in fast_model_string:
+            from ..config import parse_model_string
+
+            fast_provider, fast_model = parse_model_string(fast_model_string)
+        else:
+            fast_provider = provider
+            fast_model = routine_model
+
+        # If same provider+model, share the limiter
+        effective_fast_model = fast_model or strong_model
+        if (
+            fast_provider == strong_provider
+            and effective_fast_model == strong_model
+        ):
             return cls(pivotal=pivotal_limiter, routine=pivotal_limiter)
 
-        # Different models — create separate limiter for routine
-        # Overrides apply to both (on Azure, limits are per-resource not per-model)
+        if not effective_fast_model and not fast_provider:
+            return cls(pivotal=pivotal_limiter, routine=pivotal_limiter)
+
         routine_limiter = RateLimiter.for_provider(
-            provider=provider,
-            model=effective_routine,
+            provider=fast_provider or strong_provider,
+            model=effective_fast_model,
             tier=tier,
             rpm_override=rpm_override,
             tpm_override=tpm_override,

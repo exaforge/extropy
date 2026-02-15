@@ -27,16 +27,23 @@ class StateManager:
     for frequently accessed data.
     """
 
-    def __init__(self, db_path: Path | str, agents: list[dict[str, Any]] | None = None):
+    def __init__(
+        self,
+        db_path: Path | str,
+        agents: list[dict[str, Any]] | None = None,
+        run_id: str = "default",
+    ):
         """Initialize state manager with database path.
 
         Args:
             db_path: Path to SQLite database file
             agents: Optional list of agents to initialize
+            run_id: Run scope for all state reads/writes
         """
         self.db_path = Path(db_path)
+        self.run_id = run_id
         self.db_path.parent.mkdir(parents=True, exist_ok=True)
-        self.conn = sqlite3.connect(str(self.db_path))
+        self.conn = sqlite3.connect(str(self.db_path), check_same_thread=False)
         self.conn.row_factory = sqlite3.Row
         self.conn.execute("PRAGMA foreign_keys = ON")
 
@@ -54,7 +61,8 @@ class StateManager:
         cursor.execute(
             """
             CREATE TABLE IF NOT EXISTS agent_states (
-                agent_id TEXT PRIMARY KEY,
+                run_id TEXT NOT NULL,
+                agent_id TEXT NOT NULL,
                 aware INTEGER DEFAULT 0,
                 exposure_count INTEGER DEFAULT 0,
                 last_reasoning_timestep INTEGER DEFAULT -1,
@@ -73,7 +81,8 @@ class StateManager:
                 private_conviction REAL,
                 private_outcomes_json TEXT,
                 raw_reasoning TEXT,
-                updated_at INTEGER DEFAULT 0
+                updated_at INTEGER DEFAULT 0,
+                PRIMARY KEY (run_id, agent_id)
             )
         """
         )
@@ -82,6 +91,7 @@ class StateManager:
         cursor.execute(
             """
             CREATE TABLE IF NOT EXISTS exposures (
+                run_id TEXT NOT NULL,
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 agent_id TEXT,
                 timestep INTEGER,
@@ -89,7 +99,7 @@ class StateManager:
                 source_agent_id TEXT,
                 content TEXT,
                 credibility REAL,
-                FOREIGN KEY (agent_id) REFERENCES agent_states(agent_id)
+                FOREIGN KEY (run_id, agent_id) REFERENCES agent_states(run_id, agent_id)
             )
         """
         )
@@ -98,13 +108,14 @@ class StateManager:
         cursor.execute(
             """
             CREATE TABLE IF NOT EXISTS memory_traces (
+                run_id TEXT NOT NULL,
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 agent_id TEXT,
                 timestep INTEGER,
                 sentiment REAL,
                 conviction REAL,
                 summary TEXT,
-                FOREIGN KEY (agent_id) REFERENCES agent_states(agent_id)
+                FOREIGN KEY (run_id, agent_id) REFERENCES agent_states(run_id, agent_id)
             )
         """
         )
@@ -113,6 +124,7 @@ class StateManager:
         cursor.execute(
             """
             CREATE TABLE IF NOT EXISTS timeline (
+                run_id TEXT NOT NULL,
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 timestep INTEGER,
                 event_type TEXT,
@@ -127,7 +139,8 @@ class StateManager:
         cursor.execute(
             """
             CREATE TABLE IF NOT EXISTS timestep_summaries (
-                timestep INTEGER PRIMARY KEY,
+                run_id TEXT NOT NULL,
+                timestep INTEGER NOT NULL,
                 new_exposures INTEGER,
                 agents_reasoned INTEGER,
                 shares_occurred INTEGER,
@@ -136,7 +149,8 @@ class StateManager:
                 position_distribution_json TEXT,
                 average_sentiment REAL,
                 average_conviction REAL,
-                sentiment_variance REAL
+                sentiment_variance REAL,
+                PRIMARY KEY (run_id, timestep)
             )
         """
         )
@@ -145,37 +159,37 @@ class StateManager:
         cursor.execute(
             """
             CREATE INDEX IF NOT EXISTS idx_exposures_agent
-            ON exposures(agent_id)
+            ON exposures(run_id, agent_id)
         """
         )
         cursor.execute(
             """
             CREATE INDEX IF NOT EXISTS idx_exposures_timestep
-            ON exposures(timestep)
+            ON exposures(run_id, timestep)
         """
         )
         cursor.execute(
             """
             CREATE INDEX IF NOT EXISTS idx_timeline_timestep
-            ON timeline(timestep)
+            ON timeline(run_id, timestep)
         """
         )
         cursor.execute(
             """
             CREATE INDEX IF NOT EXISTS idx_agent_states_aware
-            ON agent_states(aware)
+            ON agent_states(run_id, aware)
         """
         )
         cursor.execute(
             """
             CREATE INDEX IF NOT EXISTS idx_agent_states_will_share
-            ON agent_states(will_share)
+            ON agent_states(run_id, will_share)
         """
         )
         cursor.execute(
             """
             CREATE INDEX IF NOT EXISTS idx_memory_traces_agent
-            ON memory_traces(agent_id)
+            ON memory_traces(run_id, agent_id)
         """
         )
 
@@ -183,18 +197,19 @@ class StateManager:
         cursor.execute(
             """
             CREATE TABLE IF NOT EXISTS shared_to (
+                run_id TEXT NOT NULL,
                 source_agent_id TEXT,
                 target_agent_id TEXT,
                 timestep INTEGER,
                 position TEXT,
-                PRIMARY KEY (source_agent_id, target_agent_id)
+                PRIMARY KEY (run_id, source_agent_id, target_agent_id)
             )
         """
         )
         cursor.execute(
             """
             CREATE INDEX IF NOT EXISTS idx_shared_to_source
-            ON shared_to(source_agent_id)
+            ON shared_to(run_id, source_agent_id)
         """
         )
 
@@ -202,8 +217,11 @@ class StateManager:
         cursor.execute(
             """
             CREATE TABLE IF NOT EXISTS simulation_metadata (
-                key TEXT PRIMARY KEY,
+                run_id TEXT NOT NULL,
+                key TEXT NOT NULL,
                 value TEXT
+                ,
+                PRIMARY KEY (run_id, key)
             )
         """
         )
@@ -215,6 +233,13 @@ class StateManager:
         cursor = self.conn.cursor()
 
         migrations = [
+            ("agent_states", "run_id", "TEXT DEFAULT 'default'"),
+            ("exposures", "run_id", "TEXT DEFAULT 'default'"),
+            ("memory_traces", "run_id", "TEXT DEFAULT 'default'"),
+            ("timeline", "run_id", "TEXT DEFAULT 'default'"),
+            ("timestep_summaries", "run_id", "TEXT DEFAULT 'default'"),
+            ("shared_to", "run_id", "TEXT DEFAULT 'default'"),
+            ("simulation_metadata", "run_id", "TEXT DEFAULT 'default'"),
             ("agent_states", "conviction", "REAL"),
             ("agent_states", "public_statement", "TEXT"),
             ("timestep_summaries", "average_conviction", "REAL"),

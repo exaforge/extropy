@@ -14,8 +14,10 @@ Implements Phase 0 redesign:
 
 import json
 import logging
+import queue
 import random
 import sqlite3
+import threading
 import time
 import uuid
 from datetime import datetime
@@ -149,6 +151,8 @@ class SimulationEngine:
         run_id: str | None = None,
         checkpoint_every_chunks: int = 1,
         retention_lite: bool = False,
+        writer_queue_size: int = 256,
+        db_write_batch_size: int = 100,
     ):
         """Initialize simulation engine.
 
@@ -173,6 +177,8 @@ class SimulationEngine:
         self.run_id = run_id or f"run_{uuid.uuid4().hex[:12]}"
         self.checkpoint_every_chunks = max(1, checkpoint_every_chunks)
         self.retention_lite = retention_lite
+        self.writer_queue_size = max(1, writer_queue_size)
+        self.db_write_batch_size = max(1, db_write_batch_size)
 
         # Build agent map for quick lookup
         self.agent_map = {a.get("_id", str(i)): a for i, a in enumerate(agents)}
@@ -202,6 +208,7 @@ class SimulationEngine:
         self.state_manager = StateManager(
             state_db_file,
             agents,
+            run_id=self.run_id,
         )
         self.study_db = open_study_db(state_db_file)
 
@@ -574,16 +581,87 @@ class SimulationEngine:
             context = self._build_reasoning_context(agent_id, old_state)
             contexts.append(context)
 
-        # Split into chunks
-        total_reasoned = 0
-        total_changes = 0
-        total_shares = 0
-
         completed_chunks = self.study_db.get_completed_simulation_chunks(
             self.run_id, timestep
         )
+        totals = {"reasoned": 0, "changes": 0, "shares": 0}
+
+        work_queue: queue.Queue[tuple[int, list[tuple[str, Any]], bool] | object] = (
+            queue.Queue(maxsize=self.writer_queue_size)
+        )
+        sentinel = object()
+        writer_error: list[Exception] = []
+
+        def _writer_loop() -> None:
+            chunks_since_checkpoint = 0
+            pending_chunks: list[tuple[int, list[tuple[str, Any]], bool]] = []
+
+            def _flush_pending() -> None:
+                nonlocal chunks_since_checkpoint
+                if not pending_chunks:
+                    return
+                with self.state_manager.transaction():
+                    for chunk_index, chunk_results, _is_last_chunk in pending_chunks:
+                        reasoned, changes, shares = self._process_reasoning_chunk(
+                            timestep, chunk_results, old_states
+                        )
+                        totals["reasoned"] += reasoned
+                        totals["changes"] += changes
+                        totals["shares"] += shares
+
+                for chunk_index, _chunk_results, is_last_chunk in pending_chunks:
+                    self.study_db.save_simulation_checkpoint(
+                        run_id=self.run_id,
+                        timestep=timestep,
+                        chunk_index=chunk_index,
+                        status="done",
+                    )
+
+                    chunks_since_checkpoint += 1
+                    if (
+                        chunks_since_checkpoint >= self.checkpoint_every_chunks
+                        or is_last_chunk
+                    ):
+                        self.study_db.set_run_metadata(
+                            self.run_id,
+                            "last_checkpoint",
+                            f"{timestep}:{chunk_index}",
+                        )
+                        chunks_since_checkpoint = 0
+
+                pending_chunks.clear()
+
+            try:
+                while True:
+                    item = work_queue.get()
+                    try:
+                        if item is sentinel:
+                            _flush_pending()
+                            break
+                        chunk_index, chunk_results, is_last_chunk = item
+                        if chunk_index in completed_chunks:
+                            continue
+                        pending_chunks.append((chunk_index, chunk_results, is_last_chunk))
+                        if (
+                            len(pending_chunks) >= self.db_write_batch_size
+                            or is_last_chunk
+                        ):
+                            _flush_pending()
+                    finally:
+                        work_queue.task_done()
+            except Exception as e:  # pragma: no cover - surfaced to caller
+                writer_error.append(e)
+
+        writer_thread = threading.Thread(
+            target=_writer_loop,
+            name=f"sim-writer-{self.run_id}-{timestep}",
+            daemon=True,
+        )
+        writer_thread.start()
 
         for chunk_start in range(0, len(contexts), self.chunk_size):
+            if writer_error:
+                break
             chunk_index = chunk_start // self.chunk_size
             if chunk_index in completed_chunks:
                 logger.info(
@@ -603,7 +681,6 @@ class SimulationEngine:
             reasoning_elapsed = time.time() - reasoning_start
             self.total_reasoning_calls += len(chunk_results)
 
-            # Accumulate token usage
             self.pivotal_input_tokens += chunk_usage.pivotal_input_tokens
             self.pivotal_output_tokens += chunk_usage.pivotal_output_tokens
             self.routine_input_tokens += chunk_usage.routine_input_tokens
@@ -616,27 +693,26 @@ class SimulationEngine:
                 else f"[TIMESTEP {timestep}] Chunk empty"
             )
 
-            # Process and commit this chunk
-            with self.state_manager.transaction():
-                reasoned, changes, shares = self._process_reasoning_chunk(
-                    timestep, chunk_results, old_states
-                )
-            if (
-                ((chunk_index + 1) % self.checkpoint_every_chunks == 0)
-                or (chunk_start + self.chunk_size >= len(contexts))
-            ):
-                self.study_db.save_simulation_checkpoint(
-                    run_id=self.run_id,
-                    timestep=timestep,
-                    chunk_index=chunk_index,
-                    status="done",
-                )
+            is_last_chunk = chunk_start + self.chunk_size >= len(contexts)
+            work_queue.put((chunk_index, chunk_results, is_last_chunk))
 
-            total_reasoned += reasoned
-            total_changes += changes
-            total_shares += shares
+        work_queue.put(sentinel)
+        while work_queue.unfinished_tasks > 0:
+            if writer_error:
+                while True:
+                    try:
+                        work_queue.get_nowait()
+                        work_queue.task_done()
+                    except queue.Empty:
+                        break
+                break
+            time.sleep(0.01)
+        work_queue.join()
+        writer_thread.join(timeout=1)
+        if writer_error:
+            raise writer_error[0]
 
-        return total_reasoned, total_changes, total_shares
+        return totals["reasoned"], totals["changes"], totals["shares"]
 
     def _process_reasoning_chunk(
         self,
@@ -1112,7 +1188,7 @@ class SimulationEngine:
             final_exposure_rate=self.state_manager.get_exposure_rate(),
             outcome_distributions=outcome_dists,
             runtime_seconds=runtime,
-            model_used=self.config.model,
+            model_used=self.config.strong,
             completed_at=datetime.now(),
         )
 
@@ -1137,19 +1213,14 @@ class SimulationEngine:
 
         # Resolve effective model names for pricing
         config = get_config()
-        provider = config.simulation.provider
-        pivotal_model = (
-            self.config.pivotal_model
-            or self.config.model
-            or config.simulation.pivotal_model
-            or config.simulation.model
-            or resolve_default_model(provider, "reasoning")
-        )
-        routine_model = (
-            self.config.routine_model
-            or config.simulation.routine_model
-            or resolve_default_model(provider, "simple")
-        )
+        from ..config import parse_model_string
+
+        strong_model_str = self.config.strong or config.resolve_sim_strong()
+        fast_model_str = self.config.fast or config.resolve_sim_fast()
+
+        # Strip provider prefix for pricing lookup (pricing is keyed by bare model name)
+        _, pivotal_model = parse_model_string(strong_model_str)
+        _, routine_model = parse_model_string(fast_model_str)
 
         cost["pivotal_model"] = pivotal_model
         cost["routine_model"] = routine_model
@@ -1238,9 +1309,8 @@ class SimulationEngine:
             "scenario_name": self.scenario.meta.name,
             "scenario_path": self.config.scenario_path,
             "population_size": len(self.agents),
-            "model": self.config.model,
-            "pivotal_model": self.config.pivotal_model,
-            "routine_model": self.config.routine_model,
+            "strong_model": self.config.strong,
+            "fast_model": self.config.fast,
             "seed": self.seed,
             "multi_touch_threshold": self.config.multi_touch_threshold,
             "completed_at": datetime.now().isoformat(),
@@ -1260,9 +1330,8 @@ def run_simulation(
     scenario_path: str | Path,
     output_dir: str | Path,
     study_db_path: str | Path | None = None,
-    model: str = "",
-    pivotal_model: str = "",
-    routine_model: str = "",
+    strong: str = "",
+    fast: str = "",
     multi_touch_threshold: int = 3,
     random_seed: int | None = None,
     on_progress: TimestepProgressCallback | None = None,
@@ -1276,6 +1345,8 @@ def run_simulation(
     resume: bool = False,
     checkpoint_every_chunks: int = 1,
     retention_lite: bool = False,
+    writer_queue_size: int = 256,
+    db_write_batch_size: int = 100,
 ) -> SimulationSummary:
     """Run a simulation from a scenario file.
 
@@ -1284,9 +1355,8 @@ def run_simulation(
     Args:
         scenario_path: Path to scenario YAML file
         output_dir: Directory for results output
-        model: LLM model for agent reasoning
-        pivotal_model: Model for pivotal reasoning (default: same as model)
-        routine_model: Cheap model for routine + classification
+        strong: Strong model for Pass 1 reasoning (provider/model format)
+        fast: Fast model for Pass 2 classification (provider/model format)
         multi_touch_threshold: Re-reason after N new exposures
         random_seed: Random seed for reproducibility
         on_progress: Progress callback(timestep, max, status)
@@ -1300,6 +1370,8 @@ def run_simulation(
         resume: Resume a prior run from DB checkpoints
         checkpoint_every_chunks: Mark simulation checkpoint every N chunks
         retention_lite: Reduce payload volume by dropping full raw reasoning text
+        writer_queue_size: Max buffered reasoning chunks before writer backpressure
+        db_write_batch_size: Number of chunks applied per DB writer transaction
 
     Returns:
         SimulationSummary with results
@@ -1309,21 +1381,26 @@ def run_simulation(
     if resume and not run_id:
         raise ValueError("--resume requires --run-id")
 
-    def _reset_runtime_tables(path: Path) -> None:
+    def _reset_runtime_tables(path: Path, run_key: str) -> None:
         conn = sqlite3.connect(str(path))
         try:
             cur = conn.cursor()
-            cur.executescript(
-                """
-                DELETE FROM agent_states;
-                DELETE FROM exposures;
-                DELETE FROM memory_traces;
-                DELETE FROM timeline;
-                DELETE FROM timestep_summaries;
-                DELETE FROM shared_to;
-                DELETE FROM simulation_metadata;
-                """
-            )
+            statements = [
+                "DELETE FROM agent_states WHERE run_id = ?",
+                "DELETE FROM exposures WHERE run_id = ?",
+                "DELETE FROM memory_traces WHERE run_id = ?",
+                "DELETE FROM timeline WHERE run_id = ?",
+                "DELETE FROM timestep_summaries WHERE run_id = ?",
+                "DELETE FROM shared_to WHERE run_id = ?",
+                "DELETE FROM simulation_metadata WHERE run_id = ?",
+            ]
+            for sql in statements:
+                try:
+                    cur.execute(sql, (run_key,))
+                except sqlite3.OperationalError:
+                    # Legacy tables without run_id columns.
+                    table = sql.split()[2]
+                    cur.execute(f"DELETE FROM {table}")
             conn.commit()
         except sqlite3.OperationalError:
             # First run on this DB may not have simulation tables yet.
@@ -1379,13 +1456,14 @@ def run_simulation(
             config={
                 "scenario_path": str(scenario_path),
                 "output_dir": str(output_dir),
-                "model": model,
-                "pivotal_model": pivotal_model,
-                "routine_model": routine_model,
+                "strong": strong,
+                "fast": fast,
                 "multi_touch_threshold": multi_touch_threshold,
                 "chunk_size": chunk_size,
                 "checkpoint_every_chunks": checkpoint_every_chunks,
                 "retention_lite": retention_lite,
+                "writer_queue_size": writer_queue_size,
+                "db_write_batch_size": db_write_batch_size,
                 "resume": resume,
             },
             seed=random_seed,
@@ -1395,7 +1473,7 @@ def run_simulation(
         db.set_run_metadata(resolved_run_id, "study_db", str(study_db_resolved))
 
     if not resume:
-        _reset_runtime_tables(study_db_resolved)
+        _reset_runtime_tables(study_db_resolved, resolved_run_id)
 
     # Load persona config if provided
     persona_config = None
@@ -1415,26 +1493,22 @@ def run_simulation(
     config = SimulationRunConfig(
         scenario_path=str(scenario_path),
         output_dir=str(output_dir),
-        model=model,
-        pivotal_model=pivotal_model,
-        routine_model=routine_model,
+        strong=strong,
+        fast=fast,
         multi_touch_threshold=multi_touch_threshold,
         random_seed=random_seed,
     )
 
-    # Create dual rate limiter (separate limiters for pivotal and routine models)
+    # Resolve effective model strings for rate limiting
     from ..config import get_config
 
     entropy_config = get_config()
-    provider = entropy_config.simulation.provider
-    effective_model = model or entropy_config.simulation.model or ""
-    effective_pivotal = pivotal_model or effective_model
-    effective_routine = routine_model or entropy_config.simulation.routine_model or ""
+    effective_strong = strong or entropy_config.resolve_sim_strong()
+    effective_fast = fast or entropy_config.resolve_sim_fast()
 
     rate_limiter = DualRateLimiter.create(
-        provider=provider,
-        pivotal_model=effective_pivotal,
-        routine_model=effective_routine,
+        strong_model_string=effective_strong,
+        fast_model_string=effective_fast,
         tier=rate_tier,
         rpm_override=rpm_override,
         tpm_override=tpm_override,
@@ -1454,6 +1528,8 @@ def run_simulation(
         run_id=resolved_run_id,
         checkpoint_every_chunks=checkpoint_every_chunks,
         retention_lite=retention_lite,
+        writer_queue_size=writer_queue_size,
+        db_write_batch_size=db_write_batch_size,
     )
 
     if on_progress:
