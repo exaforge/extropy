@@ -9,7 +9,7 @@ import hashlib
 import multiprocessing as mp
 import random
 import time
-from collections import defaultdict
+from collections import Counter, defaultdict
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from datetime import datetime
 from pathlib import Path
@@ -1270,6 +1270,46 @@ def _ensure_intra_similarity_coverage(
     return added
 
 
+def _compute_degree_targets(
+    n: int,
+    avg_degree: float,
+    distribution: str | None,
+    power_law_exponent: float,
+    rng: random.Random,
+) -> list[int]:
+    """Compute per-node degree targets based on degree distribution setting.
+
+    Args:
+        n: Number of agents.
+        avg_degree: Target average degree.
+        distribution: "uniform", "power_law", or None (defaults to uniform).
+        power_law_exponent: Exponent for power-law distribution.
+        rng: Random number generator.
+
+    Returns:
+        List of per-node target degrees (length n).
+    """
+    if distribution is None or distribution == "uniform" or n == 0:
+        target = max(1, int(round(avg_degree)))
+        return [target] * n
+
+    # Power-law: sample from Pareto-like distribution, then scale so mean = avg_degree.
+    # Use inverse CDF: x = x_min * u^(-1/(alpha-1)) where alpha = power_law_exponent.
+    alpha = max(1.5, power_law_exponent)
+    raw: list[float] = []
+    for _ in range(n):
+        u = rng.random()
+        # Avoid u=0 which gives infinity
+        u = max(u, 1e-10)
+        raw.append(u ** (-1.0 / (alpha - 1.0)))
+
+    # Scale so mean equals avg_degree
+    raw_mean = sum(raw) / n
+    scale = avg_degree / raw_mean if raw_mean > 0 else 1.0
+    targets = [max(1, int(round(v * scale))) for v in raw]
+    return targets
+
+
 def _sample_edges(
     agents: list[dict],
     agent_ids: list[str],
@@ -1280,6 +1320,7 @@ def _sample_edges(
     intra_scale: float,
     inter_scale: float,
     rng: random.Random,
+    structural_pairs: set[tuple[str, str]] | None = None,
 ) -> tuple[list[Edge], set[tuple[str, str]]]:
     """Sample edges with deterministic community quotas and local attachment."""
     n = len(agents)
@@ -1290,16 +1331,21 @@ def _sample_edges(
     node_degree = [0] * n
     community_external: dict[int, int] = defaultdict(int)
 
+    _structural_pairs = structural_pairs or set()
+
     def add_edge(i: int, j: int, sim: float) -> bool:
         pair = (i, j) if i < j else (j, i)
         if i == j or pair in added_pairs:
+            return False
+        # Skip pairs already covered by structural edges
+        id_a = agent_ids[i]
+        id_b = agent_ids[j]
+        if (id_a, id_b) in _structural_pairs:
             return False
         added_pairs.add(pair)
 
         agent_a = agents[i]
         agent_b = agents[j]
-        id_a = agent_ids[i]
-        id_b = agent_ids[j]
 
         edge_type = _infer_edge_type(agent_a, agent_b, config, is_rewired=False)
         influence_weights = _compute_influence_weights(agent_a, agent_b, sim, config)
@@ -1380,7 +1426,16 @@ def _sample_edges(
         inter_target = inter_available
         intra_target = min(intra_available, target_edges - inter_target)
 
-    degree_soft_cap = max(2, int(config.avg_degree * 1.8 * max(0.8, target_multiplier)))
+    # Per-node degree targets based on degree_distribution_target config.
+    per_node_targets = _compute_degree_targets(
+        n,
+        config.avg_degree,
+        config.degree_distribution_target,
+        config.power_law_exponent,
+        rng,
+    )
+    cap_multiplier = 1.8 * max(0.8, target_multiplier)
+    degree_caps = [max(2, int(t * cap_multiplier)) for t in per_node_targets]
     seed_k = max(1, min(12, int(config.avg_degree * 0.35 * max(0.8, intra_scale))))
 
     # Seed local neighborhoods (kNN-like) for clustering.
@@ -1399,7 +1454,7 @@ def _sample_edges(
         for _score, j, sim in intra_by_node[i]:
             if picked >= seed_k or intra_added >= intra_target:
                 break
-            if node_degree[i] >= degree_soft_cap and node_degree[j] >= degree_soft_cap:
+            if node_degree[i] >= degree_caps[i] and node_degree[j] >= degree_caps[j]:
                 continue
             if add_edge(i, j, sim):
                 intra_added += 1
@@ -1409,7 +1464,7 @@ def _sample_edges(
     for _score, i, j, sim in intra_pairs:
         if intra_added >= intra_target:
             break
-        if node_degree[i] >= degree_soft_cap and node_degree[j] >= degree_soft_cap:
+        if node_degree[i] >= degree_caps[i] and node_degree[j] >= degree_caps[j]:
             continue
         if add_edge(i, j, sim):
             intra_added += 1
@@ -1438,7 +1493,7 @@ def _sample_edges(
         if bridge is None:
             continue
         i, j, sim = bridge
-        if node_degree[i] >= degree_soft_cap and node_degree[j] >= degree_soft_cap:
+        if node_degree[i] >= degree_caps[i] and node_degree[j] >= degree_caps[j]:
             continue
         if add_edge(i, j, sim):
             inter_added += 1
@@ -1447,7 +1502,7 @@ def _sample_edges(
     for _score, i, j, sim in inter_pairs:
         if inter_added >= inter_target:
             break
-        if node_degree[i] >= degree_soft_cap and node_degree[j] >= degree_soft_cap:
+        if node_degree[i] >= degree_caps[i] and node_degree[j] >= degree_caps[j]:
             continue
         if add_edge(i, j, sim):
             inter_added += 1
@@ -1485,7 +1540,7 @@ def _sample_edges(
         for _score, i, j, sim in fof_candidates:
             if len(edges) >= target_edges:
                 break
-            if node_degree[i] >= degree_soft_cap and node_degree[j] >= degree_soft_cap:
+            if node_degree[i] >= degree_caps[i] and node_degree[j] >= degree_caps[j]:
                 continue
             add_edge(i, j, sim)
 
@@ -1496,7 +1551,7 @@ def _sample_edges(
         for _score, i, j, sim in all_pairs:
             if len(edges) >= target_edges:
                 break
-            if node_degree[i] >= degree_soft_cap and node_degree[j] >= degree_soft_cap:
+            if node_degree[i] >= degree_caps[i] and node_degree[j] >= degree_caps[j]:
                 continue
             add_edge(i, j, sim)
 
@@ -1926,6 +1981,7 @@ def _generate_network_single_pass(
     intra_scale: float,
     inter_scale: float,
     rng: random.Random,
+    structural_pairs: set[tuple[str, str]] | None = None,
 ) -> tuple[list[Edge], float, float, float, float]:
     """Generate network with given parameters and return metrics.
 
@@ -1944,6 +2000,7 @@ def _generate_network_single_pass(
         intra_scale,
         inter_scale,
         rng,
+        structural_pairs=structural_pairs,
     )
 
     # Apply triadic closure for clustering (allow more edges to be added)
@@ -2125,6 +2182,10 @@ def generate_network(
         * config.calibration_restarts
         * config.max_calibration_iterations,
     )
+
+    # Initialized before stage loop; populated in Step 3b inside the loop.
+    structural_edges: list[Edge] = []
+    structural_pair_set: set[tuple[str, str]] = set()
 
     for stage_idx, stage in enumerate(stage_plan):
         if time.time() - started_at >= elapsed_budget:
@@ -2357,6 +2418,35 @@ def generate_network(
             )
             continue
 
+        # Step 3b: Generate structural edges first (structural-first ordering).
+        # Structural edges consume part of the degree budget; similarity
+        # calibration targets the remainder.
+        structural_edges = _generate_structural_edges(agents, agent_ids, rng)
+        structural_pair_set: set[tuple[str, str]] = set()
+        for se in structural_edges:
+            structural_pair_set.add((se.source, se.target))
+            structural_pair_set.add((se.target, se.source))
+
+        structural_degree: Counter[str] = Counter()
+        for se in structural_edges:
+            structural_degree[se.source] += 1
+            structural_degree[se.target] += 1
+        avg_structural = (
+            sum(structural_degree.values()) / max(n, 1) if structural_edges else 0.0
+        )
+
+        # Reduce similarity target by average structural degree
+        similarity_target = max(1.0, config.avg_degree - avg_structural)
+        stage_cfg = stage_cfg.model_copy(update={"avg_degree": similarity_target})
+
+        logger.info(
+            "[NETWORK] Structural edges: %d (avg structural degree: %.2f, "
+            "similarity target: %.2f)",
+            len(structural_edges),
+            avg_structural,
+            similarity_target,
+        )
+
         # Step 4: Calibrate for this stage.
         stage_deadline = min(started_at + elapsed_budget, stage_started + stage_budget)
         stage_accepted = False
@@ -2408,6 +2498,7 @@ def generate_network(
                         intra_scale,
                         inter_scale,
                         iter_rng,
+                        structural_pairs=structural_pair_set,
                     )
                 )
                 lcc_deficit = max(
@@ -2609,9 +2700,9 @@ def generate_network(
         edge_set.add((edge.source, edge.target))
         edge_set.add((edge.target, edge.source))
 
-    # Step 4b: Generate structural edges and merge (protected from pruning/rewiring)
-    structural_edges = _generate_structural_edges(agents, agent_ids, rng)
-    structural_pairs: set[tuple[str, str]] = set()
+    # Step 4b: Merge pre-generated structural edges into similarity edges.
+    # Structural edges were generated before calibration (Step 3b) and the
+    # similarity budget was reduced accordingly. Now merge them in.
     structural_added = 0
     for se in structural_edges:
         if (se.source, se.target) not in edge_set:
@@ -2619,17 +2710,6 @@ def generate_network(
             edge_set.add((se.source, se.target))
             edge_set.add((se.target, se.source))
             structural_added += 1
-        else:
-            # Mark existing edge as structural if it matches
-            for existing in edges:
-                if (existing.source == se.source and existing.target == se.target) or (
-                    existing.source == se.target and existing.target == se.source
-                ):
-                    existing.structural = True
-                    existing.context = se.context
-                    break
-        structural_pairs.add((se.source, se.target))
-        structural_pairs.add((se.target, se.source))
 
     if structural_added > 0:
         emit_progress(
@@ -2652,7 +2732,7 @@ def generate_network(
         edge_set,
         config,
         rng,
-        protected_pairs=structural_pairs,
+        protected_pairs=structural_pair_set,
     )
     emit_progress("Rewiring edges", len(edges), len(edges), force_db=True)
 

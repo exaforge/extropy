@@ -9,6 +9,7 @@ import random
 from typing import Any
 
 from ...core.models.population import Dependent, HouseholdType
+from ..names.generator import generate_name
 
 
 # =============================================================================
@@ -191,6 +192,7 @@ def generate_dependents(
     num_adults: int,
     primary_age: int,
     rng: random.Random,
+    ethnicity: str | None = None,
 ) -> list[Dependent]:
     """Generate NPC dependents for a household.
 
@@ -210,9 +212,15 @@ def generate_dependents(
         elderly_age = primary_age + rng.randint(22, 35)
         elderly_gender = rng.choice(["male", "female"])
         relationship = "father" if elderly_gender == "male" else "mother"
+        dep_first, _ = generate_name(
+            gender=elderly_gender,
+            ethnicity=ethnicity,
+            age=elderly_age,
+            seed=rng.randint(0, 2**31),
+        )
         dependents.append(
             Dependent(
-                name=f"Dependent ({relationship})",
+                name=dep_first,
                 age=elderly_age,
                 gender=elderly_gender,
                 relationship=relationship,
@@ -227,9 +235,15 @@ def generate_dependents(
         child_gender = rng.choice(["male", "female"])
         relationship = "son" if child_gender == "male" else "daughter"
         school_status = _school_status(child_age)
+        child_first, _ = generate_name(
+            gender=child_gender,
+            ethnicity=ethnicity,
+            age=child_age,
+            seed=rng.randint(0, 2**31),
+        )
         dependents.append(
             Dependent(
-                name=f"Dependent ({relationship})",
+                name=child_first,
                 age=child_age,
                 gender=child_gender,
                 relationship=relationship,
@@ -245,9 +259,12 @@ def _sample_child_age(parent_age: int, rng: random.Random) -> int:
     # Parent had child between age 20-40 typically
     max_child_age = max(0, parent_age - 20)
     min_child_age = max(0, parent_age - 40)
-    if max_child_age <= min_child_age:
-        return max(0, min(17, max_child_age))
-    age = rng.randint(min_child_age, min(17, max_child_age))
+    # Clamp to 0-17 range (children only)
+    lo = min(17, min_child_age)
+    hi = min(17, max_child_age)
+    if hi <= lo:
+        return max(0, hi)
+    age = rng.randint(lo, hi)
     return max(0, age)
 
 

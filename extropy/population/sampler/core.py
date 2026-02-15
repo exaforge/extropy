@@ -385,7 +385,8 @@ def _sample_population_households(
 
         # Dependents
         dependents = generate_dependents(
-            htype, household_size, num_adults, adult1_age, rng
+            htype, household_size, num_adults, adult1_age, rng,
+            ethnicity=adult1.get("race_ethnicity"),
         )
 
         if has_kids and focus_mode == "all":

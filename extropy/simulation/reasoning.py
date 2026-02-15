@@ -134,7 +134,11 @@ def build_pass1_prompt(
             if peer_name:
                 prompt_parts.append(f'- {peer_name} told me: "{exp.content}"')
             else:
-                prompt_parts.append("- Someone I know told me about this")
+                source_name = context.agent_names.get(
+                    exp.source_agent_id,
+                    f"agent-{exp.source_agent_id[:6]}",
+                )
+                prompt_parts.append(f'- {source_name} told me: "{exp.content}"')
         else:
             # Seed/channel exposure
             channel = channel_map.get(exp.channel)

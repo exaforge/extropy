@@ -193,7 +193,7 @@ class TestBuildPass1Prompt:
         assert "Jordan" in prompt
 
     def test_network_exposure_fallback_no_name(self):
-        """Network exposure falls back to 'Someone I know' when no peer name."""
+        """Network exposure falls back to agent ID prefix when no peer name."""
         context = _make_context(
             exposure_history=[
                 ExposureRecord(
@@ -208,7 +208,7 @@ class TestBuildPass1Prompt:
         )
         scenario = _make_scenario()
         prompt = build_pass1_prompt(context, scenario)
-        assert "Someone I know" in prompt
+        assert "agent-a5" in prompt
 
     def test_no_memory_section_on_first_reasoning(self):
         """Empty memory_trace -> no 'What I've Been Thinking' section."""

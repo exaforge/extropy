@@ -161,10 +161,10 @@ def build_characteristics_list(
     """
     # Order: personality first (most decision-relevant), then attitudes, then demographics, then professional
     category_order = [
-        ("personality", "Your Mindset & Values"),
-        ("context_specific", "Your Attitudes & Concerns"),
-        ("universal", "Your Background"),
-        ("population_specific", "Your Professional Context"),
+        ("personality", "Mindset & Values"),
+        ("context_specific", "Attitudes & Concerns"),
+        ("universal", "Background"),
+        ("population_specific", "Professional Context"),
     ]
 
     decision_set = set(decision_relevant_attributes or [])
@@ -252,7 +252,7 @@ def generate_persona(
     formatted = format_agent(agent, population_spec)
 
     # Build the persona
-    parts = ["## Who You Are", ""]
+    parts = ["## Who I Am", ""]
 
     if population_spec.meta.persona_template:
         # Render narrative intro from template using formatted values
@@ -271,7 +271,7 @@ def generate_persona(
 
     # Add all remaining attributes as structured list
     parts.append("")
-    parts.append("## Your Characteristics")
+    parts.append("## My Characteristics")
     parts.append("")
 
     characteristics = build_characteristics_list(
@@ -291,7 +291,7 @@ def _build_simple_intro(
 
     Uses only narrative-safe attributes.
     """
-    # Try to build: "You are a {age}-year-old {gender} {role/specialty}..."
+    # Try to build: "I'm a {age}-year-old {gender} {role/specialty}..."
     intro_parts = []
 
     age = agent.get("age")
@@ -299,13 +299,13 @@ def _build_simple_intro(
 
     if age is not None:
         if gender:
-            intro_parts.append(f"You are a {int(age)}-year-old {gender}")
+            intro_parts.append(f"I'm a {int(age)}-year-old {gender}")
         else:
-            intro_parts.append(f"You are {int(age)} years old")
+            intro_parts.append(f"I'm {int(age)} years old")
     elif gender:
-        intro_parts.append(f"You are {gender}")
+        intro_parts.append(f"I'm {gender}")
     else:
-        intro_parts.append("You are a member of this population")
+        intro_parts.append("I'm a member of this population")
 
     # Add role/occupation/specialty if available
     for attr_name in (
@@ -367,14 +367,14 @@ def _fallback_persona(agent: dict[str, Any]) -> str:
     gender = agent.get("gender", "person")
 
     if age:
-        parts.append(f"You are a {int(age)}-year-old {gender}.")
+        parts.append(f"I'm a {int(age)}-year-old {gender}.")
     else:
-        parts.append(f"You are a {gender}.")
+        parts.append(f"I'm a {gender}.")
 
     # Add a few key attributes
     for key in ("role", "occupation", "specialty", "employer_type", "years_experience"):
         if key in agent and agent[key]:
-            parts.append(f"Your {key.replace('_', ' ')} is {agent[key]}.")
+            parts.append(f"My {key.replace('_', ' ')} is {agent[key]}.")
             if len(parts) >= 4:
                 break
 

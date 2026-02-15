@@ -208,6 +208,13 @@ class SimulationEngine:
         # Build agent map for quick lookup
         self.agent_map = {a.get("_id", str(i)): a for i, a in enumerate(agents)}
 
+        # Pre-build agent name lookup for peer reference resolution
+        self._agent_names: dict[str, str] = {
+            aid: a.get("first_name", "")
+            for aid, a in self.agent_map.items()
+            if a.get("first_name")
+        }
+
         # Build adjacency list for O(1) neighbor lookups (both directions)
         self.adjacency: dict[str, list[tuple[str, dict]]] = {}
         for edge in network.get("edges", []):
@@ -1133,6 +1140,7 @@ class SimulationEngine:
         ctx.macro_summary = macro_summary
         ctx.local_mood_summary = local_mood_summary
         ctx.background_context = self.scenario.background_context
+        ctx.agent_names = self._agent_names
         return ctx
 
     def _get_peer_opinions(self, agent_id: str) -> list[PeerOpinion]:
