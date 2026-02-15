@@ -137,6 +137,7 @@ def bind_constraints(
             type=attr.type,
             category=attr.category,
             description=attr.description,
+            scope=attr.scope,
             sampling=filtered_sampling,
             grounding=attr.grounding,
             constraints=attr.constraints,
@@ -189,6 +190,7 @@ def build_spec(
     attributes: list[AttributeSpec],
     sampling_order: list[str],
     sources: list[str],
+    agent_focus: str | None = None,
 ) -> PopulationSpec:
     """
     Assemble the final PopulationSpec from all components.
@@ -200,6 +202,7 @@ def build_spec(
         attributes: List of AttributeSpec
         sampling_order: Order for sampling
         sources: List of source URLs from research
+        agent_focus: Who the study agents represent (determines agent vs NPC)
 
     Returns:
         Complete PopulationSpec ready for YAML export
@@ -208,6 +211,7 @@ def build_spec(
         description=description,
         size=size,
         geography=geography,
+        agent_focus=agent_focus,
         created_at=datetime.now(),
     )
 

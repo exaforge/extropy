@@ -64,8 +64,12 @@ def spec_command(
 
     size = sufficiency_result.size
     geography = sufficiency_result.geography
+    agent_focus = sufficiency_result.agent_focus
     geo_str = f", {geography}" if geography else ""
-    console.print(f"[green]✓[/green] Context sufficient ({size} agents{geo_str})")
+    focus_str = f", focus: {agent_focus}" if agent_focus else ""
+    console.print(
+        f"[green]✓[/green] Context sufficient ({size} agents{geo_str}{focus_str})"
+    )
 
     # Step 1: Attribute Selection
     console.print()
@@ -207,6 +211,7 @@ def spec_command(
             attributes=bound_attrs,
             sampling_order=sampling_order,
             sources=sources,
+            agent_focus=agent_focus,
         )
 
     console.print("[green]✓[/green] Spec assembled")

@@ -304,6 +304,10 @@ class SpecMeta(BaseModel):
     description: str = Field(description="Original population description")
     size: int = Field(description="Number of agents to generate")
     geography: str | None = Field(default=None, description="Geographic scope")
+    agent_focus: str | None = Field(
+        default=None,
+        description="Who the study agents represent. Determines agent vs NPC partitioning in household sampling.",
+    )
     created_at: datetime = Field(default_factory=datetime.now)
     version: str = Field(default="1.0", description="Spec format version")
     persona_template: str | None = Field(
@@ -460,6 +464,7 @@ class PopulationSpec(BaseModel):
             description=f"{self.meta.description} + {extension.meta.description}",
             size=self.meta.size,
             geography=self.meta.geography,
+            agent_focus=self.meta.agent_focus,
             created_at=datetime.now(),
             version=self.meta.version,
             persona_template=None,
@@ -536,6 +541,10 @@ class DiscoveredAttribute(BaseModel):
         default="independent",
         description="independent: sample directly; derived: zero-variance formula; conditional: probabilistic dependency",
     )
+    scope: Literal["individual", "household"] = Field(
+        default="individual",
+        description="individual: varies per person; household: shared across household members",
+    )
     depends_on: list[str] = Field(default_factory=list)
 
 
@@ -558,6 +567,10 @@ class HydratedAttribute(BaseModel):
     strategy: Literal["independent", "derived", "conditional"] = Field(
         default="independent", description="Sampling strategy determined in Step 1"
     )
+    scope: Literal["individual", "household"] = Field(
+        default="individual",
+        description="individual: varies per person; household: shared across household members",
+    )
     depends_on: list[str] = Field(default_factory=list)
     sampling: SamplingConfig
     grounding: GroundingInfo
@@ -570,4 +583,8 @@ class SufficiencyResult(BaseModel):
     sufficient: bool
     size: int = Field(default=1000, description="Extracted or default population size")
     geography: str | None = None
+    agent_focus: str | None = Field(
+        default=None,
+        description="Who this study is about, e.g. 'surgeons', 'high school students', 'retired couples', 'families'",
+    )
     clarifications_needed: list[str] = Field(default_factory=list)

@@ -150,6 +150,7 @@ Return JSON array with formula for each attribute."""
                 category=original.category,
                 description=original.description,
                 strategy="derived",
+                scope=original.scope,
                 depends_on=original.depends_on,
                 sampling=sampling,
                 grounding=grounding,

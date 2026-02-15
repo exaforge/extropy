@@ -14,7 +14,7 @@ import random
 import sqlite3
 from datetime import datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
 from ...core.models import (
     PopulationSpec,
@@ -45,6 +45,30 @@ class SamplingError(Exception):
     """Raised when sampling fails for an agent."""
 
     pass
+
+
+def _classify_agent_focus(
+    agent_focus: str | None,
+) -> Literal["all", "couples", "primary_only"]:
+    """Determine household agent scope from agent_focus metadata.
+
+    Returns:
+        "all" — everyone in household is an agent (families, communities)
+        "couples" — both partners are agents, kids are NPCs (retired couples, married couples)
+        "primary_only" — only the primary adult is an agent, partner + kids are NPCs (surgeons, students, subscribers)
+    """
+    if not agent_focus:
+        return "primary_only"
+
+    focus_lower = agent_focus.lower()
+
+    if any(kw in focus_lower for kw in ("famil", "household", "everyone")):
+        return "all"
+
+    if any(kw in focus_lower for kw in ("couple", "pair", "partners", "spouses")):
+        return "couples"
+
+    return "primary_only"
 
 
 def _has_household_attributes(spec: PopulationSpec) -> bool:
@@ -177,6 +201,83 @@ def _sample_population_independent(
     return agents
 
 
+def _generate_npc_partner(
+    primary: dict[str, Any],
+    household_attrs: set[str],
+    categorical_options: dict[str, list[str]],
+    rng: random.Random,
+) -> dict[str, Any]:
+    """Generate a lightweight NPC partner profile for context.
+
+    Not a full agent — just enough for persona prompts and conversations.
+    """
+    partner: dict[str, Any] = {}
+
+    if "age" in primary:
+        partner["age"] = correlate_partner_attribute("age", primary["age"], rng)
+    partner["gender"] = rng.choice(["male", "female"])
+
+    for attr in (
+        "race_ethnicity",
+        "education_level",
+        "religious_affiliation",
+        "political_orientation",
+    ):
+        if attr in primary:
+            correlated = correlate_partner_attribute(
+                attr, primary[attr], rng, categorical_options.get(attr)
+            )
+            if correlated is not None:
+                partner[attr] = correlated
+
+    # Shared household attrs
+    for attr in household_attrs:
+        if attr in primary:
+            partner[attr] = primary[attr]
+
+    if primary.get("last_name"):
+        partner["last_name"] = primary["last_name"]
+
+    partner["relationship"] = "partner"
+    return partner
+
+
+def _sample_dependent_as_agent(
+    spec: PopulationSpec,
+    attr_map: dict[str, AttributeSpec],
+    rng: random.Random,
+    index: int,
+    id_width: int,
+    stats: SamplingStats,
+    numeric_values: dict[str, list[float]],
+    dependent: Any,
+    parent: dict[str, Any],
+    household_id: str,
+) -> dict[str, Any]:
+    """Promote a dependent to a full agent with all attributes sampled.
+
+    Uses the dependent's known attributes (age, gender) as seeds,
+    then samples remaining attributes normally.
+    """
+    agent = _sample_single_agent(
+        spec, attr_map, rng, index, id_width, stats, numeric_values
+    )
+
+    # Override with dependent's known attributes
+    agent["age"] = dependent.age
+    agent["gender"] = dependent.gender
+    agent["household_id"] = household_id
+    agent["household_role"] = f"dependent_{dependent.relationship}"
+    agent["relationship_to_primary"] = dependent.relationship
+
+    # Copy household-scoped attributes from parent
+    for attr in spec.attributes:
+        if attr.scope == "household" and attr.name in parent:
+            agent[attr.name] = parent[attr.name]
+
+    return agent
+
+
 def _sample_population_households(
     spec: PopulationSpec,
     attr_map: dict[str, AttributeSpec],
@@ -192,6 +293,8 @@ def _sample_population_households(
     Returns (agents, households) where households is a list of household
     metadata dicts for DB persistence.
     """
+    focus_mode = _classify_agent_focus(spec.meta.agent_focus)
+
     num_households = estimate_household_count(target_n)
     hh_id_width = len(str(num_households - 1))
 
@@ -216,7 +319,7 @@ def _sample_population_households(
 
         household_id = f"household_{hh_idx:0{hh_id_width}d}"
 
-        # Sample Adult 1 (primary)
+        # Sample Adult 1 (primary) — always an agent
         adult1 = _sample_single_agent(
             spec, attr_map, rng, agent_index, id_width, stats, numeric_values
         )
@@ -244,45 +347,81 @@ def _sample_population_households(
         adult1["household_role"] = "adult_primary"
 
         adult_ids = [adult1["_id"]]
+        adult2_added = False
 
-        if has_partner and agent_index < target_n:
-            # Sample Adult 2 with correlated demographics
-            adult2 = _sample_partner_agent(
-                spec,
-                attr_map,
-                rng,
-                agent_index,
-                id_width,
-                stats,
-                numeric_values,
-                adult1,
-                household_attrs,
-                categorical_options,
-            )
-            adult2["household_id"] = household_id
-            adult2["household_role"] = "adult_secondary"
-            # Partners share a surname
-            if adult1.get("last_name"):
-                adult2["last_name"] = adult1["last_name"]
-            adult2["partner_id"] = adult1["_id"]
-            adult1["partner_id"] = adult2["_id"]
-            adult_ids.append(adult2["_id"])
-            agent_index += 1
+        if has_partner:
+            if focus_mode in ("couples", "all") and agent_index < target_n:
+                # Partner is a full agent
+                adult2 = _sample_partner_agent(
+                    spec,
+                    attr_map,
+                    rng,
+                    agent_index,
+                    id_width,
+                    stats,
+                    numeric_values,
+                    adult1,
+                    household_attrs,
+                    categorical_options,
+                )
+                adult2["household_id"] = household_id
+                adult2["household_role"] = "adult_secondary"
+                if adult1.get("last_name"):
+                    adult2["last_name"] = adult1["last_name"]
+                adult2["partner_id"] = adult1["_id"]
+                adult1["partner_id"] = adult2["_id"]
+                adult_ids.append(adult2["_id"])
+                agent_index += 1
+                adult2_added = True
+            else:
+                # Partner is NPC context on the primary agent
+                npc_partner = _generate_npc_partner(
+                    adult1, household_attrs, categorical_options, rng
+                )
+                adult1["partner_npc"] = npc_partner
+                adult1["partner_id"] = None
         else:
             adult1["partner_id"] = None
 
-        # Generate NPC dependents
+        # Dependents
         dependents = generate_dependents(
             htype, household_size, num_adults, adult1_age, rng
         )
-        dep_dicts = [d.model_dump() for d in dependents]
 
-        # Attach dependents to all adults
-        adult1["dependents"] = dep_dicts
+        if has_kids and focus_mode == "all":
+            # Kids become full agents
+            dep_dicts = []
+            for dep in dependents:
+                if agent_index >= target_n:
+                    # Remaining dependents stay as NPC data
+                    dep_dicts.append(dep.model_dump())
+                    continue
+                kid_agent = _sample_dependent_as_agent(
+                    spec,
+                    attr_map,
+                    rng,
+                    agent_index,
+                    id_width,
+                    stats,
+                    numeric_values,
+                    dep,
+                    adult1,
+                    household_id,
+                )
+                agents.append(kid_agent)
+                adult_ids.append(kid_agent["_id"])
+                agent_index += 1
+            # Any overflow dependents attached as NPC data
+            adult1["dependents"] = dep_dicts
+        else:
+            # Kids are NPCs
+            dep_dicts = [d.model_dump() for d in dependents]
+            adult1["dependents"] = dep_dicts
+
         agents.append(adult1)
 
-        if has_partner and len(adult_ids) > 1:
-            adult2["dependents"] = dep_dicts
+        if adult2_added:
+            adult2["dependents"] = adult1.get("dependents", [])
             agents.append(adult2)
 
         # Build household record
@@ -296,7 +435,7 @@ def _sample_population_households(
                 "id": household_id,
                 "household_type": htype.value,
                 "adult_ids": adult_ids,
-                "dependent_data": dep_dicts,
+                "dependent_data": [d.model_dump() for d in dependents],
                 "shared_attributes": shared_attrs,
             }
         )

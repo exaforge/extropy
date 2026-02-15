@@ -48,6 +48,11 @@ ATTRIBUTE_SELECTION_SCHEMA = {
                         "enum": ["independent", "derived", "conditional"],
                         "description": "Sampling strategy: independent (no dependencies), derived (zero-variance formula), conditional (probabilistic dependency)",
                     },
+                    "scope": {
+                        "type": "string",
+                        "enum": ["individual", "household"],
+                        "description": "individual: varies per person; household: shared across household members",
+                    },
                     "depends_on": {
                         "type": "array",
                         "items": {"type": "string"},
@@ -60,6 +65,7 @@ ATTRIBUTE_SELECTION_SCHEMA = {
                     "category",
                     "description",
                     "strategy",
+                    "scope",
                     "depends_on",
                 ],
                 "additionalProperties": False,
@@ -235,6 +241,15 @@ def select_attributes(
     - income depends on role (chiefs earn more on average, but there's variance)
     - research_activity depends on employer_type (university hospitals skew toward research)
 
+    ## Attribute Scope
+
+    Each attribute is either **individual** (varies per person) or **household** (shared by all household members):
+
+    - `household` scope: state, urban_rural, household_income, household_size, marital_status, housing_type, neighborhood characteristics — anything that describes WHERE or HOW the household lives
+    - `individual` scope: age, gender, occupation, education, personality traits, attitudes — anything personal
+
+    Default to `individual` if unsure. Only use `household` for attributes that genuinely cannot differ between people living together.
+
     ## Dependencies
 
     Only mark depends_on if there's a LOGICAL relationship:
@@ -252,6 +267,7 @@ def select_attributes(
     - category: universal, population_specific, context_specific, personality
     - description: One clear sentence
     - strategy: independent, derived, or conditional
+    - scope: individual or household
     - depends_on: List of attribute names (max 3, empty if independent)"""
 
     data = reasoning_call(
@@ -278,6 +294,7 @@ def select_attributes(
             category=attr_data["category"],
             description=attr_data["description"],
             strategy=strategy,
+            scope=attr_data.get("scope", "individual"),
             depends_on=depends_on,
         )
         attributes.append(attr)

@@ -23,13 +23,25 @@ SUFFICIENCY_SCHEMA = {
             "type": ["string", "null"],
             "description": "Geographic scope if mentioned (e.g., 'Germany', 'US', 'California')",
         },
+        "agent_focus": {
+            "type": ["string", "null"],
+            "description": "Who is this study about? The core entity being simulated. "
+            "E.g., 'surgeons', 'Netflix subscribers', 'high school students', "
+            "'retired couples', 'families'. null if unclear.",
+        },
         "clarifications_needed": {
             "type": "array",
             "items": {"type": "string"},
             "description": "List of clarifying questions if insufficient",
         },
     },
-    "required": ["sufficient", "size", "geography", "clarifications_needed"],
+    "required": [
+        "sufficient",
+        "size",
+        "geography",
+        "agent_focus",
+        "clarifications_needed",
+    ],
     "additionalProperties": False,
 }
 
@@ -72,6 +84,13 @@ A sufficient description should specify:
    - Extract if mentioned (e.g., "German surgeons" → Germany)
    - Can be country, region, or city
 
+4. AGENT FOCUS - who is the study about?
+   - Extract the core entity: "500 German surgeons" → "surgeons"
+   - "1000 high school students in Texas" → "high school students"
+   - "200 retired couples" → "retired couples"
+   - "300 families in Ohio" → "families"
+   - This determines who becomes a simulated agent vs background context
+
 If the description is too vague to create meaningful attributes, mark as insufficient
 and provide specific clarifying questions.
 
@@ -88,5 +107,6 @@ Be lenient - if you can reasonably infer a specific population, mark as sufficie
         sufficient=data.get("sufficient", False),
         size=data.get("size", default_size),
         geography=data.get("geography"),
+        agent_focus=data.get("agent_focus"),
         clarifications_needed=data.get("clarifications_needed", []),
     )

@@ -26,10 +26,14 @@ from extropy.population.sampler.households import (
 import random
 
 
-def _make_household_spec(size: int = 100) -> PopulationSpec:
+def _make_household_spec(
+    size: int = 100, agent_focus: str | None = "couples"
+) -> PopulationSpec:
     """Create a minimal spec with household-scoped attributes."""
     return PopulationSpec(
-        meta=SpecMeta(description="Test household spec", size=size),
+        meta=SpecMeta(
+            description="Test household spec", size=size, agent_focus=agent_focus
+        ),
         grounding=GroundingSummary(
             overall="medium",
             sources_count=1,
