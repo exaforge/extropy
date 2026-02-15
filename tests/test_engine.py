@@ -905,7 +905,8 @@ class TestSimulationMetadata:
             return results, BatchTokenUsage()
 
         with patch(
-            "extropy.simulation.engine.batch_reason_agents_async", side_effect=fake_batch
+            "extropy.simulation.engine.batch_reason_agents_async",
+            side_effect=fake_batch,
         ):
             reasoned, _, _ = engine._reason_agents(0)
 
@@ -1229,7 +1230,8 @@ class TestProgressState:
             engine.state_manager.record_exposure(aid, exposure)
 
         with patch(
-            "extropy.simulation.engine.batch_reason_agents_async", side_effect=fake_batch
+            "extropy.simulation.engine.batch_reason_agents_async",
+            side_effect=fake_batch,
         ):
             engine._reason_agents(0)
 
@@ -1283,7 +1285,8 @@ class TestProgressState:
             return [(ctx.agent_id, resp) for ctx in contexts], BatchTokenUsage()
 
         with patch(
-            "extropy.simulation.engine.batch_reason_agents_async", side_effect=fake_batch
+            "extropy.simulation.engine.batch_reason_agents_async",
+            side_effect=fake_batch,
         ):
             engine._reason_agents(0)
 
@@ -1492,7 +1495,8 @@ class TestTokenAccumulation:
             return results, usage
 
         with patch(
-            "extropy.simulation.engine.batch_reason_agents_async", side_effect=fake_batch
+            "extropy.simulation.engine.batch_reason_agents_async",
+            side_effect=fake_batch,
         ):
             engine._reason_agents(0)
 
