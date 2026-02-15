@@ -178,8 +178,13 @@ class NetworkConfig(BaseModel):
         """Get total weight for normalization."""
         return sum(cfg.weight for cfg in self.attribute_weights.values())
 
-    def apply_quality_profile_defaults(self) -> "NetworkConfig":
-        """Return config with quality-profile defaults applied deterministically."""
+    def apply_quality_profile_defaults(self, *, force: bool = False) -> "NetworkConfig":
+        """Apply deterministic profile defaults for advanced quality/runtime knobs.
+
+        Args:
+            force: If True, always apply profile values. If False, only fill fields
+                that are still at model defaults.
+        """
         profile_defaults: dict[str, dict[str, Any]] = {
             "fast": {
                 "topology_gate": "warn",
@@ -210,6 +215,9 @@ class NetworkConfig(BaseModel):
             },
         }
         defaults = profile_defaults[self.quality_profile]
+        if force:
+            return self.model_copy(update=defaults)
+
         updates: dict[str, Any] = {}
         for key, value in defaults.items():
             if getattr(self, key) == NetworkConfig.model_fields[key].default:
