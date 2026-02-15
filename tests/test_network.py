@@ -29,6 +29,7 @@ from extropy.population.network.generator import (
     _assign_communities_with_diagnostics,
     _compute_similarity_coverage,
     _coverage_needs_escalation,
+    _compute_modularity_fast,
 )
 
 _REFERENCE_SENIORITY_LEVELS = {
@@ -777,6 +778,19 @@ class TestGenerateNetwork:
         assert c1 == c2
         assert d1 == d2
 
+    def test_assign_communities_forces_partition_on_collapse(self):
+        """Collapsed labels should trigger deterministic forced partition fallback."""
+        agents = [{"_id": f"a{i}"} for i in range(80)]
+        similarities: dict[tuple[int, int], float] = {}
+        for i in range(80):
+            for j in range(i + 1, 80):
+                similarities[(i, j)] = 0.9
+        communities, diag = _assign_communities_with_diagnostics(
+            agents, similarities, n_communities=8, rng=random.Random(42)
+        )
+        assert len(set(communities)) >= 2
+        assert diag.get("forced_partition", 0.0) == 1.0
+
     def test_generate_network_includes_ladder_stage_metadata(self, sample_agents):
         """Result metadata should include stage-level quality diagnostics."""
         config = REFERENCE_NETWORK_CONFIG.model_copy(
@@ -875,6 +889,36 @@ class TestGenerateNetwork:
                     config,
                     checkpoint_path=checkpoint_path,
                 )
+
+
+class TestModularityComputation:
+    """Sanity checks for fixed-community modularity computation."""
+
+    def test_single_community_modularity_is_zero(self):
+        agent_ids = ["a0", "a1", "a2", "a3"]
+        communities = [0, 0, 0, 0]
+        edges = [
+            Edge(source="a0", target="a1", weight=1.0, edge_type="peer"),
+            Edge(source="a1", target="a2", weight=1.0, edge_type="peer"),
+            Edge(source="a2", target="a3", weight=1.0, edge_type="peer"),
+            Edge(source="a3", target="a0", weight=1.0, edge_type="peer"),
+        ]
+        q = _compute_modularity_fast(edges, agent_ids, communities)
+        assert abs(q) < 1e-9
+
+    def test_two_disconnected_triangles_have_positive_modularity(self):
+        agent_ids = ["a0", "a1", "a2", "b0", "b1", "b2"]
+        communities = [0, 0, 0, 1, 1, 1]
+        edges = [
+            Edge(source="a0", target="a1", weight=1.0, edge_type="peer"),
+            Edge(source="a1", target="a2", weight=1.0, edge_type="peer"),
+            Edge(source="a2", target="a0", weight=1.0, edge_type="peer"),
+            Edge(source="b0", target="b1", weight=1.0, edge_type="peer"),
+            Edge(source="b1", target="b2", weight=1.0, edge_type="peer"),
+            Edge(source="b2", target="b0", weight=1.0, edge_type="peer"),
+        ]
+        q = _compute_modularity_fast(edges, agent_ids, communities)
+        assert pytest.approx(q, abs=1e-9) == 0.5
 
 
 class TestGenerateNetworkWithMetrics:

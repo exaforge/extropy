@@ -769,11 +769,110 @@ def _assign_communities_with_diagnostics(
             assignments[node] = node % k
 
     unique_labels = len(set(assignments))
+
+    # Guard against community collapse (e.g., all nodes in one label).
+    # If collapsed, enforce a deterministic attribute-grounded partition first.
+    # Fall back to seeded partition only if no useful attributes are available.
+    forced_partition = 0.0
+    attribute_partition = 0.0
+    min_required = max(2, min(k, n // 120))
+    if unique_labels < min_required:
+        candidate_attrs: list[tuple[str, int]] = []
+        if agents:
+            keys = [
+                key
+                for key in agents[0].keys()
+                if key != "_id"
+                and not key.startswith("_")
+                and isinstance(agents[0].get(key), (str, int, float, bool))
+            ]
+            for key in keys:
+                values = {a.get(key) for a in agents if a.get(key) is not None}
+                card = len(values)
+                if 2 <= card <= max(8, int(n * 0.2)):
+                    candidate_attrs.append((key, card))
+        candidate_attrs.sort(key=lambda x: (-x[1], x[0]))
+        selected_attrs = [name for name, _card in candidate_attrs[:3]]
+
+        if selected_attrs:
+            buckets: dict[tuple[Any, ...], list[int]] = defaultdict(list)
+            for idx, agent in enumerate(agents):
+                key = tuple(agent.get(attr) for attr in selected_attrs)
+                buckets[key].append(idx)
+            if len(buckets) >= 2:
+                bucket_items = sorted(
+                    buckets.items(),
+                    key=lambda item: (-len(item[1]), str(item[0])),
+                )
+                reassigned = [0] * n
+                if len(bucket_items) <= k:
+                    for cid, (_bucket_key, members) in enumerate(bucket_items):
+                        for node in members:
+                            reassigned[node] = cid
+                else:
+                    for bucket_key, members in bucket_items:
+                        cid = abs(hash((bucket_key, k))) % k
+                        for node in members:
+                            reassigned[node] = cid
+                assignments = reassigned
+                unique_labels = len(set(assignments))
+                forced_partition = 1.0
+                attribute_partition = 1.0
+
+        if unique_labels < min_required:
+            ordered_nodes = sorted(range(n), key=lambda i: (-len(adjacency[i]), i))
+            seeds: list[int] = []
+            if ordered_nodes:
+                stride = max(1, len(ordered_nodes) // k)
+                for idx in range(0, len(ordered_nodes), stride):
+                    seeds.append(ordered_nodes[idx])
+                    if len(seeds) >= k:
+                        break
+            seen = set(seeds)
+            if len(seeds) < k:
+                for idx in ordered_nodes:
+                    if idx in seen:
+                        continue
+                    seeds.append(idx)
+                    seen.add(idx)
+                    if len(seeds) >= k:
+                        break
+            if not seeds:
+                seeds = list(range(min(k, n)))
+
+            def get_sim(i: int, j: int) -> float:
+                if i == j:
+                    return 1.0
+                pair = (i, j) if i < j else (j, i)
+                return similarities.get(pair, 0.0)
+
+            reassigned = [0] * n
+            for node in range(n):
+                best_idx = node % len(seeds)
+                best_sim = get_sim(node, seeds[best_idx])
+                any_signal = best_sim > 0.0
+                for seed_idx in range(1, len(seeds)):
+                    sim = get_sim(node, seeds[seed_idx])
+                    if sim > best_sim:
+                        best_sim = sim
+                        best_idx = seed_idx
+                        any_signal = True
+                if any_signal:
+                    reassigned[node] = best_idx
+                else:
+                    reassigned[node] = node % len(seeds)
+
+            assignments = reassigned
+            unique_labels = len(set(assignments))
+            forced_partition = 1.0
+
     return assignments, {
         "low_signal": 0.0,
         "label_iterations": float(iters_used),
         "initial_labels": float(len(label_members)),
         "final_labels": float(unique_labels),
+        "forced_partition": forced_partition,
+        "attribute_partition": attribute_partition,
     }
 
 
@@ -992,9 +1091,13 @@ def _sample_edges(
     n_intra = len(intra_pairs)
     n_inter = len(inter_pairs)
 
-    # Calculate target edges (before triadic closure adds more)
-    # Aim for ~45% of final target since triadic closure will add ~55% more
-    target_edges = int(n * config.avg_degree / 2 * 0.45)
+    # Dynamic degree target so calibration scales can actually move edge count.
+    # Baseline scale corresponds to config defaults (intra=1.0, inter~0.3).
+    expected_edges = max(1, int(n * config.avg_degree / 2))
+    baseline_scale = 0.65
+    scale_mean = max(0.1, (intra_scale + inter_scale) / 2.0)
+    target_multiplier = max(0.4, min(1.35, scale_mean / baseline_scale))
+    target_edges = max(1, int(expected_edges * target_multiplier))
 
     # Base probabilities calibrated for target edges
     avg_sim_intra = sum(s for _, _, s in intra_pairs) / n_intra if n_intra > 0 else 0.5
@@ -1017,12 +1120,17 @@ def _sample_edges(
     ]
     all_pairs.sort(key=lambda x: x[2], reverse=True)
 
+    phase1_target = max(1, int(target_edges * 0.85))
     for i, j, sim, same_community in all_pairs:
-        if len(edges) >= target_edges:
+        if len(edges) >= phase1_target:
             break
 
         scale = intra_scale if same_community else inter_scale
         prob = base_prob * sim * scale * degree_factors[i] * degree_factors[j]
+        if same_community:
+            prob *= 1.25
+        else:
+            prob *= 0.2
 
         # Boost probability for friends-of-friends (local attachment)
         common_neighbors = len(adjacency[i] & adjacency[j])
@@ -1037,9 +1145,7 @@ def _sample_edges(
 
     # Phase 2: Local attachment - preferentially add edges to friends-of-friends
     # This is key for high clustering
-    local_attachment_budget = int(
-        target_edges * 0.5
-    )  # 50% of edges via local attachment
+    local_attachment_budget = max(0, target_edges - len(edges))
     local_edges_added = 0
 
     # Build list of potential local attachments (pairs with common neighbors but no edge)
@@ -1053,9 +1159,13 @@ def _sample_edges(
                     if pair not in added_pairs:
                         sim = similarities.get(pair, 0.0)
                         if sim > 0:
-                            # Score by similarity and number of common neighbors
                             common = len(adjacency[i] & adjacency[fof])
+                            same_community = communities[i] == communities[fof]
                             score = sim * (1 + common * 0.3)
+                            if same_community:
+                                score *= 1.35
+                            else:
+                                score *= 0.5
                             fof_candidates.append((score, i, fof, sim))
 
     # Deduplicate and sort
@@ -1075,8 +1185,9 @@ def _sample_edges(
         if (min(i, j), max(i, j)) in added_pairs:
             continue
 
-        # High probability for local attachment (friends-of-friends)
-        if rng.random() < 0.7:
+        same_community = communities[i] == communities[j]
+        local_prob = 0.9 if same_community else 0.12
+        if rng.random() < local_prob:
             add_edge(i, j, sim)
             local_edges_added += 1
 
@@ -1095,9 +1206,10 @@ def _triadic_closure(
     target_clustering: float = 0.35,
     max_edge_increase: float = 1.5,
 ) -> tuple[list[Edge], set[tuple[str, str]]]:
-    """Apply triadic closure to increase clustering coefficient.
+    """Apply bounded triadic closure with sampled open-triad proposals.
 
-    Runs until target_clustering is reached or edge budget exhausted.
+    This avoids global open-triad enumeration (which is expensive at 10k+ scale)
+    while still aggressively adding triangle-closing edges.
     """
     n = len(agents)
     if n < 3 or config.triadic_closure_prob <= 0:
@@ -1116,96 +1228,75 @@ def _triadic_closure(
     if current_clustering >= target_clustering:
         return edges, edge_set
 
-    # Edge budget: don't exceed max_edge_increase factor
+    # Edge budget: do not exceed the configured expansion factor.
     max_edges = int(len(edges) * max_edge_increase)
+    available = max(0, max_edges - len(edges))
+    if available <= 0:
+        return edges, edge_set
 
-    max_iterations = 25  # More iterations for better convergence
-    max_closures_per_iter = int(n * 0.25)  # More closures per iteration
+    hubs = [i for i in range(n) if len(adjacency[i]) >= 2]
+    if not hubs:
+        return edges, edge_set
 
-    for iteration in range(max_iterations):
-        # Find open triads
-        open_triads: list[tuple[int, int, int]] = []
+    # Aggressive but bounded closure budget.
+    closure_budget = min(available, max(500, int(available * 0.35)))
+    attempts = max(closure_budget * 6, n)
+    closures = 0
 
-        for b in range(n):
-            neighbors_of_b = list(adjacency[b])
-            for i, a in enumerate(neighbors_of_b):
-                for c in neighbors_of_b[i + 1 :]:
-                    if c not in adjacency[a]:
-                        open_triads.append((a, c, b))
-
-        if not open_triads:
+    for _ in range(attempts):
+        if closures >= closure_budget or len(edges) >= max_edges:
             break
 
-        if len(edges) >= max_edges:
-            break
+        b = hubs[rng.randrange(len(hubs))]
+        neighbors = list(adjacency[b])
+        if len(neighbors) < 2:
+            continue
+        a, c = rng.sample(neighbors, 2)
+        if a == c or c in adjacency[a]:
+            continue
 
-        # Score triads by similarity and community membership
-        triad_with_score = []
-        for a, c, b in open_triads:
-            pair = (min(a, c), max(a, c))
-            sim = similarities.get(pair) if similarities is not None else None
-            if sim is None:
-                sim = compute_similarity(
-                    agents[a],
-                    agents[c],
-                    config.attribute_weights,
-                    config.ordinal_levels,
-                )
-                if similarities is not None:
-                    similarities[pair] = sim
-            same_community = (
-                communities is not None and communities[a] == communities[c]
+        pair = (min(a, c), max(a, c))
+        sim = similarities.get(pair) if similarities is not None else None
+        if sim is None:
+            sim = compute_similarity(
+                agents[a],
+                agents[c],
+                config.attribute_weights,
+                config.ordinal_levels,
             )
-            score = (5.0 if same_community else 0.0) + sim
-            triad_with_score.append((score, sim, a, c, b))
-        triad_with_score.sort(reverse=True, key=lambda x: x[0])
+            if similarities is not None:
+                similarities[pair] = sim
 
-        top_candidates = triad_with_score[: max_closures_per_iter * 2]
-        rng.shuffle(top_candidates)
+        same_community = communities is not None and communities[a] == communities[c]
+        # Strong push toward closing likely triads, especially within-community.
+        effective_prob = config.triadic_closure_prob * (0.9 + sim * 0.6)
+        if same_community:
+            effective_prob += 0.2
+        effective_prob = min(0.98, max(0.05, effective_prob))
 
-        closures = 0
+        if rng.random() >= effective_prob:
+            continue
 
-        for score, sim, a, c, b in top_candidates:
-            if closures >= max_closures_per_iter:
-                break
-            if len(edges) >= max_edges:
-                break
+        agent_a = agents[a]
+        agent_c = agents[c]
+        id_a = agent_ids[a]
+        id_c = agent_ids[c]
+        edge_type = _infer_edge_type(agent_a, agent_c, config, is_rewired=False)
+        influence_weights = _compute_influence_weights(agent_a, agent_c, sim, config)
 
-            if c in adjacency[a]:
-                continue
-
-            agent_a = agents[a]
-            agent_c = agents[c]
-
-            # Higher base probability for more aggressive triadic closure
-            effective_prob = min(0.95, config.triadic_closure_prob * (0.7 + sim * 0.5))
-
-            if rng.random() < effective_prob:
-                id_a = agent_ids[a]
-                id_c = agent_ids[c]
-
-                edge_type = _infer_edge_type(agent_a, agent_c, config, is_rewired=False)
-                influence_weights = _compute_influence_weights(
-                    agent_a, agent_c, sim, config
-                )
-
-                new_edge = Edge(
-                    source=id_a,
-                    target=id_c,
-                    weight=sim,
-                    edge_type=edge_type,
-                    influence_weight=influence_weights,
-                )
-                edges.append(new_edge)
-                edge_set.add((id_a, id_c))
-                edge_set.add((id_c, id_a))
-                adjacency[a].add(c)
-                adjacency[c].add(a)
-                closures += 1
-
-        current_clustering = _compute_avg_clustering(adjacency, n)
-        if current_clustering >= target_clustering:
-            break
+        new_edge = Edge(
+            source=id_a,
+            target=id_c,
+            weight=sim,
+            edge_type=edge_type,
+            influence_weight=influence_weights,
+        )
+        edges.append(new_edge)
+        edge_set.add((id_a, id_c))
+        edge_set.add((id_c, id_a))
+        adjacency[a].add(c)
+        adjacency[c].add(a)
+        closures += 1
 
     return edges, edge_set
 
@@ -1285,10 +1376,11 @@ def _compute_modularity_fast(
     agent_ids: list[str],
     communities: list[int],
 ) -> float:
-    """Compute modularity using the provided community assignments.
+    """Compute modularity from fixed community assignments.
 
-    This is faster than running Louvain since we already have communities.
-    Modularity Q = (1/2m) * sum_ij[(A_ij - k_i*k_j/2m) * delta(c_i, c_j)]
+    Uses the equivalent community-aggregate form:
+      Q = sum_c [ (l_c / m) - (d_c / (2m))^2 ]
+    where l_c is internal edge count in community c and d_c is total degree sum.
     """
     n = len(agent_ids)
     m = len(edges)
@@ -1297,7 +1389,7 @@ def _compute_modularity_fast(
 
     id_to_idx = {aid: i for i, aid in enumerate(agent_ids)}
 
-    # Compute degrees
+    # Node degrees.
     degrees = [0] * n
     for edge in edges:
         i = id_to_idx[edge.source]
@@ -1305,21 +1397,25 @@ def _compute_modularity_fast(
         degrees[i] += 1
         degrees[j] += 1
 
-    # Compute modularity
-    q = 0.0
-    two_m = 2 * m
-
-    # For edges within same community
+    # Internal edge counts per community.
+    internal_edges: dict[int, int] = defaultdict(int)
     for edge in edges:
         i = id_to_idx[edge.source]
         j = id_to_idx[edge.target]
-        if communities[i] == communities[j]:
-            # A_ij = 1, and we count each edge once
-            q += 2 * (1 - degrees[i] * degrees[j] / two_m)
+        ci = communities[i]
+        if ci == communities[j]:
+            internal_edges[ci] += 1
 
-    # Normalize
-    q /= two_m
+    # Degree sums per community.
+    degree_sums: dict[int, int] = defaultdict(int)
+    for idx, degree in enumerate(degrees):
+        degree_sums[communities[idx]] += degree
 
+    two_m = float(2 * m)
+    q = 0.0
+    for community, d_sum in degree_sums.items():
+        l_c = internal_edges.get(community, 0)
+        q += (l_c / m) - (d_sum / two_m) ** 2
     return q
 
 
@@ -1682,7 +1778,8 @@ def generate_network(
         # Step 3: Assign communities with deterministic, scalable algorithm.
         n_communities = config.community_count
         if n_communities is None:
-            n_communities = max(5, int(n / 40))
+            # Keep communities coarse enough for stable modularity/clustering at scale.
+            n_communities = max(5, int(n / 200))
         emit_progress(
             "Detecting communities",
             0,
@@ -1734,7 +1831,7 @@ def generate_network(
                 break
             restart_seed = seed + stage_idx * 100003 + restart * 1000003
             intra_scale = 1.0
-            inter_scale = 1.2
+            inter_scale = max(0.1, float(stage_cfg.inter_community_scale))
             calibration_run_id: str | None = None
             if study_db_file is not None and network_run_id:
                 with open_study_db(study_db_file) as db:
@@ -1775,7 +1872,17 @@ def generate_network(
                         iter_rng,
                     )
                 )
-                edges = _apply_bridge_swaps(edges, agent_ids, communities, stage_cfg, iter_rng)
+                should_bridge_swap = (
+                    modularity > (mod_max + 0.02)
+                    or (
+                        largest_component_ratio < config.target_largest_component_ratio
+                        and modularity > mod_min
+                    )
+                )
+                if should_bridge_swap:
+                    edges = _apply_bridge_swaps(
+                        edges, agent_ids, communities, stage_cfg, iter_rng
+                    )
                 emit_progress(
                     "Repair pass",
                     iteration + 1,
@@ -1893,10 +2000,10 @@ def generate_network(
                     inter_scale *= 1.2
                     intra_scale *= 0.92
                 elif modularity < mod_min:
-                    intra_scale *= 1.12
-                    inter_scale *= 0.9
+                    intra_scale *= 1.35
+                    inter_scale *= 0.55
                 if clustering < cluster_min:
-                    intra_scale *= 1.1
+                    intra_scale *= 1.15
                 intra_scale = max(0.25, min(6.5, intra_scale))
                 inter_scale = max(0.25, min(6.5, inter_scale))
 
