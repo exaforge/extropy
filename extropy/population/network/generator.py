@@ -218,6 +218,7 @@ def _load_similarity_checkpoint(
     similarities = payload.get("similarities", {})
     completed_rows = int(payload.get("completed_rows", 0))
     completed_chunk_starts: set[int] = set()
+    allowed_completed_rows = max(0, completed_rows)
     for item in payload.get("completed_chunks", []):
         if (
             isinstance(item, (list, tuple))
@@ -225,7 +226,10 @@ def _load_similarity_checkpoint(
             and isinstance(item[0], int)
             and isinstance(item[1], int)
         ):
-            completed_chunk_starts.add(item[0])
+            # Guard against stale/inconsistent payloads where completed_chunks
+            # were not truncated with completed_rows.
+            if item[0] < allowed_completed_rows and item[1] <= allowed_completed_rows:
+                completed_chunk_starts.add(item[0])
 
     if not isinstance(similarities, dict):
         raise ValueError("Invalid checkpoint similarities payload")
@@ -304,8 +308,8 @@ def _compute_similarities_parallel(
     tasks = [(i, min(i + chunk_size, n)) for i in range(0, n, chunk_size)]
     task_ends = {start: end for start, end in tasks}
     completed_starts: set[int] = set(completed_chunk_starts or set())
-    for start, _ in tasks:
-        if start < completed_rows:
+    for start, end in tasks:
+        if end <= completed_rows:
             completed_starts.add(start)
     pending_tasks = [(s, e) for s, e in tasks if s not in completed_starts]
     workers = max(1, config.similarity_workers)
@@ -427,8 +431,8 @@ def _compute_similarities_serial(
     chunk_size = max(8, config.similarity_chunk_size)
     tasks = [(i, min(i + chunk_size, n)) for i in range(0, n, chunk_size)]
     completed_starts: set[int] = set(completed_chunk_starts or set())
-    for start, _ in tasks:
-        if start < start_row:
+    for start, end in tasks:
+        if end <= start_row:
             completed_starts.add(start)
     completed_row_count = sum((e - s) for s, e in tasks if s in completed_starts)
 

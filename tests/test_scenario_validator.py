@@ -128,7 +128,18 @@ def test_load_and_validate_scenario_resolves_relative_paths(
             network_id="default",
             config={},
             result_meta={"node_count": 1},
-            edges=[],
+            edges=[
+                {
+                    "source": "agent_0",
+                    "target": "agent_0",
+                    "weight": 1.0,
+                    "type": "self",
+                    "influence_weight": {
+                        "source_to_target": 1.0,
+                        "target_to_source": 1.0,
+                    },
+                }
+            ],
             seed=None,
             candidate_mode="test",
         )
