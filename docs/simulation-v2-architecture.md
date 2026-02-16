@@ -813,9 +813,9 @@ Split into independent subsystems. Each assessed for actual value vs implementat
 
 - **3.10d: Repetition detection + forced deepening.** If Jaccard similarity on word-level trigrams between consecutive reasonings > 70%, inject a prompt nudge: "You've been thinking the same thing for several days. Has anything actually changed? Are you starting to doubt your plan? Have you actually done anything about it?" Simple trigram comparison, no embeddings needed. Prevents the stale convergence we saw in the ASI run ("No change — save, learn AI, backup income" × 5 timesteps). Without this, agents converge to identical outputs and the sim produces meaningless duplicate reasoning.
 
-**Tier 3: Build at high fidelity (medium effort, marginal value over full traces)**
+**OMITTED: Marginal value**
 
-- **3.10e: Episodic vs semantic memory.** After N timesteps of consistent reasoning on a theme, engine extracts a belief statement and adds to persistent "beliefs" field. Shown as "Things I've come to believe:" separate from "What I thought recently." Extraction is rule-based: if the same keywords appear in 3+ consecutive reasonings, consolidate into a belief. Marginal value because the LLM already consolidates beliefs implicitly when reading its own full history — making it explicit is a nice-to-have.
+- **~~3.10e: Episodic vs semantic memory.~~** ~~After N timesteps of consistent reasoning on a theme, engine extracts a belief statement and adds to persistent "beliefs" field.~~ **Omitted.** The LLM already consolidates beliefs implicitly when reading its own full history. Making it explicit adds complexity for marginal gain. The full memory trace (uncapped, timestamped) provides sufficient context.
 
 **CUT: Not building**
 
@@ -832,7 +832,7 @@ Split into independent subsystems. Each assessed for actual value vs implementat
 | 3.10b conviction self-awareness | Yes | Yes | Yes |
 | 3.10c THINK vs SAY | No | No | Yes |
 | 3.10d repetition detection | No | No | Yes |
-| 3.10e episodic/semantic memory | No | Yes | Yes |
+| ~~3.10e episodic/semantic memory~~ | — | — | **Omitted** |
 | ~~3.10f attention weighting~~ | — | — | **Cut** |
 | 3.10g spontaneous recall | No | No | **Deferred** |
 
@@ -1175,7 +1175,7 @@ Ship this alone. Every simulation immediately feels more human, and the accounta
 - Conviction self-awareness (all tiers — deterministic)
 - THINK vs SAY separation (high fidelity — schema change)
 - Repetition detection + deepening nudge (high fidelity — string overlap check)
-- Episodic/semantic memory consolidation (high fidelity — rule-based belief extraction)
+- ~~Episodic/semantic memory consolidation~~ — **Omitted**
 
 ### Phase F: Fidelity Tiers + Results (~1.5 weeks)
 
