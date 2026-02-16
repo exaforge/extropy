@@ -246,35 +246,78 @@ def build_conditional_base_schema() -> dict:
 
 
 def build_household_config_schema() -> dict:
-    """Build JSON schema for household config hydration."""
+    """Build JSON schema for household config hydration.
+
+    Uses array-of-objects patterns instead of dict/tuple schemas for LLM compatibility.
+    Both Anthropic and OpenAI structured outputs require additionalProperties: false
+    (not a schema) and don't support tuple-style array items.
+    """
     return {
         "type": "object",
         "properties": {
+            # Array of {upper_bound, label} instead of tuple [int, str]
             "age_brackets": {
                 "type": "array",
                 "items": {
-                    "type": "array",
-                    "items": [
-                        {"type": "integer"},
-                        {"type": "string"},
-                    ],
-                },
-            },
-            "household_type_weights": {
-                "type": "object",
-                "additionalProperties": {
                     "type": "object",
-                    "additionalProperties": {"type": "number"},
+                    "properties": {
+                        "upper_bound": {"type": "integer"},
+                        "label": {"type": "string"},
+                    },
+                    "required": ["upper_bound", "label"],
+                    "additionalProperties": False,
                 },
             },
+            # Array of {bracket, types: [{type, weight}]} instead of nested dict
+            "household_type_weights": {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "bracket": {"type": "string"},
+                        "types": {
+                            "type": "array",
+                            "items": {
+                                "type": "object",
+                                "properties": {
+                                    "type": {"type": "string"},
+                                    "weight": {"type": "number"},
+                                },
+                                "required": ["type", "weight"],
+                                "additionalProperties": False,
+                            },
+                        },
+                    },
+                    "required": ["bracket", "types"],
+                    "additionalProperties": False,
+                },
+            },
+            # Array of {group, rate} instead of dict
             "same_group_rates": {
-                "type": "object",
-                "additionalProperties": {"type": "number"},
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "group": {"type": "string"},
+                        "rate": {"type": "number"},
+                    },
+                    "required": ["group", "rate"],
+                    "additionalProperties": False,
+                },
             },
             "default_same_group_rate": {"type": "number"},
+            # Array of {attribute, correlation} instead of dict
             "assortative_mating": {
-                "type": "object",
-                "additionalProperties": {"type": "number"},
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "attribute": {"type": "string"},
+                        "correlation": {"type": "number"},
+                    },
+                    "required": ["attribute", "correlation"],
+                    "additionalProperties": False,
+                },
             },
             "partner_age_gap_mean": {"type": "number"},
             "partner_age_gap_std": {"type": "number"},
