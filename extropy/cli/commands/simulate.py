@@ -191,6 +191,12 @@ def simulate_command(
         "--merged-pass",
         help="Use single merged reasoning pass instead of two-pass (experimental)",
     ),
+    fidelity: str = typer.Option(
+        "medium",
+        "--fidelity",
+        "-f",
+        help="Fidelity level: low (no conversations), medium (2 turns), high (3 turns)",
+    ),
     quiet: bool = typer.Option(False, "--quiet", "-q", help="Suppress progress output"),
     verbose: bool = typer.Option(False, "--verbose", "-v", help="Show detailed logs"),
     debug: bool = typer.Option(
@@ -322,6 +328,7 @@ def simulate_command(
                 db_write_batch_size=db_write_batch_size,
                 resource_governor=governor,
                 merged_pass=merged_pass,
+                fidelity=fidelity,
             )
             simulation_error = None
         except Exception as e:
@@ -359,6 +366,7 @@ def simulate_command(
                     db_write_batch_size=db_write_batch_size,
                     resource_governor=governor,
                     merged_pass=merged_pass,
+                    fidelity=fidelity,
                 )
             except Exception as e:
                 simulation_error = e

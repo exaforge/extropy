@@ -908,7 +908,7 @@ class TestSimulationMetadata:
             "extropy.simulation.engine.batch_reason_agents_async",
             side_effect=fake_batch,
         ):
-            reasoned, _, _ = engine._reason_agents(0)
+            reasoned, _, _, _ = engine._reason_agents(0)
 
         assert reasoned == 3
         completed = engine.study_db.get_completed_simulation_chunks(engine.run_id, 0)
