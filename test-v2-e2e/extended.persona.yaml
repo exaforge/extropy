@@ -1,0 +1,851 @@
+population_description: 10 US suburban homeowners with school-age children + Local
+  school board book ban decision
+created_at: '2026-02-15T23:45:42.186580'
+intro_template: I'm a {age}-year-old {gender} living in {state}, where I've been a
+  homeowner for {homeownership_years} years. I'm {marital_status} with {num_children}
+  school-age children attending {school_type} school, and my kids' education is one
+  of my top priorities. My political views lean {political_ideology}, and I identify
+  as {religious_affiliation}. I've been paying close attention to what's happening
+  with our local school board lately.
+treatments:
+- attribute: age
+  treatment: concrete
+  group: basic_identity
+- attribute: gender
+  treatment: concrete
+  group: basic_identity
+- attribute: state
+  treatment: concrete
+  group: basic_identity
+- attribute: urban_rural
+  treatment: concrete
+  group: basic_identity
+- attribute: education_level
+  treatment: concrete
+  group: basic_identity
+- attribute: marital_status
+  treatment: concrete
+  group: basic_identity
+- attribute: household_size
+  treatment: concrete
+  group: household_composition
+- attribute: employment_status
+  treatment: concrete
+  group: work_and_income
+- attribute: num_children
+  treatment: concrete
+  group: household_composition
+- attribute: community_involvement
+  treatment: relative
+  group: civic_engagement
+- attribute: openness
+  treatment: relative
+  group: personality
+- attribute: conscientiousness
+  treatment: relative
+  group: personality
+- attribute: extraversion
+  treatment: relative
+  group: personality
+- attribute: agreeableness
+  treatment: relative
+  group: personality
+- attribute: neuroticism
+  treatment: relative
+  group: personality
+- attribute: risk_tolerance
+  treatment: relative
+  group: personality
+- attribute: education_priority
+  treatment: concrete
+  group: values_and_priorities
+- attribute: environmental_consciousness
+  treatment: relative
+  group: values_and_priorities
+- attribute: occupation_category
+  treatment: concrete
+  group: work_and_income
+- attribute: individual_income
+  treatment: concrete
+  group: work_and_income
+- attribute: household_income
+  treatment: concrete
+  group: work_and_income
+- attribute: homeownership_years
+  treatment: concrete
+  group: housing_and_assets
+- attribute: home_value
+  treatment: concrete
+  group: housing_and_assets
+- attribute: mortgage_status
+  treatment: concrete
+  group: housing_and_assets
+- attribute: youngest_child_age
+  treatment: concrete
+  group: household_composition
+- attribute: oldest_child_age
+  treatment: concrete
+  group: household_composition
+- attribute: school_type
+  treatment: concrete
+  group: education_and_parenting
+- attribute: dual_income_household
+  treatment: concrete
+  group: work_and_income
+- attribute: commute_time
+  treatment: concrete
+  group: work_and_income
+- attribute: vehicle_count
+  treatment: concrete
+  group: housing_and_assets
+- attribute: pta_membership
+  treatment: concrete
+  group: civic_engagement
+- attribute: home_office
+  treatment: concrete
+  group: housing_and_assets
+- attribute: household_savings
+  treatment: concrete
+  group: housing_and_assets
+- attribute: childcare_expense
+  treatment: concrete
+  group: household_composition
+- attribute: extracurricular_count
+  treatment: concrete
+  group: education_and_parenting
+- attribute: religious_affiliation
+  treatment: concrete
+  group: values_and_priorities
+- attribute: political_ideology
+  treatment: concrete
+  group: values_and_priorities
+- attribute: free_speech_absolutism
+  treatment: relative
+  group: book_ban_perspectives
+- attribute: trust_in_institutions
+  treatment: relative
+  group: civic_engagement
+- attribute: has_school_age_children
+  treatment: concrete
+  group: household_composition
+- attribute: school_board_engagement
+  treatment: relative
+  group: civic_engagement
+- attribute: media_consumption_primary
+  treatment: concrete
+  group: values_and_priorities
+- attribute: parental_control_preference
+  treatment: concrete
+  group: book_ban_perspectives
+- attribute: library_usage_frequency
+  treatment: concrete
+  group: education_and_parenting
+- attribute: personal_book_ban_experience
+  treatment: concrete
+  group: book_ban_perspectives
+- attribute: lgbtq_acceptance
+  treatment: relative
+  group: book_ban_perspectives
+- attribute: age_appropriateness_concern
+  treatment: relative
+  group: book_ban_perspectives
+- attribute: social_network_density
+  treatment: relative
+  group: civic_engagement
+groups:
+- name: basic_identity
+  label: About Me
+  attributes:
+  - age
+  - gender
+  - state
+  - urban_rural
+  - education_level
+  - marital_status
+- name: household_composition
+  label: My Family
+  attributes:
+  - household_size
+  - num_children
+  - youngest_child_age
+  - oldest_child_age
+  - childcare_expense
+  - has_school_age_children
+- name: work_and_income
+  label: Work & Finances
+  attributes:
+  - employment_status
+  - occupation_category
+  - individual_income
+  - household_income
+  - dual_income_household
+  - commute_time
+- name: housing_and_assets
+  label: Home & Assets
+  attributes:
+  - homeownership_years
+  - home_value
+  - mortgage_status
+  - vehicle_count
+  - home_office
+  - household_savings
+- name: education_and_parenting
+  label: Education & Parenting
+  attributes:
+  - school_type
+  - extracurricular_count
+  - library_usage_frequency
+- name: values_and_priorities
+  label: Values & Beliefs
+  attributes:
+  - education_priority
+  - environmental_consciousness
+  - religious_affiliation
+  - political_ideology
+  - media_consumption_primary
+- name: civic_engagement
+  label: Community Engagement
+  attributes:
+  - community_involvement
+  - pta_membership
+  - trust_in_institutions
+  - school_board_engagement
+  - social_network_density
+- name: personality
+  label: My Personality
+  attributes:
+  - openness
+  - conscientiousness
+  - extraversion
+  - agreeableness
+  - neuroticism
+  - risk_tolerance
+- name: book_ban_perspectives
+  label: Views on Book Access & Content
+  attributes:
+  - free_speech_absolutism
+  - parental_control_preference
+  - personal_book_ban_experience
+  - lgbtq_acceptance
+  - age_appropriateness_concern
+phrasings:
+  boolean:
+  - attribute: dual_income_household
+    true_phrase: Both my spouse and I work
+    false_phrase: Only one of us works in my household
+  - attribute: pta_membership
+    true_phrase: I am a member of the PTA
+    false_phrase: I am not a member of the PTA
+  - attribute: home_office
+    true_phrase: I have a dedicated home office space
+    false_phrase: I don't have a dedicated home office space
+  - attribute: has_school_age_children
+    true_phrase: I have school-age children who could be affected by this book ban
+      decision
+    false_phrase: I don't have school-age children who would be affected by this book
+      ban decision
+  - attribute: personal_book_ban_experience
+    true_phrase: I have personal experience with book restrictions or censorship in
+      my own education or parenting
+    false_phrase: I don't have personal experience with book restrictions or censorship
+      in my own education or parenting
+  categorical:
+  - attribute: gender
+    phrases:
+      male: I'm a dad
+      female: I'm a mom
+    null_options: []
+    null_phrase: null
+    fallback: null
+  - attribute: state
+    phrases:
+      CA: I live in California
+      TX: I live in Texas
+      FL: I live in Florida
+      NY: I live in New York
+      PA: I live in Pennsylvania
+      IL: I live in Illinois
+      OH: I live in Ohio
+      GA: I live in Georgia
+      NC: I live in North Carolina
+      MI: I live in Michigan
+      NJ: I live in New Jersey
+      VA: I live in Virginia
+      WA: I live in Washington
+      AZ: I live in Arizona
+      MA: I live in Massachusetts
+      TN: I live in Tennessee
+      IN: I live in Indiana
+      MO: I live in Missouri
+      MD: I live in Maryland
+      WI: I live in Wisconsin
+      CO: I live in Colorado
+      MN: I live in Minnesota
+      SC: I live in South Carolina
+      AL: I live in Alabama
+      LA: I live in Louisiana
+      KY: I live in Kentucky
+      OR: I live in Oregon
+      OK: I live in Oklahoma
+      CT: I live in Connecticut
+      UT: I live in Utah
+      IA: I live in Iowa
+      NV: I live in Nevada
+      AR: I live in Arkansas
+      MS: I live in Mississippi
+      KS: I live in Kansas
+      NM: I live in New Mexico
+      NE: I live in Nebraska
+      WV: I live in West Virginia
+      ID: I live in Idaho
+      HI: I live in Hawaii
+      NH: I live in New Hampshire
+      ME: I live in Maine
+      MT: I live in Montana
+      RI: I live in Rhode Island
+      DE: I live in Delaware
+      SD: I live in South Dakota
+      ND: I live in North Dakota
+      AK: I live in Alaska
+      VT: I live in Vermont
+      WY: I live in Wyoming
+    null_options: []
+    null_phrase: null
+    fallback: null
+  - attribute: urban_rural
+    phrases:
+      suburban: My family lives in the suburbs
+    null_options: []
+    null_phrase: null
+    fallback: null
+  - attribute: education_level
+    phrases:
+      high_school: I finished high school
+      associate: I have an associate's degree
+      bachelor: I have a bachelor's degree
+      graduate: I have a graduate degree
+    null_options: []
+    null_phrase: null
+    fallback: null
+  - attribute: marital_status
+    phrases:
+      married: I'm married
+      divorced: I'm divorced
+      single: I'm single
+      widowed: I'm widowed
+    null_options: []
+    null_phrase: null
+    fallback: null
+  - attribute: employment_status
+    phrases:
+      full_time: I work full-time
+      part_time: I work part-time
+      self_employed: I'm self-employed
+      unemployed: I'm not currently employed
+    null_options: []
+    null_phrase: null
+    fallback: null
+  - attribute: community_involvement
+    phrases:
+      high: I'm very active in my community and neighborhood
+      medium: I'm moderately involved in community activities
+      low: I occasionally participate in neighborhood events
+      none: I don't really get involved in community activities
+    null_options:
+    - none
+    null_phrase: I don't really get involved in community activities
+    fallback: null
+  - attribute: risk_tolerance
+    phrases:
+      low: I prefer to play it safe and avoid risk
+      medium: I'm comfortable with a moderate level of risk
+      high: I'm willing to take significant risks
+    null_options: []
+    null_phrase: null
+    fallback: null
+  - attribute: education_priority
+    phrases:
+      low: My kids' education isn't my top priority
+      medium: Education is important to me, but it's balanced with other priorities
+      high: My children's education is one of my highest priorities
+    null_options: []
+    null_phrase: null
+    fallback: null
+  - attribute: environmental_consciousness
+    phrases:
+      low: Environmental issues aren't really on my radar
+      medium: I care about the environment and try to make sustainable choices when
+        I can
+      high: Environmental sustainability is very important to me and guides many of
+        my decisions
+    null_options: []
+    null_phrase: null
+    fallback: null
+  - attribute: occupation_category
+    phrases:
+      professional: I work in a professional field like law, medicine, or engineering
+      management: I'm in a management role
+      service: I work in the service industry
+      sales: I'm in sales
+      trades: I work in a skilled trade
+      administrative: I do administrative work
+    null_options: []
+    null_phrase: null
+    fallback: null
+  - attribute: mortgage_status
+    phrases:
+      paying_mortgage: I'm still paying off my mortgage
+      paid_off: I've paid off my mortgage
+    null_options: []
+    null_phrase: null
+    fallback: null
+  - attribute: school_type
+    phrases:
+      public: My kids go to public school
+      private: My kids attend private school
+      charter: My kids go to a charter school
+      homeschool: I homeschool my children
+    null_options: []
+    null_phrase: null
+    fallback: null
+  - attribute: religious_affiliation
+    phrases:
+      christian_conservative: I'm a conservative Christian
+      christian_moderate: I'm a Christian with moderate views
+      christian_progressive: I'm a progressive Christian
+      other_religion: I practice a non-Christian faith
+      secular: I'm secular but not particularly focused on religion
+      none: I don't identify with any religion
+    null_options:
+    - none
+    null_phrase: I don't identify with any religion
+    fallback: null
+  - attribute: political_ideology
+    phrases:
+      very_conservative: I'm very conservative politically
+      conservative: I'm conservative
+      moderate: I'm politically moderate
+      liberal: I'm liberal
+      very_liberal: I'm very liberal politically
+    null_options: []
+    null_phrase: null
+    fallback: null
+  - attribute: free_speech_absolutism
+    phrases:
+      absolutist: I believe in absolute free speech with virtually no restrictions
+      strong: I strongly support free speech, though I recognize some limits may be
+        necessary
+      moderate: I balance free speech with the need for some content curation
+      limited: I think there should be significant limits on speech to protect people
+        from harm
+    null_options: []
+    null_phrase: null
+    fallback: null
+  - attribute: trust_in_institutions
+    phrases:
+      very_high: I have a great deal of trust in public institutions like schools
+        and government
+      high: I generally trust public institutions
+      moderate: I have mixed feelings about public institutions — some trust, some
+        skepticism
+      low: I don't have much trust in public institutions
+      very_low: I have very little trust in schools and government
+    null_options: []
+    null_phrase: null
+    fallback: null
+  - attribute: school_board_engagement
+    phrases:
+      very_active: I'm very engaged with the school board — I attend almost every
+        meeting and speak regularly
+      active: I actively follow school board decisions and attend meetings regularly
+      occasional: I check in on school board activities occasionally
+      minimal: I pay minimal attention to what the school board does
+      none: I don't engage with the school board at all
+    null_options:
+    - none
+    null_phrase: I don't engage with the school board at all
+    fallback: null
+  - attribute: media_consumption_primary
+    phrases:
+      social_media: I get most of my news from social media
+      cable_news: I primarily watch cable news
+      local_news: I mainly follow local news sources
+      national_newspapers: I read national newspapers like the Times or the Post
+      online_news: I get my news from online news websites
+    null_options: []
+    null_phrase: null
+    fallback: null
+  - attribute: parental_control_preference
+    phrases:
+      parents_only: I believe parents alone should control what their children read
+      parents_primary: I think parents should have primary control, with some input
+        from educators
+      shared_responsibility: I believe it should be a shared responsibility between
+        parents and educators
+      educators_primary: I think educators should have primary control, with parents
+        having input
+      educators_only: I believe professional educators should decide what's appropriate
+        for students
+    null_options: []
+    null_phrase: null
+    fallback: null
+  - attribute: library_usage_frequency
+    phrases:
+      weekly: My family and I use the library every week
+      monthly: We visit the library about once a month
+      occasionally: We go to the library every now and then
+      rarely: We rarely use the library
+      never: We don't use the library
+    null_options:
+    - never
+    null_phrase: We don't use the library
+    fallback: null
+  - attribute: lgbtq_acceptance
+    phrases:
+      very_accepting: I'm very accepting of LGBTQ individuals and topics
+      accepting: I'm accepting of LGBTQ people and issues
+      neutral: I'm neutral on LGBTQ matters
+      resistant: I'm uncomfortable with LGBTQ topics, especially around children
+      very_resistant: I'm very opposed to LGBTQ content and discussions
+    null_options: []
+    null_phrase: null
+    fallback: null
+  - attribute: age_appropriateness_concern
+    phrases:
+      very_concerned: I'm very concerned about age-appropriate content in school materials
+      concerned: I'm concerned about ensuring school materials are age-appropriate
+      moderate: I have moderate concerns about age-appropriateness
+      relaxed: I'm fairly relaxed about what's age-appropriate
+      very_relaxed: I'm not worried about age-appropriateness — I trust kids can handle
+        challenging material
+    null_options: []
+    null_phrase: null
+    fallback: null
+  - attribute: social_network_density
+    phrases:
+      very_high: I have a very strong network of local parents and neighbors — we're
+        all connected
+      high: I have a solid network of parents and community members I'm in touch with
+      moderate: I know some other parents and neighbors, but we're not super connected
+      low: I don't know many other parents or neighbors well
+      isolated: I feel pretty isolated — I don't really have a local parent network
+    null_options: []
+    null_phrase: null
+    fallback: null
+  relative:
+  - attribute: community_involvement
+    labels:
+      much_below: I'm far less involved in community activities than most people
+      below: I participate in community activities less than most
+      average: I'm about as involved in community activities as the average person
+      above: I'm more engaged in community activities than most people
+      much_above: I'm far more active in community activities than most people
+  - attribute: openness
+    labels:
+      much_below: I'm much less open to new experiences than most people
+      below: I'm somewhat less curious and open-minded than most
+      average: I'm about as open to new ideas as the average person
+      above: I'm more intellectually curious and open than most people
+      much_above: I'm far more open to experiences and ideas than most people
+  - attribute: conscientiousness
+    labels:
+      much_below: I'm far less organized and disciplined than most people
+      below: I'm somewhat less conscientious than most
+      average: I'm about as organized and dependable as the average person
+      above: I'm more organized and self-disciplined than most people
+      much_above: I'm far more conscientious and dependable than most people
+  - attribute: extraversion
+    labels:
+      much_below: I'm far more introverted than most people
+      below: I'm somewhat less outgoing than most
+      average: I'm about as extraverted as the average person
+      above: I'm more sociable and outgoing than most people
+      much_above: I'm far more extraverted and energetic than most people
+  - attribute: agreeableness
+    labels:
+      much_below: I'm much less agreeable and cooperative than most people
+      below: I'm somewhat less trusting and compassionate than most
+      average: I'm about as agreeable as the average person
+      above: I'm more cooperative and compassionate than most people
+      much_above: I'm far more agreeable and trusting than most people
+  - attribute: neuroticism
+    labels:
+      much_below: I'm far more emotionally stable than most people
+      below: I'm somewhat less anxious than most
+      average: I'm about as emotionally reactive as the average person
+      above: I'm more prone to anxiety than most people
+      much_above: I'm far more emotionally sensitive than most people
+  - attribute: risk_tolerance
+    labels:
+      much_below: I'm far more risk-averse than most people
+      below: I'm somewhat more cautious than most
+      average: I have about the same risk tolerance as the average person
+      above: I'm more willing to take risks than most people
+      much_above: I'm far more risk-tolerant than most people
+  - attribute: environmental_consciousness
+    labels:
+      much_below: I'm far less concerned about environmental issues than most people
+      below: I'm somewhat less environmentally conscious than most
+      average: I'm about as concerned about the environment as the average person
+      above: I'm more environmentally conscious than most people
+      much_above: I'm far more concerned about environmental issues than most people
+  - attribute: free_speech_absolutism
+    labels:
+      much_below: I believe in content curation far more than most people
+      below: I'm somewhat less absolutist about free speech than most
+      average: I have about the same views on free speech as the average person
+      above: I'm more of a free speech absolutist than most people
+      much_above: I believe in absolute free speech far more strongly than most people
+  - attribute: trust_in_institutions
+    labels:
+      much_below: I trust institutions far less than most people
+      below: I'm more skeptical of institutions than most
+      average: I'm about as trusting of institutions as the average person
+      above: I generally trust institutions more than most
+      much_above: I have much more faith in institutions than most people
+  - attribute: school_board_engagement
+    labels:
+      much_below: I'm far less engaged with the school board than most people
+      below: I attend school board meetings less than most
+      average: I'm about as engaged with the school board as the average person
+      above: I'm more active with the school board than most people
+      much_above: I'm far more engaged with the school board than most people
+  - attribute: lgbtq_acceptance
+    labels:
+      much_below: I'm far less accepting of LGBTQ topics than most people
+      below: I'm somewhat less accepting of LGBTQ issues than most
+      average: I'm about as accepting of LGBTQ topics as the average person
+      above: I'm more accepting of LGBTQ individuals than most people
+      much_above: I'm far more accepting of LGBTQ topics than most people
+  - attribute: age_appropriateness_concern
+    labels:
+      much_below: I'm far less concerned about age-appropriate content than most people
+      below: I'm somewhat less worried about age-appropriateness than most
+      average: I have about the same concerns about age-appropriate content as the
+        average person
+      above: I'm more concerned about age-appropriate materials than most people
+      much_above: I'm far more concerned about age-appropriate content than most people
+  - attribute: social_network_density
+    labels:
+      much_below: I have far fewer local parent connections than most people
+      below: My parent network is somewhat smaller than most
+      average: I have about the same size parent network as the average person
+      above: I have more local parent connections than most people
+      much_above: I have a far larger parent network than most people
+  concrete:
+  - attribute: age
+    template: I'm {value} years old
+    format_spec: .0f
+    prefix: ''
+    suffix: ''
+  - attribute: household_size
+    template: There are {value} people in my household
+    format_spec: .0f
+    prefix: ''
+    suffix: ''
+  - attribute: num_children
+    template: I have {value} school-age children
+    format_spec: .0f
+    prefix: ''
+    suffix: ''
+  - attribute: individual_income
+    template: I earn {value} per year
+    format_spec: .2f
+    prefix: $
+    suffix: ''
+  - attribute: household_income
+    template: Our household brings in {value} annually
+    format_spec: .2f
+    prefix: $
+    suffix: ''
+  - attribute: homeownership_years
+    template: We've owned our home for {value} years
+    format_spec: .0f
+    prefix: ''
+    suffix: ''
+  - attribute: home_value
+    template: Our home is valued at {value}
+    format_spec: .2f
+    prefix: $
+    suffix: ''
+  - attribute: youngest_child_age
+    template: My youngest child is {value} years old
+    format_spec: .0f
+    prefix: ''
+    suffix: ''
+  - attribute: oldest_child_age
+    template: My oldest child is {value} years old
+    format_spec: .0f
+    prefix: ''
+    suffix: ''
+  - attribute: commute_time
+    template: My commute takes {value} each way
+    format_spec: .0f
+    prefix: ''
+    suffix: ' minutes'
+  - attribute: vehicle_count
+    template: We own {value} vehicles
+    format_spec: .0f
+    prefix: ''
+    suffix: ''
+  - attribute: household_savings
+    template: We have {value} in savings and investments
+    format_spec: .2f
+    prefix: $
+    suffix: ''
+  - attribute: childcare_expense
+    template: I spend {value} per month on childcare
+    format_spec: .2f
+    prefix: $
+    suffix: ''
+  - attribute: extracurricular_count
+    template: My kids are enrolled in {value} extracurricular activities
+    format_spec: .0f
+    prefix: ''
+    suffix: ''
+population_stats:
+  stats:
+    age:
+      mean: 30.510204081632654
+      std: 17.812825960736355
+      min: 4.0
+      max: 56.0
+      count: 49.0
+    agreeableness:
+      mean: 3.742296609197454
+      std: 0.6021187408907889
+      min: 2.4993583967379003
+      max: 5.0
+      count: 49.0
+    conscientiousness:
+      mean: 3.679869888537246
+      std: 0.6199907438886438
+      min: 2.2281225906517585
+      max: 5.0
+      count: 49.0
+    commute_time:
+      mean: 30.632653061224488
+      std: 17.444786563076445
+      min: 5.0
+      max: 87.0
+      count: 49.0
+    extraversion:
+      mean: 3.324855736233059
+      std: 0.7147824100658166
+      min: 1.7592498627620068
+      max: 4.862375789876565
+      count: 49.0
+    homeownership_years:
+      mean: 14.183673469387756
+      std: 9.15986141950247
+      min: 1.0
+      max: 33.0
+      count: 49.0
+    household_size:
+      mean: 4.1020408163265305
+      std: 0.8476658628056143
+      min: 2.0
+      max: 5.0
+      count: 49.0
+    dual_income_household:
+      mean: 0.5102040816326531
+      std: 0.5050762722761054
+      min: 0.0
+      max: 1.0
+      count: 49.0
+    neuroticism:
+      mean: 2.963042481081652
+      std: 0.8074593016284259
+      min: 1.0
+      max: 4.504133788459496
+      count: 49.0
+    num_children:
+      mean: 2.0408163265306123
+      std: 0.7059031943035045
+      min: 1.0
+      max: 4.0
+      count: 49.0
+    has_school_age_children:
+      mean: 1.0
+      std: 0.0
+      min: 1.0
+      max: 1.0
+      count: 49.0
+    individual_income:
+      mean: 71107.22448979592
+      std: 32871.254997252356
+      min: 25000.0
+      max: 147817.0
+      count: 49.0
+    household_income:
+      mean: 112427.22448979592
+      std: 35753.11161240917
+      min: 69291.0
+      max: 179598.0
+      count: 49.0
+    extracurricular_count:
+      mean: 3.7142857142857144
+      std: 2.1505813167606567
+      min: 0.0
+      max: 8.0
+      count: 49.0
+    household_savings:
+      mean: 95363.26530612246
+      std: 78952.96873133173
+      min: 6574.0
+      max: 270409.0
+      count: 49.0
+    openness:
+      mean: 3.4978221478343148
+      std: 0.678771250007823
+      min: 2.300849868966461
+      max: 5.0
+      count: 49.0
+    personal_book_ban_experience:
+      mean: 0.20408163265306123
+      std: 0.40720550896397784
+      min: 0.0
+      max: 1.0
+      count: 49.0
+    pta_membership:
+      mean: 0.5102040816326531
+      std: 0.5050762722761054
+      min: 0.0
+      max: 1.0
+      count: 49.0
+    home_value:
+      mean: 507553.8775510204
+      std: 204733.88463814766
+      min: 230281.0
+      max: 964952.0
+      count: 49.0
+    home_office:
+      mean: 0.5714285714285714
+      std: 0.5
+      min: 0.0
+      max: 1.0
+      count: 49.0
+    vehicle_count:
+      mean: 2.0816326530612246
+      std: 0.9538678868576252
+      min: 1.0
+      max: 5.0
+      count: 49.0
+    youngest_child_age:
+      mean: 7.8979591836734695
+      std: 3.336945321942308
+      min: 5.0
+      max: 15.0
+      count: 49.0
+    childcare_expense:
+      mean: 1122.6530612244899
+      std: 1001.612586262365
+      min: 0.0
+      max: 2500.0
+      count: 49.0
+    oldest_child_age:
+      mean: 13.571428571428571
+      std: 2.516611478423583
+      min: 7.0
+      max: 18.0
+      count: 49.0
