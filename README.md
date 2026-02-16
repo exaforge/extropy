@@ -64,16 +64,12 @@ extropy results --study-db $DB --segment income
 
 ## Features
 
-| | |
-|---|---|
-| **Any geography** | US, Japan, India, Brazil — real distributions with citations |
-| **Households** | Correlated partners, NPC dependents, assortative mating |
-| **Social network** | Partner/coworker/neighbor edges, similarity-based ties, small-world topology |
-| **Two-pass reasoning** | Role-play first, classify second — no central tendency bias |
-| **Conversations** | Agents talk to each other; both update state |
-| **Memory & conviction** | Reasoning history, conviction-gated sharing, flip resistance |
-| **Timeline events** | Evolving scenarios with new information over time |
-| **Open-ended outcomes** | Free text responses — discover categories post-hoc |
+| Phase | Capability |
+|-------|------------|
+| **Population** | Any geography, real distributions with citations, household mode with correlated partners and dependents |
+| **Network** | Structural edges (partner/coworker/neighbor), similarity ties, small-world topology |
+| **Simulation** | Two-pass reasoning, agent conversations, memory traces, conviction-gated sharing, timeline events |
+| **Outcomes** | Categorical, boolean, float, or open-ended — discover categories post-hoc |
 
 ## Development
 
