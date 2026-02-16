@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-This file gives practical guidance to coding agents working in this repository.
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## What Extropy Is
 
@@ -30,8 +30,13 @@ CLI entry point: `extropy` (from `pyproject.toml`), Python `>=3.11`.
 ```bash
 pip install -e ".[dev]"
 
-# tests / lint
-pytest
+# tests
+pytest                          # all tests
+pytest tests/test_sampler.py    # single file
+pytest -k "test_sampling"       # pattern match
+pytest --tb=short -q            # CI style (quick output)
+
+# lint / format
 ruff check .
 ruff format .
 
@@ -89,7 +94,7 @@ Resolution order (highest first):
 1. Programmatic config (`configure(...)` / constructed `ExtropyConfig`)
 2. Environment variables
 3. Config file
-4. Dataclass defaults
+4. Pydantic model defaults
 
 Defaults in code:
 - `pipeline.provider = "openai"`
@@ -129,10 +134,15 @@ Scenario validation: `extropy/scenario/validator.py`.
 - Network edges are traversed bidirectionally during simulation.
 - Keep LLM reasoning pass semantic; classification pass handles structured outcome extraction.
 - Prefer data-driven network behavior through `NetworkConfig` over hardcoded social rules.
+- Use Pydantic `BaseModel` for all config/model classes — no dataclasses.
+- Canonical state lives in SQLite (`study.db`); use `StateManager` for simulation state access.
 
 ## Testing & CI
 
-Tests are in `tests/` and run with `pytest`.
+Tests are in `tests/` and run with `pytest`. Common fixtures are in `tests/conftest.py`:
+- `minimal_population_spec`, `complex_population_spec` — ready-to-use PopulationSpec objects
+- `ten_agents`, `sample_agents` — agent dicts for propagation/integration tests
+- `linear_network`, `star_network` — network topologies for testing propagation
 
 CI (`.github/workflows/test.yml`) runs:
 - lint: `ruff check`, `ruff format --check`
