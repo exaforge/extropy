@@ -1,14 +1,6 @@
 # CLI Reference
 
-A hands-on walkthrough of every command in order, using a single example from start to finish.
-
----
-
-## The Example: Austin Congestion Tax
-
-A city council in Austin, TX announces a **$15/day congestion tax** for driving into the downtown core during peak hours (7-10am, 4-7pm). The goal is to reduce traffic and fund public transit expansion. We want to simulate how 500 Austin commuters respond — who complies, who switches to transit, who protests, and who just pays and moves on.
-
-This is the kind of question Extropy was built for: a heterogeneous population with different incomes, commute methods, values, and trust levels — all reacting to the same policy change.
+Complete reference for all Extropy CLI commands, flags, and options.
 
 ---
 
@@ -20,666 +12,580 @@ extropy spec ──> extropy extend ──> extropy sample ──> extropy netwo
                                                                                                               extropy estimate    extropy results
 ```
 
-Each step produces a file that feeds into the next:
-
-| Step | Command | Input | Output |
-|------|---------|-------|--------|
-| 1 | `extropy spec` | Natural language description | `base.yaml` (population spec) |
-| 2 | `extropy extend` | `base.yaml` + scenario description | `population.yaml` (merged spec) |
-| 3 | `extropy sample` | `population.yaml` | `agents.json` (concrete agents) |
-| 4 | `extropy network` | `agents.json` | `network.json` (social graph) |
-| 5 | `extropy persona` | `population.yaml` + `agents.json` | `population.persona.yaml` (persona config) |
-| 6 | `extropy scenario` | `population.yaml` + `agents.json` + `network.json` | `scenario.yaml` (executable spec) |
-| 7 | `extropy simulate` | `scenario.yaml` | `results/` (simulation output) |
-
-You can also run `extropy validate` at any point to check a spec file, `extropy estimate` to preview simulation cost, and `extropy results` to inspect simulation output.
+Canonical data store: `study.db` (SQLite). All commands read from and write to this database.
 
 ---
 
-## Configuration
+## extropy spec
 
-Before starting, configure your providers and models. You can mix and match providers for different phases of the pipeline.
-
-```bash
-# Set pipeline (steps 1-6) to use Claude
-extropy config set pipeline.provider claude
-
-# Set simulation (step 7) to use OpenAI
-extropy config set simulation.provider openai
-
-# Optionally override the simulation model
-extropy config set simulation.model gpt-5-mini
-
-# View current config
-extropy config show
-```
-
-### API Keys
-
-Set your API keys as environment variables (or in a `.env` file):
+Build a population specification from a natural language description.
 
 ```bash
-export ANTHROPIC_API_KEY=sk-ant-...       # For Claude
-export OPENAI_API_KEY=sk-...              # For OpenAI
+extropy spec "500 Austin TX commuters" -o austin/base.yaml -y
 ```
 
-### Programmatic Configuration (Package Use)
+### Arguments
 
-When using extropy as a library, configure programmatically — no files needed:
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `description` | string | yes | Natural language population description |
 
-```python
-from extropy.config import configure, ExtropyConfig, PipelineConfig, SimZoneConfig
+### Options
 
-configure(ExtropyConfig(
-    pipeline=PipelineConfig(provider="claude"),
-    simulation=SimZoneConfig(provider="openai", model="gpt-5-mini"),
-))
-```
+| Flag | Short | Type | Default | Description |
+|------|-------|------|---------|-------------|
+| `--output` | `-o` | path | required | Output YAML file path |
+| `--yes` | `-y` | flag | false | Skip confirmation prompts |
 
 ---
 
-## Step 1: Define the Base Population
+## extropy extend
+
+Extend a base population spec with scenario-relevant attributes.
 
 ```bash
-extropy spec "500 Austin TX commuters who drive into downtown for work" \
-  -o austin/base.yaml
+extropy extend austin/base.yaml -s "Response to $15/day congestion tax" -o austin/population.yaml -y
 ```
 
-This takes a natural language description and builds a **population specification** — a YAML file describing who these people are, statistically.
+### Arguments
 
-### What happens under the hood
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `base_spec` | path | yes | Path to base population spec YAML |
 
-1. **Sufficiency check** — Extracts population size (500), geography (Austin, TX), and checks if the description is specific enough.
-2. **Attribute discovery** — An LLM identifies 25-40 relevant attributes: `age`, `income`, `zip_code`, `commute_distance_miles`, `vehicle_type`, `has_transit_access`, etc.
-3. **Distribution research** — For each attribute, researches real-world distributions using web search and LLM reasoning. e.g., "Austin median household income is $85,000" becomes `distribution: lognormal(mean=85000, std=35000)`.
-4. **Constraint binding** — Resolves dependencies between attributes (e.g., `commute_time` depends on `commute_distance_miles` and `commute_method`) and determines a valid sampling order.
-5. **Validation** — Checks for circular dependencies, invalid distributions, and structural issues.
+### Options
 
-### Human checkpoints
-
-The command pauses twice for confirmation:
-1. After attribute discovery — review the list of attributes before expensive distribution research.
-2. After spec assembly — review the final spec before saving.
-
-Use `-y` to skip both prompts (useful for scripting).
-
-### Arguments & options
-
-| | Name | Description |
-|---|---|---|
-| **Arg** | `description` | Natural language population description |
-| **Opt** | `--output` / `-o` | Output YAML file path **(required)** |
-| **Opt** | `--yes` / `-y` | Skip confirmation prompts |
-
-### Output
-
-A YAML file (`base.yaml`) with:
-- **Meta** — size, geography, description
-- **Attributes** — each with type, distribution, dependencies, constraints, and grounding sources
-- **Sampling order** — topologically sorted for correct dependency resolution
+| Flag | Short | Type | Default | Description |
+|------|-------|------|---------|-------------|
+| `--scenario` | `-s` | string | required | Scenario description |
+| `--output` | `-o` | path | required | Output merged spec YAML |
+| `--yes` | `-y` | flag | false | Skip confirmation prompts |
 
 ---
 
-## Step 2: Extend with Scenario Attributes
+## extropy sample
+
+Sample concrete agents from a population specification.
 
 ```bash
-extropy extend austin/base.yaml \
-  -s "Response to a new $15/day downtown congestion tax during peak hours" \
-  -o austin/population.yaml
+extropy sample austin/population.yaml --study-db austin/study.db --seed 42
 ```
 
-The base spec knows *who* these commuters are (demographics, commute patterns). This step adds *how they'll think about the scenario* — behavioral and psychological attributes that don't exist in any census.
+### Arguments
 
-### What it adds
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `spec_file` | path | yes | Population spec YAML to sample from |
 
-Given the base attributes and the scenario description, the LLM discovers new attributes like:
-- `price_sensitivity` — derived from `income` and `monthly_transportation_cost`
-- `environmental_values` — how much they care about emissions reduction
-- `trust_in_local_government` — affects whether they see the tax as legitimate
-- `transit_switching_feasibility` — derived from `has_transit_access` and `commute_distance_miles`
-- `protest_propensity` — derived from `political_engagement` and `price_sensitivity`
+### Options
 
-These new attributes can **depend on base attributes**, creating realistic correlations. A low-income commuter with no transit access will have different `protest_propensity` than a high-income commuter who could easily switch to rail.
-
-### Persona template
-
-This step also generates a **persona template** — a natural language template that will be filled in per-agent during simulation:
-
-> *"You are a {age}-year-old {occupation} living in {neighborhood}. You commute {commute_distance_miles} miles to downtown Austin by {commute_method}. Your household income is ${income}. You {transit_access_description}..."*
-
-This is what the LLM reads when reasoning as each agent.
-
-### Arguments & options
-
-| | Name | Description |
-|---|---|---|
-| **Arg** | `base_spec` | Path to base population spec YAML |
-| **Opt** | `--scenario` / `-s` | Scenario description **(required)** |
-| **Opt** | `--output` / `-o` | Output merged spec YAML **(required)** |
-| **Opt** | `--yes` / `-y` | Skip confirmation prompts |
-
-### Output
-
-A merged YAML file (`population.yaml`) containing all base attributes + new scenario attributes + persona template. This is the complete population definition.
+| Flag | Short | Type | Default | Description |
+|------|-------|------|---------|-------------|
+| `--study-db` | | path | required | Canonical study database path |
+| `--population-id` | | string | `default` | Population ID in study DB |
+| `--count` | `-n` | int | spec size | Number of agents to sample |
+| `--seed` | | int | random | Random seed for reproducibility |
+| `--report` | `-r` | flag | false | Show distribution summaries after sampling |
+| `--skip-validation` | | flag | false | Skip spec validation before sampling |
 
 ---
 
-## Step 3: Sample Concrete Agents
+## extropy network
+
+Generate a social network connecting sampled agents.
 
 ```bash
-extropy sample austin/population.yaml \
-  -o austin/agents.json \
-  -n 500 \
-  --seed 42
+extropy network --study-db austin/study.db -p austin/population.yaml --seed 42
 ```
 
-The population spec defines *distributions* (e.g., "age: Normal(38, 12)"). This step **samples** 500 concrete agents from those distributions, respecting all dependencies and constraints.
+### Options
 
-### What you get
+| Flag | Short | Type | Default | Description |
+|------|-------|------|---------|-------------|
+| `--study-db` | | path | required | Canonical study database path |
+| `--population-id` | | string | `default` | Population ID to load agents from |
+| `--network-id` | | string | `default` | Network ID to write |
+| `--population` | `-p` | path | | Population spec YAML (generates network config via LLM) |
+| `--network-config` | `-c` | path | | Custom network config YAML file |
+| `--quality-profile` | | string | `balanced` | Quality profile: `fast`, `balanced`, `strict` |
+| `--avg-degree` | | int | 20 | Target average connections per agent |
+| `--rewire-prob` | | float | 0.05 | Watts-Strogatz rewiring probability |
+| `--seed` | | int | random | Random seed for reproducibility |
+| `--validate` | `-v` | flag | false | Print network validation metrics |
+| `--resume` | | flag | false | Resume from checkpoint in study DB |
 
-Each agent is a dictionary of concrete values:
+#### Resource Tuning Options
 
-```json
-{
-  "_id": "agent_001",
-  "age": 34,
-  "income": 62000,
-  "zip_code": "78745",
-  "commute_method": "personal_vehicle",
-  "commute_distance_miles": 14.2,
-  "has_transit_access": false,
-  "price_sensitivity": 0.78,
-  "trust_in_local_government": 0.35,
-  "environmental_values": 0.42
-}
-```
-
-Agent 001 is a 34-year-old making $62k, driving 14 miles from south Austin with no transit access. High price sensitivity, low government trust. This person will react very differently to the congestion tax than a $150k tech worker who lives near a rail stop.
-
-### The `--report` flag
-
-Add `--report` / `-r` to see distribution summaries after sampling — means, standard deviations, and top categorical values. Useful for sanity-checking that sampled agents match the spec.
-
-### Arguments & options
-
-| | Name | Description |
-|---|---|---|
-| **Arg** | `spec_file` | Population spec YAML to sample from |
-| **Opt** | `--output` / `-o` | Output file path (.json or .db) **(required)** |
-| **Opt** | `--count` / `-n` | Number of agents (defaults to `spec.meta.size`) |
-| **Opt** | `--seed` | Random seed for reproducibility |
-| **Opt** | `--format` / `-f` | Output format: `json` or `sqlite` (default: `json`) |
-| **Opt** | `--report` / `-r` | Show distribution summaries after sampling |
-| **Opt** | `--skip-validation` | Skip spec validation before sampling |
-
-### Output
-
-A JSON file (`agents.json`) or SQLite database (`agents.db`) containing all sampled agents with their attributes.
+| Flag | Type | Default | Description |
+|------|------|---------|-------------|
+| `--num-restarts` | int | profile | Number of calibration restarts |
+| `--max-iters` | int | profile | Max iterations per restart |
+| `--calibration-metric` | string | profile | Metric to optimize |
+| `--min-degree` | int | profile | Minimum node degree |
+| `--clustering-target` | float | profile | Target clustering coefficient |
+| `--clustering-tolerance` | float | profile | Clustering tolerance |
 
 ---
 
-## Step 4: Build the Social Network
+## extropy persona
+
+Generate persona rendering configuration for a population.
 
 ```bash
-extropy network --study-db austin/study.db \
-  --population-id default \
-  --network-id baseline \
-  -p austin/population.yaml \
-  --quality-profile balanced \
-  --seed 42
+extropy persona austin/population.yaml --study-db austin/study.db -y
 ```
 
-Agents don't exist in isolation. This step creates a **social network graph** connecting agents based on attribute similarity — people who live in the same neighborhood, work in similar industries, or share commute patterns are more likely to be connected.
+### Arguments
 
-### Network configuration
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `spec_file` | path | yes | Population spec YAML |
 
-The network's social structure is driven by a `NetworkConfig` that defines which attributes create connections, what types of relationships exist, and who influences whom. Three ways to provide it:
+### Options
 
-1. **LLM-generated** (`-p population.yaml`) — The LLM reads the population spec and generates attribute weights, edge type rules, influence factors, and degree multipliers tailored to that population.
-2. **Manual YAML** (`-c config.yaml`) — Load a hand-crafted or previously saved config file.
-3. **No config** — Produces a flat network with no similarity structure (all edges are "peer" type).
-
-Auto-detection: if `{population_stem}.network-config.yaml` exists alongside the population file, it's loaded automatically.
-
-When using `-p` without `-c`, Extropy auto-saves the effective generated config (after CLI overrides/profile expansion) next to the population file:
-`<population_stem>.network-config.<network_id>.seed<seed>.<YYYYMMDD-HHMMSS>.yaml`.
-
-Save a generated config for inspection/editing with `--save-config`:
-
-```bash
-extropy network --study-db austin/study.db --network-id baseline \
-  -p austin/population.yaml --save-config austin/network-config.yaml \
-  -o austin/network.json
-```
-
-### How connections form
-
-The network uses a **Watts-Strogatz small-world model** with attribute-based similarity weighting:
-
-- **Homophily** — Agents with matching attributes (defined by `attribute_weights` in the config) get higher connection probability. The LLM picks which attributes matter for each population.
-- **Weak ties** — Random rewiring (controlled by `--rewire-prob`) creates cross-cluster bridges, modeling how information spreads beyond tight-knit groups.
-- **Edge types** — Connections are typed via priority-ordered rules (e.g., same workplace → `colleague`, same neighborhood → `neighbor`). These matter during simulation because information spreads differently through close colleagues vs. acquaintances.
-- **Influence asymmetry** — Influence factors define who sways whom (e.g., senior employees influence junior ones more). Supports ordinal, boolean, and numeric factor types.
-
-### The `--validate` flag
-
-Add `-v` to print network quality metrics:
-
-```bash
-extropy network --study-db austin/study.db --network-id baseline \
-  -p austin/population.yaml --validate
-```
-
-This shows clustering coefficient, average path length, modularity, and flags anything outside expected ranges for a realistic social network.
-
-### Quality profile (primary control)
-
-- `--quality-profile fast` — quickest runtime, looser gate defaults
-- `--quality-profile balanced` — default, strict gate with moderate budget
-- `--quality-profile strict` — strongest calibration effort and strict gating
-
-For most runs, only this flag should be adjusted.
-
-### Arguments & options
-
-| | Name | Description |
-|---|---|---|
-| **Opt** | `--study-db` | Canonical study DB path **(required)** |
-| **Opt** | `--population-id` | Population ID in study DB (default: `default`) |
-| **Opt** | `--network-id` | Network ID to write/read (default: `default`) |
-| **Opt** | `--output` / `-o` | Optional network JSON export path |
-| **Opt** | `--population` / `-p` | Population spec YAML — generates network config via LLM |
-| **Opt** | `--network-config` / `-c` | Custom network config YAML file |
-| **Opt** | `--save-config` | Save the generated/loaded config to YAML |
-| **Opt** | `--quality-profile` | Primary quality control: `fast | balanced | strict` (default: `balanced`) |
-| **Opt** | `--avg-degree` | Target average connections per agent (default: `20`) |
-| **Opt** | `--rewire-prob` | Watts-Strogatz rewiring probability (default: `0.05`) |
-| **Opt** | `--seed` | Random seed for reproducibility |
-| **Opt** | `--validate` / `-v` | Print network validation metrics |
-| **Opt** | `--no-metrics` | Skip computing node metrics (faster for large populations) |
-| **Opt** | `--resume` | Resume similarity + calibration checkpoint state from study DB |
-
-### Output
-
-Canonical output is `study.db` (`network_edges`, `network_runs`, `network_metrics`). Optional JSON export can be written with `--output`.
-
-If strict topology gate fails, Extropy writes a quarantined artifact network ID
-`<network_id>__rejected__<run_id_prefix>` and exits non-zero without overwriting the canonical `network_id`.
+| Flag | Short | Type | Default | Description |
+|------|-------|------|---------|-------------|
+| `--study-db` | | path | | Study DB to load agents from (preferred) |
+| `--population-id` | | string | `default` | Population ID when using --study-db |
+| `--agents` | `-a` | path | | Legacy: sampled agents JSON file |
+| `--output` | `-o` | path | `{spec}.persona.yaml` | Output persona config path |
+| `--preview/--no-preview` | | flag | true | Show sample persona before saving |
+| `--agent` | | int | 0 | Agent index for preview |
+| `--yes` | `-y` | flag | false | Skip confirmation prompts |
+| `--show` | `-s` | flag | false | Preview existing config without regenerating |
 
 ---
 
-## Step 5: Generate Persona Configuration
+## extropy scenario
+
+Compile a scenario specification from population and network.
 
 ```bash
-extropy persona austin/population.yaml \
-  --agents austin/agents.json \
-  -o austin/population.persona.yaml
+extropy scenario -p austin/population.yaml --study-db austin/study.db -o austin/scenario.yaml -y
 ```
 
-This step generates a **persona configuration** — instructions for how to render each agent's attributes into a first-person narrative that the LLM reads during simulation.
+### Options
 
-### Why this matters
-
-The persona is what the LLM sees when reasoning as an agent. A flat list of attributes like `age: 34, income: 62000, price_sensitivity: 0.78` doesn't help the LLM *embody* the agent. The persona system converts these into first-person statements that create genuine perspective-taking:
-
-> *"I'm 34 years old... I'm much more price-sensitive than most people..."*
-
-The difference between "puppetry" (the LLM referencing external data) and "embodiment" (the LLM internalizing a worldview) is critical for simulation accuracy.
-
-### The 5-step generation pipeline
-
-1. **Structure** — Classify each attribute as `concrete` (keep exact values) or `relative` (position against population), and group them thematically.
-
-2. **Boolean phrasings** — Generate true/false phrases: *"I own my home"* vs *"I rent my home"*.
-
-3. **Categorical phrasings** — Generate per-option phrases: *"I drive a pickup truck"*, *"I take the bus"*.
-
-4. **Relative phrasings** — Generate 5-tier positioning labels based on z-scores: *"I'm far more price-sensitive than most people"* (z > 1) vs *"I'm about average"* (|z| < 0.3).
-
-5. **Concrete phrasings** — Generate templates with format specs: *"I drive {value} miles to downtown"* with `.1f` formatting, or *"I start work around {value}"* with `time12` formatting (8.5 -> "8:30 AM").
-
-### Scalability
-
-The persona config is generated **once per population** via LLM, then applied to all agents computationally. There are no per-agent LLM calls for persona rendering — just template substitution and z-score lookups.
-
-### Arguments & options
-
-| | Name | Description |
-|---|---|---|
-| **Arg** | `spec_file` | Population spec YAML |
-| **Opt** | `--agents` / `-a` | Sampled agents JSON (for population statistics) |
-| **Opt** | `--output` / `-o` | Output path (default: `{spec_stem}.persona.yaml`) |
-| **Opt** | `--preview` / `--no-preview` | Show sample persona before saving (default: on) |
-| **Opt** | `--agent` | Which agent to preview (default: `0`) |
-| **Opt** | `--yes` / `-y` | Skip confirmation prompts |
-| **Opt** | `--show` / `-s` | Preview existing persona config without regenerating |
-
-### Output
-
-A YAML file (`population.persona.yaml`) containing:
-- **Intro template** — Narrative opening paragraph template
-- **Treatments** — Per-attribute classification (concrete vs relative)
-- **Groups** — Thematic groupings with labels ("About Me", "My Commute", etc.)
-- **Phrasings** — Templates for boolean, categorical, relative, and concrete attributes
-- **Population stats** — Mean/std/min/max for relative positioning
-
-The simulation engine auto-detects this file when running — no need to pass it explicitly if it follows the naming convention `{population_stem}.persona.yaml`.
+| Flag | Short | Type | Default | Description |
+|------|-------|------|---------|-------------|
+| `--population` | `-p` | path | required | Population spec YAML |
+| `--study-db` | | path | required | Canonical study database path |
+| `--population-id` | | string | `default` | Population ID in study DB |
+| `--network-id` | | string | `default` | Network ID in study DB |
+| `--description` | `-d` | string | from spec | Scenario description |
+| `--output` | `-o` | path | `{pop}.scenario.yaml` | Output scenario spec path |
+| `--timeline` | | path | | Timeline events YAML for evolving scenarios |
+| `--yes` | `-y` | flag | false | Skip confirmation prompts |
 
 ---
 
-## Step 6: Compile the Scenario
+## extropy simulate
+
+Run the simulation engine.
 
 ```bash
-extropy scenario \
-  -p austin/population.yaml \
-  -a austin/agents.json \
-  -n austin/network.json \
-  -o austin/scenario.yaml
+extropy simulate austin/scenario.yaml --study-db austin/study.db -o austin/results --seed 42
 ```
 
-This compiles everything into an **executable scenario specification** — the complete instruction set for the simulation engine.
+### Arguments
 
-### What gets generated
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `scenario_file` | path | yes | Scenario spec YAML |
 
-1. **Event definition** — The congestion tax announcement: event type (`policy_change`), source (`Austin City Council`), credibility score, ambiguity level.
+### Options
 
-2. **Seed exposure rules** — How agents first learn about the event:
-   - *Official city notice* — broadcast to all agents at timestep 0
-   - *Local news coverage* — broadcast with high reach at timestep 0
-   - *Social media discussion* — organic spread starting timestep 1
-   - *Employer HR notification* — targeted to downtown office workers at timestep 1
-   - *Neighborhood group chats* — targeted by `zip_code` clusters at timestep 2
+| Flag | Short | Type | Default | Description |
+|------|-------|------|---------|-------------|
+| `--output` | `-o` | path | required | Output results directory |
+| `--study-db` | | path | required | Canonical study database path |
+| `--seed` | | int | random | Random seed for reproducibility |
+| `--fidelity` | `-f` | string | `medium` | Fidelity tier: `low`, `medium`, `high` |
+| `--merged-pass` | | flag | false | Single-pass reasoning (cheaper, less accurate) |
+| `--threshold` | `-t` | int | 3 | Multi-touch threshold for re-reasoning |
+| `--chunk-size` | | int | 50 | Agents per reasoning chunk (checkpoint granularity) |
+| `--resume` | | flag | false | Resume from checkpoint |
+| `--run-id` | | string | auto | Simulation run ID |
 
-3. **Interaction model** — How agents discuss and process the event (broadcast response, direct conversation, etc.)
+#### Model Options
 
-4. **Spread configuration** — How information and opinions propagate through the network. Includes edge-type modifiers (e.g., neighbor connections amplify sharing about local policy).
+| Flag | Short | Type | Default | Description |
+|------|-------|------|---------|-------------|
+| `--strong` | `-m` | string | config | Strong model for Pass 1 (`provider/model`) |
+| `--fast` | | string | config | Fast model for Pass 2 (`provider/model`) |
 
-5. **Outcome definitions** — What to measure: `compliance_intent` (categorical: comply/switch_transit/protest/avoid), `sentiment` (float: -1 to 1), `willingness_to_pay` (boolean), etc.
+#### Rate Limiting Options
 
-### Arguments & options
+| Flag | Type | Default | Description |
+|------|------|---------|-------------|
+| `--rate-tier` | int | config | Provider rate limit tier (1-4) |
+| `--rpm-override` | int | | Override requests per minute |
+| `--tpm-override` | int | | Override tokens per minute |
+| `--max-concurrent` | int | config | Max concurrent LLM calls |
 
-| | Name | Description |
-|---|---|---|
-| **Opt** | `--population` / `-p` | Population spec YAML **(required)** |
-| **Opt** | `--agents` / `-a` | Sampled agents JSON **(required)** |
-| **Opt** | `--network` / `-n` | Network JSON **(required)** |
-| **Opt** | `--description` / `-d` | Scenario description (defaults to spec metadata) |
-| **Opt** | `--output` / `-o` | Output path (defaults to `{population_stem}.scenario.yaml`) |
-| **Opt** | `--yes` / `-y` | Skip confirmation prompts |
+#### Output Options
 
-### Output
-
-A YAML file (`scenario.yaml`) containing the complete scenario specification: event, exposure rules, interaction model, spread config, outcomes, and simulation parameters.
+| Flag | Short | Type | Default | Description |
+|------|-------|------|---------|-------------|
+| `--quiet` | `-q` | flag | false | Suppress progress output |
+| `--verbose` | `-v` | flag | false | Show detailed logs |
+| `--debug` | | flag | false | Show debug-level logs |
 
 ---
 
-## Step 7: Run the Simulation
+## extropy estimate
+
+Predict simulation cost without making API calls.
 
 ```bash
-extropy simulate austin/scenario.yaml \
-  -o austin/results/ \
-  --seed 42
+extropy estimate austin/scenario.yaml --study-db austin/study.db
 ```
 
-This is where it all comes together. The simulation engine loads the scenario spec, hydrates agents with their personas, and runs timestep-by-timestep simulation with LLM-powered reasoning.
+### Arguments
 
-### What happens each timestep
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `scenario_file` | path | yes | Scenario spec YAML |
 
-1. **Seed exposure** — Agents learn about the congestion tax through channels defined in the scenario (city notices, news, social media).
-2. **Network propagation** — Exposed agents share information through their social connections. Edge types and spread modifiers control how fast and far information travels.
-3. **Two-pass agent reasoning** — Each newly-exposed agent receives their persona + the event description + what they've heard from connections. **Pass 1**: the agent role-plays their reaction in natural language (no enums, no anchoring). **Pass 2**: a cheap model classifies the freeform response into outcome categories. This eliminates central tendency bias. Agents are processed in chunks (default 50, configurable via `--chunk-size`) with per-chunk SQLite commits for crash safety.
-4. **State update** — Agent states are updated with position, sentiment, conviction, and a public statement summarizing their stance. Agents who receive information from multiple sources may re-evaluate (controlled by `--threshold`).
-5. **Stopping check** — The engine checks if exposure has saturated, opinions have converged, or max timesteps are reached.
+### Options
 
-### Live progress display
-
-In normal mode, the CLI shows a live-updating display with per-agent progress and decision distribution bars:
-
-```
-Timestep 1/100 | 267/513 agents (52%) | Exposure: 65.3% | 5m 23s
-
-  pay_for_extra_members   52% ████████████████░░░░
-  remove_shared_access    31% ██████████░░░░░░░░░░
-  cancel_or_downgrade     12% ████░░░░░░░░░░░░░░░░
-  switch_to_competitor     5% ██░░░░░░░░░░░░░░░░░░
-```
-
-Position counts are cumulative across all timesteps. In verbose mode (`-v`), per-agent log lines include the agent's position and the engine logs periodic summary blocks every 50 agents with distribution and averages.
-
-### Checkpointing and resume
-
-The simulation checkpoints after each chunk of agents. If the process crashes or is interrupted (`Ctrl-C`), rerunning the same command with the same `--output` directory automatically resumes from where it left off — completed timesteps are skipped, and already-processed agents within a partial timestep are not re-reasoned.
-
-### What emerges
-
-Agent 001 (low-income, no transit, south Austin) reasons: *"I can't afford $15/day, that's $300/month. There's no bus from my neighborhood. This feels targeted at people like me."* Outcome: **protest**.
-
-Agent 247 (tech worker, lives near rail, $150k) reasons: *"$15 is annoying but I could take the train. Less traffic sounds nice actually."* Outcome: **switch_transit**.
-
-Agent 389 (small business owner, downtown) reasons: *"My employees can't get to work if they can't afford to drive in. This will kill my business."* Outcome: **protest** — but for completely different reasons than Agent 001.
-
-These aren't scripted responses. They emerge from each agent's unique combination of attributes, persona, and reasoning.
-
-### Arguments & options
-
-| | Name | Description |
-|---|---|---|
-| **Arg** | `scenario_file` | Scenario spec YAML |
-| **Opt** | `--output` / `-o` | Output results directory **(required)** |
-| **Opt** | `--model` / `-m` | LLM model for both passes (default: from `extropy config`) |
-| **Opt** | `--pivotal-model` | Model override for Pass 1 reasoning |
-| **Opt** | `--routine-model` | Model override for Pass 2 classification |
-| **Opt** | `--threshold` / `-t` | Multi-touch threshold for re-reasoning (default: `3`) |
-| **Opt** | `--rate-tier` | Provider rate limit tier 1-4 (default: from config) |
-| **Opt** | `--rpm-override` | Override requests per minute limit |
-| **Opt** | `--tpm-override` | Override tokens per minute limit |
-| **Opt** | `--chunk-size` | Agents per reasoning chunk for checkpointing (default: `50`) |
-| **Opt** | `--seed` | Random seed for reproducibility |
-| **Opt** | `--persona` / `-p` | Persona config YAML (auto-detected if not specified) |
-| **Opt** | `--quiet` / `-q` | Suppress progress output |
-| **Opt** | `--verbose` / `-v` | Show detailed logs |
-| **Opt** | `--debug` | Show debug-level logs |
-
-### Output
-
-A results directory containing:
-- `study.db` — canonical SQLite state and checkpoint store
-- `agent_states.json` — Final state of every agent
-- `by_timestep.json` — Per-timestep metrics (exposure, sentiment, conviction, position distributions)
-- `outcome_distributions.json` — Aggregate outcome distributions
-- `meta.json` — Run configuration and metadata
+| Flag | Short | Type | Default | Description |
+|------|-------|------|---------|-------------|
+| `--study-db` | | path | required | Canonical study database path |
+| `--strong` | `-m` | string | config | Strong model for Pass 1 (`provider/model`) |
+| `--fast` | | string | config | Fast model for Pass 2 (`provider/model`) |
+| `--threshold` | `-t` | int | 3 | Multi-touch threshold |
+| `--verbose` | `-v` | flag | false | Show per-timestep breakdown |
 
 ---
 
-## Viewing Results
+## extropy results
+
+Display simulation results from the study database.
 
 ```bash
 extropy results --study-db austin/study.db
+extropy results --study-db austin/study.db --segment income
+extropy results --study-db austin/study.db --timeline
+extropy results --study-db austin/study.db --agent agent_042
 ```
 
-Display a summary of simulation outcomes — exposure rates, outcome distributions, and convergence information.
+### Options
 
-### Segment by attribute
-
-```bash
-extropy results austin/results/ --segment income
-```
-
-Break down outcomes by an attribute. This is where the insights live: *"Low-income commuters (<$50k) are 4x more likely to protest than high-income commuters (>$100k), who mostly comply or switch to transit."*
-
-### Timeline view
-
-```bash
-extropy results austin/results/ --timeline
-```
-
-See how opinions evolved over time — when protest sentiment peaked, when transit-switching accelerated, etc.
-
-### Single agent deep-dive
-
-```bash
-extropy results austin/results/ --agent agent_001
-```
-
-Inspect one agent's full reasoning chain: what they heard, from whom, when, and how their position evolved.
-
-### Arguments & options
-
-| | Name | Description |
-|---|---|---|
-| **Arg** | `results_dir` | Results directory from simulation |
-| **Opt** | `--segment` / `-s` | Attribute to segment results by |
-| **Opt** | `--timeline` / `-t` | Show timeline view |
-| **Opt** | `--agent` / `-a` | Show single agent details |
+| Flag | Short | Type | Default | Description |
+|------|-------|------|---------|-------------|
+| `--study-db` | | path | required | Canonical study database path |
+| `--run-id` | | string | latest | Simulation run ID |
+| `--segment` | `-s` | string | | Attribute to segment results by |
+| `--timeline` | `-t` | flag | false | Show timeline view |
+| `--agent` | `-a` | string | | Show single agent details |
 
 ---
 
-## Utility: Validate Specs
+## extropy validate
+
+Validate a population or scenario spec.
 
 ```bash
-extropy validate austin/population.yaml        # population spec
-extropy validate austin/scenario.yaml           # scenario spec (auto-detected)
-extropy validate austin/population.yaml --strict  # treat warnings as errors
+extropy validate austin/population.yaml
+extropy validate austin/scenario.yaml
+extropy validate austin/population.yaml --strict
 ```
 
-Validate a spec file at any point in the pipeline. Auto-detects file type based on naming: `*.scenario.yaml` runs scenario spec validation, `*.yaml` runs population spec validation. Checks for structural issues, distribution validity, formula syntax, dependency cycles, and scenario-specific rules.
+### Arguments
 
-### Arguments & options
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `spec_file` | path | yes | Spec file to validate |
 
-| | Name | Description |
-|---|---|---|
-| **Arg** | `spec_file` | Spec file to validate (`.yaml` or `.scenario.yaml`) |
-| **Opt** | `--strict` | Treat warnings as errors (population specs only) |
+### Options
+
+| Flag | Type | Default | Description |
+|------|------|---------|-------------|
+| `--strict` | flag | false | Treat warnings as errors (population specs only) |
+
+Auto-detects file type: `*.scenario.yaml` runs scenario validation, other `*.yaml` runs population validation.
 
 ---
 
-## Estimate Simulation Cost
+## extropy config
 
-```bash
-extropy estimate austin/scenario.yaml
-extropy estimate austin/scenario.yaml --verbose
-extropy estimate austin/scenario.yaml --pivotal-model gpt-5 --routine-model gpt-5-mini
-```
-
-Predict the cost of a simulation run without making any API calls. Uses a simplified SIR-like propagation model to estimate how many agents reason per timestep, then calculates token counts and USD costs from the model pricing database.
-
-### What you get
-
-```
-COST ESTIMATE: austin_congestion_tax
-──────────────────────────────────────
-Population: 500 agents | Avg degree: 20
-Max timesteps: 50 | Effective: 38 (early stopping predicted)
-
-Models: gpt-5 (Pass 1) / gpt-5-mini (Pass 2)
-
-LLM CALLS
-  Pass 1 (reasoning):     1,847 calls
-  Pass 2 (classification): 1,847 calls
-
-TOKENS
-  Pass 1 input:    2.4M tokens
-  Pass 1 output:   184K tokens
-  Pass 2 input:    923K tokens
-  Pass 2 output:   92K tokens
-
-COST
-  Pass 1:  $4.12
-  Pass 2:  $0.38
-  Total:   $4.50
-```
-
-### The `--verbose` flag
-
-Shows a per-timestep breakdown: how many agents are newly exposed, how many reason, and cumulative cost at each timestep. Useful for understanding the cost curve and where early stopping kicks in.
-
-### Arguments & options
-
-| | Name | Description |
-|---|---|---|
-| **Arg** | `scenario_file` | Scenario spec YAML |
-| **Opt** | `--model` / `-m` | Model for both passes |
-| **Opt** | `--pivotal-model` | Model for Pass 1 reasoning |
-| **Opt** | `--routine-model` | Model for Pass 2 classification |
-| **Opt** | `--threshold` / `-t` | Multi-touch threshold (default: `3`) |
-| **Opt** | `--verbose` / `-v` | Show per-timestep breakdown |
-
----
-
-## Managing Configuration
+View and modify configuration.
 
 ```bash
 extropy config show
-extropy config set pipeline.provider claude
-extropy config set simulation.model gpt-5-mini
+extropy config set models.fast openai/gpt-5-mini
+extropy config set simulation.strong anthropic/claude-sonnet-4.5
 extropy config reset
 ```
 
-Extropy uses a **two-zone configuration** system. The **pipeline** zone controls which provider and models are used for population and scenario building (steps 1-6). The **simulation** zone controls agent reasoning (step 7). This lets you use a powerful model for building (e.g., Claude) and a fast/cheap model for simulation (e.g., GPT-5-mini).
+### Arguments
 
-Three providers are supported: `openai`, `claude`, and `azure_openai`.
-
-Config is stored at `~/.config/extropy/config.json` and managed exclusively through this command.
+| Name | Type | Description |
+|------|------|-------------|
+| `action` | string | Action: `show`, `set`, `reset` |
+| `key` | string | Config key (for `set`) |
+| `value` | string | Value to set (for `set`) |
 
 ### Available Keys
 
-| Key | Description | Default |
-|-----|-------------|---------|
-| `pipeline.provider` | LLM provider for steps 1-6 (`openai`, `claude`, or `azure_openai`) | `openai` |
-| `pipeline.model_simple` | Model for simple calls (sufficiency checks) | provider default |
-| `pipeline.model_reasoning` | Model for reasoning calls (attribute selection, hydration) | provider default |
-| `pipeline.model_research` | Model for research calls (web search + reasoning) | provider default |
-| `simulation.provider` | LLM provider for step 7 (`openai`, `claude`, or `azure_openai`) | `openai` |
-| `simulation.model` | Model for agent reasoning | provider default |
-| `simulation.pivotal_model` | Model for Pass 1 (role-play reasoning) | provider default |
-| `simulation.routine_model` | Model for Pass 2 (classification) | provider default |
-| `simulation.max_concurrent` | Max concurrent LLM calls during simulation | `50` |
-| `simulation.rate_tier` | Rate limit tier (1-4, higher = more generous limits) | `None` (Tier 1) |
-| `simulation.rpm_override` | Override requests per minute limit | `None` |
-| `simulation.tpm_override` | Override tokens per minute limit | `None` |
-| `simulation.api_format` | API format override (`responses` for OpenAI, `chat_completions` for Azure) | `""` (auto) |
+| Key | Description |
+|-----|-------------|
+| `models.fast` | Fast model for pipeline (`provider/model`) |
+| `models.strong` | Strong model for pipeline (`provider/model`) |
+| `simulation.fast` | Fast model for simulation Pass 2 |
+| `simulation.strong` | Strong model for simulation Pass 1 |
+| `simulation.max_concurrent` | Max concurrent LLM calls |
+| `simulation.rate_tier` | Rate limit tier (1-4) |
+| `simulation.rpm_override` | RPM override |
+| `simulation.tpm_override` | TPM override |
+| `show_cost` | Show cost tracking |
+| `providers.<name>.base_url` | Custom provider base URL |
+| `providers.<name>.api_key_env` | Custom provider API key env var |
 
-### Resolution Order
+---
 
-Config values are resolved in this order (first wins):
+## extropy export
 
-1. Programmatic (`ExtropyConfig` constructed in code / CLI flag overrides)
-2. Environment variable (e.g., `SIMULATION_MODEL`, `PIPELINE_PROVIDER`)
-3. Config file (`~/.config/extropy/config.json`)
-4. Hardcoded defaults
+Export data from the study database.
 
-### Environment Variables
+### extropy export agents
 
-API keys are always read from environment variables (never stored in config):
+```bash
+extropy export agents --study-db austin/study.db --to agents.jsonl
+```
 
-| Variable | Purpose |
-|----------|---------|
+| Flag | Type | Default | Description |
+|------|------|---------|-------------|
+| `--study-db` | path | required | Study database path |
+| `--population-id` | string | `default` | Population ID |
+| `--to` | path | required | Output file path |
+
+### extropy export edges
+
+```bash
+extropy export edges --study-db austin/study.db --to edges.jsonl
+```
+
+| Flag | Type | Default | Description |
+|------|------|---------|-------------|
+| `--study-db` | path | required | Study database path |
+| `--network-id` | string | `default` | Network ID |
+| `--to` | path | required | Output file path |
+
+### extropy export states
+
+```bash
+extropy export states --study-db austin/study.db --to states.jsonl
+```
+
+| Flag | Type | Default | Description |
+|------|------|---------|-------------|
+| `--study-db` | path | required | Study database path |
+| `--run-id` | string | latest | Simulation run ID |
+| `--to` | path | required | Output file path |
+
+---
+
+## extropy inspect
+
+Inspect study database entities.
+
+### extropy inspect summary
+
+```bash
+extropy inspect summary --study-db austin/study.db
+```
+
+| Flag | Type | Default | Description |
+|------|------|---------|-------------|
+| `--study-db` | path | required | Study database path |
+| `--population-id` | string | `default` | Population ID |
+| `--network-id` | string | `default` | Network ID |
+| `--run-id` | string | latest | Simulation run ID |
+
+### extropy inspect agent
+
+```bash
+extropy inspect agent --study-db austin/study.db --agent-id agent_042
+```
+
+| Flag | Type | Default | Description |
+|------|------|---------|-------------|
+| `--study-db` | path | required | Study database path |
+| `--agent-id` | string | required | Agent ID |
+| `--run-id` | string | latest | Simulation run ID |
+
+### extropy inspect network
+
+```bash
+extropy inspect network --study-db austin/study.db
+```
+
+| Flag | Type | Default | Description |
+|------|------|---------|-------------|
+| `--study-db` | path | required | Study database path |
+| `--network-id` | string | `default` | Network ID |
+| `--top` | int | 10 | Number of top-degree nodes to show |
+
+### extropy inspect network-status
+
+```bash
+extropy inspect network-status --study-db austin/study.db --network-run-id <id>
+```
+
+| Flag | Type | Default | Description |
+|------|------|---------|-------------|
+| `--study-db` | path | required | Study database path |
+| `--network-run-id` | string | required | Network generation run ID |
+
+---
+
+## extropy query
+
+Run read-only SQL queries against the study database.
+
+```bash
+extropy query sql --study-db austin/study.db --sql "SELECT * FROM agents LIMIT 10"
+```
+
+### extropy query sql
+
+| Flag | Type | Default | Description |
+|------|------|---------|-------------|
+| `--study-db` | path | required | Study database path |
+| `--sql` | string | required | Read-only SQL statement |
+| `--limit` | int | 1000 | Max rows to return |
+| `--format` | string | `table` | Output format: `table`, `json`, `jsonl` |
+
+Only `SELECT`, `WITH`, and `EXPLAIN` queries are allowed.
+
+---
+
+## extropy report
+
+Generate JSON reports from simulation data.
+
+### extropy report run
+
+```bash
+extropy report run --study-db austin/study.db -o report.json
+```
+
+| Flag | Short | Type | Default | Description |
+|------|-------|------|---------|-------------|
+| `--study-db` | | path | required | Study database path |
+| `--run-id` | | string | latest | Simulation run ID |
+| `--output` | `-o` | path | required | Output JSON file |
+
+### extropy report network
+
+```bash
+extropy report network --study-db austin/study.db -o network-report.json
+```
+
+| Flag | Short | Type | Default | Description |
+|------|-------|------|---------|-------------|
+| `--study-db` | | path | required | Study database path |
+| `--network-id` | | string | `default` | Network ID |
+| `--output` | `-o` | path | required | Output JSON file |
+
+---
+
+## extropy chat
+
+Interactive chat with simulated agents.
+
+### Interactive REPL
+
+```bash
+extropy chat --study-db austin/study.db --run-id <id> --agent-id agent_042
+```
+
+| Flag | Type | Default | Description |
+|------|------|---------|-------------|
+| `--study-db` | path | required | Study database path |
+| `--run-id` | string | required | Simulation run ID |
+| `--agent-id` | string | required | Agent ID |
+| `--session-id` | string | auto | Chat session ID |
+
+REPL commands: `/context`, `/timeline <n>`, `/history`, `/exit`
+
+### extropy chat ask
+
+Non-interactive API for automation.
+
+```bash
+extropy chat ask --study-db austin/study.db --run-id <id> --agent-id agent_042 \
+  --prompt "What changed your mind?" --json
+```
+
+| Flag | Type | Default | Description |
+|------|------|---------|-------------|
+| `--study-db` | path | required | Study database path |
+| `--run-id` | string | required | Simulation run ID |
+| `--agent-id` | string | required | Agent ID |
+| `--prompt` | string | required | Question to ask |
+| `--session-id` | string | auto | Chat session ID |
+| `--json` | flag | false | Output JSON response |
+
+---
+
+## extropy migrate
+
+Migrate legacy artifacts to the study database.
+
+### extropy migrate legacy
+
+```bash
+extropy migrate legacy --study-db austin/study.db \
+  --agents-file agents.json --network-file network.json
+```
+
+| Flag | Type | Default | Description |
+|------|------|---------|-------------|
+| `--study-db` | path | required | Target study database |
+| `--agents-file` | path | | Legacy agents JSON |
+| `--network-file` | path | | Legacy network JSON |
+| `--population-spec` | path | | Population spec for provenance |
+| `--population-id` | string | `default` | Population ID |
+| `--network-id` | string | `default` | Network ID |
+
+### extropy migrate scenario
+
+```bash
+extropy migrate scenario --input old-scenario.yaml --study-db austin/study.db -o new-scenario.yaml
+```
+
+| Flag | Short | Type | Default | Description |
+|------|-------|------|---------|-------------|
+| `--input` | | path | required | Legacy scenario YAML |
+| `--study-db` | | path | required | Study database path |
+| `--population-id` | | string | `default` | Population ID |
+| `--network-id` | | string | `default` | Network ID |
+| `--output` | `-o` | path | `{input}.db-first.yaml` | Output scenario path |
+
+---
+
+## Environment Variables
+
+### API Keys (required)
+
+| Variable | Description |
+|----------|-------------|
 | `OPENAI_API_KEY` | OpenAI API key |
 | `ANTHROPIC_API_KEY` | Anthropic (Claude) API key |
 | `AZURE_OPENAI_API_KEY` | Azure OpenAI API key |
-| `AZURE_OPENAI_ENDPOINT` | Azure OpenAI endpoint URL |
-| `AZURE_OPENAI_API_VERSION` | Azure API version (default: `2025-03-01-preview`) |
-| `AZURE_OPENAI_DEPLOYMENT` | Azure OpenAI deployment name |
+| `OPENROUTER_API_KEY` | OpenRouter API key |
+| `DEEPSEEK_API_KEY` | DeepSeek API key |
 
-Other environment variable overrides:
+### Azure Configuration
 
-| Variable | Purpose |
-|----------|---------|
-| `LLM_PROVIDER` | Legacy: override both pipeline and simulation provider |
-| `PIPELINE_PROVIDER` | Override pipeline provider |
-| `SIMULATION_PROVIDER` | Override simulation provider |
-| `MODEL_SIMPLE` | Override pipeline simple model |
-| `MODEL_REASONING` | Override pipeline reasoning model |
-| `MODEL_RESEARCH` | Override pipeline research model |
-| `SIMULATION_MODEL` | Override simulation model |
-| `SIMULATION_PIVOTAL_MODEL` | Override Pass 1 model |
-| `SIMULATION_ROUTINE_MODEL` | Override Pass 2 model |
-| `SIMULATION_RATE_TIER` | Override rate limit tier |
-| `SIMULATION_RPM_OVERRIDE` | Override RPM limit |
-| `SIMULATION_TPM_OVERRIDE` | Override TPM limit |
-| `SIMULATION_API_FORMAT` | Override API format |
-| `DB_PATH` | Override database path |
-| `DEFAULT_POPULATION_SIZE` | Override default population size |
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `AZURE_OPENAI_ENDPOINT` | | Azure OpenAI endpoint URL |
+| `AZURE_OPENAI_API_VERSION` | `2025-03-01-preview` | Azure API version |
+| `AZURE_OPENAI_DEPLOYMENT` | | Azure deployment name |
 
 ---
 
@@ -687,25 +593,34 @@ Other environment variable overrides:
 
 ```bash
 # Full pipeline
-extropy spec "500 Austin TX commuters who drive into downtown for work" -o austin/base.yaml
-extropy extend austin/base.yaml -s "Response to a $15/day downtown congestion tax" -o austin/population.yaml
-extropy sample austin/population.yaml -o austin/agents.json --seed 42
-extropy network austin/agents.json -o austin/network.json -p austin/population.yaml --seed 42
-extropy persona austin/population.yaml --agents austin/agents.json
-extropy scenario -p austin/population.yaml -a austin/agents.json -n austin/network.json -o austin/scenario.yaml
+STUDY=runs/my-study
+DB=$STUDY/study.db
+mkdir -p $STUDY
 
-# Estimate cost before running
-extropy estimate austin/scenario.yaml
+extropy spec "500 Austin TX commuters" -o $STUDY/base.yaml -y
+extropy extend $STUDY/base.yaml -s "Response to $15/day congestion tax" -o $STUDY/population.yaml -y
+extropy sample $STUDY/population.yaml --study-db $DB --seed 42
+extropy network --study-db $DB -p $STUDY/population.yaml --seed 42
+extropy persona $STUDY/population.yaml --study-db $DB -y
+extropy scenario -p $STUDY/population.yaml --study-db $DB -o $STUDY/scenario.yaml -y
+
+# Estimate cost
+extropy estimate $STUDY/scenario.yaml --study-db $DB
 
 # Run simulation
-extropy simulate austin/scenario.yaml -o austin/results/ --seed 42
+extropy simulate $STUDY/scenario.yaml --study-db $DB -o $STUDY/results --seed 42
 
 # View results
-extropy results austin/results/
-extropy results austin/results/ --segment income
-extropy results austin/results/ --timeline
+extropy results --study-db $DB
+extropy results --study-db $DB --segment income
+extropy results --study-db $DB --timeline
+extropy results --study-db $DB --agent agent_042
 
-# Validate at any point
-extropy validate austin/population.yaml
-extropy validate austin/scenario.yaml
+# Validate
+extropy validate $STUDY/population.yaml
+extropy validate $STUDY/scenario.yaml
+
+# Config
+extropy config show
+extropy config set simulation.strong anthropic/claude-sonnet-4.5
 ```
