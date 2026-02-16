@@ -24,6 +24,7 @@ from .parser import parse_scenario
 from .exposure import generate_seed_exposure
 from .interaction import determine_interaction_model
 from .outcomes import define_outcomes
+from .timeline import generate_timeline
 from ..utils.callbacks import StepProgressCallback
 from .validator import validate_scenario
 from ..storage import open_study_db
@@ -91,20 +92,18 @@ def create_scenario(
     network_id: str = "default",
     output_path: str | Path | None = None,
     on_progress: StepProgressCallback | None = None,
+    timeline_mode: str | None = None,
 ) -> tuple[ScenarioSpec, ValidationResult]:
     """
     Create a complete scenario spec from a description.
 
     Orchestrates the full pipeline:
-    1. Load population spec
-    2. Parse scenario description into Event
-    3. Generate seed exposure rules
-    4. Determine interaction model and spread config
-    5. Define outcomes
-    6. Generate simulation config
-    7. Assemble ScenarioSpec
-    8. Validate
-    9. Optionally save to YAML
+    1. Load population spec and parse event
+    2. Generate seed exposure rules
+    3. Determine interaction model and spread config
+    4. Define outcomes
+    5. Generate timeline and background context
+    6. Assemble ScenarioSpec and validate
 
     Args:
         description: Natural language scenario description
@@ -114,6 +113,8 @@ def create_scenario(
         network_id: Network ID in study DB
         output_path: Optional path to save scenario YAML
         on_progress: Optional callback(step, status) for progress updates
+        timeline_mode: Timeline mode override. None = auto-detect, "static" = single event,
+            "evolving" = multi-event timeline.
 
     Returns:
         Tuple of (ScenarioSpec, ValidationResult)
@@ -145,7 +146,7 @@ def create_scenario(
     # Load inputs
     # =========================================================================
 
-    progress("1/5", "Loading population spec...")
+    progress("1/6", "Loading population spec...")
 
     if not population_spec_path.exists():
         raise FileNotFoundError(f"Population spec not found: {population_spec_path}")
@@ -165,7 +166,7 @@ def create_scenario(
     # Step 1: Parse scenario description
     # =========================================================================
 
-    progress("1/5", "Parsing event definition...")
+    progress("1/6", "Parsing event definition...")
 
     event = parse_scenario(description, population_spec)
 
@@ -173,7 +174,7 @@ def create_scenario(
     # Step 2: Generate seed exposure
     # =========================================================================
 
-    progress("2/5", "Generating seed exposure rules...")
+    progress("2/6", "Generating seed exposure rules...")
 
     seed_exposure = generate_seed_exposure(
         event,
@@ -185,7 +186,7 @@ def create_scenario(
     # Step 3: Determine interaction model
     # =========================================================================
 
-    progress("3/5", "Determining interaction model...")
+    progress("3/6", "Determining interaction model...")
 
     interaction_config, spread_config = determine_interaction_model(
         event,
@@ -197,7 +198,7 @@ def create_scenario(
     # Step 4: Define outcomes
     # =========================================================================
 
-    progress("4/5", "Defining outcomes...")
+    progress("4/6", "Defining outcomes...")
 
     outcome_config = define_outcomes(
         event,
@@ -206,13 +207,26 @@ def create_scenario(
     )
 
     # =========================================================================
-    # Step 5: Assemble scenario spec
+    # Step 5: Generate timeline + background context
     # =========================================================================
 
-    progress("5/5", "Assembling scenario spec...")
+    progress("5/6", "Generating timeline...")
 
     # Generate simulation config based on population size
     simulation_config = _determine_simulation_config(population_spec.meta.size)
+
+    timeline_events, background_context = generate_timeline(
+        scenario_description=description,
+        base_event=event,
+        simulation_config=simulation_config,
+        timeline_mode=timeline_mode,
+    )
+
+    # =========================================================================
+    # Step 6: Assemble scenario spec
+    # =========================================================================
+
+    progress("6/6", "Assembling scenario spec...")
 
     # Generate scenario name
     scenario_name = _generate_scenario_name(description)
@@ -232,11 +246,13 @@ def create_scenario(
     spec = ScenarioSpec(
         meta=meta,
         event=event,
+        timeline=timeline_events if timeline_events else None,
         seed_exposure=seed_exposure,
         interaction=interaction_config,
         spread=spread_config,
         outcomes=outcome_config,
         simulation=simulation_config,
+        background_context=background_context,
     )
 
     # =========================================================================

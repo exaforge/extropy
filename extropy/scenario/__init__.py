@@ -29,6 +29,8 @@ from ..core.models import (
     # Event
     EventType,
     Event,
+    # Timeline
+    TimelineEvent,
     # Exposure
     ExposureChannel,
     ExposureRule,
@@ -58,6 +60,7 @@ from .parser import parse_scenario
 from .exposure import generate_seed_exposure
 from .interaction import determine_interaction_model
 from .outcomes import define_outcomes
+from .timeline import generate_timeline
 from .compiler import create_scenario, compile_scenario_from_files
 from .validator import validate_scenario, load_and_validate_scenario
 
@@ -66,6 +69,8 @@ __all__ = [
     # Models - Event
     "EventType",
     "Event",
+    # Models - Timeline
+    "TimelineEvent",
     # Models - Exposure
     "ExposureChannel",
     "ExposureRule",
@@ -94,6 +99,7 @@ __all__ = [
     "generate_seed_exposure",
     "determine_interaction_model",
     "define_outcomes",
+    "generate_timeline",
     "create_scenario",
     "compile_scenario_from_files",
     "validate_scenario",

@@ -233,6 +233,8 @@ def extend_command(
             attributes=bound_attrs,
             sampling_order=sampling_order,
             sources=sources,
+            household_config=household_config,
+            name_config=name_config,
         )
         merged_spec = base.merge(extension_spec)
 

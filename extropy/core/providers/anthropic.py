@@ -29,13 +29,27 @@ logger = logging.getLogger(__name__)
 def _clean_schema_for_tool(schema: dict) -> dict:
     """Clean a JSON schema for use as a tool input_schema.
 
-    Removes fields that aren't valid in tool input schemas
-    (like 'additionalProperties' in nested objects that Claude
-    doesn't support in tool definitions).
+    Anthropic structured outputs support additionalProperties: false but NOT
+    schema-valued additionalProperties (e.g. {"type": "number"}).
+
+    This function:
+    - Keeps additionalProperties: false (valid and useful)
+    - Strips additionalProperties when it's a dict/schema (not supported)
+    - Logs a warning when stripping schema-valued additionalProperties
     """
     cleaned = {}
     for key, value in schema.items():
         if key == "additionalProperties":
+            if value is False:
+                # Keep additionalProperties: false - it's valid
+                cleaned[key] = value
+            elif isinstance(value, dict):
+                # Schema-valued additionalProperties not supported - strip with warning
+                logger.warning(
+                    "Stripping schema-valued additionalProperties from tool schema "
+                    "(not supported by Anthropic structured outputs)"
+                )
+            # Skip other truthy values (True, etc.)
             continue
         if isinstance(value, dict):
             cleaned[key] = _clean_schema_for_tool(value)

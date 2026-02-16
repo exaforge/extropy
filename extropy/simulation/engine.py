@@ -49,7 +49,11 @@ from .reasoning import (
     batch_reason_agents_async,
     create_reasoning_context,
 )
-from .propagation import apply_seed_exposures, propagate_through_network
+from .propagation import (
+    apply_seed_exposures,
+    apply_timeline_exposures,
+    propagate_through_network,
+)
 from .stopping import evaluate_stopping_conditions
 from ..utils.callbacks import TimestepProgressCallback
 from ..utils.resource_governor import ResourceGovernor
@@ -295,6 +299,9 @@ class SimulationEngine:
         self.recent_summaries: list[TimestepSummary] = []
         self.total_reasoning_calls = 0
         self.total_exposures = 0
+
+        # Timeline state (active event for current timestep, if any)
+        self._active_timeline_event: Any = None
 
         # Token usage tracking
         self.pivotal_input_tokens = 0
@@ -569,7 +576,7 @@ class SimulationEngine:
         return summary
 
     def _apply_exposures(self, timestep: int) -> int:
-        """Apply seed and network exposures for this timestep.
+        """Apply seed, timeline, and network exposures for this timestep.
 
         Returns:
             Total new exposures this timestep.
@@ -583,6 +590,20 @@ class SimulationEngine:
         )
         logger.info(f"[TIMESTEP {timestep}] Seed exposures: {new_seed}")
 
+        # Apply timeline event exposures (if any timeline event fires this timestep)
+        new_timeline, active_event = apply_timeline_exposures(
+            timestep,
+            self.scenario,
+            self.agents,
+            self.state_manager,
+            self.rng,
+        )
+        if new_timeline > 0:
+            logger.info(f"[TIMESTEP {timestep}] Timeline exposures: {new_timeline}")
+
+        # Store active timeline event for prompt rendering
+        self._active_timeline_event = active_event
+
         new_network = propagate_through_network(
             timestep,
             self.scenario,
@@ -595,7 +616,7 @@ class SimulationEngine:
         )
         logger.info(f"[TIMESTEP {timestep}] Network exposures: {new_network}")
 
-        return new_seed + new_network
+        return new_seed + new_timeline + new_network
 
     def _reason_agents(self, timestep: int) -> tuple[int, int, int]:
         """Identify agents needing reasoning, run in chunks, commit per-chunk.
@@ -1141,25 +1162,49 @@ class SimulationEngine:
         ctx.local_mood_summary = local_mood_summary
         ctx.background_context = self.scenario.background_context
         ctx.agent_names = self._agent_names
+
+        # Populate Phase C fields
+        ctx.observable_peer_actions = self._compute_observable_adoption(agent_id)
+        ctx.conformity = agent.get("conformity")
+
+        # Build timeline recap (accumulated events up to current timestep)
+        if self.scenario.timeline:
+            recap = []
+            current_dev = None
+            unit = self.scenario.simulation.timestep_unit.value
+            for te in self.scenario.timeline:
+                if te.timestep < timestep:
+                    desc = te.description or te.event.content[:80]
+                    recap.append(f"{unit} {te.timestep + 1}: {desc}")
+                elif te.timestep == timestep:
+                    current_dev = te.event.content
+            ctx.timeline_recap = recap if recap else None
+            ctx.current_development = current_dev
+
         return ctx
 
     def _get_peer_opinions(self, agent_id: str) -> list[PeerOpinion]:
-        """Get opinions of connected peers.
+        """Get opinions of connected peers who have visibly shared.
 
-        In the redesigned simulation, peers share public_statement + sentiment,
-        NOT position labels. Position is output-only (Pass 2).
+        Only includes peers who have will_share=True — this models real-world
+        observability where agents can only perceive what peers have explicitly
+        shared or posted. Silent position changes are invisible.
 
         Args:
             agent_id: Agent ID
 
         Returns:
-            List of peer opinions
+            List of peer opinions (only from peers who shared)
         """
         neighbors = self.adjacency.get(agent_id, [])
         opinions = []
 
         for neighbor_id, edge_data in neighbors[:5]:  # Limit to 5 peers
             neighbor_state = self.state_manager.get_agent_state(neighbor_id)
+
+            # Only include peer if they actively shared (observable behavior)
+            if not neighbor_state.will_share:
+                continue
 
             peer_sentiment = (
                 neighbor_state.public_sentiment
@@ -1168,7 +1213,7 @@ class SimulationEngine:
             )
             peer_position = neighbor_state.public_position or neighbor_state.position
 
-            # Include peer if they have formed any public opinion.
+            # Include peer if they have formed any public opinion AND shared
             if peer_sentiment is not None or neighbor_state.public_statement:
                 peer_data = self.agent_map.get(neighbor_id, {})
                 opinions.append(
@@ -1176,14 +1221,39 @@ class SimulationEngine:
                         agent_id=neighbor_id,
                         peer_name=peer_data.get("first_name"),
                         relationship=edge_data.get("type", "contact"),
-                        position=peer_position,  # kept for backwards compat
+                        position=peer_position,
                         sentiment=peer_sentiment,
                         public_statement=neighbor_state.public_statement,
-                        credibility=0.85,  # Phase 2 will make this dynamic
+                        credibility=0.85,
                     )
                 )
 
         return opinions
+
+    def _compute_observable_adoption(self, agent_id: str) -> int | None:
+        """Count neighbors who have visibly acted (will_share=True).
+
+        Real-world model: agents can only perceive what peers have
+        explicitly shared or posted. Silent position changes are invisible.
+
+        Args:
+            agent_id: Agent ID
+
+        Returns:
+            Count of neighbors who shared, or None if no neighbors
+        """
+        neighbors = self.adjacency.get(agent_id, [])
+        if not neighbors:
+            return None
+
+        visible_actors = 0
+        for neighbor_id, _ in neighbors:
+            ns = self.state_manager.get_agent_state(neighbor_id)
+            # Only count peers who shared/posted — observable behavior
+            if ns.will_share:
+                visible_actors += 1
+
+        return visible_actors
 
     def _render_macro_summary(self, summary: TimestepSummary) -> str:
         """Convert a TimestepSummary into a human-readable vibes sentence.
@@ -1508,6 +1578,7 @@ def run_simulation(
     writer_queue_size: int = 256,
     db_write_batch_size: int = 100,
     resource_governor: ResourceGovernor | None = None,
+    merged_pass: bool = False,
 ) -> SimulationSummary:
     """Run a simulation from a scenario file.
 
@@ -1534,6 +1605,7 @@ def run_simulation(
         writer_queue_size: Maximum buffered chunks waiting for DB writer
         db_write_batch_size: Number of chunks applied per DB writer transaction
         resource_governor: Optional governor for runtime downshift guardrails
+        merged_pass: Use single merged reasoning pass instead of two-pass (experimental)
 
     Returns:
         SimulationSummary with results
@@ -1665,6 +1737,7 @@ def run_simulation(
         multi_touch_threshold=multi_touch_threshold,
         random_seed=random_seed,
         max_concurrent=entropy_config.simulation.max_concurrent,
+        merged_pass=merged_pass,
     )
     effective_strong = strong or entropy_config.resolve_sim_strong()
     effective_fast = fast or entropy_config.resolve_sim_fast()

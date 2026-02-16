@@ -176,6 +176,36 @@ def build_pass1_prompt(
     if context.macro_summary:
         prompt_parts.extend(["", context.macro_summary])
 
+    # --- Timeline recap (Phase C) ---
+    if context.timeline_recap:
+        prompt_parts.extend(["", "## What's Happened So Far", ""])
+        for entry in context.timeline_recap:
+            prompt_parts.append(f"- {entry}")
+
+    # --- Current development (Phase C) ---
+    if context.current_development:
+        prompt_parts.extend(
+            [
+                "",
+                f"## This {context.timestep_unit}'s Development",
+                "",
+                context.current_development,
+            ]
+        )
+
+    # --- Conformity self-awareness (Phase C) ---
+    if context.conformity is not None:
+        prompt_parts.append("")
+        if context.conformity >= 0.7:
+            prompt_parts.append(
+                "I tend to go along with what most people around me are doing."
+            )
+        elif context.conformity <= 0.3:
+            prompt_parts.append(
+                "I tend to form my own opinion regardless of what others think."
+            )
+        # Mid-range (0.3-0.7): no explicit phrasing (neutral)
+
     # --- Memory trace (full, uncapped, fidelity-gated) ---
     if context.memory_trace:
         prompt_parts.extend(["", "## What I've Been Thinking", ""])
@@ -376,18 +406,22 @@ def build_pass2_schema(outcomes: OutcomeConfig) -> dict[str, Any] | None:
     """Build JSON schema for Pass 2 (classification) from scenario outcomes.
 
     Only includes categorical, boolean, and float outcomes —
-    these are the ones that need classification.
+    open_ended outcomes are captured in Pass 1 free text and skipped here.
 
     Args:
         outcomes: Outcome configuration from scenario
 
     Returns:
-        JSON schema dictionary, or None if no classifiable outcomes
+        JSON schema dictionary, or None if all outcomes are open_ended (skip Pass 2)
     """
     properties: dict[str, Any] = {}
     required: list[str] = []
 
     for outcome in outcomes.suggested_outcomes:
+        # Skip open_ended outcomes — they're captured in Pass 1 free text
+        if outcome.type == OutcomeType.OPEN_ENDED:
+            continue
+
         outcome_prop: dict[str, Any] = {
             "description": outcome.description,
         }
@@ -401,8 +435,6 @@ def build_pass2_schema(outcomes: OutcomeConfig) -> dict[str, Any] | None:
             outcome_prop["type"] = "number"
             outcome_prop["minimum"] = outcome.range[0]
             outcome_prop["maximum"] = outcome.range[1]
-        elif outcome.type == OutcomeType.OPEN_ENDED:
-            outcome_prop["type"] = "string"
         else:
             outcome_prop["type"] = "string"
 
@@ -410,8 +442,99 @@ def build_pass2_schema(outcomes: OutcomeConfig) -> dict[str, Any] | None:
         if outcome.required:
             required.append(outcome.name)
 
+    # If no classifiable outcomes remain (all were open_ended), skip Pass 2
     if not properties:
         return None
+
+    return {
+        "type": "object",
+        "properties": properties,
+        "required": required,
+        "additionalProperties": False,
+    }
+
+
+# =============================================================================
+# Merged pass: Combined role-play + classification schema
+# =============================================================================
+
+
+def build_merged_schema(outcomes: OutcomeConfig) -> dict[str, Any]:
+    """Build JSON schema for merged single-pass reasoning.
+
+    Combines Pass 1 (role-play) fields with Pass 2 (classification) outcome fields
+    into a single schema. Used when merged_pass=True for cheaper/faster reasoning.
+
+    Args:
+        outcomes: Outcome configuration from scenario
+
+    Returns:
+        JSON schema dictionary with both reasoning and outcome fields
+    """
+    # Start with Pass 1 fields
+    properties: dict[str, Any] = {
+        "reasoning": {
+            "type": "string",
+            "description": "Your honest first reaction in 2-4 sentences. Be direct — state what you think, not both sides.",
+        },
+        "public_statement": {
+            "type": "string",
+            "description": "What would you bluntly tell a friend about this? One strong sentence.",
+        },
+        "reasoning_summary": {
+            "type": "string",
+            "description": "A single sentence capturing your core reaction (for your own memory).",
+        },
+        "sentiment": {
+            "type": "number",
+            "minimum": -1.0,
+            "maximum": 1.0,
+            "description": "Your emotional reaction: -1 = very negative, 0 = neutral, 1 = very positive.",
+        },
+        "conviction": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100,
+            "description": "How sure are you? 0 = genuinely no idea what to think, 25 = starting to lean one way, 50 = clear opinion, 75 = quite sure and hard to change your mind, 100 = absolutely certain.",
+        },
+        "will_share": {
+            "type": "boolean",
+            "description": "Will you actively discuss or share this with others?",
+        },
+    }
+    required = [
+        "reasoning",
+        "public_statement",
+        "reasoning_summary",
+        "sentiment",
+        "conviction",
+        "will_share",
+    ]
+
+    # Add Pass 2 outcome fields (skip open_ended)
+    for outcome in outcomes.suggested_outcomes:
+        if outcome.type == OutcomeType.OPEN_ENDED:
+            continue
+
+        outcome_prop: dict[str, Any] = {
+            "description": outcome.description,
+        }
+
+        if outcome.type == OutcomeType.CATEGORICAL and outcome.options:
+            outcome_prop["type"] = "string"
+            outcome_prop["enum"] = outcome.options
+        elif outcome.type == OutcomeType.BOOLEAN:
+            outcome_prop["type"] = "boolean"
+        elif outcome.type == OutcomeType.FLOAT and outcome.range:
+            outcome_prop["type"] = "number"
+            outcome_prop["minimum"] = outcome.range[0]
+            outcome_prop["maximum"] = outcome.range[1]
+        else:
+            outcome_prop["type"] = "string"
+
+        properties[outcome.name] = outcome_prop
+        if outcome.required:
+            required.append(outcome.name)
 
     return {
         "type": "object",
@@ -645,6 +768,131 @@ async def _reason_agent_two_pass_async(
 
 
 # =============================================================================
+# Merged pass reasoning (async)
+# =============================================================================
+
+
+async def _reason_agent_merged_async(
+    context: ReasoningContext,
+    scenario: ScenarioSpec,
+    config: SimulationRunConfig,
+    rate_limiter: Any = None,
+) -> ReasoningResponse | None:
+    """Single-pass async reasoning for an agent.
+
+    Combines role-play and classification into one LLM call with a merged schema.
+    Cheaper/faster than two-pass but may produce less nuanced reasoning.
+
+    Args:
+        context: Reasoning context
+        scenario: Scenario specification
+        config: Simulation run configuration
+        rate_limiter: Optional DualRateLimiter for API pacing
+
+    Returns:
+        ReasoningResponse, or None if failed
+    """
+    prompt = build_pass1_prompt(context, scenario)
+    schema = build_merged_schema(scenario.outcomes)
+    position_outcome = _get_primary_position_outcome(scenario)
+
+    # Use main model for merged pass
+    model = config.strong or None
+
+    usage = TokenUsage()
+    for attempt in range(config.max_retries):
+        try:
+            if rate_limiter:
+                estimated_input = len(prompt) // 4
+                estimated_output = 400  # slightly larger for combined response
+                await rate_limiter.pivotal.acquire(
+                    estimated_input_tokens=estimated_input,
+                    estimated_output_tokens=estimated_output,
+                )
+
+            call_start = time.time()
+            response, usage = await asyncio.wait_for(
+                simple_call_async(
+                    prompt=prompt,
+                    response_schema=schema,
+                    schema_name="agent_reasoning",
+                    model=model,
+                ),
+                timeout=30.0,
+            )
+            call_elapsed = time.time() - call_start
+
+            logger.info(f"[MERGED] Agent {context.agent_id} - {call_elapsed:.2f}s")
+
+            if not response:
+                continue
+
+            break
+        except asyncio.TimeoutError:
+            logger.warning(
+                f"[MERGED] Agent {context.agent_id} - attempt {attempt + 1} timed out after 30s"
+            )
+            if attempt == config.max_retries - 1:
+                return None
+        except Exception as e:
+            logger.warning(
+                f"[MERGED] Agent {context.agent_id} - attempt {attempt + 1} failed: {e}"
+            )
+            if attempt == config.max_retries - 1:
+                return None
+    else:
+        return None
+
+    # Extract fields
+    reasoning = response.get("reasoning", "")
+    public_statement = response.get("public_statement", "")
+    reasoning_summary = response.get("reasoning_summary", "")
+    sentiment = response.get("sentiment")
+    if sentiment is not None:
+        sentiment = max(-1.0, min(1.0, float(sentiment)))
+    conviction_score = response.get("conviction")
+    will_share = response.get("will_share", False)
+
+    conviction_float = score_to_conviction_float(conviction_score)
+
+    # Extract position from outcomes
+    position = None
+    if position_outcome and position_outcome in response:
+        position = response[position_outcome]
+
+    # Build outcomes dict (everything except the Pass 1 fields)
+    pass1_fields = {
+        "reasoning",
+        "public_statement",
+        "reasoning_summary",
+        "sentiment",
+        "conviction",
+        "will_share",
+    }
+    outcomes = {k: v for k, v in response.items() if k not in pass1_fields}
+
+    # Merge sentiment into outcomes for backwards compat
+    if sentiment is not None:
+        outcomes["sentiment"] = sentiment
+
+    return ReasoningResponse(
+        position=position,
+        sentiment=sentiment,
+        conviction=conviction_float,
+        public_statement=public_statement,
+        reasoning_summary=reasoning_summary,
+        action_intent=outcomes.get("action_intent"),
+        will_share=will_share,
+        reasoning=reasoning,
+        outcomes=outcomes,
+        pass1_input_tokens=usage.input_tokens,
+        pass1_output_tokens=usage.output_tokens,
+        pass2_input_tokens=0,
+        pass2_output_tokens=0,
+    )
+
+
+# =============================================================================
 # Synchronous reasoning (kept for backwards compatibility / testing)
 # =============================================================================
 
@@ -801,7 +1049,10 @@ async def batch_reason_agents_async(
     rate_limiter: Any = None,
     on_agent_done: Callable[[str, ReasoningResponse | None], None] | None = None,
 ) -> tuple[list[tuple[str, ReasoningResponse | None]], BatchTokenUsage]:
-    """Reason multiple agents concurrently with two-pass reasoning.
+    """Reason multiple agents concurrently.
+
+    Uses two-pass reasoning by default (Pass 1 role-play, Pass 2 classification).
+    When config.merged_pass=True, uses single-pass with combined schema.
 
     This is an async coroutine — call from within an existing event loop.
     The caller is responsible for provider cleanup when the loop ends.
@@ -809,7 +1060,7 @@ async def batch_reason_agents_async(
     Args:
         contexts: List of reasoning contexts
         scenario: Scenario specification
-        config: Simulation run configuration
+        config: Simulation run configuration (merged_pass controls mode)
         max_concurrency: Max concurrent API calls (None/0 = auto from rate limiter)
         rate_limiter: Optional DualRateLimiter instance for API pacing
         on_agent_done: Optional callback(agent_id, response) called per agent after reasoning
@@ -822,7 +1073,8 @@ async def batch_reason_agents_async(
         return [], BatchTokenUsage()
 
     total = len(contexts)
-    logger.info(f"[REASONING] Starting two-pass async reasoning for {total} agents")
+    mode = "merged" if config.merged_pass else "two-pass"
+    logger.info(f"[REASONING] Starting {mode} async reasoning for {total} agents")
 
     if rate_limiter:
         rpm_derived = rate_limiter.max_safe_concurrent
@@ -846,7 +1098,14 @@ async def batch_reason_agents_async(
         ctx: ReasoningContext,
     ) -> tuple[int, str, ReasoningResponse | None, float]:
         start = time.time()
-        result = await _reason_agent_two_pass_async(ctx, scenario, config, rate_limiter)
+        if config.merged_pass:
+            result = await _reason_agent_merged_async(
+                ctx, scenario, config, rate_limiter
+            )
+        else:
+            result = await _reason_agent_two_pass_async(
+                ctx, scenario, config, rate_limiter
+            )
         elapsed = time.time() - start
         completed[0] += 1
 

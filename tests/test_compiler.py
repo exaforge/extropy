@@ -123,8 +123,10 @@ class TestCreateScenario:
     @patch("extropy.scenario.compiler.generate_seed_exposure")
     @patch("extropy.scenario.compiler.determine_interaction_model")
     @patch("extropy.scenario.compiler.define_outcomes")
+    @patch("extropy.scenario.compiler.generate_timeline")
     def test_creates_valid_scenario(
         self,
+        mock_timeline,
         mock_outcomes,
         mock_interaction,
         mock_exposure,
@@ -193,6 +195,8 @@ class TestCreateScenario:
             ],
         )
 
+        mock_timeline.return_value = ([], None)  # No timeline events, no background
+
         spec, validation_result = create_scenario(
             description="Test product launch scenario",
             population_spec_path=pop_path,
@@ -210,8 +214,10 @@ class TestCreateScenario:
     @patch("extropy.scenario.compiler.generate_seed_exposure")
     @patch("extropy.scenario.compiler.determine_interaction_model")
     @patch("extropy.scenario.compiler.define_outcomes")
+    @patch("extropy.scenario.compiler.generate_timeline")
     def test_progress_callback_called(
         self,
+        mock_timeline,
         mock_outcomes,
         mock_interaction,
         mock_exposure,
@@ -271,6 +277,8 @@ class TestCreateScenario:
             ],
         )
 
+        mock_timeline.return_value = ([], None)  # No timeline events, no background
+
         progress_calls = []
 
         def on_progress(step, status):
@@ -285,8 +293,8 @@ class TestCreateScenario:
             on_progress=on_progress,
         )
 
-        # Should get 5 progress calls (steps 1/5 through 5/5)
-        # Note: step 1/5 is called twice (once for loading, once for parsing)
-        assert len(progress_calls) >= 5
+        # Should get 6 progress calls (steps 1/6 through 6/6)
+        # Note: step 1/6 is called twice (once for loading, once for parsing)
+        assert len(progress_calls) >= 6
         steps = [call[0] for call in progress_calls]
-        assert "5/5" in steps
+        assert "6/6" in steps

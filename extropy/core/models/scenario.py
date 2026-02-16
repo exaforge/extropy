@@ -114,6 +114,26 @@ class SeedExposure(BaseModel):
     )
 
 
+class TimelineEvent(BaseModel):
+    """A development in the scenario timeline.
+
+    Timeline events represent how a scenario evolves over time. For evolving
+    scenarios (crises, campaigns), multiple events occur at different timesteps.
+    Static scenarios (policy announcements) have no timeline events.
+    """
+
+    timestep: int = Field(ge=0, description="When this development occurs")
+    event: Event = Field(description="The event content at this timestep")
+    exposure_rules: list[ExposureRule] | None = Field(
+        default=None,
+        description="Custom exposure rules; if None, reuses seed_exposure.rules with updated content",
+    )
+    description: str | None = Field(
+        default=None,
+        description="Human-readable context for this development",
+    )
+
+
 # =============================================================================
 # Interaction Model
 # =============================================================================
@@ -285,6 +305,10 @@ class ScenarioSpec(BaseModel):
 
     meta: ScenarioMeta
     event: Event
+    timeline: list[TimelineEvent] | None = Field(
+        default=None,
+        description="Subsequent developments; None or empty = static scenario",
+    )
     seed_exposure: SeedExposure
     interaction: InteractionConfig
     spread: SpreadConfig

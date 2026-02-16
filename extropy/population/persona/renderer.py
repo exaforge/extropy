@@ -297,6 +297,180 @@ def render_intro(agent: dict[str, Any], config: PersonaConfig) -> str:
         return f"## Who I Am\n\n[Error rendering intro: {e}]"
 
 
+# =============================================================================
+# Household Section Rendering
+# =============================================================================
+
+# Templates for partner phrases, keyed by (has_kids, partner_gender)
+_PARTNER_TEMPLATES = [
+    "My {title} {name} is {age}.",
+    "{name} and I have been together for a while now — {pronoun}'s {age}.",
+    "I live with {name} ({age}), my {title}.",
+]
+
+# Templates for kids, keyed by count
+_KIDS_TEMPLATES_SINGLE = [
+    "Our {relationship} {name} is {age}{school_phrase}.",
+    "We have a {relationship}, {name}, who's {age}{school_phrase}.",
+]
+
+_KIDS_TEMPLATES_MULTI = [
+    "We have {count} kids: {kid_list}.",
+    "Our children are {kid_list}.",
+]
+
+# Templates for elderly dependents
+_ELDERLY_TEMPLATES = [
+    "My {relationship} {name} ({age}) also lives with us.",
+    "{name}, my {relationship}, lives with us at {age}.",
+]
+
+# Single parent templates
+_SINGLE_PARENT_TEMPLATES = [
+    "It's just me and {kid_summary}.",
+    "I'm raising {kid_summary} on my own.",
+]
+
+
+def _format_age(age: int | str) -> str:
+    """Format age, handling babies specially."""
+    try:
+        age_int = int(age)
+        if age_int == 0:
+            return "less than a year old"
+        if age_int == 1:
+            return "1 year old"
+        return str(age_int)
+    except (ValueError, TypeError):
+        return str(age)
+
+
+def _format_kid(dep: dict[str, Any]) -> str:
+    """Format a single kid for listing."""
+    name = dep.get("name", "")
+    age = dep.get("age", "")
+    school = dep.get("school_status")
+
+    age_str = _format_age(age)
+
+    if school and school not in ("adult", "working_adult", "home"):
+        return f"{name} ({age_str}, {school.replace('_', ' ')})"
+    return f"{name} ({age_str})"
+
+
+def _get_school_phrase(dep: dict[str, Any]) -> str:
+    """Get school status phrase for a dependent."""
+    school = dep.get("school_status")
+    if not school or school in ("adult", "working_adult", "home"):
+        return ""
+    return f", in {school.replace('_', ' ')}"
+
+
+def render_household_section(agent: dict[str, Any], rng: Any = None) -> str:
+    """Render the household section with partner and dependents.
+
+    Args:
+        agent: Agent dict with optional partner_npc and dependents
+        rng: Optional random source for template variation (defaults to hash-based)
+
+    Returns:
+        Rendered household section, or empty string if no household context
+    """
+    partner = agent.get("partner_npc")
+    dependents = agent.get("dependents", [])
+    partner_id = agent.get("partner_id")  # If partner is also an agent
+
+    # Skip if no household context
+    if not partner and not dependents and not partner_id:
+        return ""
+
+    # Use agent ID for deterministic randomness
+    if rng is None:
+        import random
+
+        seed = hash(agent.get("_id", "")) % (2**31)
+        rng = random.Random(seed)
+
+    phrases = []
+
+    # Separate kids from elderly
+    kids = [d for d in dependents if d.get("relationship") in ("son", "daughter")]
+    elderly = [
+        d
+        for d in dependents
+        if d.get("relationship") in ("mother", "father", "grandmother", "grandfather")
+    ]
+
+    # Partner phrase
+    if partner:
+        name = partner.get("first_name", "my partner")
+        age = partner.get("age", "")
+        gender = partner.get("gender", "")
+
+        # Title based on gender
+        title = (
+            "husband"
+            if gender == "male"
+            else "wife"
+            if gender == "female"
+            else "partner"
+        )
+        pronoun = "he" if gender == "male" else "she" if gender == "female" else "they"
+
+        template = rng.choice(_PARTNER_TEMPLATES)
+        phrase = template.format(name=name, age=age, title=title, pronoun=pronoun)
+        phrases.append(phrase)
+    elif partner_id:
+        # Partner is an agent, just note we have one
+        phrases.append("I live with my partner.")
+
+    # Kids phrase
+    if kids:
+        is_single_parent = not partner and not partner_id
+
+        if len(kids) == 1:
+            kid = kids[0]
+            name = kid.get("name", "my child")
+            age = _format_age(kid.get("age", ""))
+            rel = kid.get("relationship", "child")
+            school_phrase = _get_school_phrase(kid)
+
+            if is_single_parent:
+                template = rng.choice(_SINGLE_PARENT_TEMPLATES)
+                phrase = template.format(kid_summary=f"my {rel} {name} ({age})")
+            else:
+                template = rng.choice(_KIDS_TEMPLATES_SINGLE)
+                phrase = template.format(
+                    name=name, age=age, relationship=rel, school_phrase=school_phrase
+                )
+            phrases.append(phrase)
+        else:
+            kid_list = ", ".join(_format_kid(k) for k in kids[:-1])
+            kid_list += f" and {_format_kid(kids[-1])}"
+
+            if is_single_parent:
+                template = rng.choice(_SINGLE_PARENT_TEMPLATES)
+                phrases.append(template.format(kid_summary=f"my {len(kids)} kids"))
+                phrases.append(f"That's {kid_list}.")
+            else:
+                template = rng.choice(_KIDS_TEMPLATES_MULTI)
+                phrases.append(template.format(count=len(kids), kid_list=kid_list))
+
+    # Elderly phrase
+    for dep in elderly:
+        name = dep.get("name", "")
+        age = dep.get("age", "")
+        rel = dep.get("relationship", "parent")
+
+        template = rng.choice(_ELDERLY_TEMPLATES)
+        phrases.append(template.format(name=name, age=age, relationship=rel))
+
+    if not phrases:
+        return ""
+
+    return "## My Household\n\n" + " ".join(phrases)
+
+
 def render_persona(
     agent: dict[str, Any],
     config: PersonaConfig,
@@ -320,6 +494,11 @@ def render_persona(
     intro = render_intro(agent, config)
     if intro:
         sections.append(intro)
+
+    # Render household section (partner, kids, elderly)
+    household = render_household_section(agent)
+    if household:
+        sections.append(household)
 
     decision_set = set(decision_relevant_attributes or [])
 

@@ -672,6 +672,7 @@ class TestBuildPass2Schema:
         assert "satisfaction" not in schema["required"]
 
     def test_open_ended_outcome(self):
+        # Open-ended outcomes are skipped in Pass 2 — they're captured in Pass 1 free text
         outcomes = OutcomeConfig(
             suggested_outcomes=[
                 OutcomeDefinition(
@@ -683,7 +684,8 @@ class TestBuildPass2Schema:
             ]
         )
         schema = build_pass2_schema(outcomes)
-        assert schema["properties"]["feedback"]["type"] == "string"
+        # Schema should be None when all outcomes are open_ended (skip Pass 2 entirely)
+        assert schema is None
 
     def test_multiple_outcomes(self):
         outcomes = OutcomeConfig(
