@@ -5,12 +5,17 @@ a HouseholdConfig instance (populated by LLM research at spec time,
 with US Census defaults as the safety net).
 """
 
+from __future__ import annotations
+
 import math
 import random
-from typing import Any
+from typing import Any, TYPE_CHECKING
 
 from ...core.models.population import Dependent, HouseholdConfig, HouseholdType
 from ..names.generator import generate_name
+
+if TYPE_CHECKING:
+    from ...core.models.population import NameConfig
 
 
 # Attributes that are always shared within a household
@@ -143,6 +148,7 @@ def generate_dependents(
     rng: random.Random,
     config: HouseholdConfig,
     ethnicity: str | None = None,
+    name_config: NameConfig | None = None,
 ) -> list[Dependent]:
     """Generate NPC dependents for a household.
 
@@ -169,6 +175,7 @@ def generate_dependents(
             ethnicity=ethnicity,
             age=elderly_age,
             seed=rng.randint(0, 2**31),
+            name_config=name_config,
         )
         dependents.append(
             Dependent(
@@ -192,6 +199,7 @@ def generate_dependents(
             ethnicity=ethnicity,
             age=child_age,
             seed=rng.randint(0, 2**31),
+            name_config=name_config,
         )
         dependents.append(
             Dependent(

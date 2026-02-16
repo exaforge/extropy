@@ -407,6 +407,7 @@ def _sample_population_households(
             rng,
             config,
             ethnicity=adult1.get("race_ethnicity"),
+            name_config=spec.meta.name_config,
         )
 
         if has_kids and focus_mode == "all":
@@ -572,6 +573,7 @@ def _sample_single_agent(
         _update_stats(attr, value, stats, numeric_values)
 
     # Generate demographically-plausible name
+    name_config = spec.meta.name_config
     gender = agent.get("gender") or agent.get("sex")
     ethnicity = (
         agent.get("race_ethnicity") or agent.get("ethnicity") or agent.get("race")
@@ -583,6 +585,7 @@ def _sample_single_agent(
         ethnicity=str(ethnicity) if ethnicity is not None else None,
         birth_decade=birth_decade,
         seed=index,
+        name_config=name_config,
     )
     agent["first_name"] = first_name
     agent["last_name"] = last_name

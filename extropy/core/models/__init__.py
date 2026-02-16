@@ -39,6 +39,9 @@ from .population import (
     Dependent,
     LifeStageThreshold,
     HouseholdConfig,
+    # Name models
+    NameEntry,
+    NameConfig,
     STANDARD_PERSONALITY_ATTRIBUTES,
 )
 
@@ -150,6 +153,9 @@ __all__ = [
     "Dependent",
     "LifeStageThreshold",
     "HouseholdConfig",
+    # Population - Name models
+    "NameEntry",
+    "NameConfig",
     "STANDARD_PERSONALITY_ATTRIBUTES",
     # Scenario - Event
     "EventType",

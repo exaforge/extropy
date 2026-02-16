@@ -137,6 +137,27 @@ class HouseholdConfig(BaseModel):
     avg_household_size: float = 2.5
 
 
+# =============================================================================
+# Name Generation Models
+# =============================================================================
+
+
+class NameEntry(BaseModel):
+    name: str
+    weight: float = 1.0
+
+
+class NameConfig(BaseModel):
+    """Name frequency tables for culturally-appropriate name generation.
+
+    None on SpecMeta = use bundled US CSV data.
+    """
+
+    male_first_names: list[NameEntry] = Field(default_factory=list)
+    female_first_names: list[NameEntry] = Field(default_factory=list)
+    last_names: list[NameEntry] = Field(default_factory=list)
+
+
 # Standard personality attributes that spec builders should include.
 # `conformity` (float, 0-1, correlated with agreeableness) is consumed by
 # Phase C for threshold behavior in simulation.
@@ -412,6 +433,7 @@ class SpecMeta(BaseModel):
         description="Scenario description from extend command, used by scenario command",
     )
     household_config: HouseholdConfig = Field(default_factory=HouseholdConfig)
+    name_config: NameConfig | None = Field(default=None)
 
 
 # =============================================================================
@@ -560,6 +582,9 @@ class PopulationSpec(BaseModel):
         base_hh = self.meta.household_config
         merged_hh = ext_hh if ext_hh != HouseholdConfig() else base_hh
 
+        # Prefer extension's name_config if present, else keep base's
+        merged_nc = extension.meta.name_config or self.meta.name_config
+
         merged_meta = SpecMeta(
             description=f"{self.meta.description} + {extension.meta.description}",
             size=self.meta.size,
@@ -569,6 +594,7 @@ class PopulationSpec(BaseModel):
             version=self.meta.version,
             persona_template=None,
             household_config=merged_hh,
+            name_config=merged_nc,
         )
 
         return PopulationSpec(

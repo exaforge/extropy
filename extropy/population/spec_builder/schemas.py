@@ -326,6 +326,35 @@ def build_household_config_schema() -> dict:
     }
 
 
+def build_name_config_schema() -> dict:
+    """Build JSON schema for name config hydration."""
+    name_entry = {
+        "type": "object",
+        "properties": {
+            "name": {"type": "string"},
+            "weight": {"type": "number"},
+        },
+        "required": ["name", "weight"],
+        "additionalProperties": False,
+    }
+    return {
+        "type": "object",
+        "properties": {
+            "male_first_names": {"type": "array", "items": name_entry},
+            "female_first_names": {"type": "array", "items": name_entry},
+            "last_names": {"type": "array", "items": name_entry},
+            "sources": {"type": "array", "items": {"type": "string"}},
+        },
+        "required": [
+            "male_first_names",
+            "female_first_names",
+            "last_names",
+            "sources",
+        ],
+        "additionalProperties": False,
+    }
+
+
 def build_modifiers_schema() -> dict:
     """Build JSON schema for conditional modifiers hydration."""
     return {

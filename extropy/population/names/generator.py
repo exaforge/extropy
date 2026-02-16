@@ -3,11 +3,20 @@
 Uses bundled SSA first-name frequencies (by decade + gender) and Census
 surname frequencies (by ethnicity) to produce names that are statistically
 representative of US demographics. Seeded RNG ensures reproducibility.
+
+When a NameConfig is provided (from LLM research), culturally-appropriate
+names are drawn from those tables instead.
 """
+
+from __future__ import annotations
 
 import csv
 import random
 from pathlib import Path
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from ...core.models.population import NameConfig
 
 _DATA_DIR = Path(__file__).parent / "data"
 
@@ -123,6 +132,7 @@ def generate_name(
     age: int | float | None = None,
     country: str = "US",
     seed: int | None = None,
+    name_config: NameConfig | None = None,
 ) -> tuple[str, str]:
     """Generate a demographically-plausible (first_name, last_name) pair.
 
@@ -133,12 +143,21 @@ def generate_name(
         age: Agent's age (used to derive birth_decade if not provided)
         country: Country code — only "US" supported for now
         seed: RNG seed for reproducibility
+        name_config: LLM-researched name tables (None = use bundled CSVs)
 
     Returns:
         Tuple of (first_name, last_name)
     """
-    first_names, last_names = _ensure_loaded()
     rng = random.Random(seed)
+
+    # Use NameConfig if available and populated
+    if name_config is not None:
+        result = _generate_from_config(name_config, gender, rng)
+        if result is not None:
+            return result
+
+    # Fallback: bundled CSV path
+    first_names, last_names = _ensure_loaded()
 
     # Resolve birth decade
     if birth_decade is None and age is not None:
@@ -174,4 +193,26 @@ def generate_name(
 
     last_name = _weighted_choice(last_options, rng)
 
+    return first_name, last_name
+
+
+def _generate_from_config(
+    config: NameConfig, gender: str | None, rng: random.Random
+) -> tuple[str, str] | None:
+    """Try generating a name from NameConfig tables. Returns None if empty."""
+    norm_gender = _normalize_gender(gender)
+
+    if norm_gender == "male":
+        first_entries = config.male_first_names
+    else:
+        first_entries = config.female_first_names
+
+    if not first_entries or not config.last_names:
+        return None
+
+    first_options = [(e.name, e.weight) for e in first_entries]
+    last_options = [(e.name, e.weight) for e in config.last_names]
+
+    first_name = _weighted_choice(first_options, rng)
+    last_name = _weighted_choice(last_options, rng)
     return first_name, last_name

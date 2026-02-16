@@ -20,6 +20,7 @@ from ...core.models import (
     DiscoveredAttribute,
     HydratedAttribute,
     HouseholdConfig,
+    NameConfig,
 )
 from ...utils.callbacks import HydrationProgressCallback
 from .hydrators import (
@@ -28,6 +29,7 @@ from .hydrators import (
     hydrate_conditional_base,
     hydrate_conditional_modifiers,
     hydrate_household_config,
+    hydrate_name_config,
 )
 
 
@@ -46,7 +48,9 @@ def hydrate_attributes(
     model: str | None = None,
     reasoning_effort: str = "low",
     on_progress: ProgressCallback | None = None,
-) -> tuple[list[HydratedAttribute], list[str], list[str], HouseholdConfig]:
+) -> tuple[
+    list[HydratedAttribute], list[str], list[str], HouseholdConfig, NameConfig | None
+]:
     """
     Research distributions for discovered attributes using split hydration.
 
@@ -70,10 +74,10 @@ def hydrate_attributes(
         on_progress: Optional callback for progress updates (step, status, count)
 
     Returns:
-        Tuple of (list of HydratedAttribute, list of source URLs, list of validation warnings, HouseholdConfig)
+        Tuple of (list of HydratedAttribute, list of source URLs, list of validation warnings, HouseholdConfig, NameConfig | None)
     """
     if not attributes:
-        return [], [], [], HouseholdConfig()
+        return [], [], [], HouseholdConfig(), None
 
     all_sources = []
     all_warnings = []
@@ -231,6 +235,21 @@ def hydrate_attributes(
     all_sources.extend(hh_sources)
     report("2e", "Household config researched", len(hh_sources))
 
+    # Step 2f: Name config
+    report("2f", "Researching population-appropriate names...")
+    name_config, name_sources = hydrate_name_config(
+        population=population,
+        geography=geography,
+        model=model,
+        reasoning_effort=reasoning_effort,
+        on_retry=make_retry_callback("2f"),
+    )
+    all_sources.extend(name_sources)
+    if name_config is not None:
+        report("2f", "Name config researched", len(name_sources))
+    else:
+        report("2f", "Using bundled CSV names", 0)
+
     # Combine all hydrated attributes
     all_hydrated = independent_attrs + derived_attrs + conditional_attrs
     unique_sources = list(set(all_sources))
@@ -241,4 +260,4 @@ def hydrate_attributes(
     # when validate_spec() is called on the final PopulationSpec
     report("strategy", "Strategy consistency check passed", None)
 
-    return all_hydrated, unique_sources, all_warnings, household_config
+    return all_hydrated, unique_sources, all_warnings, household_config, name_config

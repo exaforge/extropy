@@ -268,13 +268,21 @@ class TestHouseholdSamplingHelpers:
 
     def test_generate_dependents_no_kids(self):
         rng = random.Random(42)
-        deps = generate_dependents(HouseholdType.COUPLE, 2, 2, 40, rng, _DEFAULT_CONFIG)
+        deps = generate_dependents(
+            HouseholdType.COUPLE, 2, 2, 40, rng, _DEFAULT_CONFIG, name_config=None
+        )
         assert len(deps) == 0
 
     def test_generate_dependents_with_kids(self):
         rng = random.Random(42)
         deps = generate_dependents(
-            HouseholdType.COUPLE_WITH_KIDS, 4, 2, 40, rng, _DEFAULT_CONFIG
+            HouseholdType.COUPLE_WITH_KIDS,
+            4,
+            2,
+            40,
+            rng,
+            _DEFAULT_CONFIG,
+            name_config=None,
         )
         assert len(deps) == 2
         for d in deps:
@@ -285,7 +293,13 @@ class TestHouseholdSamplingHelpers:
     def test_generate_dependents_multi_generational(self):
         rng = random.Random(42)
         deps = generate_dependents(
-            HouseholdType.MULTI_GENERATIONAL, 4, 2, 45, rng, _DEFAULT_CONFIG
+            HouseholdType.MULTI_GENERATIONAL,
+            4,
+            2,
+            45,
+            rng,
+            _DEFAULT_CONFIG,
+            name_config=None,
         )
         assert len(deps) == 2
         relationships = [d.relationship for d in deps]

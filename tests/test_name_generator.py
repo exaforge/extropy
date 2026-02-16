@@ -5,6 +5,7 @@ Functions under test in extropy/population/names/generator.py.
 
 from extropy.population.names import generate_name
 from extropy.population.names.generator import age_to_birth_decade
+from extropy.core.models.population import NameConfig, NameEntry
 
 
 class TestGenerateName:
@@ -127,6 +128,85 @@ class TestGenerateName:
         for alias in aliases:
             first, last = generate_name(ethnicity=alias, seed=0)
             assert isinstance(first, str)
+
+
+class TestNameConfig:
+    """Test generate_name() with NameConfig-based generation."""
+
+    def _make_config(self) -> NameConfig:
+        return NameConfig(
+            male_first_names=[
+                NameEntry(name="Haruto", weight=5.0),
+                NameEntry(name="Ren", weight=3.0),
+                NameEntry(name="Sota", weight=2.0),
+            ],
+            female_first_names=[
+                NameEntry(name="Yui", weight=5.0),
+                NameEntry(name="Hana", weight=3.0),
+                NameEntry(name="Aoi", weight=2.0),
+            ],
+            last_names=[
+                NameEntry(name="Tanaka", weight=5.0),
+                NameEntry(name="Suzuki", weight=4.0),
+                NameEntry(name="Sato", weight=3.0),
+            ],
+        )
+
+    def test_config_male_draws_from_config(self):
+        config = self._make_config()
+        names = set()
+        for s in range(20):
+            first, last = generate_name(gender="male", seed=s, name_config=config)
+            names.add(first)
+        expected = {"Haruto", "Ren", "Sota"}
+        assert names.issubset(expected), f"Got unexpected names: {names - expected}"
+        assert len(names) > 1
+
+    def test_config_female_draws_from_config(self):
+        config = self._make_config()
+        names = set()
+        for s in range(20):
+            first, last = generate_name(gender="female", seed=s, name_config=config)
+            names.add(first)
+        expected = {"Yui", "Hana", "Aoi"}
+        assert names.issubset(expected), f"Got unexpected names: {names - expected}"
+        assert len(names) > 1
+
+    def test_config_last_names_from_config(self):
+        config = self._make_config()
+        surnames = set()
+        for s in range(20):
+            _, last = generate_name(seed=s, name_config=config)
+            surnames.add(last)
+        expected = {"Tanaka", "Suzuki", "Sato"}
+        assert surnames.issubset(expected), (
+            f"Got unexpected surnames: {surnames - expected}"
+        )
+        assert len(surnames) > 1
+
+    def test_config_seeded_reproducibility(self):
+        config = self._make_config()
+        a1, b1 = generate_name(gender="male", seed=42, name_config=config)
+        a2, b2 = generate_name(gender="male", seed=42, name_config=config)
+        assert a1 == a2
+        assert b1 == b2
+
+    def test_empty_config_falls_back_to_csv(self):
+        """NameConfig with empty lists falls back to CSV names."""
+        empty_config = NameConfig()
+        first, last = generate_name(gender="male", seed=42, name_config=empty_config)
+        # Should still produce valid names from CSV fallback
+        assert isinstance(first, str) and len(first) > 0
+        assert isinstance(last, str) and len(last) > 0
+
+    def test_none_config_uses_csv(self):
+        """name_config=None is identical to no-config behavior."""
+        first1, last1 = generate_name(gender="female", ethnicity="white", seed=99)
+        first2, last2 = generate_name(
+            gender="female", ethnicity="white", seed=99, name_config=None
+        )
+        assert first1 == first2
+        assert last1 == last2
 
 
 class TestAgeToBirthDecade:

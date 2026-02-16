@@ -144,12 +144,21 @@ def spec_command(
         current_step[1] = status
 
     household_config = None
+    name_config = None
 
     def do_hydration():
-        nonlocal hydrated, sources, warnings, hydration_error, household_config
+        nonlocal \
+            hydrated, \
+            sources, \
+            warnings, \
+            hydration_error, \
+            household_config, \
+            name_config
         try:
-            hydrated, sources, warnings, household_config = hydrate_attributes(
-                attributes, description, geography, on_progress=on_progress
+            hydrated, sources, warnings, household_config, name_config = (
+                hydrate_attributes(
+                    attributes, description, geography, on_progress=on_progress
+                )
             )
         except Exception as e:
             hydration_error = e
@@ -215,6 +224,7 @@ def spec_command(
             sources=sources,
             agent_focus=agent_focus,
             household_config=household_config,
+            name_config=name_config,
         )
 
     console.print("[green]✓[/green] Spec assembled")
