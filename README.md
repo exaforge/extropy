@@ -64,12 +64,29 @@ extropy results --study-db $DB --segment income
 
 ## Features
 
-| Phase | Capability |
-|-------|------------|
-| **Population** | Any geography, real distributions with citations, household mode with correlated partners and dependents |
-| **Network** | Structural edges (partner/coworker/neighbor), similarity ties, small-world topology |
-| **Simulation** | Two-pass reasoning, agent conversations, memory traces, conviction-gated sharing, timeline events |
-| **Outcomes** | Categorical, boolean, float, or open-ended — discover categories post-hoc |
+| | |
+|:--|:--|
+| **Population** | |
+| Any geography | US, Japan, India, Brazil — define attributes with your distributions |
+| Real grounding | LLM researches actual demographics, cites sources |
+| Household mode | Correlated partners, NPC dependents, assortative mating |
+| Agent focus | Primary adult, couples, or full families as reasoning agents |
+| **Network** | |
+| Structural edges | Partner, household, coworker, neighbor, congregation, school parent |
+| Similarity edges | Acquaintances and online contacts from attribute similarity |
+| Small-world | Calibrated clustering coefficient and path lengths |
+| **Simulation** | |
+| Two-pass reasoning | Role-play first, classify second — eliminates central tendency bias |
+| Conversations | Agents talk to each other; both update state independently |
+| Memory | Full reasoning history with emotional trajectory |
+| Conviction | Affects sharing probability and flip resistance |
+| THINK vs SAY | Internal monologue separate from public statement |
+| Timeline events | New information injected at specified timesteps |
+| **Outcomes** | |
+| Categorical | Known decision space (buy/wait/skip) |
+| Boolean | Binary decisions (will share, will switch) |
+| Float | Intensity measures (sentiment, likelihood) |
+| Open-ended | Free text — discover categories post-hoc |
 
 ## Development
 
