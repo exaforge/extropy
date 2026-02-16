@@ -26,11 +26,21 @@ You control whether agents exist as isolated individuals or as family units.
 
 **Individual professionals responding to an industry disruption**: Set `household_mode: false`. Each agent is independent. Good for workplace scenarios, B2B decisions, or any context where family structure doesn't matter.
 
-**Households deciding whether to adopt rooftop solar**: Set `household_mode: true`. Now you get family units. A married couple shares a `household_id` and `last_name`. They have correlated attributes - similar education levels, aligned political views (with configurable assortative mating rates), compatible religious backgrounds. If they have kids, those kids exist as NPCs with names, ages, and school status.
+**Households deciding whether to adopt rooftop solar**: Set `household_mode: true`. Now you get family units. A married couple shares a `household_id` and `last_name`. They have correlated attributes - similar education levels, aligned political views (with configurable assortative mating rates), compatible religious backgrounds.
+
+**Kids as NPCs (default)**: Children exist as non-reasoning dependents. They have names, ages, genders, relationships ("son", "daughter"), and school status. They're part of the household data but don't make decisions or form opinions. This is the common case - you care about how parents reason, not toddlers.
+
+**Kids as full agents**: Set `dependents_as_agents: true`. Now children are sampled as real agents who reason, form opinions, and participate in the simulation. Useful for scenarios where teen opinions matter - school policy changes, youth-targeted products, family dynamics where kids influence parents.
+
+**Adults as NPCs**: You can mark specific household members as non-reasoning. A scenario about working mothers might have husbands as NPCs - present in the household data, named, with attributes, but not actively reasoning. This cuts simulation cost while preserving household context.
 
 **Single adults in urban apartments vs. families in suburban homes**: Household size is a distribution you control. You can weight toward single-person households for urban scenarios or larger families for suburban contexts. The network generator adapts - single adults don't get `school_parent` edges, families do.
 
-**Multi-generational households in collectivist cultures**: Configure your household size distribution to allow larger units. The system generates appropriate dependent relationships. You can add custom attributes like `household_decision_maker` to model hierarchical family dynamics.
+**Couples without children**: Household sampling handles childless couples naturally. Two adults, linked by `partner_id`, sharing a `household_id`. No dependents generated.
+
+**Single parents**: Configure your household composition distribution to include single-adult-with-children structures. One reasoning adult, NPC (or agent) children.
+
+**Roommates or non-family households**: The `household_id` groups agents who share a living situation. They don't have to be family. A group of college roommates can share a `household_id` with `household_role` values that reflect their arrangement, without partner or dependent relationships.
 
 ---
 
@@ -56,27 +66,40 @@ Agents don't exist in isolation. They're connected in networks that reflect real
 
 Some scenarios are a single shock. Others unfold over time.
 
-**Static: Company announces layoffs**: One event, one moment. Agents hear about it through various channels, form opinions, maybe share with their network. Simulation runs for a few timesteps as the information propagates and opinions stabilize.
+**Static: Netflix announces a price increase**: One event, one moment. Netflix raises prices by $3/month. Agents hear about it through news, social media, or email. They form opinions - cancel, keep, or downgrade. They share with their network. Over a few timesteps, information propagates, opinions stabilize, and you see the final distribution. The event itself doesn't change; what evolves is awareness and social influence.
 
-**Evolving: A product launch that rolls out in phases**:
-- Week 1: Announcement and early access signups
-- Week 3: Limited release in major cities
-- Week 5: Nationwide availability
-- Week 8: First price drop
+This is the right model when:
+- The event is a discrete announcement or decision
+- What matters is how the population responds and influences each other
+- There's no new information after the initial shock
 
-Each timestep, agents see what's happened so far. Their prompts include a recap: "Over the past few weeks, you've seen the product launch in your city and heard mixed reviews from early adopters." The timeline creates a narrative arc that shapes reasoning.
+**Evolving: Netflix password crackdown unfolds over months**:
+- Month 1: Netflix announces upcoming password-sharing restrictions
+- Month 2: Enforcement begins in select markets
+- Month 3: Full rollout, first reports of account lockouts
+- Month 4: Netflix offers discounted "extra member" add-on
+- Month 5: Competitor promotions target frustrated users
+
+Each timestep, agents see what's happened so far. Their prompts include a recap: "Over the past few months, Netflix first announced the crackdown, then started enforcing it. Last month they offered a cheaper add-on option." The timeline creates a narrative arc where agent reasoning evolves with new information.
+
+This is the right model when:
+- The situation develops with new facts over time
+- Agent responses to Week 1 should differ from Week 5
+- You want to model how opinions shift as circumstances change
 
 **Evolving: A crisis that develops and resolves**:
-- Day 1: Initial reports, uncertainty
-- Day 2: Official confirmation, safety guidance
-- Day 3: Peak concern, behavioral changes
-- Day 5: Situation stabilizing
-- Day 7: Restrictions lifted
-- Day 10: Post-incident analysis
+- Day 1: Initial reports of data breach, uncertainty about scope
+- Day 2: Company confirms breach, announces investigation
+- Day 3: Details emerge - 10 million accounts affected
+- Day 5: Company offers free credit monitoring
+- Day 7: CEO resigns
+- Day 10: New security measures announced
 
-Agents experience the crisis as it unfolds. Early timesteps have high uncertainty. Later timesteps have more information. Memory traces let agents reference their earlier reactions: "Last week I was panicking. Now that I know more, I'm calmer."
+Agents experience the crisis as it unfolds. Early timesteps have high uncertainty and speculation. Later timesteps have concrete information. Memory traces let agents reference their earlier reactions: "Last week I was panicking about my data. Now that they're offering monitoring, I'm less worried but still annoyed."
 
-**Automatic detection**: If you define a single event with no timeline, Extropy treats it as static. If you provide multiple events or explicit timeline entries, it switches to evolving mode. You can also force the mode with `timeline_mode: static` or `timeline_mode: evolving`.
+**Automatic detection**: If you define a single event with no timeline, Extropy treats it as static. If you provide multiple events or explicit timeline entries, it switches to evolving mode. You can override with `timeline_mode: static` or `timeline_mode: evolving`.
+
+**Timestep units are configurable**: Days, weeks, months - whatever fits your scenario. A crisis might unfold over days. A policy change might play out over months. A generational shift might span years.
 
 ---
 
