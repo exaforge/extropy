@@ -24,6 +24,19 @@ def get_json_mode() -> bool:
     return _json_mode
 
 
+def is_agent_mode() -> bool:
+    """Check if CLI is in agent mode (from config).
+
+    Agent mode means:
+    - JSON output instead of rich terminal formatting
+    - Exit codes for structured error handling
+    - No interactive prompts (clarifications return exit code 2)
+    """
+    from ..config import get_config
+
+    return get_config().cli.mode == "agent"
+
+
 def _version_callback(value: bool) -> None:
     if value:
         from .. import __version__

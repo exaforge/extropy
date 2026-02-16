@@ -1,5 +1,6 @@
 """Spec command for generating population specs from descriptions."""
 
+import json
 import time
 from pathlib import Path
 from threading import Event, Thread
@@ -10,6 +11,7 @@ from rich.spinner import Spinner
 
 from ...population.spec_builder import (
     check_sufficiency,
+    check_sufficiency_with_answers,
     select_attributes,
     hydrate_attributes,
     bind_constraints,
@@ -17,13 +19,13 @@ from ...population.spec_builder import (
 )
 from ...utils import topological_sort, CircularDependencyError
 from ...population.validator import validate_spec
-from ..app import app, console
+from ..app import app, console, is_agent_mode
 from ..display import (
     display_discovered_attributes,
     display_spec_summary,
     display_validation_result,
 )
-from ..utils import format_elapsed
+from ..utils import format_elapsed, Output, ExitCode
 
 
 @app.command("spec")
@@ -33,6 +35,16 @@ def spec_command(
     ),
     output: Path = typer.Option(..., "--output", "-o", help="Output YAML file path"),
     yes: bool = typer.Option(False, "--yes", "-y", help="Skip confirmation prompts"),
+    answers: str | None = typer.Option(
+        None,
+        "--answers",
+        help="JSON with pre-supplied clarification answers (for agent mode)",
+    ),
+    use_defaults: bool = typer.Option(
+        False,
+        "--use-defaults",
+        help="Use defaults for ambiguous values instead of prompting",
+    ),
 ):
     """
     Generate a population spec from a description.
@@ -45,31 +57,168 @@ def spec_command(
         extropy spec "1000 Indian smallholder farmers" -o farmers.yaml
     """
     start_time = time.time()
-    console.print()
+    agent_mode = is_agent_mode()
+    out = Output(console, json_mode=agent_mode)
+
+    if not agent_mode:
+        console.print()
+
+    # Parse answers if provided
+    parsed_answers: dict[str, str | int] = {}
+    if answers:
+        try:
+            parsed_answers = json.loads(answers)
+        except json.JSONDecodeError as e:
+            out.error(
+                f"Invalid JSON in --answers: {e}", exit_code=ExitCode.VALIDATION_ERROR
+            )
+            raise typer.Exit(out.finish())
 
     # Step 0: Context Sufficiency Check
     sufficiency_result = None
-    with console.status("[cyan]Checking context sufficiency...[/cyan]"):
+    if not agent_mode:
+        with console.status("[cyan]Checking context sufficiency...[/cyan]"):
+            try:
+                if parsed_answers:
+                    sufficiency_result = check_sufficiency_with_answers(
+                        description, parsed_answers
+                    )
+                else:
+                    sufficiency_result = check_sufficiency(description)
+            except Exception as e:
+                console.print(f"[red]✗[/red] Error checking sufficiency: {e}")
+                raise typer.Exit(1)
+    else:
         try:
-            sufficiency_result = check_sufficiency(description)
+            if parsed_answers:
+                sufficiency_result = check_sufficiency_with_answers(
+                    description, parsed_answers
+                )
+            else:
+                sufficiency_result = check_sufficiency(description)
         except Exception as e:
-            console.print(f"[red]✗[/red] Error checking sufficiency: {e}")
-            raise typer.Exit(1)
+            out.error(
+                f"Error checking sufficiency: {e}", exit_code=ExitCode.VALIDATION_ERROR
+            )
+            raise typer.Exit(out.finish())
 
+    # Handle insufficient context
     if not sufficiency_result.sufficient:
-        console.print("[red]✗[/red] Description needs clarification:")
-        for q in sufficiency_result.clarifications_needed:
-            console.print(f"  • {q}")
-        raise typer.Exit(1)
+        questions = sufficiency_result.questions
+
+        # Try using defaults if flag is set
+        if use_defaults and questions:
+            default_answers = {
+                q.id: q.default for q in questions if q.default is not None
+            }
+            if default_answers:
+                all_answers = {**parsed_answers, **default_answers}
+                try:
+                    sufficiency_result = check_sufficiency_with_answers(
+                        description, all_answers
+                    )
+                except Exception as e:
+                    if agent_mode:
+                        out.error(
+                            f"Error with defaults: {e}",
+                            exit_code=ExitCode.VALIDATION_ERROR,
+                        )
+                        raise typer.Exit(out.finish())
+                    else:
+                        console.print(f"[red]✗[/red] Error with defaults: {e}")
+                        raise typer.Exit(1)
+
+    # Still insufficient after defaults?
+    if not sufficiency_result.sufficient:
+        questions = sufficiency_result.questions
+
+        if agent_mode:
+            # Agent mode: return structured questions with exit code 2
+            resume_cmd = (
+                f"extropy spec \"{description}\" -o {output} --answers '{{...}}'"
+            )
+            out.needs_clarification(
+                questions=questions,
+                resume_command=resume_cmd,
+                partial_data={"size": sufficiency_result.size},
+            )
+            raise typer.Exit(out.finish())
+        else:
+            # Human mode: interactive prompts
+            console.print("[yellow]⚠[/yellow] Description needs clarification:")
+            collected_answers: dict[str, str | int] = dict(parsed_answers)
+
+            for q in questions:
+                console.print()
+                console.print(f"[bold]{q.question}[/bold]")
+
+                if q.type == "single_choice" and q.options:
+                    for i, opt in enumerate(q.options, 1):
+                        default_marker = (
+                            " [dim](default)[/dim]" if opt == q.default else ""
+                        )
+                        console.print(f"  [{i}] {opt}{default_marker}")
+
+                    default_idx = (
+                        q.options.index(q.default) + 1 if q.default in q.options else 1
+                    )
+                    choice = typer.prompt(
+                        f"Select [1-{len(q.options)}]",
+                        default=str(default_idx),
+                        show_default=False,
+                    )
+                    try:
+                        idx = int(choice) - 1
+                        if 0 <= idx < len(q.options):
+                            collected_answers[q.id] = q.options[idx]
+                        else:
+                            collected_answers[q.id] = q.options[0]
+                    except ValueError:
+                        # User typed text instead of number, use as-is
+                        collected_answers[q.id] = choice
+                elif q.type == "number":
+                    val = typer.prompt(
+                        "Enter number",
+                        default=str(q.default) if q.default else "",
+                    )
+                    try:
+                        collected_answers[q.id] = int(val)
+                    except ValueError:
+                        collected_answers[q.id] = val
+                else:  # text
+                    val = typer.prompt(
+                        "Enter value",
+                        default=str(q.default) if q.default else "",
+                    )
+                    collected_answers[q.id] = val
+
+            # Re-check with collected answers
+            console.print()
+            with console.status("[cyan]Re-checking context sufficiency...[/cyan]"):
+                try:
+                    sufficiency_result = check_sufficiency_with_answers(
+                        description, collected_answers
+                    )
+                except Exception as e:
+                    console.print(f"[red]✗[/red] Error: {e}")
+                    raise typer.Exit(1)
+
+            if not sufficiency_result.sufficient:
+                console.print("[red]✗[/red] Still insufficient after clarification:")
+                for q in sufficiency_result.clarifications_needed:
+                    console.print(f"  • {q}")
+                raise typer.Exit(1)
 
     size = sufficiency_result.size
     geography = sufficiency_result.geography
     agent_focus = sufficiency_result.agent_focus
     geo_str = f", {geography}" if geography else ""
     focus_str = f", focus: {agent_focus}" if agent_focus else ""
-    console.print(
-        f"[green]✓[/green] Context sufficient ({size} agents{geo_str}{focus_str})"
-    )
+
+    if not agent_mode:
+        console.print(
+            f"[green]✓[/green] Context sufficient ({size} agents{geo_str}{focus_str})"
+        )
 
     # Step 1: Attribute Selection
     console.print()
@@ -107,18 +256,19 @@ def spec_command(
         f"[green]✓[/green] Found {len(attributes)} attributes ({format_elapsed(selection_elapsed)})"
     )
 
-    # Human Checkpoint #1
-    display_discovered_attributes(attributes, geography)
+    # Human Checkpoint #1 - skip in agent mode (agents decide by running the command)
+    if not agent_mode:
+        display_discovered_attributes(attributes, geography)
 
-    if not yes:
-        choice = (
-            typer.prompt("[Y] Proceed  [n] Cancel", default="Y", show_default=False)
-            .strip()
-            .lower()
-        )
-        if choice == "n":
-            console.print("[dim]Cancelled.[/dim]")
-            raise typer.Exit(0)
+        if not yes:
+            choice = (
+                typer.prompt("[Y] Proceed  [n] Cancel", default="Y", show_default=False)
+                .strip()
+                .lower()
+            )
+            if choice == "n":
+                console.print("[dim]Cancelled.[/dim]")
+                raise typer.Exit(0)
 
     # Early cycle detection - check before expensive hydration
     try:
@@ -247,25 +397,40 @@ def spec_command(
     # Note: Persona template generation happens in extend, not base spec
     # This ensures the template includes scenario attributes
 
-    # Human Checkpoint #2
-    display_spec_summary(population_spec)
+    # Human Checkpoint #2 - skip in agent mode
+    if not agent_mode:
+        display_spec_summary(population_spec)
 
-    if not yes:
-        choice = (
-            typer.prompt("[Y] Save spec  [n] Cancel", default="Y", show_default=False)
-            .strip()
-            .lower()
-        )
-        if choice == "n":
-            console.print("[dim]Cancelled.[/dim]")
-            raise typer.Exit(0)
+        if not yes:
+            choice = (
+                typer.prompt(
+                    "[Y] Save spec  [n] Cancel", default="Y", show_default=False
+                )
+                .strip()
+                .lower()
+            )
+            if choice == "n":
+                console.print("[dim]Cancelled.[/dim]")
+                raise typer.Exit(0)
 
     # Save
     population_spec.to_yaml(output)
     elapsed = time.time() - start_time
 
-    console.print()
-    console.print("═" * 60)
-    console.print(f"[green]✓[/green] Spec saved to [bold]{output}[/bold]")
-    console.print(f"[dim]Total time: {format_elapsed(elapsed)}[/dim]")
-    console.print("═" * 60)
+    if agent_mode:
+        out.success(
+            "Spec saved",
+            output=str(output),
+            size=size,
+            geography=geography,
+            agent_focus=agent_focus,
+            attribute_count=len(population_spec.attributes),
+            elapsed_seconds=elapsed,
+        )
+        raise typer.Exit(out.finish())
+    else:
+        console.print()
+        console.print("═" * 60)
+        console.print(f"[green]✓[/green] Spec saved to [bold]{output}[/bold]")
+        console.print(f"[dim]Total time: {format_elapsed(elapsed)}[/dim]")
+        console.print("═" * 60)

@@ -20,6 +20,7 @@ VALID_KEYS = {
     "simulation.rate_tier",
     "simulation.rpm_override",
     "simulation.tpm_override",
+    "cli.mode",
     "show_cost",
 }
 
@@ -117,6 +118,11 @@ def _show_config():
             if provider_cfg.api_key_env:
                 console.print(f"    api_key_env = {provider_cfg.api_key_env}")
 
+    # CLI settings
+    console.print()
+    console.print("[bold cyan]CLI[/bold cyan]")
+    console.print(f"  mode = {config.cli.mode}")
+
     # Cost tracking
     if config.show_cost:
         console.print()
@@ -190,6 +196,8 @@ def _set_config(key: str, value: str):
             target = config.models
         elif zone == "simulation":
             target = config.simulation
+        elif zone == "cli":
+            target = config.cli
         else:
             console.print(f"[red]Unknown zone:[/red] {zone}")
             raise typer.Exit(1)

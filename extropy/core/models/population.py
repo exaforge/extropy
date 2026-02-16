@@ -715,6 +715,16 @@ class HydratedAttribute(BaseModel):
     constraints: list[Constraint] = Field(default_factory=list)
 
 
+class ClarificationQuestion(BaseModel):
+    """Structured clarification question for agent/human interaction."""
+
+    id: str = Field(description="snake_case identifier, e.g. 'geography'")
+    question: str = Field(description="Human-readable question")
+    type: Literal["single_choice", "text", "number"] = "single_choice"
+    options: list[str] | None = None
+    default: str | int | None = None
+
+
 class SufficiencyResult(BaseModel):
     """Result from context sufficiency check (Step 0)."""
 
@@ -726,3 +736,7 @@ class SufficiencyResult(BaseModel):
         description="Who this study is about, e.g. 'surgeons', 'high school students', 'retired couples', 'families'",
     )
     clarifications_needed: list[str] = Field(default_factory=list)
+    questions: list[ClarificationQuestion] = Field(
+        default_factory=list,
+        description="Structured clarification questions for agent mode",
+    )

@@ -31,21 +31,23 @@ class ExitCode:
     AI tools can check $? and know exactly what failed:
         0 = Success
         1 = Validation error (fix spec/input first)
-        2 = File not found
-        3 = Sampling error
-        4 = Network generation error
-        5 = Simulation error
-        6 = Scenario error
+        2 = Needs clarification (agent mode: answer questions and retry)
+        3 = File not found
+        4 = Sampling error
+        5 = Network generation error
+        6 = Simulation error
+        7 = Scenario error
         10 = User cancelled
     """
 
     SUCCESS = 0
     VALIDATION_ERROR = 1
-    FILE_NOT_FOUND = 2
-    SAMPLING_ERROR = 3
-    NETWORK_ERROR = 4
-    SIMULATION_ERROR = 5
-    SCENARIO_ERROR = 6
+    NEEDS_CLARIFICATION = 2
+    FILE_NOT_FOUND = 3
+    SAMPLING_ERROR = 4
+    NETWORK_ERROR = 5
+    SIMULATION_ERROR = 6
+    SCENARIO_ERROR = 7
     USER_CANCELLED = 10
 
 
@@ -194,6 +196,38 @@ class Output:
     def set_data(self, key: str, value: Any) -> None:
         """Set arbitrary data in JSON output."""
         self._data[key] = value
+
+    def needs_clarification(
+        self,
+        questions: list,
+        resume_command: str,
+        partial_data: dict | None = None,
+    ) -> None:
+        """Set needs_clarification status with structured questions.
+
+        Used in agent mode when the CLI needs more information to proceed.
+        Returns exit code 2 with JSON containing questions and a resume command.
+
+        Args:
+            questions: List of ClarificationQuestion objects
+            resume_command: Command template for retrying with --answers
+            partial_data: Any partial results to include
+        """
+        self._exit_code = ExitCode.NEEDS_CLARIFICATION
+        self._data["status"] = "needs_clarification"
+        self._data["questions"] = [
+            {
+                "id": q.id,
+                "question": q.question,
+                "type": q.type,
+                "options": q.options,
+                "default": q.default,
+            }
+            for q in questions
+        ]
+        self._data["resume_command"] = resume_command
+        if partial_data:
+            self._data["partial"] = partial_data
 
     def divider(self) -> None:
         """Output a visual divider (human mode only)."""

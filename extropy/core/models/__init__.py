@@ -33,6 +33,7 @@ from .population import (
     SpecMeta,
     PopulationSpec,
     # Pipeline types
+    ClarificationQuestion,
     SufficiencyResult,
     # Household models
     HouseholdType,
@@ -149,6 +150,7 @@ __all__ = [
     "SpecMeta",
     "PopulationSpec",
     # Population - Pipeline types
+    "ClarificationQuestion",
     "SufficiencyResult",
     # Population - Household models
     "HouseholdType",

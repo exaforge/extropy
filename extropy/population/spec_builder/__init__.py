@@ -24,7 +24,7 @@ FAIL-FAST VALIDATION:
     error feedback if syntax errors are detected. See validator/llm_response.py.
 """
 
-from .sufficiency import check_sufficiency
+from .sufficiency import check_sufficiency, check_sufficiency_with_answers
 from .selector import select_attributes
 from .hydrator import hydrate_attributes
 from .hydrators import (
@@ -48,6 +48,7 @@ from ..validator import (
 __all__ = [
     # Pipeline steps
     "check_sufficiency",
+    "check_sufficiency_with_answers",
     "select_attributes",
     "hydrate_attributes",
     "hydrate_independent",

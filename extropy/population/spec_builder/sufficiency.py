@@ -5,7 +5,7 @@ to proceed with attribute discovery and spec generation.
 """
 
 from ...core.llm import simple_call
-from ...core.models import SufficiencyResult
+from ...core.models import ClarificationQuestion, SufficiencyResult
 
 # JSON schema for sufficiency check response
 SUFFICIENCY_SCHEMA = {
@@ -34,7 +34,38 @@ SUFFICIENCY_SCHEMA = {
         "clarifications_needed": {
             "type": "array",
             "items": {"type": "string"},
-            "description": "List of clarifying questions if insufficient",
+            "description": "List of clarifying questions if insufficient (kept for backward compat)",
+        },
+        "questions": {
+            "type": "array",
+            "description": "Structured clarification questions with IDs, types, and options",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "description": "snake_case identifier, e.g. 'geography', 'population_size'",
+                    },
+                    "question": {
+                        "type": "string",
+                        "description": "Human-readable question text",
+                    },
+                    "type": {
+                        "type": "string",
+                        "enum": ["single_choice", "text", "number"],
+                        "description": "Question type for UI rendering",
+                    },
+                    "options": {
+                        "type": ["array", "null"],
+                        "items": {"type": "string"},
+                        "description": "Options for single_choice questions",
+                    },
+                    "default": {
+                        "description": "Default value if user doesn't provide one",
+                    },
+                },
+                "required": ["id", "question", "type"],
+            },
         },
     },
     "required": [
@@ -43,6 +74,7 @@ SUFFICIENCY_SCHEMA = {
         "geography",
         "agent_focus",
         "clarifications_needed",
+        "questions",
     ],
     "additionalProperties": False,
 }
@@ -101,7 +133,23 @@ A sufficient description should specify:
    - "retired couples planning travel" → "couples" (both partners matter)
 
 If the description is too vague to create meaningful attributes, mark as insufficient
-and provide specific clarifying questions.
+and provide BOTH:
+1. `clarifications_needed`: Simple list of question strings (for backward compat)
+2. `questions`: Structured questions with these fields:
+   - id: snake_case identifier (e.g., "geography", "agent_focus")
+   - question: Human-readable question text
+   - type: "single_choice" (with options), "text" (free text), or "number"
+   - options: Array of choices for single_choice (null for text/number)
+   - default: Reasonable default value if any (helps with --use-defaults flag)
+
+Example structured question:
+{{
+  "id": "geography",
+  "question": "What country or region should these surgeons be from?",
+  "type": "single_choice",
+  "options": ["United States", "Germany", "United Kingdom", "Other"],
+  "default": "United States"
+}}
 
 Be lenient - if you can reasonably infer a specific population, mark as sufficient."""
 
@@ -112,10 +160,51 @@ Be lenient - if you can reasonably infer a specific population, mark as sufficie
         model=model,
     )
 
+    # Parse structured questions from response
+    raw_questions = data.get("questions", [])
+    questions = [
+        ClarificationQuestion(
+            id=q.get("id", f"q{i}"),
+            question=q.get("question", ""),
+            type=q.get("type", "text"),
+            options=q.get("options"),
+            default=q.get("default"),
+        )
+        for i, q in enumerate(raw_questions)
+    ]
+
     return SufficiencyResult(
         sufficient=data.get("sufficient", False),
         size=data.get("size", default_size),
         geography=data.get("geography"),
         agent_focus=data.get("agent_focus"),
         clarifications_needed=data.get("clarifications_needed", []),
+        questions=questions,
     )
+
+
+def check_sufficiency_with_answers(
+    description: str,
+    answers: dict[str, str | int],
+    default_size: int = 1000,
+    model: str | None = None,
+) -> SufficiencyResult:
+    """Re-check sufficiency with pre-supplied answers.
+
+    Enriches the description with answer context and re-runs the sufficiency check.
+
+    Args:
+        description: Original natural language population description
+        answers: Dict mapping question IDs to answer values
+        default_size: Default size if not specified
+        model: Model to use
+
+    Returns:
+        SufficiencyResult with updated sufficient flag
+    """
+    # Build enriched description with answers
+    enriched = description
+    for key, value in answers.items():
+        enriched += f" | {key}: {value}"
+
+    return check_sufficiency(enriched, default_size, model)

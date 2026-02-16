@@ -19,7 +19,7 @@ import json
 import logging
 import os
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -109,6 +109,17 @@ class CustomProviderConfig(BaseModel):
     api_key_env: str = ""
 
 
+class CLIConfig(BaseModel):
+    """CLI behavior settings."""
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    mode: Literal["human", "agent"] = Field(
+        default="human",
+        description="human: interactive prompts, rich output. agent: JSON output, exit codes, no prompts",
+    )
+
+
 # =============================================================================
 # Main config class
 # =============================================================================
@@ -138,6 +149,7 @@ class ExtropyConfig(BaseModel):
     models: ModelsConfig = Field(default_factory=ModelsConfig)
     simulation: SimulationConfig = Field(default_factory=SimulationConfig)
     providers: dict[str, CustomProviderConfig] = Field(default_factory=dict)
+    cli: CLIConfig = Field(default_factory=CLIConfig)
     show_cost: bool = False
 
     @classmethod
@@ -195,6 +207,7 @@ class ExtropyConfig(BaseModel):
         data: dict[str, Any] = {
             "models": self.models.model_dump(),
             "simulation": self.simulation.model_dump(),
+            "cli": self.cli.model_dump(),
         }
         if self.providers:
             data["providers"] = {
@@ -210,6 +223,7 @@ class ExtropyConfig(BaseModel):
         result = {
             "models": self.models.model_dump(),
             "simulation": self.simulation.model_dump(),
+            "cli": self.cli.model_dump(),
         }
         if self.providers:
             result["providers"] = {
@@ -267,6 +281,10 @@ def _apply_dict(config: ExtropyConfig, data: dict) -> None:
                     base_url=provider_data.get("base_url", ""),
                     api_key_env=provider_data.get("api_key_env", ""),
                 )
+    if "cli" in data and isinstance(data["cli"], dict):
+        for k, v in data["cli"].items():
+            if hasattr(config.cli, k):
+                setattr(config.cli, k, v)
     if "show_cost" in data:
         config.show_cost = bool(data["show_cost"])
 
