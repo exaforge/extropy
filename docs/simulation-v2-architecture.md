@@ -1167,27 +1167,27 @@ Ship this alone. Every simulation immediately feels more human, and the accounta
 - Day phase templates (optional, adapts to timestep unit)
 - Social posts + public discourse aggregation
 
-### Phase E: Cognitive Architecture (~1.5 weeks)
+### Phase E: Cognitive Architecture — COMPLETE ✓
 
-**Files:** `reasoning.py`, `engine.py`, `persona.py`
+**Files:** `reasoning.py`, `engine.py`, `text_utils.py`
 
-- Emotional trajectory rendering (all tiers — deterministic string formatting)
-- Conviction self-awareness (all tiers — deterministic)
-- THINK vs SAY separation (high fidelity — schema change)
-- Repetition detection + deepening nudge (high fidelity — string overlap check)
+- ✅ Emotional trajectory rendering (all tiers — deterministic string formatting)
+- ✅ Conviction self-awareness (all tiers — deterministic)
+- ✅ THINK vs SAY separation (high fidelity — prompt-only, uses `reasoning` field)
+- ✅ Repetition detection + deepening nudge (trigram Jaccard >70% threshold)
 - ~~Episodic/semantic memory consolidation~~ — **Omitted**
 
-### Phase F: Fidelity Tiers + Results (~1.5 weeks)
+### Phase F: Fidelity Tiers + Results — COMPLETE ✓
 
-**Files:** `engine.py`, `reasoning.py`, CLI, `results/` module
+**Files:** `engine.py`, `reasoning.py`, `aggregation.py`, CLI
 
-- `--fidelity low|medium|high` flag on `SimulationRunConfig` (runtime choice, not scenario-intrinsic)
-- Fidelity-gated feature inclusion (conversations, cognitive features, memory depth)
-- Exploratory outcome export (structured JSON/CSV for downstream DS — no built-in clustering)
-- Conversation analysis (impact, themes, state changes)
-- Enhanced segment breakdowns
+- ✅ `--fidelity low|medium|high` flag on `SimulationRunConfig`
+- ✅ Fidelity-gated feature inclusion (conversations, memory depth, peer limits 5/5/10)
+- ✅ Exploratory outcome export (`elaborations.csv` with agent demographics + all outcomes)
+- ✅ Conversation analysis (`compute_most_impactful_conversations` — ranks by sentiment+conviction delta)
+- ✅ Social posts export (`social_posts.json`)
 
-### Phase G: Backtesting Harness (~2 weeks)
+### Phase G: Backtesting Harness — DEFERRED
 
 **Files:** `tests/`, new `extropy/validation/` module
 
@@ -1199,4 +1199,4 @@ Ship this alone. Every simulation immediately feels more human, and the accounta
 
 **Total estimated: ~13 weeks for full v2.**
 
-Phase A alone (~1.5 weeks) is a massive improvement with zero risk — named agents, temporal awareness, full memory, intent accountability, and macro feedback. Each subsequent phase is independently shippable and testable.
+**Status: Phases A-F COMPLETE.** Phase G (backtesting) is deferred — requires curating ground-truth datasets for historical scenarios.

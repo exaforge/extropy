@@ -222,24 +222,6 @@ You don't program social behavior explicitly. It emerges from the mechanics.
 
 ---
 
-## What You Get Out
-
-After simulation runs, you have:
-
-**Position distributions**: What fraction of the population supports, opposes, or remains neutral? Segmented by any attribute - how do young people differ from old? Urban from rural? High-income from low-income?
-
-**Sentiment trajectories**: How did emotional response evolve over time? Did initial negativity soften? Did enthusiasm fade?
-
-**Conviction patterns**: Where are the true believers vs. the persuadable middle? How does certainty correlate with position?
-
-**Sharing behavior**: Who's talking about this? Which demographics amplify vs. stay silent?
-
-**Reasoning traces**: The actual first-person reasoning each agent produced. Qualitative insight into why people think what they think.
-
-**Network effects**: How did information flow? Which communities adopted early? Where did resistance cluster?
-
----
-
 ## Agent Conversations
 
 Agents can talk to each other. When reasoning, an agent can choose to initiate a conversation with someone in their network.
@@ -330,4 +312,28 @@ To make it concrete, here are scenarios that work right now with no additional d
 - Crisis scenarios that evolve over days/weeks with new developments
 - Any population, any country, any event, any outcome structure
 
-The core simulation engine is complete through Phase E - households, networks, timelines, conversations, social posts, and cognitive architecture. What remains is Phase F (fidelity-gated results export and conversation impact analysis).
+The core simulation engine is complete through Phase F - households, networks, timelines, conversations, social posts, cognitive architecture, fidelity tiers, and results export.
+
+---
+
+## What You Get Out
+
+After simulation runs, you have:
+
+**Position distributions**: What fraction of the population supports, opposes, or remains neutral? Segmented by any attribute - how do young people differ from old? Urban from rural? High-income from low-income?
+
+**Sentiment trajectories**: How did emotional response evolve over time? Did initial negativity soften? Did enthusiasm fade?
+
+**Conviction patterns**: Where are the true believers vs. the persuadable middle? How does certainty correlate with position?
+
+**Sharing behavior**: Who's talking about this? Which demographics amplify vs. stay silent?
+
+**Reasoning traces**: The actual first-person reasoning each agent produced. Qualitative insight into why people think what they think.
+
+**Network effects**: How did information flow? Which communities adopted early? Where did resistance cluster?
+
+**Conversation impact**: Which conversations changed minds most? Ranked by sentiment and conviction delta. See exactly what was said that moved people.
+
+**Elaborations export**: Flattened CSV with every agent's demographics, outcomes, and reasoning - ready for downstream analysis, clustering, or visualization.
+
+**Social posts timeline**: Every public statement made during the simulation, with agent name, position, and sentiment.
