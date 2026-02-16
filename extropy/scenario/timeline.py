@@ -114,49 +114,57 @@ def _build_timeline_prompt(
     ]
 
     if timeline_mode == "static":
-        parts.extend([
-            "This is a STATIC scenario. Generate only background_context.",
-            "Set scenario_type to 'static' and leave timeline_events empty.",
-        ])
+        parts.extend(
+            [
+                "This is a STATIC scenario. Generate only background_context.",
+                "Set scenario_type to 'static' and leave timeline_events empty.",
+            ]
+        )
     elif timeline_mode == "evolving":
-        parts.extend([
-            "This is an EVOLVING scenario. Generate 3-6 timeline events.",
-            "Set scenario_type to 'evolving'.",
-            "",
-            "Timeline event guidelines:",
-            "- Space events at meaningful intervals (not every timestep)",
-            "- Each event should escalate, complicate, or resolve the situation",
-            "- Include reactions, developments, or new information",
-            "- Vary sources (officials, media, social, leaked info)",
-        ])
+        parts.extend(
+            [
+                "This is an EVOLVING scenario. Generate 3-6 timeline events.",
+                "Set scenario_type to 'evolving'.",
+                "",
+                "Timeline event guidelines:",
+                "- Space events at meaningful intervals (not every timestep)",
+                "- Each event should escalate, complicate, or resolve the situation",
+                "- Include reactions, developments, or new information",
+                "- Vary sources (officials, media, social, leaked info)",
+            ]
+        )
     else:
-        parts.extend([
-            "Determine if this is a STATIC or EVOLVING scenario:",
-            "",
-            "STATIC scenarios (scenario_type='static'):",
-            "- One-time announcements (price changes, policy updates)",
-            "- Product launches with no expected developments",
-            "- Simple changes with immediate, stable reactions",
-            "",
-            "EVOLVING scenarios (scenario_type='evolving'):",
-            "- Crises that unfold over time (safety issues, scandals)",
-            "- Campaigns with multiple phases",
-            "- Situations where new information emerges",
-            "- Events that trigger reactions, counter-reactions",
-            "",
-            "For EVOLVING scenarios, generate 3-6 timeline events:",
-            "- Space events at meaningful intervals",
-            "- Each event should escalate, complicate, or resolve",
-            "- Vary sources appropriately",
-        ])
+        parts.extend(
+            [
+                "Determine if this is a STATIC or EVOLVING scenario:",
+                "",
+                "STATIC scenarios (scenario_type='static'):",
+                "- One-time announcements (price changes, policy updates)",
+                "- Product launches with no expected developments",
+                "- Simple changes with immediate, stable reactions",
+                "",
+                "EVOLVING scenarios (scenario_type='evolving'):",
+                "- Crises that unfold over time (safety issues, scandals)",
+                "- Campaigns with multiple phases",
+                "- Situations where new information emerges",
+                "- Events that trigger reactions, counter-reactions",
+                "",
+                "For EVOLVING scenarios, generate 3-6 timeline events:",
+                "- Space events at meaningful intervals",
+                "- Each event should escalate, complicate, or resolve",
+                "- Vary sources appropriately",
+            ]
+        )
 
-    parts.extend([
-        "",
-        "For ALL scenarios, generate background_context:",
-        "- 1-2 sentences of ambient framing",
-        "- Economic conditions, cultural moment, season if relevant",
-        "- This appears in every agent's reasoning prompt",
-    ])
+    parts.extend(
+        [
+            "",
+            "For ALL scenarios, generate background_context:",
+            "- 1-2 sentences of ambient framing",
+            "- Economic conditions, cultural moment, season if relevant",
+            "- This appears in every agent's reasoning prompt",
+        ]
+    )
 
     return "\n".join(parts)
 

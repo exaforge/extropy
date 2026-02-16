@@ -207,9 +207,9 @@ class TestAgentFocusPrimaryOnly:
         # Check that partner is NPC
         for agent in primaries_with_partners:
             assert "partner_npc" in agent, "Partner should be in partner_npc field"
-            assert (
-                agent.get("partner_id") is None
-            ), "partner_id should be None for NPC partners"
+            assert agent.get("partner_id") is None, (
+                "partner_id should be None for NPC partners"
+            )
 
             # Check NPC partner has expected fields
             npc = agent["partner_npc"]
@@ -228,18 +228,18 @@ class TestAgentFocusPrimaryOnly:
             a for a in agents if a.get("household_role") == "adult_secondary"
         ]
 
-        assert (
-            len(secondary_adults) == 0
-        ), "In primary_only mode, partners should be NPCs, not agents"
+        assert len(secondary_adults) == 0, (
+            "In primary_only mode, partners should be NPCs, not agents"
+        )
 
     def test_total_agent_count_matches(self):
         spec = _make_household_spec(size=100, agent_focus="surgeons")
         result = sample_population(spec, count=100, seed=42)
 
         # Should produce at most the requested count
-        assert (
-            len(result.agents) <= 100
-        ), "Agent count should not exceed requested count"
+        assert len(result.agents) <= 100, (
+            "Agent count should not exceed requested count"
+        )
 
     def test_npc_partner_has_correlated_demographics(self):
         spec = _make_household_spec(size=300, agent_focus="surgeons")
@@ -271,9 +271,9 @@ class TestAgentFocusPrimaryOnly:
         for agent in result.agents:
             npc = agent.get("partner_npc")
             if npc and agent.get("last_name"):
-                assert (
-                    npc.get("last_name") == agent["last_name"]
-                ), "NPC partner should share last name"
+                assert npc.get("last_name") == agent["last_name"], (
+                    "NPC partner should share last name"
+                )
 
 
 class TestAgentFocusCouples:
@@ -306,12 +306,12 @@ class TestAgentFocusCouples:
             assert pid in id_map, f"Partner {pid} should be a full agent"
 
             partner = id_map[pid]
-            assert (
-                partner.get("household_role") == "adult_secondary"
-            ), "Partner should be adult_secondary"
-            assert (
-                partner.get("partner_id") == agent["_id"]
-            ), "Partner should link back to primary"
+            assert partner.get("household_role") == "adult_secondary", (
+                "Partner should be adult_secondary"
+            )
+            assert partner.get("partner_id") == agent["_id"], (
+                "Partner should link back to primary"
+            )
 
     def test_no_npc_partners(self):
         spec = _make_household_spec(size=200, agent_focus="retired couples")
@@ -319,9 +319,9 @@ class TestAgentFocusCouples:
 
         # No agents should have partner_npc field
         agents_with_npc = [a for a in result.agents if "partner_npc" in a]
-        assert (
-            len(agents_with_npc) == 0
-        ), "In couples mode, partners should be full agents, not NPCs"
+        assert len(agents_with_npc) == 0, (
+            "In couples mode, partners should be full agents, not NPCs"
+        )
 
     def test_partners_share_household_id(self):
         spec = _make_household_spec(size=200, agent_focus="retired couples")
@@ -333,9 +333,9 @@ class TestAgentFocusCouples:
             if pid:
                 partner = id_map.get(pid)
                 assert partner is not None
-                assert (
-                    partner["household_id"] == agent["household_id"]
-                ), "Partners should share household_id"
+                assert partner["household_id"] == agent["household_id"], (
+                    "Partners should share household_id"
+                )
 
     def test_partners_share_household_scoped_attrs(self):
         spec = _make_household_spec(size=200, agent_focus="retired couples")
@@ -348,9 +348,9 @@ class TestAgentFocusCouples:
                 partner = id_map.get(pid)
                 assert partner is not None
                 # 'state' is household-scoped
-                assert (
-                    agent["state"] == partner["state"]
-                ), "Partners should share household-scoped attrs"
+                assert agent["state"] == partner["state"], (
+                    "Partners should share household-scoped attrs"
+                )
 
     def test_kids_are_npcs(self):
         spec = _make_household_spec(size=200, agent_focus="retired couples")
@@ -363,15 +363,13 @@ class TestAgentFocusCouples:
             if a.get("household_role", "").startswith("dependent_")
         ]
 
-        assert (
-            len(kids_as_agents) == 0
-        ), "In couples mode, kids should be NPCs, not agents"
+        assert len(kids_as_agents) == 0, (
+            "In couples mode, kids should be NPCs, not agents"
+        )
 
         # Check that some agents have dependents
         agents_with_kids = [a for a in result.agents if a.get("dependents")]
-        assert (
-            len(agents_with_kids) > 0
-        ), "Some households should have kids as NPCs"
+        assert len(agents_with_kids) > 0, "Some households should have kids as NPCs"
 
 
 class TestAgentFocusFamilies:
@@ -409,22 +407,19 @@ class TestAgentFocusFamilies:
         for kid in kid_agents:
             assert "_id" in kid, "Kid agent should have _id"
             assert "household_id" in kid, "Kid agent should have household_id"
-            assert (
-                "household_role" in kid
-            ), "Kid agent should have household_role"
-            assert kid["household_role"].startswith(
-                "dependent_"
-            ), "Kid role should start with dependent_"
-            assert (
-                "relationship_to_primary" in kid
-            ), "Kid should have relationship_to_primary"
+            assert "household_role" in kid, "Kid agent should have household_role"
+            assert kid["household_role"].startswith("dependent_"), (
+                "Kid role should start with dependent_"
+            )
+            assert "relationship_to_primary" in kid, (
+                "Kid should have relationship_to_primary"
+            )
             assert "age" in kid, "Kid should have age"
             assert "gender" in kid, "Kid should have gender"
 
     def test_kid_agents_inherit_household_attrs(self):
         spec = _make_household_spec(size=200, agent_focus="families")
         result = sample_population(spec, count=200, seed=42)
-        id_map = {a["_id"]: a for a in result.agents}
 
         kid_agents = [
             a
@@ -447,9 +442,9 @@ class TestAgentFocusFamilies:
 
             if parent:
                 # 'state' is household-scoped, should be inherited
-                assert (
-                    kid["state"] == parent["state"]
-                ), "Kid should inherit household-scoped attrs from parent"
+                assert kid["state"] == parent["state"], (
+                    "Kid should inherit household-scoped attrs from parent"
+                )
 
     def test_both_partners_still_agents(self):
         spec = _make_household_spec(size=200, agent_focus="families")
@@ -460,21 +455,20 @@ class TestAgentFocusFamilies:
             a for a in result.agents if a.get("household_role") == "adult_secondary"
         ]
 
-        assert (
-            len(secondary_adults) > 0
-        ), "In families mode, both partners should be agents"
+        assert len(secondary_adults) > 0, (
+            "In families mode, both partners should be agents"
+        )
 
     def test_overflow_kids_remain_npc(self):
         """If we hit the agent count limit, remaining kids should be NPCs."""
         spec = _make_household_spec(size=50, agent_focus="families")
         result = sample_population(spec, count=50, seed=42)
 
-        # Check if any primary has NPC dependents even in families mode
-        # (happens when agent count is reached)
-        agents_with_npc_deps = [a for a in result.agents if a.get("dependents")]
+        # Should not exceed requested count
+        assert len(result.agents) <= 50, "Should not exceed requested agent count"
 
-        # This is ok - overflow protection should keep some kids as NPCs
-        # if we hit the agent limit
+        # Some households may have NPC dependents if we hit the limit
+        # This is expected overflow protection behavior
 
 
 class TestAgentFocusDefault:
@@ -492,9 +486,9 @@ class TestAgentFocusDefault:
         ]
 
         # Should have some NPC partners
-        assert (
-            len(primaries_with_npc) > 0
-        ), "Default (None) should behave like primary_only"
+        assert len(primaries_with_npc) > 0, (
+            "Default (None) should behave like primary_only"
+        )
 
     def test_no_secondary_agents_by_default(self):
         spec = _make_household_spec(size=200, agent_focus=None)
@@ -504,9 +498,9 @@ class TestAgentFocusDefault:
             a for a in result.agents if a.get("household_role") == "adult_secondary"
         ]
 
-        assert (
-            len(secondary_adults) == 0
-        ), "Default should be primary_only (no partner agents)"
+        assert len(secondary_adults) == 0, (
+            "Default should be primary_only (no partner agents)"
+        )
 
 
 class TestAgentFocusMetadata:

@@ -184,20 +184,26 @@ def build_pass1_prompt(
 
     # --- Current development (Phase C) ---
     if context.current_development:
-        prompt_parts.extend([
-            "",
-            f"## This {context.timestep_unit}'s Development",
-            "",
-            context.current_development,
-        ])
+        prompt_parts.extend(
+            [
+                "",
+                f"## This {context.timestep_unit}'s Development",
+                "",
+                context.current_development,
+            ]
+        )
 
     # --- Conformity self-awareness (Phase C) ---
     if context.conformity is not None:
         prompt_parts.append("")
         if context.conformity >= 0.7:
-            prompt_parts.append("I tend to go along with what most people around me are doing.")
+            prompt_parts.append(
+                "I tend to go along with what most people around me are doing."
+            )
         elif context.conformity <= 0.3:
-            prompt_parts.append("I tend to form my own opinion regardless of what others think.")
+            prompt_parts.append(
+                "I tend to form my own opinion regardless of what others think."
+            )
         # Mid-range (0.3-0.7): no explicit phrasing (neutral)
 
     # --- Memory trace (full, uncapped, fidelity-gated) ---
@@ -1093,9 +1099,13 @@ async def batch_reason_agents_async(
     ) -> tuple[int, str, ReasoningResponse | None, float]:
         start = time.time()
         if config.merged_pass:
-            result = await _reason_agent_merged_async(ctx, scenario, config, rate_limiter)
+            result = await _reason_agent_merged_async(
+                ctx, scenario, config, rate_limiter
+            )
         else:
-            result = await _reason_agent_two_pass_async(ctx, scenario, config, rate_limiter)
+            result = await _reason_agent_two_pass_async(
+                ctx, scenario, config, rate_limiter
+            )
         elapsed = time.time() - start
         completed[0] += 1
 
