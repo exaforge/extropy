@@ -325,8 +325,7 @@ class TestConversationModels:
 class TestFidelityTurnCount:
     """Tests for fidelity-based turn count."""
 
-    @pytest.mark.asyncio
-    async def test_medium_fidelity_has_2_turns(self):
+    def test_medium_fidelity_has_2_turns(self):
         """Medium fidelity should have 2 turns (4 messages)."""
         # This tests the turn count logic without actually calling LLM
         config = SimulationRunConfig(
@@ -337,8 +336,7 @@ class TestFidelityTurnCount:
         assert config.fidelity == "medium"
         # In the actual execute_conversation_async, turns = 2 for medium
 
-    @pytest.mark.asyncio
-    async def test_high_fidelity_has_3_turns(self):
+    def test_high_fidelity_has_3_turns(self):
         """High fidelity should have 3 turns (6 messages)."""
         config = SimulationRunConfig(
             scenario_path="test.yaml",
