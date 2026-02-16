@@ -387,7 +387,12 @@ def _build_conversation_schema() -> dict[str, Any]:
                 "description": "How sure you are now: 0-100",
             },
         },
-        "required": ["response", "updated_sentiment", "updated_conviction"],
+        "required": [
+            "response",
+            "internal_reaction",
+            "updated_sentiment",
+            "updated_conviction",
+        ],
         "additionalProperties": False,
     }
 

@@ -25,9 +25,11 @@ SUFFICIENCY_SCHEMA = {
         },
         "agent_focus": {
             "type": ["string", "null"],
-            "description": "Who is this study about? The core entity being simulated. "
-            "E.g., 'surgeons', 'Netflix subscribers', 'high school students', "
-            "'retired couples', 'families'. null if unclear.",
+            "description": "Who should be simulated as active agents? This controls household sampling: "
+            "- 'families' or 'households' = everyone in household is simulated (use for communities, neighborhoods, social scenarios) "
+            "- 'couples' or 'partners' = both adults simulated, children are background NPCs "
+            "- specific roles like 'surgeons', 'subscribers' = one person per household, others are NPCs. "
+            "For community/neighborhood/social scenarios, prefer 'families'. null if unclear.",
         },
         "clarifications_needed": {
             "type": "array",
@@ -84,12 +86,19 @@ A sufficient description should specify:
    - Extract if mentioned (e.g., "German surgeons" → Germany)
    - Can be country, region, or city
 
-4. AGENT FOCUS - who is the study about?
-   - Extract the core entity: "500 German surgeons" → "surgeons"
-   - "1000 high school students in Texas" → "high school students"
-   - "200 retired couples" → "retired couples"
-   - "300 families in Ohio" → "families"
-   - This determines who becomes a simulated agent vs background context
+4. AGENT FOCUS - who should be simulated as active agents?
+   This controls how households are sampled:
+   - "families" or "households" → everyone in household gets simulated (both partners, older kids)
+     Use for: communities, neighborhoods, social dynamics, local issues
+   - "couples" or "partners" → both adults simulated, children are background NPCs
+     Use for: relationship studies, retirement planning, couple decisions
+   - Specific roles like "surgeons", "subscribers" → one person per household, partner/kids are NPCs
+     Use for: professional studies, product research, individual behavior
+
+   Examples:
+   - "community reacting to school policy" → "families" (both parents may have opinions)
+   - "500 German surgeons" → "surgeons" (study is about the surgeon, not their family)
+   - "retired couples planning travel" → "couples" (both partners matter)
 
 If the description is too vague to create meaningful attributes, mark as insufficient
 and provide specific clarifying questions.

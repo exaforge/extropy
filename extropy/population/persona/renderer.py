@@ -253,6 +253,32 @@ def render_persona_section(
     return "\n\n".join(lines)
 
 
+def extract_intro_attributes(intro_template: str) -> set[str]:
+    """Extract attribute names used in the intro template.
+
+    Args:
+        intro_template: Template string with {attribute} placeholders
+
+    Returns:
+        Set of attribute names found in template
+    """
+    # Match {attribute_name} patterns, excluding format specs like {value:.2f}
+    pattern = r"\{(\w+)(?::[^}]*)?\}"
+    matches = re.findall(pattern, intro_template)
+    # Filter out 'value' which is a concrete phrasing placeholder
+    return {m for m in matches if m != "value"}
+
+
+def _ensure_period(phrase: str) -> str:
+    """Ensure phrase ends with sentence-ending punctuation."""
+    phrase = phrase.strip()
+    if not phrase:
+        return phrase
+    if phrase[-1] not in ".!?":
+        return phrase + "."
+    return phrase
+
+
 def render_intro(agent: dict[str, Any], config: PersonaConfig) -> str:
     """Render the narrative intro section."""
     # Time-related attribute name patterns
@@ -500,7 +526,13 @@ def render_persona(
     if household:
         sections.append(household)
 
+    # Track attributes to exclude from group rendering
+    # 1. Attributes already rendered in intro_template
+    intro_attrs = extract_intro_attributes(config.intro_template)
+    # 2. Decision-relevant attributes (rendered in separate section)
     decision_set = set(decision_relevant_attributes or [])
+    # Combined exclusion set
+    exclude_set = intro_attrs | decision_set
 
     # Render decision-relevant attributes first if specified
     if decision_set:
@@ -509,46 +541,48 @@ def render_persona(
             value = agent.get(attr_name)
             phrase = render_attribute(attr_name, value, config)
             if phrase:
-                decision_phrases.append(phrase)
+                decision_phrases.append(_ensure_period(phrase))
         if decision_phrases:
             sections.append(
                 "## Most Relevant to This Decision\n\n" + " ".join(decision_phrases)
             )
 
-    # Render each group in order, excluding decision-relevant attrs already shown
+    # Render each group in order, excluding already-rendered attrs
     for group in config.groups:
-        if not decision_set:
-            section = render_persona_section(group.name, agent, config)
-        else:
-            # Filter out decision-relevant attributes from regular groups
-            remaining_attrs = [a for a in group.attributes if a not in decision_set]
-            if not remaining_attrs:
-                continue
-            # Render manually with filtered attributes
-            group_obj = config.get_group(group.name)
-            if not group_obj:
-                continue
-            lines = [f"## {group_obj.label}", ""]
-            phrases = []
-            for attr_name in remaining_attrs:
-                value = agent.get(attr_name)
-                phrase = render_attribute(attr_name, value, config)
-                if phrase:
-                    phrases.append(phrase)
-            if not phrases:
-                continue
-            current_para = []
-            paragraphs = []
-            for phrase in phrases:
-                current_para.append(phrase)
-                if len(current_para) >= 3 or phrase.endswith("."):
-                    if current_para:
-                        paragraphs.append(" ".join(current_para))
-                        current_para = []
-            if current_para:
+        # Filter out attributes already shown in intro or decision section
+        remaining_attrs = [a for a in group.attributes if a not in exclude_set]
+        if not remaining_attrs:
+            continue
+
+        # Render manually with filtered attributes
+        group_obj = config.get_group(group.name)
+        if not group_obj:
+            continue
+
+        lines = [f"## {group_obj.label}", ""]
+        phrases = []
+        for attr_name in remaining_attrs:
+            value = agent.get(attr_name)
+            phrase = render_attribute(attr_name, value, config)
+            if phrase:
+                phrases.append(_ensure_period(phrase))
+
+        if not phrases:
+            continue
+
+        # Group phrases into paragraphs (3 phrases per paragraph)
+        current_para = []
+        paragraphs = []
+        for phrase in phrases:
+            current_para.append(phrase)
+            if len(current_para) >= 3:
                 paragraphs.append(" ".join(current_para))
-            lines.extend(paragraphs)
-            section = "\n\n".join(lines)
+                current_para = []
+        if current_para:
+            paragraphs.append(" ".join(current_para))
+
+        lines.extend(paragraphs)
+        section = "\n\n".join(lines)
         if section:
             sections.append(section)
 

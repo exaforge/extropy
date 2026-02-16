@@ -460,7 +460,8 @@ def build_pass1_schema() -> dict[str, Any]:
                             "description": "What to discuss",
                         },
                     },
-                    "required": ["type", "who"],
+                    "required": ["type", "who", "topic"],
+                    "additionalProperties": False,
                 },
                 "description": "Actions to take (optional). Can talk to 0-2 people.",
                 "maxItems": 2,
@@ -473,6 +474,7 @@ def build_pass1_schema() -> dict[str, Any]:
             "sentiment",
             "conviction",
             "will_share",
+            "actions",
         ],
         "additionalProperties": False,
     }
@@ -635,7 +637,8 @@ def build_merged_schema(outcomes: OutcomeConfig) -> dict[str, Any]:
                         "description": "What to discuss",
                     },
                 },
-                "required": ["type", "who"],
+                "required": ["type", "who", "topic"],
+                "additionalProperties": False,
             },
             "description": "Actions to take (optional). Can talk to 0-2 people.",
             "maxItems": 2,
@@ -648,6 +651,7 @@ def build_merged_schema(outcomes: OutcomeConfig) -> dict[str, Any]:
         "sentiment",
         "conviction",
         "will_share",
+        "actions",
     ]
 
     # Add Pass 2 outcome fields (skip open_ended)
