@@ -267,6 +267,55 @@ def build_pass1_prompt(
                 trajectory = "fairly steady"
             prompt_parts.append(f"\nI've been feeling {trajectory} since this started.")
 
+    # --- Conviction self-awareness (Phase E) ---
+    if is_re_reasoning and len(context.memory_trace) >= 2:
+        convictions = [
+            m.conviction for m in context.memory_trace if m.conviction is not None
+        ]
+        if len(convictions) >= 2:
+            latest = convictions[-1]
+            trend = latest - convictions[0]
+
+            # Firmness label based on latest conviction
+            if latest >= 0.7:
+                firmness = "firm about this"
+            elif latest >= 0.5:
+                firmness = "moderately certain"
+            elif latest >= 0.3:
+                firmness = "leaning but uncertain"
+            else:
+                firmness = "quite uncertain"
+
+            # Trend suffix
+            if trend > 0.2:
+                trend_text = " and getting more certain"
+            elif trend < -0.2:
+                trend_text = " but my certainty has been slipping"
+            else:
+                trend_text = ""
+
+            prompt_parts.append(f"I've been {firmness}{trend_text} since this started.")
+
+    # --- Repetition detection (Phase E) ---
+    if is_re_reasoning and len(context.memory_trace) >= 2:
+        last_two = context.memory_trace[-2:]
+        prev_reasoning = last_two[0].raw_reasoning or ""
+        curr_reasoning = last_two[1].raw_reasoning or ""
+
+        if prev_reasoning and curr_reasoning:
+            from .text_utils import compute_trigram_jaccard
+
+            similarity = compute_trigram_jaccard(prev_reasoning, curr_reasoning)
+            if similarity > 0.7:
+                prompt_parts.extend(
+                    [
+                        "",
+                        "*You've been thinking the same things for a while now. "
+                        "Has anything actually changed? Are you starting to doubt yourself? "
+                        "Have you done anything about it, or just thought about it?*",
+                    ]
+                )
+
     # --- Intent accountability ---
     if is_re_reasoning and context.prior_action_intent:
         prompt_parts.extend(
@@ -306,8 +355,29 @@ def build_pass1_prompt(
             ]
         )
 
-    # --- Instructions ---
-    if is_re_reasoning:
+    # --- Instructions (with THINK vs SAY at high fidelity) ---
+    if fidelity == "high":
+        # Explicit THINK vs SAY separation (Phase E)
+        prompt_parts.extend(
+            [
+                "",
+                "## Your Honest Reaction",
+                "",
+                "There's often a gap between what you THINK and what you SAY.",
+                "",
+                "**Your internal monologue** — what you're actually thinking:",
+                "- Be raw and honest. Fears, doubts, contradictions, anger — whatever is true.",
+                "- This is just you, thinking to yourself.",
+                "",
+                "**Your public statement** — what you'd tell people:",
+                "- This might differ from your private thoughts.",
+                "- Consider who you're talking to and what image you want to project.",
+                "",
+                "Commit to both. Your reasoning should reflect the internal truth.",
+                "Your public_statement should reflect what you'd actually say out loud.",
+            ]
+        )
+    elif is_re_reasoning:
         prompt_parts.extend(
             [
                 "",
