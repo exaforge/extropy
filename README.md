@@ -64,38 +64,16 @@ extropy results --study-db $DB --segment income
 
 ## Features
 
-### Population
 | | |
 |---|---|
-| **Any geography** | US, Japan, India, Brazil — define attributes with your distributions |
-| **Household mode** | Family units with correlated partners, NPC dependents, assortative mating |
-| **Agent focus** | Primary adult, couples, or full families as reasoning agents |
-| **Real distributions** | LLM researches actual demographics with citations |
-
-### Social Network
-| | |
-|---|---|
-| **Structural edges** | Partner, household, coworker, neighbor, congregation, school parent |
-| **Similarity edges** | Acquaintances and online contacts based on attribute similarity |
-| **Edge-type influence** | Different relationships carry different weight per scenario |
-| **Small-world topology** | Calibrated clustering and path lengths |
-
-### Simulation
-| | |
-|---|---|
-| **Two-pass reasoning** | Role-play first, classify second — eliminates central tendency bias |
-| **Conversations** | Agents talk to each other; both update state independently |
-| **Memory & conviction** | Agents remember past reasoning; conviction affects sharing and flip resistance |
-| **THINK vs SAY** | Separate internal monologue from public statement (high fidelity) |
-| **Timeline events** | Inject new information at specified timesteps for evolving scenarios |
-
-### Outcomes
-| | |
-|---|---|
-| **Categorical** | Known decision space (buy/wait/skip, support/oppose/neutral) |
-| **Boolean** | Binary decisions (will share, will switch) |
-| **Float** | Intensity measures (sentiment, likelihood, trust level) |
-| **Open-ended** | Free text — discover categories post-hoc |
+| **Any geography** | US, Japan, India, Brazil — real distributions with citations |
+| **Households** | Correlated partners, NPC dependents, assortative mating |
+| **Social network** | Partner/coworker/neighbor edges, similarity-based ties, small-world topology |
+| **Two-pass reasoning** | Role-play first, classify second — no central tendency bias |
+| **Conversations** | Agents talk to each other; both update state |
+| **Memory & conviction** | Reasoning history, conviction-gated sharing, flip resistance |
+| **Timeline events** | Evolving scenarios with new information over time |
+| **Open-ended outcomes** | Free text responses — discover categories post-hoc |
 
 ## Development
 
