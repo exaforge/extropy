@@ -39,6 +39,7 @@ logger = logging.getLogger(__name__)
 # Keywords that suggest household context is relevant
 _HOUSEHOLD_KEYWORDS = frozenset(
     [
+        # Population keywords
         "family",
         "families",
         "couple",
@@ -57,26 +58,39 @@ _HOUSEHOLD_KEYWORDS = frozenset(
         "living together",
         "home owner",
         "homeowner",
+        # Scenario keywords that imply household context
+        "childcare",
+        "child care",
+        "parental",
+        "maternity",
+        "paternity",
+        "housing",
+        "mortgage",
+        "rent",
+        "school district",
+        "relocation",
+        "moving",
     ]
 )
 
 
 def _should_hydrate_household_config(
-    population: str,
+    description: str,
     attributes: list[DiscoveredAttribute],
 ) -> bool:
-    """Check if this population needs household config research.
+    """Check if this population/scenario needs household config research.
 
     Household config is expensive (agentic research with web search).
     Only hydrate it when:
     1. Any discovered attribute has scope="household", OR
-    2. Population description mentions household-related keywords
+    2. Description (population or scenario) mentions household-related keywords
 
-    For purely professional populations (physicians, office workers, voters),
-    we skip household research and use defaults if household sampling triggers.
+    At spec time, description is just the population ("2000 physicians").
+    At extend time, description is "population + scenario" so scenario
+    keywords like "childcare policy" will trigger household research.
 
     Args:
-        population: Population description
+        description: Population description OR "population + scenario" for extend
         attributes: Discovered attributes from selector
 
     Returns:
@@ -89,10 +103,10 @@ def _should_hydrate_household_config(
     if has_household_attrs:
         return True
 
-    # Check if population description implies household context
-    pop_lower = population.lower()
+    # Check if description implies household context
+    desc_lower = description.lower()
     for keyword in _HOUSEHOLD_KEYWORDS:
-        if keyword in pop_lower:
+        if keyword in desc_lower:
             return True
 
     return False
