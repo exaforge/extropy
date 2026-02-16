@@ -22,6 +22,7 @@ from ...core.models import (
     SamplingStats,
     SamplingResult,
     HouseholdConfig,
+    NameConfig,
 )
 from ...utils.callbacks import ItemProgressCallback
 from .distributions import sample_distribution, coerce_to_type
@@ -217,6 +218,7 @@ def _generate_npc_partner(
     categorical_options: dict[str, list[str]],
     rng: random.Random,
     config: HouseholdConfig,
+    name_config: NameConfig | None = None,
 ) -> dict[str, Any]:
     """Generate a lightweight NPC partner profile for context.
 
@@ -245,6 +247,18 @@ def _generate_npc_partner(
     for attr in household_attrs:
         if attr in primary:
             partner[attr] = primary[attr]
+
+    # Generate name for partner
+    partner_age = partner.get("age")
+    birth_decade = age_to_birth_decade(partner_age) if partner_age is not None else None
+    first_name, _ = generate_name(
+        gender=partner["gender"],
+        ethnicity=partner.get("race_ethnicity"),
+        birth_decade=birth_decade,
+        seed=rng.randint(0, 2**31),
+        name_config=name_config,
+    )
+    partner["first_name"] = first_name
 
     if primary.get("last_name"):
         partner["last_name"] = primary["last_name"]
@@ -391,7 +405,12 @@ def _sample_population_households(
             else:
                 # Partner is NPC context on the primary agent
                 npc_partner = _generate_npc_partner(
-                    adult1, household_attrs, categorical_options, rng, config
+                    adult1,
+                    household_attrs,
+                    categorical_options,
+                    rng,
+                    config,
+                    name_config=spec.meta.name_config,
                 )
                 adult1["partner_npc"] = npc_partner
                 adult1["partner_id"] = None
