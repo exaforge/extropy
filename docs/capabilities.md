@@ -28,19 +28,28 @@ You control whether agents exist as isolated individuals or as family units.
 
 **Households deciding whether to adopt rooftop solar**: Set `household_mode: true`. Now you get family units. A married couple shares a `household_id` and `last_name`. They have correlated attributes - similar education levels, aligned political views (with configurable assortative mating rates), compatible religious backgrounds.
 
-**Kids as NPCs (default)**: Children exist as non-reasoning dependents. They have names, ages, genders, relationships ("son", "daughter"), and school status. They're part of the household data but don't make decisions or form opinions. This is the common case - you care about how parents reason, not toddlers.
+The `agent_focus` field in your population spec controls who reasons vs. who exists as context:
 
-**Kids as full agents**: Set `dependents_as_agents: true`. Now children are sampled as real agents who reason, form opinions, and participate in the simulation. Useful for scenarios where teen opinions matter - school policy changes, youth-targeted products, family dynamics where kids influence parents.
+**Primary only (default)**: Only the primary adult in each household is a reasoning agent. Partners and children exist as NPC data attached to that agent - named, with attributes, but not making decisions. Use this when you care about one decision-maker per household (e.g., "the subscriber", "the homeowner").
 
-**Adults as NPCs**: You can mark specific household members as non-reasoning. A scenario about working mothers might have husbands as NPCs - present in the household data, named, with attributes, but not actively reasoning. This cuts simulation cost while preserving household context.
+**Couples**: Both adults in a household are reasoning agents. Children are NPCs. Partners influence each other through network edges (weight 1.0). Use this when both adults' opinions matter (e.g., couples deciding on a major purchase, spouses with different political views).
 
-**Single adults in urban apartments vs. families in suburban homes**: Household size is a distribution you control. You can weight toward single-person households for urban scenarios or larger families for suburban contexts. The network generator adapts - single adults don't get `school_parent` edges, families do.
+**All (families)**: Everyone in the household is a reasoning agent, including children old enough to have opinions. Use this when family dynamics matter (e.g., teens influencing parents on tech adoption, multi-generational disagreements).
 
-**Couples without children**: Household sampling handles childless couples naturally. Two adults, linked by `partner_id`, sharing a `household_id`. No dependents generated.
+The mechanism: set `agent_focus` in your population spec metadata. Values like "families", "households", or "everyone" trigger the "all" mode. Values like "couples", "partners", or "spouses" trigger couples mode. Everything else defaults to primary-only.
 
-**Single parents**: Configure your household composition distribution to include single-adult-with-children structures. One reasoning adult, NPC (or agent) children.
+**Household types are sampled by age bracket**:
+- Singles (one adult, no kids)
+- Couples (two adults, no kids)
+- Single parents (one adult with kids)
+- Couples with kids (two adults with kids)
+- Multi-generational (extended family)
 
-**Roommates or non-family households**: The `household_id` groups agents who share a living situation. They don't have to be family. A group of college roommates can share a `household_id` with `household_role` values that reflect their arrangement, without partner or dependent relationships.
+Each age bracket has configurable weights. Young adults skew toward singles and couples. Middle-aged adults skew toward families. Elderly skew toward couples and singles again.
+
+**Single adults**: Sampled naturally from the "single" household type. No partner, no dependents. Network edges come from coworkers, neighbors, congregation - not family.
+
+**Childless couples**: Sampled from the "couple" household type. Two adults linked by `partner_id`, sharing `household_id` and `last_name`. No dependents generated.
 
 ---
 
