@@ -277,6 +277,15 @@ def build_pass1_prompt(
             ]
         )
 
+    # --- Social feed from broader population (Phase D) ---
+    if context.social_feed:
+        prompt_parts.extend(["", "## What People Are Saying Online", ""])
+        for post in context.social_feed:
+            statement = post["statement"]
+            if len(statement) > 80:
+                statement = statement[:80] + "..."
+            prompt_parts.append(f'- {post["agent_name"]}: "{statement}"')
+
     # --- Available contacts for conversation (Phase D) ---
     if context.available_contacts:
         prompt_parts.extend(["", "## People I Could Talk To", ""])

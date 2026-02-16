@@ -336,6 +336,10 @@ class ReasoningContext(BaseModel):
         default_factory=list,
         description="People the agent can talk to (name, relationship, observable state)",
     )
+    social_feed: list[dict[str, Any]] = Field(
+        default_factory=list,
+        description="Recent public statements from the broader population (beyond direct network)",
+    )
 
 
 # =============================================================================

@@ -1449,6 +1449,9 @@ class SimulationEngine:
         if self.config.fidelity != "low":
             ctx.available_contacts = self._build_available_contacts(agent_id, agent)
 
+        # Build social feed from recent posts (beyond direct network)
+        ctx.social_feed = self._build_social_feed(agent_id, timestep)
+
         # Build timeline recap (accumulated events up to current timestep)
         if self.scenario.timeline:
             recap = []
@@ -1632,6 +1635,58 @@ class SimulationEngine:
             )
 
         return contacts
+
+    def _build_social_feed(self, agent_id: str, timestep: int) -> list[dict[str, Any]]:
+        """Build social feed from recent posts beyond agent's direct network.
+
+        The social feed represents public discourse the agent can perceive
+        from the broader population, like trending posts on social media.
+
+        Args:
+            agent_id: Agent ID
+            timestep: Current simulation timestep
+
+        Returns:
+            List of post dicts with agent_name, statement, position
+        """
+        if timestep == 0:
+            return []
+
+        # Get recent posts (not including current timestep)
+        recent_posts = self.study_db.get_recent_social_posts(
+            self.run_id,
+            current_timestep=timestep,
+            lookback=3,
+            limit=15,
+        )
+
+        if not recent_posts:
+            return []
+
+        # Get agent's direct neighbors to exclude
+        neighbors = self.adjacency.get(agent_id, [])
+        neighbor_ids = {n[0] for n in neighbors}
+        neighbor_ids.add(agent_id)  # Exclude self
+
+        # Filter to posts from non-neighbors (the "broader public")
+        feed = []
+        for post in recent_posts:
+            if post["agent_id"] in neighbor_ids:
+                continue
+
+            feed.append(
+                {
+                    "agent_name": post["agent_name"],
+                    "statement": post["statement"],
+                    "position": post["position"],
+                }
+            )
+
+            # Limit to 5 posts from beyond direct network
+            if len(feed) >= 5:
+                break
+
+        return feed
 
     def _render_macro_summary(self, summary: TimestepSummary) -> str:
         """Convert a TimestepSummary into a human-readable vibes sentence.
