@@ -339,55 +339,9 @@ Each timeline event:
 
 For scenarios with no evolution (Netflix password sharing), the timeline is just the single t=0 event. No extra configuration needed.
 
-#### Day Phases (New, Optional)
+#### ~~Day Phases~~ (OMITTED)
 
-Templates that structure the agent's timestep experience into life contexts. Optional — if omitted, the engine uses an improved flat prompt (still much better than current).
-
-```yaml
-day_phases:
-  defaults:
-    - phase: morning
-      condition: "true"
-      template: "I wake up and check my phone."
-      slots: [social_media_exposures, aggregate_mood]
-    - phase: work
-      condition: "employment_status in ['employed full-time', 'employed part-time', 'self-employed']"
-      template: "I head to work at my {occupation_sector} job."
-      slots: [workplace_exposures, coworker_opinions]
-    - phase: school
-      condition: "school_enrollment != 'not enrolled'"
-      template: "I go to class."
-      slots: [peer_opinions]
-    - phase: evening
-      condition: "true"
-      template: "I'm home for the evening."
-      slots: [family_context, partner_opinion, network_opinions, memory_trace]
-
-  # Override for weekly timesteps
-  weekly:
-    - phase: this_week_at_work
-      condition: "employment_status in ['employed full-time', 'employed part-time', 'self-employed']"
-      template: "This week at work..."
-      slots: [workplace_exposures, coworker_opinions]
-    - phase: this_week_at_home
-      condition: "true"
-      template: "At home this week..."
-      slots: [family_context, partner_opinion, aggregate_mood]
-    - phase: this_week_online
-      condition: "social_media_usage in ['heavy/multiple times daily', 'moderate/daily']"
-      template: "Online this week..."
-      slots: [social_media_exposures, public_discourse]
-```
-
-Phase selection adapts to `timestep_unit`:
-- Daily → morning/work/evening
-- Weekly → this_week_at_work/home/online
-- Monthly → this_month overview
-- Hourly → single phase per timestep
-
-Agent attributes determine which phases render. A retiree skips `work`. A student gets `school` instead. Night shift workers get a different `work` time slot. This is evaluated at prompt build time using the condition expressions.
-
-If no `day_phases` defined in scenario YAML → engine uses sensible defaults based on timestep_unit.
+**Decision:** Day phase templates are not implemented. The improved flat prompt structure (first-person voice, temporal awareness, named peers, local mood, social feed) provides sufficient narrative context without explicit morning/work/evening phase segmentation. The complexity of condition-based phase selection doesn't justify the marginal improvement over the current prompt design.
 
 #### Outcome Tracks (New)
 
@@ -492,20 +446,7 @@ class TimelineEvent(BaseModel):
     exposure_rules: list[ExposureRule] | None = None  # If None, reuse seed_exposure rules
     description: str | None = None  # Human-readable context for this development
 
-class DayPhase(BaseModel):
-    """A single phase in a day template."""
-    phase: str
-    condition: str
-    template: str
-    slots: list[str]
-
-class DayPhaseConfig(BaseModel):
-    """Day phase templates, optionally keyed by timestep unit."""
-    defaults: list[DayPhase] | None = None
-    hourly: list[DayPhase] | None = None
-    daily: list[DayPhase] | None = None
-    weekly: list[DayPhase] | None = None
-    monthly: list[DayPhase] | None = None
+# DayPhase and DayPhaseConfig — OMITTED (see "Day Phases" section above)
 
 class ChannelVariant(BaseModel):
     when: str
@@ -524,7 +465,7 @@ class ScenarioSpec(BaseModel):
     spread: SpreadConfig
     outcomes: OutcomeConfig
     simulation: SimulationConfig
-    day_phases: DayPhaseConfig | None = None      # NEW
+    # day_phases — OMITTED
     channel_experience: dict[str, ChannelExperience] | None = None  # NEW
     relationship_weights: dict[str, float] | None = None  # NEW
 ```
