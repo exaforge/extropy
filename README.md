@@ -1,11 +1,17 @@
-# Extropy
+<p align="center">
+  <img src="assets/logo.png" alt="Extropy" width="600">
+</p>
 
-[![CI](https://github.com/exaforge/extropy/actions/workflows/test.yml/badge.svg)](https://github.com/exaforge/extropy/actions/workflows/test.yml)
-[![PyPI version](https://img.shields.io/pypi/v/extropy-run.svg)](https://pypi.org/project/extropy-run/)
-[![Python](https://img.shields.io/pypi/pyversions/extropy-run.svg)](https://pypi.org/project/extropy-run/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+<p align="center">
+  <a href="https://github.com/exaforge/extropy/actions/workflows/test.yml"><img src="https://github.com/exaforge/extropy/actions/workflows/test.yml/badge.svg" alt="CI"></a>
+  <a href="https://pypi.org/project/extropy-run/"><img src="https://img.shields.io/pypi/v/extropy-run.svg" alt="PyPI"></a>
+  <a href="https://pypi.org/project/extropy-run/"><img src="https://img.shields.io/pypi/pyversions/extropy-run.svg" alt="Python"></a>
+  <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License"></a>
+</p>
 
-Predictive intelligence through agent-based population simulation.
+<p align="center">
+  <strong>Predictive intelligence through agent-based population simulation.</strong>
+</p>
 
 Extropy creates synthetic populations grounded in real-world distributions, connects them in social networks, and simulates how they respond to events — each agent reasoning individually via LLM. Opinions form, spread, and evolve. Get distributional predictions by segment with reasoning traces explaining why.
 

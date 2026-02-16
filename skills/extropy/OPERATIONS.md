@@ -298,3 +298,58 @@ extropy validate <scenario.yaml>     # Scenario spec (auto-detected)
 ```
 
 Run after any manual edits to specs.
+
+## Inspection & Debugging
+
+### `extropy inspect`
+
+Inspect study database entities.
+
+```bash
+extropy inspect summary --study-db $DB                    # Overview of agents, edges, runs
+extropy inspect agent --study-db $DB --agent-id agent_042 # Single agent details
+extropy inspect network --study-db $DB                    # Network topology stats
+extropy inspect network-status --study-db $DB --network-run-id <id>  # Calibration progress
+```
+
+### `extropy query`
+
+Run read-only SQL against study database.
+
+```bash
+extropy query sql --study-db $DB --sql "SELECT * FROM agent_states WHERE position = 'protest'" --format json
+extropy query sql --study-db $DB --sql "SELECT position, COUNT(*) FROM agent_states GROUP BY position"
+```
+
+Only `SELECT`, `WITH`, `EXPLAIN` allowed. Use for ad-hoc analysis not covered by `results`.
+
+### `extropy report`
+
+Generate JSON reports for downstream processing.
+
+```bash
+extropy report run --study-db $DB -o run-report.json        # Run summary (counts, positions)
+extropy report network --study-db $DB -o network-report.json # Network stats (edges, types)
+```
+
+## Post-Simulation Chat
+
+### `extropy chat`
+
+Interactive conversation with simulated agents using their DB-backed state.
+
+```bash
+# Interactive REPL
+extropy chat --study-db $DB --run-id <id> --agent-id agent_042
+
+# Non-interactive (for automation)
+extropy chat ask --study-db $DB --run-id <id> --agent-id agent_042 \
+  --prompt "Why did you change your mind?" --json
+```
+
+REPL commands: `/context`, `/timeline <n>`, `/history`, `/exit`
+
+Useful for:
+- Understanding individual agent reasoning
+- Testing counterfactuals ("what if X happened?")
+- Generating quotes for reports

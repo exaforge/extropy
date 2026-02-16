@@ -143,8 +143,21 @@ extropy results --study-db $DB --timeline
 extropy results --study-db $DB --agent agent_0042
 
 # Export for DS
-extropy export elaborations --study-db $DB --to elaborations.csv
-extropy export conversations --study-db $DB --to conversations.json
+extropy export states --study-db $DB --to states.jsonl
+extropy export agents --study-db $DB --to agents.jsonl
+
+# Inspection
+extropy inspect summary --study-db $DB
+extropy inspect agent --study-db $DB --agent-id agent_042
+
+# Ad-hoc queries
+extropy query sql --study-db $DB --sql "SELECT position, COUNT(*) FROM agent_states GROUP BY position"
+
+# JSON reports
+extropy report run --study-db $DB -o report.json
+
+# Post-sim chat
+extropy chat --study-db $DB --run-id <id> --agent-id agent_042
 ```
 
 See `ANALYSIS.md` for interpretation guide.
