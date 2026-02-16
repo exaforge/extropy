@@ -33,7 +33,7 @@ pip install extropy-run
 export OPENAI_API_KEY=sk-...
 ```
 
-Requires Python 3.11+.
+Requires Python 3.11+. [uv](https://github.com/astral-sh/uv) recommended.
 
 ## Quick Start
 
