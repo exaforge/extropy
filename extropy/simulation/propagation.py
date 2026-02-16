@@ -12,11 +12,13 @@ from typing import Any
 
 from ..core.models import (
     ScenarioSpec,
+    Event,
     ExposureRule,
     SpreadConfig,
     ExposureRecord,
     SimulationEvent,
     SimulationEventType,
+    TimelineEvent,
 )
 from ..population.sampler import eval_condition, ConditionError
 from .state import StateManager
@@ -147,6 +149,110 @@ def apply_seed_exposures(
             new_exposures += 1
 
     return new_exposures
+
+
+def apply_timeline_exposures(
+    timestep: int,
+    scenario: ScenarioSpec,
+    agents: list[dict[str, Any]],
+    state_manager: StateManager,
+    rng: random.Random,
+) -> tuple[int, Event | None]:
+    """Apply timeline event exposures for this timestep.
+
+    Timeline events represent scenario developments (new information, escalations,
+    resolutions) that occur at specific timesteps. Each timeline event can have
+    custom exposure rules or reuse the seed exposure rules with updated content.
+
+    Args:
+        timestep: Current timestep
+        scenario: Scenario specification
+        agents: List of all agents
+        state_manager: State manager for recording exposures
+        rng: Random number generator
+
+    Returns:
+        Tuple of (new_exposure_count, active_timeline_event_or_none)
+    """
+    if not scenario.timeline:
+        return 0, None
+
+    # Find timeline event for this timestep
+    active_event: TimelineEvent | None = None
+    for te in scenario.timeline:
+        if te.timestep == timestep:
+            active_event = te
+            break
+
+    if active_event is None:
+        return 0, None
+
+    logger.info(
+        f"[TIMELINE] Timestep {timestep}: Applying timeline event - "
+        f"{active_event.description or active_event.event.content[:50]}"
+    )
+
+    # Determine which exposure rules to use
+    if active_event.exposure_rules is not None:
+        rules = active_event.exposure_rules
+    else:
+        # Reuse seed exposure rules but substitute with timeline event content
+        rules = scenario.seed_exposure.rules
+
+    new_exposures = 0
+    event_content = active_event.event.content
+    event_credibility = active_event.event.credibility
+
+    for rule in rules:
+        # For timeline events, ignore the rule's timestep field — we're applying now
+        # (Rules are designed for t=0 seed exposure but we reuse them for timeline)
+        channel_credibility = get_channel_credibility(scenario, rule.channel)
+
+        for i, agent in enumerate(agents):
+            agent_id = agent.get("_id", str(i))
+
+            # Evaluate the "when" condition (skip timestep check since we're applying now)
+            when_cond = rule.when.lower()
+            if when_cond != "true" and when_cond != "1":
+                try:
+                    if not eval_condition(rule.when, agent, raise_on_error=True):
+                        continue
+                except ConditionError as e:
+                    logger.warning(
+                        f"Failed to evaluate timeline exposure rule '{rule.when}': {e}"
+                    )
+                    continue
+
+            # Probabilistic exposure
+            if rng.random() > rule.probability:
+                continue
+
+            exposure = ExposureRecord(
+                timestep=timestep,
+                channel=rule.channel,
+                source_agent_id=None,
+                content=event_content,
+                credibility=min(1.0, event_credibility * channel_credibility),
+            )
+
+            state_manager.record_exposure(agent_id, exposure)
+            state_manager.log_event(
+                SimulationEvent(
+                    timestep=timestep,
+                    event_type=SimulationEventType.SEED_EXPOSURE,
+                    agent_id=agent_id,
+                    details={
+                        "channel": rule.channel,
+                        "timeline_event": True,
+                        "description": active_event.description,
+                    },
+                )
+            )
+            new_exposures += 1
+
+    logger.info(f"[TIMELINE] Timestep {timestep}: {new_exposures} new exposures")
+
+    return new_exposures, active_event.event
 
 
 def get_neighbors(

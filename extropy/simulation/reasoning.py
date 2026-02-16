@@ -176,6 +176,30 @@ def build_pass1_prompt(
     if context.macro_summary:
         prompt_parts.extend(["", context.macro_summary])
 
+    # --- Timeline recap (Phase C) ---
+    if context.timeline_recap:
+        prompt_parts.extend(["", "## What's Happened So Far", ""])
+        for entry in context.timeline_recap:
+            prompt_parts.append(f"- {entry}")
+
+    # --- Current development (Phase C) ---
+    if context.current_development:
+        prompt_parts.extend([
+            "",
+            f"## This {context.timestep_unit}'s Development",
+            "",
+            context.current_development,
+        ])
+
+    # --- Conformity self-awareness (Phase C) ---
+    if context.conformity is not None:
+        prompt_parts.append("")
+        if context.conformity >= 0.7:
+            prompt_parts.append("I tend to go along with what most people around me are doing.")
+        elif context.conformity <= 0.3:
+            prompt_parts.append("I tend to form my own opinion regardless of what others think.")
+        # Mid-range (0.3-0.7): no explicit phrasing (neutral)
+
     # --- Memory trace (full, uncapped, fidelity-gated) ---
     if context.memory_trace:
         prompt_parts.extend(["", "## What I've Been Thinking", ""])
@@ -376,18 +400,22 @@ def build_pass2_schema(outcomes: OutcomeConfig) -> dict[str, Any] | None:
     """Build JSON schema for Pass 2 (classification) from scenario outcomes.
 
     Only includes categorical, boolean, and float outcomes —
-    these are the ones that need classification.
+    open_ended outcomes are captured in Pass 1 free text and skipped here.
 
     Args:
         outcomes: Outcome configuration from scenario
 
     Returns:
-        JSON schema dictionary, or None if no classifiable outcomes
+        JSON schema dictionary, or None if all outcomes are open_ended (skip Pass 2)
     """
     properties: dict[str, Any] = {}
     required: list[str] = []
 
     for outcome in outcomes.suggested_outcomes:
+        # Skip open_ended outcomes — they're captured in Pass 1 free text
+        if outcome.type == OutcomeType.OPEN_ENDED:
+            continue
+
         outcome_prop: dict[str, Any] = {
             "description": outcome.description,
         }
@@ -401,8 +429,6 @@ def build_pass2_schema(outcomes: OutcomeConfig) -> dict[str, Any] | None:
             outcome_prop["type"] = "number"
             outcome_prop["minimum"] = outcome.range[0]
             outcome_prop["maximum"] = outcome.range[1]
-        elif outcome.type == OutcomeType.OPEN_ENDED:
-            outcome_prop["type"] = "string"
         else:
             outcome_prop["type"] = "string"
 
@@ -410,6 +436,7 @@ def build_pass2_schema(outcomes: OutcomeConfig) -> dict[str, Any] | None:
         if outcome.required:
             required.append(outcome.name)
 
+    # If no classifiable outcomes remain (all were open_ended), skip Pass 2
     if not properties:
         return None
 

@@ -314,6 +314,23 @@ class ReasoningContext(BaseModel):
         default_factory=dict,
         description="Mapping of agent_id → first name for resolving peer references",
     )
+    # Phase C additions
+    timeline_recap: list[str] | None = Field(
+        default=None,
+        description="Bullet list of what's happened so far in the scenario",
+    )
+    current_development: str | None = Field(
+        default=None,
+        description="This timestep's new development (if any)",
+    )
+    observable_peer_actions: int | None = Field(
+        default=None,
+        description="Count of neighbors who visibly acted (shared/posted)",
+    )
+    conformity: float | None = Field(
+        default=None,
+        description="Agent's conformity attribute (0-1)",
+    )
 
 
 # =============================================================================
@@ -389,6 +406,10 @@ class SimulationRunConfig(BaseModel):
     max_concurrent: int | None = Field(
         default=None,
         description="Max concurrent async reasoning calls (None = auto from RPM)",
+    )
+    merged_pass: bool = Field(
+        default=False,
+        description="Use single merged pass instead of two-pass reasoning (experimental)",
     )
 
     # Backward compat aliases

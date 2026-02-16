@@ -285,8 +285,8 @@ class TestCreateScenario:
             on_progress=on_progress,
         )
 
-        # Should get 5 progress calls (steps 1/5 through 5/5)
-        # Note: step 1/5 is called twice (once for loading, once for parsing)
-        assert len(progress_calls) >= 5
+        # Should get 6 progress calls (steps 1/6 through 6/6)
+        # Note: step 1/6 is called twice (once for loading, once for parsing)
+        assert len(progress_calls) >= 6
         steps = [call[0] for call in progress_calls]
-        assert "5/5" in steps
+        assert "6/6" in steps

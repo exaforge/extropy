@@ -36,6 +36,11 @@ def scenario_command(
         "-o",
         help="Output path (defaults to {population_stem}.scenario.yaml)",
     ),
+    timeline: str = typer.Option(
+        "auto",
+        "--timeline",
+        help="Timeline mode: auto (LLM decides), static (single event), evolving (multi-event)",
+    ),
     yes: bool = typer.Option(False, "--yes", "-y", help="Skip confirmation prompts"),
 ):
     """
@@ -116,6 +121,8 @@ def scenario_command(
     def run_pipeline():
         nonlocal result_spec, validation_result, pipeline_error
         try:
+            # Convert timeline mode (auto -> None for LLM decision)
+            timeline_mode = None if timeline == "auto" else timeline
             result_spec, validation_result = create_scenario(
                 description=scenario_desc,
                 population_spec_path=population,
@@ -124,6 +131,7 @@ def scenario_command(
                 network_id=network_id,
                 output_path=None,  # Don't save yet
                 on_progress=on_progress,
+                timeline_mode=timeline_mode,
             )
         except Exception as e:
             pipeline_error = e
@@ -213,6 +221,29 @@ def scenario_command(
         f"[bold]Simulation:[/bold] {sim.max_timesteps} {sim.timestep_unit.value}s"
     )
     console.print()
+
+    # Timeline info (Phase C)
+    if result_spec.timeline:
+        console.print(f"[bold]Timeline:[/bold] {len(result_spec.timeline)} events")
+        for te in result_spec.timeline[:3]:
+            desc = te.description or te.event.content[:40]
+            console.print(f"  • t={te.timestep}: {desc}")
+        if len(result_spec.timeline) > 3:
+            console.print(f"  [dim]... and {len(result_spec.timeline) - 3} more[/dim]")
+        console.print()
+    else:
+        console.print("[bold]Timeline:[/bold] static (single event)")
+        console.print()
+
+    # Background context (Phase C)
+    if result_spec.background_context:
+        ctx_preview = (
+            result_spec.background_context[:60] + "..."
+            if len(result_spec.background_context) > 60
+            else result_spec.background_context
+        )
+        console.print(f"[bold]Background:[/bold] {ctx_preview}")
+        console.print()
 
     # Validation Results
     if validation_result.errors:

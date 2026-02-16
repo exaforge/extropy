@@ -57,6 +57,8 @@ from .scenario import (
     # Event
     EventType,
     Event,
+    # Timeline
+    TimelineEvent,
     # Exposure
     ExposureChannel,
     ExposureRule,
@@ -160,6 +162,8 @@ __all__ = [
     # Scenario - Event
     "EventType",
     "Event",
+    # Scenario - Timeline
+    "TimelineEvent",
     # Scenario - Exposure
     "ExposureChannel",
     "ExposureRule",

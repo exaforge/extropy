@@ -186,6 +186,11 @@ def simulate_command(
         "-p",
         help="PersonaConfig YAML for embodied personas (auto-detected if not specified)",
     ),
+    merged_pass: bool = typer.Option(
+        False,
+        "--merged-pass",
+        help="Use single merged reasoning pass instead of two-pass (experimental)",
+    ),
     quiet: bool = typer.Option(False, "--quiet", "-q", help="Suppress progress output"),
     verbose: bool = typer.Option(False, "--verbose", "-v", help="Show detailed logs"),
     debug: bool = typer.Option(
@@ -316,6 +321,7 @@ def simulate_command(
                 writer_queue_size=writer_queue_size,
                 db_write_batch_size=db_write_batch_size,
                 resource_governor=governor,
+                merged_pass=merged_pass,
             )
             simulation_error = None
         except Exception as e:
@@ -352,6 +358,7 @@ def simulate_command(
                     writer_queue_size=writer_queue_size,
                     db_write_batch_size=db_write_batch_size,
                     resource_governor=governor,
+                    merged_pass=merged_pass,
                 )
             except Exception as e:
                 simulation_error = e
