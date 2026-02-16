@@ -64,7 +64,7 @@ extropy results --study-db $DB --segment income
 
 ## Features
 
-| | |
+| Feature | Description |
 |:--|:--|
 | **Population** | |
 | Any geography | US, Japan, India, Brazil — define attributes with your distributions |
