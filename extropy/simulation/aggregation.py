@@ -343,3 +343,158 @@ def compute_conversation_stats(
         "total_messages": total_messages,
         "avg_turns": round(avg_turns, 2),
     }
+
+
+def compute_most_impactful_conversations(
+    study_db: StudyDB,
+    run_id: str,
+    max_timesteps: int,
+    top_n: int = 10,
+) -> list[dict[str, Any]]:
+    """Identify most impactful conversations by state change magnitude.
+
+    Impact is measured by the sum of absolute sentiment and conviction changes
+    for both participants.
+
+    Args:
+        study_db: Study database connection
+        run_id: Simulation run ID
+        max_timesteps: Maximum timestep for iteration
+        top_n: Number of top conversations to return
+
+    Returns:
+        List of top conversations with impact scores
+    """
+    scored_conversations: list[tuple[float, dict[str, Any]]] = []
+
+    for timestep in range(max_timesteps):
+        convs = study_db.get_conversations_for_timestep(run_id, timestep)
+
+        for conv in convs:
+            impact = 0.0
+
+            # Initiator state change
+            init_change = conv.get("initiator_state_change")
+            if init_change:
+                if init_change.get("sentiment") is not None:
+                    impact += abs(init_change["sentiment"])
+                if init_change.get("conviction") is not None:
+                    impact += abs(init_change["conviction"])
+
+            # Target state change (if not NPC)
+            target_change = conv.get("target_state_change")
+            if target_change:
+                if target_change.get("sentiment") is not None:
+                    impact += abs(target_change["sentiment"])
+                if target_change.get("conviction") is not None:
+                    impact += abs(target_change["conviction"])
+
+            if impact > 0:
+                scored_conversations.append((impact, conv))
+
+    # Sort by impact descending and take top N
+    scored_conversations.sort(key=lambda x: x[0], reverse=True)
+
+    return [
+        {
+            "impact_score": round(score, 3),
+            "timestep": conv.get("timestep"),
+            "initiator_id": conv.get("initiator_id"),
+            "target_id": conv.get("target_id"),
+            "target_is_npc": conv.get("target_is_npc", False),
+            "initiator_state_change": conv.get("initiator_state_change"),
+            "target_state_change": conv.get("target_state_change"),
+            "message_count": len(conv.get("messages", [])),
+        }
+        for score, conv in scored_conversations[:top_n]
+    ]
+
+
+def export_elaborations_csv(
+    state_manager: StateManager,
+    agent_map: dict[str, dict[str, Any]],
+    output_path: str,
+) -> int:
+    """Export open-ended elaborations as flattened CSV for DS workflows.
+
+    Exports one row per agent with their demographics and outcome values.
+
+    Args:
+        state_manager: State manager with final states
+        agent_map: Mapping of agent_id to agent attributes
+        output_path: Path to write CSV file
+
+    Returns:
+        Number of rows exported
+    """
+    import csv
+
+    final_states = state_manager.export_final_states()
+
+    if not final_states:
+        return 0
+
+    # Determine all outcome keys across agents
+    outcome_keys: set[str] = set()
+    for state in final_states:
+        if state.get("outcomes"):
+            outcome_keys.update(state["outcomes"].keys())
+
+    # Define columns: agent_id, demographics, state fields, outcomes
+    demographic_fields = [
+        "first_name",
+        "age",
+        "gender",
+        "race_ethnicity",
+        "state",
+        "education_level",
+        "occupation_sector",
+        "household_income",
+    ]
+
+    state_fields = [
+        "position",
+        "sentiment",
+        "conviction",
+        "will_share",
+        "public_statement",
+        "raw_reasoning",
+    ]
+
+    outcome_fields = sorted(outcome_keys)
+
+    # Build header
+    header = ["agent_id"] + demographic_fields + state_fields + outcome_fields
+
+    rows_written = 0
+    with open(output_path, "w", newline="", encoding="utf-8") as f:
+        writer = csv.writer(f)
+        writer.writerow(header)
+
+        for state in final_states:
+            agent_id = state["agent_id"]
+            agent = agent_map.get(agent_id, {})
+
+            row = [agent_id]
+
+            # Demographics
+            for field in demographic_fields:
+                row.append(agent.get(field, ""))
+
+            # State fields
+            for field in state_fields:
+                value = state.get(field, "")
+                # Truncate long text for CSV
+                if isinstance(value, str) and len(value) > 500:
+                    value = value[:500] + "..."
+                row.append(value)
+
+            # Outcomes
+            outcomes = state.get("outcomes", {})
+            for key in outcome_fields:
+                row.append(outcomes.get(key, ""))
+
+            writer.writerow(row)
+            rows_written += 1
+
+    return rows_written
