@@ -564,6 +564,13 @@ class SimulationEngine:
                     f"{conversation_state_changes} state changes"
                 )
 
+        # 2e. Record social posts from agents who shared
+        posts_recorded = self._record_social_posts(timestep)
+        if posts_recorded > 0:
+            logger.info(
+                f"[TIMESTEP {timestep}] Social posts recorded: {posts_recorded}"
+            )
+
         # 2d. Decay conviction for agents that did not reason this timestep.
         # This adds attention-fade dynamics without forcing additional LLM calls.
         with self.state_manager.transaction():
@@ -1292,6 +1299,52 @@ class SimulationEngine:
                 self.state_manager.batch_update_states(state_updates, timestep)
 
         return state_changes
+
+    def _record_social_posts(self, timestep: int) -> int:
+        """Record social posts from agents who are sharing.
+
+        Captures public_statement from agents with will_share=True as social posts.
+
+        Args:
+            timestep: Current simulation timestep
+
+        Returns:
+            Number of posts recorded
+        """
+        # Get all agents who are sharing this timestep
+        sharers = self.state_manager.get_sharers()
+
+        if not sharers:
+            return 0
+
+        posts = []
+        for agent_id in sharers:
+            state = self.state_manager.get_agent_state(agent_id)
+
+            # Only record if they have a public statement
+            if not state.public_statement:
+                continue
+
+            # Get agent name
+            agent = self.agent_map.get(agent_id, {})
+            agent_name = agent.get("first_name", agent_id)
+
+            posts.append(
+                {
+                    "timestep": timestep,
+                    "agent_id": agent_id,
+                    "agent_name": agent_name,
+                    "statement": state.public_statement,
+                    "position": state.public_position or state.position,
+                    "sentiment": state.public_sentiment or state.sentiment,
+                    "conviction": state.public_conviction or state.conviction,
+                }
+            )
+
+        if posts:
+            self.study_db.save_social_posts_batch(self.run_id, posts)
+
+        return len(posts)
 
     def _position_action_friction(self, position: str | None) -> float:
         """Estimate behavior-change friction from a position label."""
