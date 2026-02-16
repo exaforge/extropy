@@ -400,9 +400,13 @@ class AttributeSpec(BaseModel):
         "universal", "population_specific", "context_specific", "personality"
     ] = Field(description="Category of attribute")
     description: str = Field(description="What this attribute represents")
-    scope: Literal["individual", "household"] = Field(
+    scope: Literal["individual", "household", "partner_correlated"] = Field(
         default="individual",
-        description="Whether this attribute is sampled per-individual or shared across a household",
+        description="individual: varies per person; household: shared across household members; partner_correlated: correlated between partners using assortative mating",
+    )
+    correlation_rate: float | None = Field(
+        default=None,
+        description="For partner_correlated scope: probability (0-1) that partner has same value. None uses type-specific defaults (age uses gaussian, race uses per-group rates).",
     )
     sampling: SamplingConfig
     grounding: GroundingInfo
@@ -670,14 +674,15 @@ class DiscoveredAttribute(BaseModel):
         default="independent",
         description="independent: sample directly; derived: zero-variance formula; conditional: probabilistic dependency",
     )
-    scope: Literal["individual", "household"] = Field(
+    scope: Literal["individual", "household", "partner_correlated"] = Field(
         default="individual",
-        description="individual: varies per person; household: shared across household members",
+        description="individual: varies per person; household: shared across household members; partner_correlated: correlated between partners",
+    )
+    correlation_rate: float | None = Field(
+        default=None,
+        description="For partner_correlated scope: probability (0-1) that partner has same value",
     )
     depends_on: list[str] = Field(default_factory=list)
-
-
-# hydrated attribute seems to be an extension of discovered attribute.
 
 
 class HydratedAttribute(BaseModel):
@@ -696,9 +701,13 @@ class HydratedAttribute(BaseModel):
     strategy: Literal["independent", "derived", "conditional"] = Field(
         default="independent", description="Sampling strategy determined in Step 1"
     )
-    scope: Literal["individual", "household"] = Field(
+    scope: Literal["individual", "household", "partner_correlated"] = Field(
         default="individual",
-        description="individual: varies per person; household: shared across household members",
+        description="individual: varies per person; household: shared across household members; partner_correlated: correlated between partners",
+    )
+    correlation_rate: float | None = Field(
+        default=None,
+        description="For partner_correlated scope: probability (0-1) that partner has same value",
     )
     depends_on: list[str] = Field(default_factory=list)
     sampling: SamplingConfig

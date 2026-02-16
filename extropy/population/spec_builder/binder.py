@@ -140,6 +140,7 @@ def bind_constraints(
             category=attr.category,
             description=attr.description,
             scope=attr.scope,
+            correlation_rate=attr.correlation_rate,
             sampling=filtered_sampling,
             grounding=attr.grounding,
             constraints=attr.constraints,

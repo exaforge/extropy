@@ -51,7 +51,7 @@ def _make_household_spec(
                 type="int",
                 category="universal",
                 description="Age",
-                scope="individual",
+                scope="partner_correlated",  # Uses gaussian offset for partners
                 sampling=SamplingConfig(
                     strategy="independent",
                     distribution=NormalDistribution(
@@ -97,7 +97,7 @@ def _make_household_spec(
                 type="categorical",
                 category="universal",
                 description="Race/ethnicity",
-                scope="individual",
+                scope="partner_correlated",  # Uses per-group rates
                 sampling=SamplingConfig(
                     strategy="independent",
                     distribution=CategoricalDistribution(
@@ -113,7 +113,8 @@ def _make_household_spec(
                 type="categorical",
                 category="universal",
                 description="Education",
-                scope="individual",
+                scope="partner_correlated",  # Correlated between partners
+                correlation_rate=0.6,  # ~60% same education
                 sampling=SamplingConfig(
                     strategy="independent",
                     distribution=CategoricalDistribution(
@@ -218,19 +219,25 @@ class TestHouseholdSamplingHelpers:
         assert household_needs_kids(HouseholdType.MULTI_GENERATIONAL)
 
     def test_correlate_age(self):
+        """Age correlation uses gaussian offset from HouseholdConfig."""
         rng = random.Random(42)
-        partner_age = correlate_partner_attribute("age", 35, rng, _DEFAULT_CONFIG)
+        partner_age = correlate_partner_attribute(
+            "age", "int", 35, None, rng, _DEFAULT_CONFIG
+        )
         assert isinstance(partner_age, int)
         assert partner_age >= 18
 
     def test_correlate_race_same_rate(self):
+        """Race/ethnicity uses per-group rates from HouseholdConfig."""
         rng = random.Random(42)
         same_count = 0
         trials = 500
         for _ in range(trials):
             result = correlate_partner_attribute(
                 "race_ethnicity",
+                "categorical",
                 "white",
+                None,  # Uses per-group rates from config
                 rng,
                 _DEFAULT_CONFIG,
                 available_options=["white", "black", "hispanic"],
@@ -242,13 +249,16 @@ class TestHouseholdSamplingHelpers:
         assert 0.80 < rate < 0.97, f"Same-race rate {rate:.2f} outside expected range"
 
     def test_correlate_education_assortative(self):
+        """Education uses explicit correlation_rate."""
         rng = random.Random(42)
         same_count = 0
         trials = 500
         for _ in range(trials):
             result = correlate_partner_attribute(
                 "education_level",
+                "categorical",
                 "bachelors",
+                0.6,  # Explicit correlation rate
                 rng,
                 _DEFAULT_CONFIG,
                 available_options=["high_school", "bachelors", "masters", "doctorate"],
@@ -259,12 +269,26 @@ class TestHouseholdSamplingHelpers:
         # Expect ~60% same education
         assert 0.50 < rate < 0.75, f"Assortative rate {rate:.2f} outside expected range"
 
-    def test_correlate_unknown_attribute_returns_none(self):
+    def test_correlate_with_default_rate(self):
+        """Unknown attributes use default_same_group_rate when no explicit rate."""
         rng = random.Random(42)
-        result = correlate_partner_attribute(
-            "personality", "introverted", rng, _DEFAULT_CONFIG
-        )
-        assert result is None
+        same_count = 0
+        trials = 500
+        for _ in range(trials):
+            result = correlate_partner_attribute(
+                "some_attribute",
+                "categorical",
+                "value_a",
+                None,  # No explicit rate, uses default
+                rng,
+                _DEFAULT_CONFIG,
+                available_options=["value_a", "value_b", "value_c"],
+            )
+            if result == "value_a":
+                same_count += 1
+        rate = same_count / trials
+        # Expect ~85% (default_same_group_rate)
+        assert 0.75 < rate < 0.95, f"Default rate {rate:.2f} outside expected range"
 
     def test_generate_dependents_no_kids(self):
         rng = random.Random(42)
@@ -434,7 +458,7 @@ class TestCorrelatedDemographics:
         for _ in range(total):
             primary_country = rng.choice(countries)
             partner_country = correlate_partner_attribute(
-                "country", primary_country, rng, config, countries
+                "country", "categorical", primary_country, None, rng, config, countries
             )
             if partner_country == primary_country:
                 same_country += 1

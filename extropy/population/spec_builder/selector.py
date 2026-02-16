@@ -109,8 +109,14 @@ ATTRIBUTE_SELECTION_SCHEMA = {
                     },
                     "scope": {
                         "type": "string",
-                        "enum": ["individual", "household"],
-                        "description": "individual: varies per person; household: shared across household members",
+                        "enum": ["individual", "household", "partner_correlated"],
+                        "description": "individual: varies per person; household: shared across household members; partner_correlated: correlated between partners (e.g., age, education, religion, politics)",
+                    },
+                    "correlation_rate": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 1,
+                        "description": "For partner_correlated scope only: probability (0-1) that partner has same value. Use ~0.6-0.7 for education, ~0.7-0.8 for religion, ~0.5-0.6 for politics. Omit for age (uses gaussian offset) and race/ethnicity (uses per-group rates).",
                     },
                     "depends_on": {
                         "type": "array",
@@ -302,12 +308,26 @@ def select_attributes(
 
     ## Attribute Scope
 
-    Each attribute is either **individual** (varies per person) or **household** (shared by all household members):
+    Each attribute has one of three scopes:
 
-    - `household` scope: state, urban_rural, household_income, household_size, marital_status, housing_type, neighborhood characteristics — anything that describes WHERE or HOW the household lives
-    - `individual` scope: age, gender, occupation, education, personality traits, attitudes — anything personal
+    - `household`: Shared by ALL household members (copied, not sampled separately)
+      - Examples: state, urban_rural, household_income, household_size, housing_type
+      - Use for anything describing WHERE or HOW the household lives together
 
-    Default to `individual` if unsure. Only use `household` for attributes that genuinely cannot differ between people living together.
+    - `partner_correlated`: Correlated between partners (assortative mating)
+      - Examples: age, education_level, religious_affiliation, political views, race/ethnicity, country
+      - Partners tend to have similar values but NOT identical
+      - Provide `correlation_rate` (0-1) for probability of same value:
+        - age: OMIT (uses gaussian offset automatically)
+        - race/ethnicity: OMIT (uses per-group rates automatically)
+        - education: ~0.6-0.7
+        - religion: ~0.7-0.8
+        - politics: ~0.5-0.6
+        - country: ~0.95 (most people marry within their country)
+
+    - `individual`: Varies per person, sampled independently
+      - Examples: gender, occupation, personality traits, personal attitudes
+      - Default if unsure
 
     ## Dependencies
 
@@ -326,7 +346,8 @@ def select_attributes(
     - category: universal, population_specific, context_specific, personality
     - description: One clear sentence
     - strategy: independent, derived, or conditional
-    - scope: individual or household
+    - scope: individual, household, or partner_correlated
+    - correlation_rate: (only for partner_correlated scope, omit for age/race)
     - depends_on: List of attribute names (max 3, empty if independent)"""
 
     data = reasoning_call(
@@ -354,6 +375,7 @@ def select_attributes(
             description=attr_data["description"],
             strategy=strategy,
             scope=attr_data.get("scope", "individual"),
+            correlation_rate=attr_data.get("correlation_rate"),
             depends_on=depends_on,
         )
         attributes.append(attr)

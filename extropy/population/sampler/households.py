@@ -3,6 +3,11 @@
 All household composition rates and correlation tables are read from
 a HouseholdConfig instance (populated by LLM research at spec time,
 with US Census defaults as the safety net).
+
+Attribute scopes are now spec-driven:
+- scope="household": shared across all household members
+- scope="partner_correlated": correlated between partners using assortative mating
+- scope="individual": sampled independently for each person
 """
 
 from __future__ import annotations
@@ -15,32 +20,7 @@ from ...core.models.population import Dependent, HouseholdConfig, HouseholdType
 from ..names.generator import generate_name
 
 if TYPE_CHECKING:
-    from ...core.models.population import NameConfig
-
-
-# Attributes that are always shared within a household
-HOUSEHOLD_SHARED_ATTRIBUTES = [
-    "state",
-    "urban_rural",
-    "household_income",
-    "household_size",
-]
-
-# Attributes correlated between partners (not copied, but biased)
-PARTNER_CORRELATED_ATTRIBUTES = [
-    "age",
-    "country",
-    "race_ethnicity",
-    "education_level",
-    "religious_affiliation",
-    "political_orientation",
-]
-
-# Attributes sampled independently for each partner
-PARTNER_INDEPENDENT_ATTRIBUTES = [
-    "personality",
-    "occupation_sector",
-]
+    from ...core.models.population import AttributeSpec, NameConfig
 
 
 def _age_bracket(age: int, config: HouseholdConfig) -> str:
@@ -92,20 +72,34 @@ def household_needs_kids(htype: HouseholdType) -> bool:
 
 def correlate_partner_attribute(
     attr_name: str,
+    attr_type: str,
     primary_value: Any,
+    correlation_rate: float | None,
     rng: random.Random,
     config: HouseholdConfig,
     available_options: list[str] | None = None,
 ) -> Any:
     """Produce a correlated value for a partner based on the primary's value.
 
-    For categorical attributes, uses assortative mating rates to decide
-    whether to copy or re-sample.  For age, applies a Gaussian offset.
+    Uses the correlation_rate from the attribute spec. Special handling:
+    - age (int/float): Gaussian offset using config.partner_age_gap_mean/std
+    - race_ethnicity-like attrs: Per-group rates from config.same_group_rates
+    - Other categorical/boolean: Simple probability of same value
 
-    Returns the correlated value, or None if the attribute isn't in the
-    correlation tables (caller should sample independently).
+    Args:
+        attr_name: Name of the attribute
+        attr_type: Type of the attribute (int, float, categorical, boolean)
+        primary_value: The primary partner's value
+        correlation_rate: Probability (0-1) that partner has same value, or None for defaults
+        rng: Random number generator
+        config: HouseholdConfig with default rates
+        available_options: For categorical attrs, list of valid options to sample from
+
+    Returns:
+        The correlated value for the partner.
     """
-    if attr_name == "age" and isinstance(primary_value, (int, float)):
+    # Age uses gaussian offset, not simple correlation
+    if attr_name == "age" and attr_type in ("int", "float"):
         partner_age = int(
             round(
                 rng.gauss(
@@ -116,16 +110,8 @@ def correlate_partner_attribute(
         )
         return max(config.min_adult_age, partner_age)
 
-    if attr_name == "country":
-        if rng.random() < config.same_country_rate:
-            return primary_value
-        if available_options:
-            others = [o for o in available_options if o != primary_value]
-            if others:
-                return rng.choice(others)
-        return primary_value
-
-    if attr_name == "race_ethnicity":
+    # Race/ethnicity uses per-group rates from config
+    if attr_name in ("race_ethnicity", "ethnicity", "race"):
         same_rate = config.same_group_rates.get(
             str(primary_value).lower(), config.default_same_group_rate
         )
@@ -137,9 +123,10 @@ def correlate_partner_attribute(
                 return rng.choice(others)
         return primary_value
 
-    if attr_name in config.assortative_mating:
-        correlation = config.assortative_mating[attr_name]
-        if rng.random() < correlation:
+    # Country uses same_country_rate from config if no explicit rate
+    if attr_name == "country":
+        rate = correlation_rate if correlation_rate is not None else config.same_country_rate
+        if rng.random() < rate:
             return primary_value
         if available_options:
             others = [o for o in available_options if o != primary_value]
@@ -147,7 +134,18 @@ def correlate_partner_attribute(
                 return rng.choice(others)
         return primary_value
 
-    return None  # Not a correlated attribute
+    # For all other attributes, use the explicit correlation_rate or a default
+    rate = correlation_rate if correlation_rate is not None else config.default_same_group_rate
+    if rng.random() < rate:
+        return primary_value
+
+    # Sample a different value
+    if available_options:
+        others = [o for o in available_options if o != primary_value]
+        if others:
+            return rng.choice(others)
+
+    return primary_value
 
 
 def generate_dependents(

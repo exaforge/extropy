@@ -33,7 +33,6 @@ from .households import (
     correlate_partner_attribute,
     generate_dependents,
     estimate_household_count,
-    PARTNER_CORRELATED_ATTRIBUTES,
 )
 from .modifiers import apply_modifiers_and_sample
 from ...utils.eval_safe import eval_formula, FormulaError
@@ -214,7 +213,7 @@ def _sample_population_independent(
 
 def _generate_npc_partner(
     primary: dict[str, Any],
-    household_attrs: set[str],
+    attr_map: dict[str, AttributeSpec],
     categorical_options: dict[str, list[str]],
     rng: random.Random,
     config: HouseholdConfig,
@@ -223,37 +222,52 @@ def _generate_npc_partner(
     """Generate a lightweight NPC partner profile for context.
 
     Not a full agent — just enough for persona prompts and conversations.
+    Uses attr.scope from the spec to determine which attributes to include.
     """
     partner: dict[str, Any] = {}
 
-    if "age" in primary:
-        partner["age"] = correlate_partner_attribute("age", primary["age"], rng, config)
+    # Always include gender
     partner["gender"] = rng.choice(["male", "female"])
 
-    for attr in (
-        "race_ethnicity",
-        "education_level",
-        "religious_affiliation",
-        "political_orientation",
-    ):
-        if attr in primary:
-            correlated = correlate_partner_attribute(
-                attr, primary[attr], rng, config, categorical_options.get(attr)
-            )
-            if correlated is not None:
-                partner[attr] = correlated
+    # Always correlate age if present (essential for NPC identity, regardless of scope)
+    if "age" in primary:
+        partner["age"] = correlate_partner_attribute(
+            "age",
+            "int",
+            primary["age"],
+            None,  # Uses gaussian offset
+            rng,
+            config,
+        )
 
-    # Shared household attrs
-    for attr in household_attrs:
-        if attr in primary:
-            partner[attr] = primary[attr]
+    # Process attributes based on their scope
+    for attr_name, attr in attr_map.items():
+        if attr_name not in primary or attr_name == "age":
+            continue
+
+        if attr.scope == "household":
+            # Shared: copy from primary
+            partner[attr_name] = primary[attr_name]
+        elif attr.scope == "partner_correlated":
+            # Correlated: use assortative mating
+            partner[attr_name] = correlate_partner_attribute(
+                attr_name,
+                attr.type,
+                primary[attr_name],
+                attr.correlation_rate,
+                rng,
+                config,
+                available_options=categorical_options.get(attr_name),
+            )
+        # Individual scope: skip for NPC (not enough data to sample fully)
 
     # Generate name for partner
     partner_age = partner.get("age")
     birth_decade = age_to_birth_decade(partner_age) if partner_age is not None else None
+    ethnicity = partner.get("race_ethnicity") or partner.get("ethnicity") or partner.get("race")
     first_name, _ = generate_name(
         gender=partner["gender"],
-        ethnicity=partner.get("race_ethnicity"),
+        ethnicity=str(ethnicity) if ethnicity else None,
         birth_decade=birth_decade,
         seed=rng.randint(0, 2**31),
         name_config=name_config,
@@ -406,7 +420,7 @@ def _sample_population_households(
                 # Partner is NPC context on the primary agent
                 npc_partner = _generate_npc_partner(
                     adult1,
-                    household_attrs,
+                    attr_map,
                     categorical_options,
                     rng,
                     config,
@@ -502,10 +516,10 @@ def _sample_partner_agent(
 ) -> dict[str, Any]:
     """Sample a partner agent with correlated demographics.
 
-    - Household-scoped attributes are copied from the primary.
-    - Correlated attributes (age, race, education, religion, politics)
-      use assortative mating tables.
-    - Everything else is sampled independently.
+    Uses attr.scope from the spec to determine sampling behavior:
+    - scope="household": copy from primary
+    - scope="partner_correlated": use assortative mating correlation
+    - scope="individual": sample independently
     """
     if config is None:
         config = HouseholdConfig()
@@ -517,29 +531,21 @@ def _sample_partner_agent(
             continue
 
         # Household-scoped: copy from primary
-        if attr_name in household_attrs and attr_name in primary:
+        if attr.scope == "household" and attr_name in primary:
             value = primary[attr_name]
-        # Correlated: use partner correlation
-        elif attr_name in PARTNER_CORRELATED_ATTRIBUTES and attr_name in primary:
-            correlated = correlate_partner_attribute(
+        # Partner-correlated: use assortative mating
+        elif attr.scope == "partner_correlated" and attr_name in primary:
+            value = correlate_partner_attribute(
                 attr_name,
+                attr.type,
                 primary[attr_name],
+                attr.correlation_rate,
                 rng,
                 config,
                 available_options=categorical_options.get(attr_name),
             )
-            if correlated is not None:
-                value = correlated
-            else:
-                # Fallback: sample independently
-                try:
-                    value = _sample_attribute(attr, rng, agent, stats)
-                except FormulaError as e:
-                    raise SamplingError(
-                        f"Agent {index}: Failed to sample '{attr_name}': {e}"
-                    ) from e
         else:
-            # Independent sampling
+            # Individual scope: sample independently
             try:
                 value = _sample_attribute(attr, rng, agent, stats)
             except FormulaError as e:
