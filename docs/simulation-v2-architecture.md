@@ -34,7 +34,7 @@ Decisions confirmed before implementation. These override any conflicting detail
 | 5 | Timeline merge semantics | Timeline entry overrides base event for that timestep. |
 | 6 | DB schema for new artifacts | Define conversations/posts/action_history tables before Phase D. |
 | 7 | Name data | Local SSA baby names + Census surnames, bundled CSVs (~500KB), US-only. Non-US via country-specific CSVs later behind same interface: `generate_name(gender, ethnicity, birth_decade, country="US")`. |
-| 8 | Conformity/threshold mechanics | Soft prompt signal only (inject local adoption ratio + conformity phrasing). No hard numeric gate. |
+| 8 | Conformity/threshold mechanics | Soft prompt signal only (conformity self-awareness + peer opinions + mood rendering). No explicit ratios or hard numeric gates. |
 | 9 | Backtesting ground-truth | Define one validation dataset schema before Phase G. |
 
 ### Phase-Specific Decisions
@@ -1034,12 +1034,12 @@ The 12 tenets below define what a high-fidelity simulation must satisfy. Tenets 
 | 3 | Social hierarchy & influence topology | **Partial** | Structural role edges, degree multipliers in network config, edge weight hierarchy | No explicit power-law degree enforcement; no hub/opinion-leader generation. Need scenario-dependent centrality targets |
 | 4 | Behavioral heterogeneity | **Partial** | Big Five personality, risk tolerance, institutional trust, cognitive attributes vary per agent | Decision-policy heterogeneity relies entirely on LLM interpretation of persona. Need explicit behavioral parameters (conformity threshold, action inertia) as agent attributes |
 | 5 | Temporal dynamics & decay | **Strong** | Conviction decay, temporal prompt awareness, emotional trajectory, memory history, scenario timeline with evolving events | Need intent→action accountability loop (surface prior action_intent, ask about follow-through) |
-| 6 | Social contagion & network effects | **Partial** | Network propagation, share modifiers, conversation system, aggregate mood, peer opinions | No explicit threshold/complex contagion. Need per-agent conformity parameter + local adoption ratio injection |
+| 6 | Social contagion & network effects | **Partial** | Network propagation, share modifiers, conversation system, aggregate mood, peer opinions | No explicit threshold/complex contagion. Need per-agent conformity parameter + conformity-aware prompt phrasing |
 | 7 | Friction & transaction costs | **Weak** | option_friction on outcomes, bounded confidence mechanics | Biggest gap. Need explicit intent→behavior pipeline: surface what agent planned vs what they actually did. Friction emerges from agent constraints but isn't tracked or measured |
 | 8 | Bounded rationality & heuristics | **Strong** | LLM is inherently a bounded rationality engine. Persona attributes (education, digital literacy, neuroticism) shape heuristic use. Agents satisfice, anchor, exhibit status quo bias naturally | Could strengthen with explicit bias nudges in prompts for specific attributes |
 | 9 | Environmental & contextual sensitivity | **Partial** | Scenario timeline handles exogenous shocks. Channel templates adapt to agent demographics | Need ambient macro context in every prompt (economic conditions, cultural moment). Need previous-timestep macro summary injection |
 | 10 | Identity & group membership | **Partial** | race_ethnicity, political_orientation, religious_affiliation in persona. Social role edges create in-group connections | Need identity-threat framing: when the scenario threatens a group identity, persona rendering should explicitly flag it as identity-relevant |
-| 11 | Preference interdependence | **Partial** | Aggregate mood rendering ("most people I know are doing X"), peer opinions, social posts. Bandwagon/FOMO effects emerge from context | Need explicit local adoption ratio in prompt: "X% of people you know have already done Y." Makes interdependence concrete, not just vibes |
+| 11 | Preference interdependence | **Partial** | Aggregate mood rendering ("most people I know are doing X"), peer opinions, social posts. Bandwagon/FOMO effects emerge from context | Named peer opinions + local mood + macro summary provide social pressure without omniscient ratio framing |
 | 12 | Macro-micro feedback loops | **Partial** | Micro→macro works (agent decisions → aggregate stats). Timeline handles exogenous macro shifts | No endogenous macro: agent behavior doesn't produce emergent macro variables that feed back. Need at minimum: inject previous timestep aggregates as ambient context |
 
 ### Concrete Fixes to Close Gaps
@@ -1087,16 +1087,19 @@ These are the minimum changes needed to move every tenet to **Strong**. Listed i
 
 **Soft conformity/threshold behavior:**
 - Add `conformity` as a standard personality attribute (0-1 scale, correlated with agreeableness). Sampled at population creation time.
-- At prompt build time, compute **local adoption ratio**: what fraction of this agent's network has already taken action (changed position, shared, etc.)
-- Inject into prompt: "About 7 out of 10 people you know have already started making changes. You tend to [wait until most people around you have acted / act independently of what others are doing]." (phrasing depends on conformity level)
-- This gives the LLM explicit threshold context without hardcoding a threshold formula. A high-conformity agent seeing 70% adoption will likely act. A low-conformity agent seeing the same might resist specifically because everyone else is doing it (contrarian behavior).
+- Inject conformity self-awareness into prompt: "I tend to go along with what most people around me are doing" (high) or "I tend to form my own opinion regardless of what others think" (low). Mid-range agents get no explicit phrasing.
+- Social pressure is conveyed through **existing mechanisms**, not explicit ratios:
+  - Named peer opinions: "My coworker Darnell thinks X"
+  - Local mood rendering: "Most people around me seem worried"
+  - Macro summary: "The general mood is shifting toward X"
+- **Rationale:** People don't actually know "7 out of 10 contacts did X" — that's omniscient narrator framing. Real social pressure comes from specific conversations and vague impressions, which the peer opinion and mood systems already capture.
 
 **Macro state feedback:**
 - After each timestep, compute macro summary from TimestepSummary data:
   - Position distribution rendered as "Most people are choosing X. A growing minority is doing Y."
   - Sentiment trend: "The general mood is getting worse / stabilizing / improving."
   - Exposure saturation: "Almost everyone has heard about this now."
-  - Action adoption rate: "About X% of people have already taken concrete action."
+  - Action momentum: "More and more people are taking action" / "Most people are still waiting"
 - Inject this into every agent's next-timestep prompt as ambient context, rendered as what the agent would sense from media/social feeds, not raw numbers.
 - This closes the macro→micro loop: agent decisions → aggregate stats → rendered as ambient context → influences next round of agent decisions.
 
@@ -1203,7 +1206,7 @@ Ship this alone. Every simulation immediately feels more human, and the accounta
 
 - Scenario timeline: sequence of events at specified timesteps
 - Timeline injection into agent prompts as "what's happened since last time"
-- Local adoption ratio computed per agent ("7 out of 10 people you know have acted")
+- Named peer opinions + local mood convey social pressure without explicit ratios
 - Conformity-aware prompt rendering ("You tend to wait for others / act independently")
 - Ambient scenario context field (`background_context` in ScenarioSpec)
 - Macro state feedback: timestep aggregates rendered as ambient vibes in next prompt
