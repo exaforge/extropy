@@ -2006,6 +2006,13 @@ class SimulationEngine:
                 with open(self.output_dir / "conversations.json", "w") as f:
                     json.dump(all_conversations, f, indent=2)
 
+            # Export social posts
+            all_posts = self.study_db.get_all_social_posts(self.run_id)
+            if all_posts:
+                meta["social_posts_count"] = len(all_posts)
+                with open(self.output_dir / "social_posts.json", "w") as f:
+                    json.dump(all_posts, f, indent=2)
+
         with open(self.output_dir / "meta.json", "w") as f:
             json.dump(meta, f, indent=2)
 
