@@ -14,6 +14,8 @@ error feedback if syntax errors are detected. This catches issues like
 unterminated strings, invalid formulas, etc. before proceeding.
 """
 
+import logging
+
 from ...core.llm import RetryCallback
 from ...core.models import (
     AttributeSpec,
@@ -31,6 +33,69 @@ from .hydrators import (
     hydrate_household_config,
     hydrate_name_config,
 )
+
+logger = logging.getLogger(__name__)
+
+# Keywords that suggest household context is relevant
+_HOUSEHOLD_KEYWORDS = frozenset(
+    [
+        "family",
+        "families",
+        "couple",
+        "couples",
+        "household",
+        "households",
+        "parent",
+        "parents",
+        "retired",
+        "retiree",
+        "retirees",
+        "spouse",
+        "spouses",
+        "married",
+        "cohabit",
+        "living together",
+        "home owner",
+        "homeowner",
+    ]
+)
+
+
+def _should_hydrate_household_config(
+    population: str,
+    attributes: list[DiscoveredAttribute],
+) -> bool:
+    """Check if this population needs household config research.
+
+    Household config is expensive (agentic research with web search).
+    Only hydrate it when:
+    1. Any discovered attribute has scope="household", OR
+    2. Population description mentions household-related keywords
+
+    For purely professional populations (physicians, office workers, voters),
+    we skip household research and use defaults if household sampling triggers.
+
+    Args:
+        population: Population description
+        attributes: Discovered attributes from selector
+
+    Returns:
+        True if household config should be researched
+    """
+    # Check if any attribute has household scope
+    has_household_attrs = any(
+        getattr(attr, "scope", "individual") == "household" for attr in attributes
+    )
+    if has_household_attrs:
+        return True
+
+    # Check if population description implies household context
+    pop_lower = population.lower()
+    for keyword in _HOUSEHOLD_KEYWORDS:
+        if keyword in pop_lower:
+            return True
+
+    return False
 
 
 # =============================================================================
@@ -223,17 +288,25 @@ def hydrate_attributes(
             len(modifier_sources),
         )
 
-    # Step 2e: Household config
-    report("2e", "Researching household composition...")
-    household_config, hh_sources = hydrate_household_config(
-        population=population,
-        geography=geography,
-        model=model,
-        reasoning_effort=reasoning_effort,
-        on_retry=make_retry_callback("2e"),
-    )
-    all_sources.extend(hh_sources)
-    report("2e", "Household config researched", len(hh_sources))
+    # Step 2e: Household config (conditional - skip for purely professional populations)
+    if _should_hydrate_household_config(population, attributes):
+        report("2e", "Researching household composition...")
+        household_config, hh_sources = hydrate_household_config(
+            population=population,
+            geography=geography,
+            model=model,
+            reasoning_effort=reasoning_effort,
+            on_retry=make_retry_callback("2e"),
+        )
+        all_sources.extend(hh_sources)
+        report("2e", "Household config researched", len(hh_sources))
+    else:
+        logger.info(
+            "Skipping household config hydration - no household-scoped attributes "
+            "or household keywords in population description"
+        )
+        household_config = HouseholdConfig()
+        report("2e", "Skipped (no household context)", 0)
 
     # Step 2f: Name config
     report("2f", "Researching population-appropriate names...")
