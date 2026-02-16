@@ -108,6 +108,8 @@ Agents experience the crisis as it unfolds. Early timesteps have high uncertaint
 
 **Automatic detection**: If you define a single event with no timeline, Extropy treats it as static. If you provide multiple events or explicit timeline entries, it switches to evolving mode. You can override with `timeline_mode: static` or `timeline_mode: evolving`.
 
+**Background context**: Scenarios can include ambient framing that appears in every agent's prompt. "The US economy is in a mild recession. Unemployment was at 4.5% before the AI announcement. It's early spring." This shapes reasoning without being the focal event.
+
 **Timestep units are configurable**: Days, weeks, months - whatever fits your scenario. A crisis might unfold over days. A policy change might play out over months. A generational shift might span years.
 
 ---
@@ -190,9 +192,13 @@ Agents aren't goldfish. They remember.
 
 **Temporal labeling**: Prompts explicitly state the current timestep. "It's now Week 5 of this situation." Agents can reason about time - how long something has been going on, whether their views have been stable or shifting.
 
-**Emotional trajectory**: The system detects sentiment trends. "You started skeptical but have been warming up" or "Your enthusiasm has been fading over the past few weeks." This shapes agent self-awareness.
+**Emotional trajectory**: The system detects sentiment trends and renders them as narrative. "I've been feeling increasingly negative since this started" or "My mood has been fairly steady." This gives agents emotional continuity between timesteps instead of starting fresh every time.
+
+**Conviction self-awareness**: Agents know how firm they've been. "I've been firm about this since Week 1" or "I started certain but my certainty has been slipping." This enables commitment bias (consistent agents resist change) and openness (wavering agents are more receptive).
 
 **Intent accountability**: If an agent said they'd do something, they get reminded. "Last week you said you were going to look into alternatives. Has anything changed?" This prevents agents from making bold claims they never follow through on.
+
+**Repetition detection**: When agents keep thinking the same thing for multiple timesteps, they get nudged: "You've been thinking the same things for a while now. Has anything actually changed? Are you starting to doubt yourself? Have you done anything about it, or just thought about it?" This prevents stale convergence where agents repeat identical reasoning.
 
 **Conviction decay**: Strong opinions fade without reinforcement. A conviction score of 0.9 doesn't stay at 0.9 forever. Configurable decay rate means you can model how quickly certainty erodes.
 
@@ -248,10 +254,10 @@ Agents can talk to each other. When reasoning, an agent can choose to initiate a
 
 **Conflict resolution**: When multiple agents want to talk to the same target, priority determines who wins. Higher relationship weight wins - a partner request beats a coworker request. Deferred requests can execute in later timesteps.
 
-**Fidelity control**: The `--fidelity` flag controls conversation depth:
-- `low`: No conversations at all - just reasoning
-- `medium` (default): 2 turns (4 messages), top 1 conversation per agent
-- `high`: 3 turns (6 messages), up to 2 conversations per agent
+**Fidelity control**: The `--fidelity` flag controls conversation depth and prompt richness:
+- `low`: No conversations, last 5 memory traces, basic prompts
+- `medium` (default): 2 turns (4 messages), 1 conversation per agent, full memory traces
+- `high`: 3 turns (6 messages), up to 2 conversations per agent, explicit THINK vs SAY separation, repetition detection
 
 ---
 
@@ -289,8 +295,39 @@ To make it concrete, here are scenarios that work right now with no additional d
 - Social media dynamics where public discourse influences individuals
 - Any population, any country, any event, any outcome structure
 
-The constraints are:
-- No runtime fidelity/cost tradeoffs beyond merged pass and fidelity levels (yet)
-- No validation against historical ground truth (yet)
+---
 
-Those are Phases E and F. What's here now is Phases A through D - the core simulation engine with households, networks, timelines, conversations, and social posts.
+## Cognitive Depth at High Fidelity
+
+At `--fidelity high`, agents get additional cognitive architecture features:
+
+**THINK vs SAY separation**: Prompts explicitly distinguish between internal monologue (raw, honest thoughts) and public statement (socially filtered). Agents with high agreeableness might have a large gap between what they think and what they say - that's interesting data.
+
+**Repetition detection**: If an agent's reasoning is too similar to their previous timestep (>70% trigram overlap), they get a prompt nudge forcing them to go deeper. This prevents the stale convergence where agents just repeat "save money, learn AI, find backup work" verbatim for 5 timesteps.
+
+These features are always-on at high fidelity, adding cognitive realism without additional configuration.
+
+---
+
+## Scenarios You Can Run Today
+
+To make it concrete, here are scenarios that work right now with no additional development:
+
+- US households responding to a streaming service price increase
+- Japanese employees adapting to return-to-office mandates
+- Indian consumers in multiple cities evaluating a new fintech app
+- Brazilian families weighing migration decisions
+- UK residents responding to congestion pricing expansion
+- German citizens reacting to energy policy changes
+- Mixed urban/rural populations facing a natural disaster
+- Multi-generational households navigating technology adoption
+- Professional networks processing industry disruption news
+- Religious communities responding to doctrinal changes
+- Parent networks reacting to school policy updates
+- Couples having conversations that shift their positions
+- Workplace discussions that change minds
+- Social media dynamics where public discourse influences individuals
+- Crisis scenarios that evolve over days/weeks with new developments
+- Any population, any country, any event, any outcome structure
+
+The core simulation engine is complete through Phase E - households, networks, timelines, conversations, social posts, and cognitive architecture. What remains is Phase F (fidelity-gated results export and conversation impact analysis).

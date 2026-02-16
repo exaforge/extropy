@@ -70,6 +70,8 @@ from .aggregation import (
     compute_outcome_distributions,
     compute_timeline_aggregates,
     compute_conversation_stats,
+    compute_most_impactful_conversations,
+    export_elaborations_csv,
 )
 
 logger = logging.getLogger(__name__)
@@ -1475,6 +1477,8 @@ class SimulationEngine:
         observability where agents can only perceive what peers have explicitly
         shared or posted. Silent position changes are invisible.
 
+        Peer limit is fidelity-gated: low=5, medium=5, high=10.
+
         Args:
             agent_id: Agent ID
 
@@ -1484,7 +1488,10 @@ class SimulationEngine:
         neighbors = self.adjacency.get(agent_id, [])
         opinions = []
 
-        for neighbor_id, edge_data in neighbors[:5]:  # Limit to 5 peers
+        # Fidelity-gated peer limit: low/medium=5, high=10
+        max_peers = 10 if self.config.fidelity == "high" else 5
+
+        for neighbor_id, edge_data in neighbors[:max_peers]:
             neighbor_state = self.state_manager.get_agent_state(neighbor_id)
 
             # Only include peer if they actively shared (observable behavior)
@@ -2012,6 +2019,27 @@ class SimulationEngine:
                 meta["social_posts_count"] = len(all_posts)
                 with open(self.output_dir / "social_posts.json", "w") as f:
                     json.dump(all_posts, f, indent=2)
+
+            # Export most impactful conversations
+            if conv_stats["total_conversations"] > 0:
+                impactful = compute_most_impactful_conversations(
+                    study_db=self.study_db,
+                    run_id=self.run_id,
+                    max_timesteps=self.scenario.simulation.max_timesteps,
+                    top_n=10,
+                )
+                if impactful:
+                    meta["most_impactful_conversations"] = impactful
+
+        # Export flattened elaborations CSV for DS workflows
+        csv_path = self.output_dir / "elaborations.csv"
+        rows_exported = export_elaborations_csv(
+            state_manager=self.state_manager,
+            agent_map=self.agent_map,
+            output_path=str(csv_path),
+        )
+        if rows_exported > 0:
+            meta["elaborations_csv_rows"] = rows_exported
 
         with open(self.output_dir / "meta.json", "w") as f:
             json.dump(meta, f, indent=2)
