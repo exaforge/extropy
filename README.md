@@ -13,6 +13,10 @@
   <strong>Predictive intelligence through agent-based population simulation.</strong>
 </p>
 
+<p align="center">
+  <a href="https://extropy.run/blog/extropy-01">📰 Announcement: Validated against 12 historical events — 9/12 matched real-world outcomes</a>
+</p>
+
 Extropy creates synthetic populations grounded in real-world distributions, connects them in social networks, and simulates how they respond to events — each agent reasoning individually via LLM. Opinions form, spread, and evolve. Get distributional predictions by segment with reasoning traces explaining why.
 
 **Simulate anything:** Netflix price hikes. Policy changes. Product launches. Crisis response. ASI breakout. Alien contact. Any scenario where humans form opinions, make decisions, and influence each other.
