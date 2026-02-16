@@ -234,6 +234,41 @@ After simulation runs, you have:
 
 ---
 
+## Agent Conversations
+
+Agents can talk to each other. When reasoning, an agent can choose to initiate a conversation with someone in their network.
+
+**Talk-to actions**: During reasoning, agents can request to talk to someone - a coworker, neighbor, partner, or family member. The request includes who they want to talk to and what topic they want to discuss.
+
+**Multi-turn exchanges**: Conversations are full back-and-forth dialogues. The initiator speaks, the target responds, they go back and forth for 2-3 turns depending on fidelity settings. Each turn is a complete LLM call with the speaker's persona and context.
+
+**State updates from conversations**: Conversations change minds. After talking, both participants get updated sentiment, conviction, and potentially position. These conversation-driven state changes override provisional reasoning state - a compelling conversation can shift someone more than passive exposure.
+
+**Partner and NPC conversations**: Agents can talk to their partner (whether another full agent or an NPC spouse) or household dependents. NPC conversations work the same way, but only the initiator's state updates - NPCs don't have persistent state.
+
+**Conflict resolution**: When multiple agents want to talk to the same target, priority determines who wins. Higher relationship weight wins - a partner request beats a coworker request. Deferred requests can execute in later timesteps.
+
+**Fidelity control**: The `--fidelity` flag controls conversation depth:
+- `low`: No conversations at all - just reasoning
+- `medium` (default): 2 turns (4 messages), top 1 conversation per agent
+- `high`: 3 turns (6 messages), up to 2 conversations per agent
+
+---
+
+## Social Feed and Public Discourse
+
+Agents don't just see their direct network neighbors. They perceive broader public discourse.
+
+**Public statements become posts**: When agents share (set `will_share=True`), their public statement gets recorded as a social post. These accumulate over timesteps, creating a timeline of what people are saying.
+
+**Social feed beyond network**: In subsequent timesteps, agents see a "What People Are Saying Online" section in their prompts. This shows recent posts from the broader population - not just direct neighbors. It's like seeing trending takes on social media from strangers.
+
+**Network vs. public**: Peer opinions come from direct network neighbors. The social feed comes from everyone else who's sharing. Agents experience both - personal network influence and ambient public discourse.
+
+**Configurable lookback**: The feed pulls from recent timesteps (default: 3 timesteps back, 5 posts shown). This models the recency bias of social media - you see what's trending now, not old takes.
+
+---
+
 ## Scenarios You Can Run Today
 
 To make it concrete, here are scenarios that work right now with no additional development:
@@ -249,12 +284,13 @@ To make it concrete, here are scenarios that work right now with no additional d
 - Professional networks processing industry disruption news
 - Religious communities responding to doctrinal changes
 - Parent networks reacting to school policy updates
+- Couples having conversations that shift their positions
+- Workplace discussions that change minds
+- Social media dynamics where public discourse influences individuals
 - Any population, any country, any event, any outcome structure
 
 The constraints are:
-- No agent-to-agent conversations (yet)
-- No agents creating public social posts (yet)
-- No runtime fidelity/cost tradeoffs beyond merged pass (yet)
+- No runtime fidelity/cost tradeoffs beyond merged pass and fidelity levels (yet)
 - No validation against historical ground truth (yet)
 
-Those are Phases D, E, F, and G. What's here now is Phases A, B, and C - the core simulation engine with households, networks, timelines, and reasoning.
+Those are Phases E and F. What's here now is Phases A through D - the core simulation engine with households, networks, timelines, conversations, and social posts.
