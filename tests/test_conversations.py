@@ -1,7 +1,5 @@
 """Unit tests for Phase D conversation system."""
 
-import pytest
-
 from extropy.simulation.conversation import (
     ConversationRequest,
     ConversationMessage,
