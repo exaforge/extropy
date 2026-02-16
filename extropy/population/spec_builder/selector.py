@@ -11,6 +11,65 @@ from ...core.llm import reasoning_call
 from ...core.models import AttributeSpec, DiscoveredAttribute
 
 
+# Multi-country geography patterns that should trigger country attribute injection
+MULTI_COUNTRY_PATTERNS = [
+    # Global
+    "world",
+    "global",
+    "globe",
+    "international",
+    "worldwide",
+    # Continents
+    "africa",
+    "asia",
+    "europe",
+    "north america",
+    "south america",
+    "latin america",
+    "oceania",
+    "antarctica",
+    # Regions spanning multiple countries
+    "east asia",
+    "southeast asia",
+    "south asia",
+    "central asia",
+    "middle east",
+    "western europe",
+    "eastern europe",
+    "central europe",
+    "northern europe",
+    "southern europe",
+    "sub-saharan africa",
+    "north africa",
+    "central america",
+    "caribbean",
+    "pacific",
+    "nordic",
+    "scandinavian",
+    "balkan",
+    "mediterranean",
+    "gulf",
+    "apac",
+    "emea",
+    "latam",
+    "amer",
+]
+
+
+def _is_multi_country_geography(geography: str | None, description: str) -> bool:
+    """Detect if the population spans multiple countries."""
+    if not geography and not description:
+        return False
+
+    text = f"{geography or ''} {description}".lower()
+
+    for pattern in MULTI_COUNTRY_PATTERNS:
+        if pattern in text:
+            return True
+
+    return False
+
+
 # JSON schema for attribute selection response
 ATTRIBUTE_SELECTION_SCHEMA = {
     "type": "object",
@@ -333,5 +392,23 @@ def select_attributes(
                         depends_on=[],
                     )
                 )
+
+    # Inject country attribute for multi-country geographies
+    if _is_multi_country_geography(geography, description):
+        existing_names = {a.name for a in attributes}
+        if "country" not in existing_names:
+            # Insert at the beginning (universal demographic)
+            attributes.insert(
+                0,
+                DiscoveredAttribute(
+                    name="country",
+                    type="categorical",
+                    category="universal",
+                    description="Country of residence",
+                    strategy="independent",
+                    scope="household",
+                    depends_on=[],
+                ),
+            )
 
     return attributes

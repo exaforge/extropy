@@ -29,6 +29,7 @@ HOUSEHOLD_SHARED_ATTRIBUTES = [
 # Attributes correlated between partners (not copied, but biased)
 PARTNER_CORRELATED_ATTRIBUTES = [
     "age",
+    "country",
     "race_ethnicity",
     "education_level",
     "religious_affiliation",
@@ -114,6 +115,15 @@ def correlate_partner_attribute(
             )
         )
         return max(config.min_adult_age, partner_age)
+
+    if attr_name == "country":
+        if rng.random() < config.same_country_rate:
+            return primary_value
+        if available_options:
+            others = [o for o in available_options if o != primary_value]
+            if others:
+                return rng.choice(others)
+        return primary_value
 
     if attr_name == "race_ethnicity":
         same_rate = config.same_group_rates.get(

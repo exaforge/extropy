@@ -422,3 +422,23 @@ class TestCorrelatedDemographics:
             avg_diff = sum(age_diffs) / len(age_diffs)
             # Average age gap should be small (< 10 years)
             assert avg_diff < 10, f"Average age gap {avg_diff:.1f} too large"
+
+    def test_country_correlation(self):
+        """Country should be correlated with high same-country rate (~95%)."""
+        rng = random.Random(42)
+        config = HouseholdConfig(same_country_rate=0.95)
+        countries = ["USA", "India", "UK", "Japan", "Brazil"]
+
+        same_country = 0
+        total = 1000
+        for _ in range(total):
+            primary_country = rng.choice(countries)
+            partner_country = correlate_partner_attribute(
+                "country", primary_country, rng, config, countries
+            )
+            if partner_country == primary_country:
+                same_country += 1
+
+        rate = same_country / total
+        # Should be close to 0.95 (within statistical margin)
+        assert 0.90 < rate < 0.99, f"Same-country rate {rate:.2%} out of expected range"

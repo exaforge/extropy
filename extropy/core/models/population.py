@@ -106,6 +106,8 @@ class HouseholdConfig(BaseModel):
         }
     )
     default_same_group_rate: float = 0.85
+    # Partner correlation: same-country rate for international populations
+    same_country_rate: float = 0.95
     assortative_mating: dict[str, float] = Field(
         default_factory=lambda: {
             "education_level": 0.6,
