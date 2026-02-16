@@ -331,6 +331,26 @@ class StudyDB:
                 PRIMARY KEY (population_id, id)
             );
 
+            CREATE TABLE IF NOT EXISTS conversations (
+                id TEXT PRIMARY KEY,
+                run_id TEXT NOT NULL,
+                timestep INTEGER NOT NULL,
+                initiator_id TEXT NOT NULL,
+                target_id TEXT NOT NULL,
+                target_is_npc INTEGER DEFAULT 0,
+                target_npc_profile JSON,
+                messages JSON NOT NULL,
+                initiator_state_change JSON,
+                target_state_change JSON,
+                priority_score REAL,
+                created_at TEXT NOT NULL
+            );
+
+            CREATE INDEX IF NOT EXISTS idx_conversations_run_timestep
+                ON conversations(run_id, timestep);
+            CREATE INDEX IF NOT EXISTS idx_conversations_initiator
+                ON conversations(run_id, initiator_id);
+
             CREATE INDEX IF NOT EXISTS idx_households_population ON households(population_id);
             CREATE INDEX IF NOT EXISTS idx_agents_population ON agents(population_id);
             CREATE INDEX IF NOT EXISTS idx_network_edges_src ON network_edges(network_id, source_id);
@@ -1107,6 +1127,140 @@ class StudyDB:
                 }
             )
         return out
+
+    def save_conversation(
+        self,
+        run_id: str,
+        conversation_data: dict[str, Any],
+    ) -> str:
+        """Save a conversation record.
+
+        Args:
+            run_id: Simulation run ID
+            conversation_data: Dict with id, timestep, initiator_id, target_id,
+                target_is_npc, target_npc_profile, messages, initiator_state_change,
+                target_state_change, priority_score
+
+        Returns:
+            Conversation ID
+        """
+        conv_id = conversation_data.get("id", str(uuid.uuid4()))
+        cursor = self.conn.cursor()
+        cursor.execute(
+            """
+            INSERT OR REPLACE INTO conversations
+            (id, run_id, timestep, initiator_id, target_id, target_is_npc,
+             target_npc_profile, messages, initiator_state_change, target_state_change,
+             priority_score, created_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                conv_id,
+                run_id,
+                conversation_data["timestep"],
+                conversation_data["initiator_id"],
+                conversation_data["target_id"],
+                1 if conversation_data.get("target_is_npc") else 0,
+                _dumps(conversation_data.get("target_npc_profile")),
+                _dumps(conversation_data["messages"]),
+                _dumps(conversation_data.get("initiator_state_change")),
+                _dumps(conversation_data.get("target_state_change")),
+                conversation_data.get("priority_score"),
+                _now_iso(),
+            ),
+        )
+        self.conn.commit()
+        return conv_id
+
+    def get_conversations_for_timestep(
+        self,
+        run_id: str,
+        timestep: int,
+    ) -> list[dict[str, Any]]:
+        """Get all conversations for a specific timestep.
+
+        Args:
+            run_id: Simulation run ID
+            timestep: Timestep to query
+
+        Returns:
+            List of conversation records
+        """
+        cursor = self.conn.cursor()
+        cursor.execute(
+            """
+            SELECT id, timestep, initiator_id, target_id, target_is_npc,
+                   target_npc_profile, messages, initiator_state_change,
+                   target_state_change, priority_score, created_at
+            FROM conversations
+            WHERE run_id = ? AND timestep = ?
+            ORDER BY priority_score DESC
+            """,
+            (run_id, timestep),
+        )
+        results = []
+        for row in cursor.fetchall():
+            results.append({
+                "id": row["id"],
+                "timestep": row["timestep"],
+                "initiator_id": row["initiator_id"],
+                "target_id": row["target_id"],
+                "target_is_npc": bool(row["target_is_npc"]),
+                "target_npc_profile": json.loads(row["target_npc_profile"] or "null"),
+                "messages": json.loads(row["messages"]),
+                "initiator_state_change": json.loads(
+                    row["initiator_state_change"] or "null"
+                ),
+                "target_state_change": json.loads(row["target_state_change"] or "null"),
+                "priority_score": row["priority_score"],
+                "created_at": row["created_at"],
+            })
+        return results
+
+    def get_agent_conversation_history(
+        self,
+        run_id: str,
+        agent_id: str,
+    ) -> list[dict[str, Any]]:
+        """Get all conversations involving a specific agent.
+
+        Args:
+            run_id: Simulation run ID
+            agent_id: Agent ID (as initiator or target)
+
+        Returns:
+            List of conversation records ordered by timestep
+        """
+        cursor = self.conn.cursor()
+        cursor.execute(
+            """
+            SELECT id, timestep, initiator_id, target_id, target_is_npc,
+                   target_npc_profile, messages, initiator_state_change,
+                   target_state_change, priority_score, created_at
+            FROM conversations
+            WHERE run_id = ? AND (initiator_id = ? OR target_id = ?)
+            ORDER BY timestep, created_at
+            """,
+            (run_id, agent_id, agent_id),
+        )
+        results = []
+        for row in cursor.fetchall():
+            results.append({
+                "id": row["id"],
+                "timestep": row["timestep"],
+                "initiator_id": row["initiator_id"],
+                "target_id": row["target_id"],
+                "target_is_npc": bool(row["target_is_npc"]),
+                "target_npc_profile": json.loads(row["target_npc_profile"] or "null"),
+                "messages": json.loads(row["messages"]),
+                "initiator_state_change": json.loads(
+                    row["initiator_state_change"] or "null"
+                ),
+                "target_state_change": json.loads(row["target_state_change"] or "null"),
+                "priority_score": row["priority_score"],
+                "created_at": row["created_at"],
+            })
+        return results
 
     def run_select(
         self,

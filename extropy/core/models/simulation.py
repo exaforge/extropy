@@ -17,7 +17,7 @@ Defines all state and event models used during simulation execution:
 
 from datetime import datetime
 from enum import Enum
-from typing import Any
+from typing import Any, Literal
 
 from pydantic import BaseModel, Field
 
@@ -331,6 +331,11 @@ class ReasoningContext(BaseModel):
         default=None,
         description="Agent's conformity attribute (0-1)",
     )
+    # Phase D additions
+    available_contacts: list[dict[str, Any]] = Field(
+        default_factory=list,
+        description="People the agent can talk to (name, relationship, observable state)",
+    )
 
 
 # =============================================================================
@@ -365,6 +370,10 @@ class ReasoningResponse(BaseModel):
     reasoning: str = Field(default="", description="Full internal monologue")
     outcomes: dict[str, Any] = Field(
         default_factory=dict, description="All structured outcomes (from Pass 2)"
+    )
+    actions: list[dict[str, Any]] = Field(
+        default_factory=list,
+        description="Actions the agent intends to take (talk_to, etc.)",
     )
 
     # Token usage tracking (populated by two-pass reasoning)
@@ -410,6 +419,10 @@ class SimulationRunConfig(BaseModel):
     merged_pass: bool = Field(
         default=False,
         description="Use single merged pass instead of two-pass reasoning (experimental)",
+    )
+    fidelity: Literal["low", "medium", "high"] = Field(
+        default="medium",
+        description="Fidelity level controlling conversation depth and prompt richness",
     )
 
     # Backward compat aliases

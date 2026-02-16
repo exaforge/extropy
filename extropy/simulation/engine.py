@@ -33,6 +33,7 @@ from ..core.models import (
     MemoryEntry,
     PeerOpinion,
     ReasoningContext,
+    ReasoningResponse,
     SimulationEvent,
     SimulationEventType,
     SimulationRunConfig,
@@ -49,6 +50,12 @@ from .reasoning import (
     batch_reason_agents_async,
     create_reasoning_context,
 )
+from .conversation import (
+    collect_conversation_requests,
+    prioritize_and_resolve_conflicts,
+    execute_conversation_batch_async,
+    ConversationResult,
+)
 from .propagation import (
     apply_seed_exposures,
     apply_timeline_exposures,
@@ -62,6 +69,7 @@ from .aggregation import (
     compute_final_aggregates,
     compute_outcome_distributions,
     compute_timeline_aggregates,
+    compute_conversation_stats,
 )
 
 logger = logging.getLogger(__name__)
@@ -537,9 +545,26 @@ class SimulationEngine:
         self.total_exposures += total_new_exposures
 
         # 2. Chunked reasoning — each chunk has its own transaction
-        agents_reasoned, state_changes, shares_occurred = self._reason_agents(timestep)
+        agents_reasoned, state_changes, shares_occurred, reasoning_results = (
+            self._reason_agents(timestep)
+        )
 
-        # 2b. Decay conviction for agents that did not reason this timestep.
+        # 2c. Execute conversations (if fidelity > low)
+        conversations_executed = 0
+        conversation_state_changes = 0
+        if self.config.fidelity != "low" and reasoning_results:
+            conv_results = self._execute_conversations(timestep, reasoning_results)
+            conversations_executed = len(conv_results)
+            conversation_state_changes = self._apply_conversation_overrides(
+                timestep, conv_results
+            )
+            if conversations_executed > 0:
+                logger.info(
+                    f"[TIMESTEP {timestep}] Conversations: {conversations_executed} executed, "
+                    f"{conversation_state_changes} state changes"
+                )
+
+        # 2d. Decay conviction for agents that did not reason this timestep.
         # This adds attention-fade dynamics without forcing additional LLM calls.
         with self.state_manager.transaction():
             decayed = self.state_manager.apply_conviction_decay(
@@ -618,13 +643,15 @@ class SimulationEngine:
 
         return new_seed + new_timeline + new_network
 
-    def _reason_agents(self, timestep: int) -> tuple[int, int, int]:
+    def _reason_agents(
+        self, timestep: int
+    ) -> tuple[int, int, int, list[tuple[str, ReasoningResponse | None]]]:
         """Identify agents needing reasoning, run in chunks, commit per-chunk.
 
         On resume, agents already processed this timestep are skipped.
 
         Returns:
-            Tuple of (agents_reasoned, state_changes, shares_occurred).
+            Tuple of (agents_reasoned, state_changes, shares_occurred, reasoning_results).
         """
         self._apply_runtime_guardrails(timestep)
         agents_to_reason = self.state_manager.get_agents_to_reason(
@@ -655,7 +682,7 @@ class SimulationEngine:
             )
 
         if not agents_to_reason:
-            return 0, 0, 0
+            return 0, 0, 0, []
 
         # Create on_agent_done closure for progress tracking
         def _on_agent_done(agent_id: str, result: Any) -> None:
@@ -687,6 +714,7 @@ class SimulationEngine:
             self.run_id, timestep
         )
         totals = {"reasoned": 0, "changes": 0, "shares": 0}
+        all_reasoning_results: list[tuple[str, ReasoningResponse | None]] = []
         work_queue: queue.Queue[tuple[int, list[tuple[str, Any]], bool] | object] = (
             queue.Queue(maxsize=self.writer_queue_size)
         )
@@ -808,6 +836,8 @@ class SimulationEngine:
                     )
                     is_last_chunk = chunk_start + self.chunk_size >= len(contexts)
                     work_queue.put((chunk_index, chunk_results, is_last_chunk))
+                    # Collect results for conversation phase
+                    all_reasoning_results.extend(chunk_results)
             finally:
                 await close_simulation_provider()
 
@@ -830,7 +860,12 @@ class SimulationEngine:
         if writer_error:
             raise writer_error[0]
 
-        return totals["reasoned"], totals["changes"], totals["shares"]
+        return (
+            totals["reasoned"],
+            totals["changes"],
+            totals["shares"],
+            all_reasoning_results,
+        )
 
     def _process_reasoning_chunk(
         self,
@@ -1068,6 +1103,196 @@ class SimulationEngine:
 
         return agents_reasoned, state_changes, shares_occurred
 
+    def _execute_conversations(
+        self,
+        timestep: int,
+        reasoning_results: list[tuple[str, ReasoningResponse | None]],
+    ) -> list[ConversationResult]:
+        """Execute conversations based on talk_to actions from reasoning.
+
+        Args:
+            timestep: Current simulation timestep
+            reasoning_results: List of (agent_id, response) pairs
+
+        Returns:
+            List of conversation results
+        """
+        # Get households for NPC resolution
+        households = self.study_db.get_households(self.scenario.meta.population_id)
+
+        # Collect conversation requests from actions
+        requests = collect_conversation_requests(
+            reasoning_results=reasoning_results,
+            adjacency=self.adjacency,
+            agent_map=self.agent_map,
+            relationship_weights=self.scenario.relationship_weights,
+            households=households,
+        )
+
+        if not requests:
+            return []
+
+        # Prioritize and resolve conflicts
+        batches, _deferred = prioritize_and_resolve_conflicts(
+            requests, fidelity=self.config.fidelity
+        )
+
+        if not batches:
+            return []
+
+        # Build contexts for all agents involved in conversations
+        contexts: dict[str, ReasoningContext] = {}
+        for batch in batches:
+            for req in batch:
+                if req.initiator_id not in contexts:
+                    state = self.state_manager.get_agent_state(req.initiator_id)
+                    contexts[req.initiator_id] = self._build_reasoning_context(
+                        req.initiator_id, state, timestep
+                    )
+                if not req.target_is_npc and req.target_id not in contexts:
+                    state = self.state_manager.get_agent_state(req.target_id)
+                    contexts[req.target_id] = self._build_reasoning_context(
+                        req.target_id, state, timestep
+                    )
+
+        # Execute all batches (in practice, usually just one batch)
+        all_results: list[ConversationResult] = []
+
+        import asyncio
+        from ..core.providers import close_simulation_provider
+
+        async def _run_conversations():
+            try:
+                for batch in batches:
+                    batch_results = await execute_conversation_batch_async(
+                        requests=batch,
+                        contexts=contexts,
+                        agent_map=self.agent_map,
+                        scenario=self.scenario,
+                        config=self.config,
+                        rate_limiter=self.rate_limiter,
+                        timestep=timestep,
+                    )
+                    all_results.extend(batch_results)
+            finally:
+                await close_simulation_provider()
+
+        asyncio.run(_run_conversations())
+
+        # Save conversations to DB
+        for result in all_results:
+            self.study_db.save_conversation(
+                run_id=self.run_id,
+                conversation_data={
+                    "id": result.id,
+                    "timestep": timestep,
+                    "initiator_id": result.initiator_id,
+                    "target_id": result.target_id,
+                    "target_is_npc": result.target_is_npc,
+                    "target_npc_profile": result.target_npc_profile,
+                    "messages": [m.model_dump() for m in result.messages],
+                    "initiator_state_change": (
+                        result.initiator_state_change.model_dump()
+                        if result.initiator_state_change
+                        else None
+                    ),
+                    "target_state_change": (
+                        result.target_state_change.model_dump()
+                        if result.target_state_change
+                        else None
+                    ),
+                    "priority_score": result.priority_score,
+                },
+            )
+
+        logger.info(f"[TIMESTEP {timestep}] Executed {len(all_results)} conversations")
+        return all_results
+
+    def _apply_conversation_overrides(
+        self,
+        timestep: int,
+        conversation_results: list[ConversationResult],
+    ) -> int:
+        """Apply state changes from conversations.
+
+        Conversation outcomes OVERRIDE the provisional reasoning state.
+
+        Args:
+            timestep: Current simulation timestep
+            conversation_results: List of conversation results
+
+        Returns:
+            Number of agents whose state was changed
+        """
+        state_changes = 0
+        state_updates: list[tuple[str, AgentState]] = []
+
+        for result in conversation_results:
+            # Skip empty conversations
+            if not result.messages:
+                continue
+
+            # Apply initiator state change
+            if result.initiator_state_change:
+                change = result.initiator_state_change
+                state = self.state_manager.get_agent_state(result.initiator_id)
+
+                updated = False
+                if change.sentiment is not None:
+                    state.sentiment = change.sentiment
+                    state.private_sentiment = change.sentiment
+                    state.public_sentiment = change.sentiment
+                    updated = True
+                if change.conviction is not None:
+                    state.conviction = change.conviction
+                    state.private_conviction = change.conviction
+                    state.public_conviction = change.conviction
+                    updated = True
+                if change.position is not None:
+                    state.position = change.position
+                    state.private_position = change.position
+                    state.public_position = change.position
+                    updated = True
+
+                if updated:
+                    state.updated_at = timestep
+                    state_updates.append((result.initiator_id, state))
+                    state_changes += 1
+
+            # Apply target state change (only for non-NPC targets)
+            if not result.target_is_npc and result.target_state_change:
+                change = result.target_state_change
+                state = self.state_manager.get_agent_state(result.target_id)
+
+                updated = False
+                if change.sentiment is not None:
+                    state.sentiment = change.sentiment
+                    state.private_sentiment = change.sentiment
+                    state.public_sentiment = change.sentiment
+                    updated = True
+                if change.conviction is not None:
+                    state.conviction = change.conviction
+                    state.private_conviction = change.conviction
+                    state.public_conviction = change.conviction
+                    updated = True
+                if change.position is not None:
+                    state.position = change.position
+                    state.private_position = change.position
+                    state.public_position = change.position
+                    updated = True
+
+                if updated:
+                    state.updated_at = timestep
+                    state_updates.append((result.target_id, state))
+                    state_changes += 1
+
+        # Batch update states
+        if state_updates:
+            with self.state_manager.transaction():
+                self.state_manager.batch_update_states(state_updates, timestep)
+
+        return state_changes
+
     def _position_action_friction(self, position: str | None) -> float:
         """Estimate behavior-change friction from a position label."""
         if not position:
@@ -1167,6 +1392,10 @@ class SimulationEngine:
         ctx.observable_peer_actions = self._compute_observable_adoption(agent_id)
         ctx.conformity = agent.get("conformity")
 
+        # Populate Phase D fields (available contacts for conversation)
+        if self.config.fidelity != "low":
+            ctx.available_contacts = self._build_available_contacts(agent_id, agent)
+
         # Build timeline recap (accumulated events up to current timestep)
         if self.scenario.timeline:
             recap = []
@@ -1254,6 +1483,102 @@ class SimulationEngine:
                 visible_actors += 1
 
         return visible_actors
+
+    def _build_available_contacts(
+        self, agent_id: str, agent: dict[str, Any]
+    ) -> list[dict[str, Any]]:
+        """Build list of contacts the agent can talk to.
+
+        Includes network neighbors and household NPCs (partner, dependents).
+        Fidelity controls how many contacts are shown.
+
+        Args:
+            agent_id: Agent ID
+            agent: Agent attributes dict
+
+        Returns:
+            List of contact dicts with name, relationship, last_opinion
+        """
+        contacts: list[dict[str, Any]] = []
+
+        # Determine limits based on fidelity
+        max_peers = 10 if self.config.fidelity == "high" else 5
+
+        # Add partner (agent or NPC)
+        partner_npc = agent.get("partner_npc")
+        if partner_npc:
+            contacts.append(
+                {
+                    "name": partner_npc.get("name", "Partner"),
+                    "relationship": "partner",
+                    "last_opinion": None,
+                    "is_npc": True,
+                }
+            )
+        elif agent.get("partner_agent_id"):
+            partner_id = agent["partner_agent_id"]
+            partner = self.agent_map.get(partner_id, {})
+            partner_state = self.state_manager.get_agent_state(partner_id)
+            contacts.append(
+                {
+                    "name": partner.get("first_name", "Partner"),
+                    "relationship": "partner",
+                    "last_opinion": partner_state.public_statement,
+                    "is_npc": False,
+                }
+            )
+
+        # Add network neighbors (sorted by relationship weight)
+        weights = self.scenario.relationship_weights or {}
+        from ..core.models.scenario import DEFAULT_RELATIONSHIP_WEIGHTS
+
+        for k, v in DEFAULT_RELATIONSHIP_WEIGHTS.items():
+            weights.setdefault(k, v)
+
+        neighbors = self.adjacency.get(agent_id, [])
+        scored_neighbors = []
+        for neighbor_id, edge_data in neighbors:
+            rel = edge_data.get("type", "contact")
+            edge_weight = edge_data.get("weight", 0.5)
+            rel_weight = weights.get(rel, 0.3)
+            score = edge_weight * rel_weight
+            scored_neighbors.append((neighbor_id, edge_data, score))
+
+        # Sort by score descending
+        scored_neighbors.sort(key=lambda x: x[2], reverse=True)
+
+        for neighbor_id, edge_data, _score in scored_neighbors[:max_peers]:
+            neighbor = self.agent_map.get(neighbor_id, {})
+            neighbor_state = self.state_manager.get_agent_state(neighbor_id)
+            name = neighbor.get("first_name")
+            if not name:
+                continue
+
+            contacts.append(
+                {
+                    "name": name,
+                    "relationship": edge_data.get("type", "contact"),
+                    "last_opinion": neighbor_state.public_statement
+                    if neighbor_state.will_share
+                    else None,
+                    "is_npc": False,
+                }
+            )
+
+        # Add household dependents (kids, elderly) as NPCs
+        # These would come from household data if available
+        dependents = agent.get("dependents", [])
+        for dep in dependents:
+            contacts.append(
+                {
+                    "name": dep.get("name", "Family member"),
+                    "relationship": dep.get("relationship", "household"),
+                    "last_opinion": None,
+                    "is_npc": True,
+                }
+            )
+
+        return contacts
 
     def _render_macro_summary(self, summary: TimestepSummary) -> str:
         """Convert a TimestepSummary into a human-readable vibes sentence.
@@ -1552,6 +1877,27 @@ class SimulationEngine:
         # Compute cost from actual token usage
         meta["cost"] = self._compute_cost()
 
+        # Compute and export conversation statistics (Phase D)
+        if self.config.fidelity != "low":
+            conv_stats = compute_conversation_stats(
+                study_db=self.study_db,
+                run_id=self.run_id,
+                max_timesteps=self.scenario.simulation.max_timesteps,
+            )
+            meta["conversation_stats"] = conv_stats
+
+            # Export conversations detail if any occurred
+            if conv_stats["total_conversations"] > 0:
+                all_conversations = []
+                for ts in range(self.scenario.simulation.max_timesteps):
+                    convs = self.study_db.get_conversations_for_timestep(
+                        self.run_id, ts
+                    )
+                    all_conversations.extend(convs)
+
+                with open(self.output_dir / "conversations.json", "w") as f:
+                    json.dump(all_conversations, f, indent=2)
+
         with open(self.output_dir / "meta.json", "w") as f:
             json.dump(meta, f, indent=2)
 
@@ -1579,6 +1925,7 @@ def run_simulation(
     db_write_batch_size: int = 100,
     resource_governor: ResourceGovernor | None = None,
     merged_pass: bool = False,
+    fidelity: str = "medium",
 ) -> SimulationSummary:
     """Run a simulation from a scenario file.
 
@@ -1606,6 +1953,7 @@ def run_simulation(
         db_write_batch_size: Number of chunks applied per DB writer transaction
         resource_governor: Optional governor for runtime downshift guardrails
         merged_pass: Use single merged reasoning pass instead of two-pass (experimental)
+        fidelity: Conversation fidelity level (low, medium, high)
 
     Returns:
         SimulationSummary with results
@@ -1729,6 +2077,10 @@ def run_simulation(
 
     entropy_config = get_config()
 
+    # Validate fidelity
+    if fidelity not in ("low", "medium", "high"):
+        raise ValueError(f"Invalid fidelity '{fidelity}', must be low/medium/high")
+
     config = SimulationRunConfig(
         scenario_path=str(scenario_path),
         output_dir=str(output_dir),
@@ -1738,6 +2090,7 @@ def run_simulation(
         random_seed=random_seed,
         max_concurrent=entropy_config.simulation.max_concurrent,
         merged_pass=merged_pass,
+        fidelity=fidelity,  # type: ignore[arg-type]
     )
     effective_strong = strong or entropy_config.resolve_sim_strong()
     effective_fast = fast or entropy_config.resolve_sim_fast()

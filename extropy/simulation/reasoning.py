@@ -277,6 +277,26 @@ def build_pass1_prompt(
             ]
         )
 
+    # --- Available contacts for conversation (Phase D) ---
+    if context.available_contacts:
+        prompt_parts.extend(["", "## People I Could Talk To", ""])
+        for contact in context.available_contacts:
+            desc = f"- {contact['name']} (my {contact['relationship']})"
+            if contact.get("last_opinion"):
+                last_op = contact["last_opinion"]
+                if len(last_op) > 50:
+                    last_op = last_op[:50] + "..."
+                desc += f': last said "{last_op}"'
+            prompt_parts.append(desc)
+        prompt_parts.extend(
+            [
+                "",
+                "You can choose to talk to someone from the list above. If you do:",
+                "- Pick who would be most helpful for YOUR situation right now",
+                "- State what you want to discuss with them",
+            ]
+        )
+
     # --- Instructions ---
     if is_re_reasoning:
         prompt_parts.extend(
@@ -345,6 +365,26 @@ def build_pass1_schema() -> dict[str, Any]:
             "will_share": {
                 "type": "boolean",
                 "description": "Will you actively discuss or share this with others?",
+            },
+            "actions": {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "type": {"type": "string", "enum": ["talk_to"]},
+                        "who": {
+                            "type": "string",
+                            "description": "Name of person to talk to",
+                        },
+                        "topic": {
+                            "type": "string",
+                            "description": "What to discuss",
+                        },
+                    },
+                    "required": ["type", "who"],
+                },
+                "description": "Actions to take (optional). Can talk to 0-2 people.",
+                "maxItems": 2,
             },
         },
         "required": [
@@ -500,6 +540,26 @@ def build_merged_schema(outcomes: OutcomeConfig) -> dict[str, Any]:
         "will_share": {
             "type": "boolean",
             "description": "Will you actively discuss or share this with others?",
+        },
+        "actions": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "type": {"type": "string", "enum": ["talk_to"]},
+                    "who": {
+                        "type": "string",
+                        "description": "Name of person to talk to",
+                    },
+                    "topic": {
+                        "type": "string",
+                        "description": "What to discuss",
+                    },
+                },
+                "required": ["type", "who"],
+            },
+            "description": "Actions to take (optional). Can talk to 0-2 people.",
+            "maxItems": 2,
         },
     }
     required = [
@@ -684,6 +744,7 @@ async def _reason_agent_two_pass_async(
         sentiment = max(-1.0, min(1.0, float(sentiment)))
     conviction_score = pass1_response.get("conviction")
     will_share = pass1_response.get("will_share", False)
+    actions = pass1_response.get("actions", [])
 
     # Map conviction score (0-100) to float via bucketing
     conviction_float = score_to_conviction_float(conviction_score)
@@ -760,6 +821,7 @@ async def _reason_agent_two_pass_async(
         will_share=will_share,
         reasoning=reasoning,
         outcomes=outcomes,
+        actions=actions,
         pass1_input_tokens=pass1_usage.input_tokens,
         pass1_output_tokens=pass1_usage.output_tokens,
         pass2_input_tokens=pass2_usage.input_tokens,
@@ -852,6 +914,7 @@ async def _reason_agent_merged_async(
         sentiment = max(-1.0, min(1.0, float(sentiment)))
     conviction_score = response.get("conviction")
     will_share = response.get("will_share", False)
+    actions = response.get("actions", [])
 
     conviction_float = score_to_conviction_float(conviction_score)
 
@@ -868,6 +931,7 @@ async def _reason_agent_merged_async(
         "sentiment",
         "conviction",
         "will_share",
+        "actions",
     }
     outcomes = {k: v for k, v in response.items() if k not in pass1_fields}
 
@@ -885,6 +949,7 @@ async def _reason_agent_merged_async(
         will_share=will_share,
         reasoning=reasoning,
         outcomes=outcomes,
+        actions=actions,
         pass1_input_tokens=usage.input_tokens,
         pass1_output_tokens=usage.output_tokens,
         pass2_input_tokens=0,

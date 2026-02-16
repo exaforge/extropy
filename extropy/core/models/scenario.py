@@ -282,6 +282,24 @@ class SimulationConfig(BaseModel):
 
 
 # =============================================================================
+# Conversation Relationship Weights
+# =============================================================================
+
+# Default relationship weights used when scenario doesn't specify custom weights
+DEFAULT_RELATIONSHIP_WEIGHTS: dict[str, float] = {
+    "partner": 1.0,
+    "household": 0.9,
+    "close_friend": 0.7,
+    "coworker": 0.6,
+    "neighbor": 0.4,
+    "congregation": 0.4,
+    "school_parent": 0.35,
+    "acquaintance": 0.2,
+    "online_contact": 0.15,
+}
+
+
+# =============================================================================
 # Complete Scenario Spec
 # =============================================================================
 
@@ -317,6 +335,10 @@ class ScenarioSpec(BaseModel):
     background_context: str | None = Field(
         default=None,
         description="Optional background context injected into reasoning prompts",
+    )
+    relationship_weights: dict[str, float] | None = Field(
+        default=None,
+        description="Scenario-specific edge weights for conversation priority and peer ordering",
     )
 
     def to_yaml(self, path: Path | str) -> None:

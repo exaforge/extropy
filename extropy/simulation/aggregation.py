@@ -1,7 +1,7 @@
 """Aggregate computation for simulation results.
 
 Computes population-level statistics including per-timestep summaries,
-segment breakdowns, and outcome distributions.
+segment breakdowns, outcome distributions, and conversation statistics.
 """
 
 from collections import defaultdict
@@ -13,6 +13,7 @@ from ..core.models import (
     PopulationSpec,
     TimestepSummary,
 )
+from ..storage import StudyDB
 from .state import StateManager
 
 
@@ -296,3 +297,49 @@ def compute_timeline_aggregates(
         )
 
     return timeline
+
+
+def compute_conversation_stats(
+    study_db: StudyDB,
+    run_id: str,
+    max_timesteps: int,
+) -> dict[str, Any]:
+    """Compute conversation statistics for a simulation run.
+
+    Args:
+        study_db: Study database connection
+        run_id: Simulation run ID
+        max_timesteps: Maximum timestep for iteration
+
+    Returns:
+        Dict with conversation statistics
+    """
+    total_conversations = 0
+    conversations_by_timestep: dict[int, int] = {}
+    state_changes_from_conversations = 0
+    total_messages = 0
+
+    for timestep in range(max_timesteps):
+        convs = study_db.get_conversations_for_timestep(run_id, timestep)
+        count = len(convs)
+        total_conversations += count
+        if count > 0:
+            conversations_by_timestep[timestep] = count
+
+        for conv in convs:
+            messages = conv.get("messages", [])
+            total_messages += len(messages)
+            if conv.get("initiator_state_change"):
+                state_changes_from_conversations += 1
+            if conv.get("target_state_change"):
+                state_changes_from_conversations += 1
+
+    avg_turns = total_messages / total_conversations if total_conversations > 0 else 0
+
+    return {
+        "total_conversations": total_conversations,
+        "conversations_by_timestep": conversations_by_timestep,
+        "state_changes_from_conversations": state_changes_from_conversations,
+        "total_messages": total_messages,
+        "avg_turns": round(avg_turns, 2),
+    }
