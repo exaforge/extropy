@@ -48,27 +48,24 @@ extropy results --study-db $DB --segment income
 ## What You Get
 
 ```
-SIMULATION RESULTS: austin_congestion_tax
-═════════════════════════════════════════
-
-Population: 500 agents | Timesteps: 47 | Exposure: 96.8%
-
-commute_response:
-  drive_and_pay          38%  ███████████████░░░░░
-  switch_to_transit      24%  █████████░░░░░░░░░░░
-  shift_schedule         19%  ███████░░░░░░░░░░░░░
-  telework_more          12%  ████░░░░░░░░░░░░░░░░
-
-sentiment: mean -0.18 (slightly negative)
-
-SEGMENT: income
-───────────────
-< $50k:   protest 41% | switch_to_transit 14%
-$50-100k: drive_and_pay 40% | shift_schedule 21%
-> $100k:  drive_and_pay 51% | telework_more 14%
+Simulation Summary
+Agents: 500
+Aware: 484 (96.8%)
+Positions:
+  - drive_and_pay: 190 (38.0%)
+  - switch_to_transit: 120 (24.0%)
+  - shift_schedule: 95 (19.0%)
+  - telework_more: 60 (12.0%)
+  - undecided: 19 (3.8%)
 ```
 
 Each agent reasoned individually. Low-income commuters with no transit access react differently than tech workers near rail — not scripted, but emergent from their attributes and social context.
+
+Export full data for deeper analysis:
+```bash
+extropy export states --study-db $DB --to states.jsonl
+extropy query sql --study-db $DB --sql "SELECT * FROM agent_states" --format json
+```
 
 ## How It Works
 
