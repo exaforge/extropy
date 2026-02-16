@@ -351,6 +351,24 @@ class StudyDB:
             CREATE INDEX IF NOT EXISTS idx_conversations_initiator
                 ON conversations(run_id, initiator_id);
 
+            CREATE TABLE IF NOT EXISTS social_posts (
+                id TEXT PRIMARY KEY,
+                run_id TEXT NOT NULL,
+                timestep INTEGER NOT NULL,
+                agent_id TEXT NOT NULL,
+                agent_name TEXT,
+                statement TEXT NOT NULL,
+                position TEXT,
+                sentiment REAL,
+                conviction REAL,
+                created_at TEXT NOT NULL
+            );
+
+            CREATE INDEX IF NOT EXISTS idx_social_posts_run_timestep
+                ON social_posts(run_id, timestep);
+            CREATE INDEX IF NOT EXISTS idx_social_posts_agent
+                ON social_posts(run_id, agent_id);
+
             CREATE INDEX IF NOT EXISTS idx_households_population ON households(population_id);
             CREATE INDEX IF NOT EXISTS idx_agents_population ON agents(population_id);
             CREATE INDEX IF NOT EXISTS idx_network_edges_src ON network_edges(network_id, source_id);
@@ -1200,21 +1218,27 @@ class StudyDB:
         )
         results = []
         for row in cursor.fetchall():
-            results.append({
-                "id": row["id"],
-                "timestep": row["timestep"],
-                "initiator_id": row["initiator_id"],
-                "target_id": row["target_id"],
-                "target_is_npc": bool(row["target_is_npc"]),
-                "target_npc_profile": json.loads(row["target_npc_profile"] or "null"),
-                "messages": json.loads(row["messages"]),
-                "initiator_state_change": json.loads(
-                    row["initiator_state_change"] or "null"
-                ),
-                "target_state_change": json.loads(row["target_state_change"] or "null"),
-                "priority_score": row["priority_score"],
-                "created_at": row["created_at"],
-            })
+            results.append(
+                {
+                    "id": row["id"],
+                    "timestep": row["timestep"],
+                    "initiator_id": row["initiator_id"],
+                    "target_id": row["target_id"],
+                    "target_is_npc": bool(row["target_is_npc"]),
+                    "target_npc_profile": json.loads(
+                        row["target_npc_profile"] or "null"
+                    ),
+                    "messages": json.loads(row["messages"]),
+                    "initiator_state_change": json.loads(
+                        row["initiator_state_change"] or "null"
+                    ),
+                    "target_state_change": json.loads(
+                        row["target_state_change"] or "null"
+                    ),
+                    "priority_score": row["priority_score"],
+                    "created_at": row["created_at"],
+                }
+            )
         return results
 
     def get_agent_conversation_history(
@@ -1245,21 +1269,240 @@ class StudyDB:
         )
         results = []
         for row in cursor.fetchall():
-            results.append({
-                "id": row["id"],
-                "timestep": row["timestep"],
-                "initiator_id": row["initiator_id"],
-                "target_id": row["target_id"],
-                "target_is_npc": bool(row["target_is_npc"]),
-                "target_npc_profile": json.loads(row["target_npc_profile"] or "null"),
-                "messages": json.loads(row["messages"]),
-                "initiator_state_change": json.loads(
-                    row["initiator_state_change"] or "null"
+            results.append(
+                {
+                    "id": row["id"],
+                    "timestep": row["timestep"],
+                    "initiator_id": row["initiator_id"],
+                    "target_id": row["target_id"],
+                    "target_is_npc": bool(row["target_is_npc"]),
+                    "target_npc_profile": json.loads(
+                        row["target_npc_profile"] or "null"
+                    ),
+                    "messages": json.loads(row["messages"]),
+                    "initiator_state_change": json.loads(
+                        row["initiator_state_change"] or "null"
+                    ),
+                    "target_state_change": json.loads(
+                        row["target_state_change"] or "null"
+                    ),
+                    "priority_score": row["priority_score"],
+                    "created_at": row["created_at"],
+                }
+            )
+        return results
+
+    def save_social_post(
+        self,
+        run_id: str,
+        post_data: dict[str, Any],
+    ) -> str:
+        """Save a social post record.
+
+        Args:
+            run_id: Simulation run ID
+            post_data: Dict with timestep, agent_id, agent_name, statement,
+                position, sentiment, conviction
+
+        Returns:
+            Post ID
+        """
+        post_id = post_data.get("id", str(uuid.uuid4()))
+        cursor = self.conn.cursor()
+        cursor.execute(
+            """
+            INSERT OR REPLACE INTO social_posts
+            (id, run_id, timestep, agent_id, agent_name, statement,
+             position, sentiment, conviction, created_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                post_id,
+                run_id,
+                post_data["timestep"],
+                post_data["agent_id"],
+                post_data.get("agent_name"),
+                post_data["statement"],
+                post_data.get("position"),
+                post_data.get("sentiment"),
+                post_data.get("conviction"),
+                _now_iso(),
+            ),
+        )
+        self.conn.commit()
+        return post_id
+
+    def save_social_posts_batch(
+        self,
+        run_id: str,
+        posts: list[dict[str, Any]],
+    ) -> int:
+        """Save multiple social posts in a batch.
+
+        Args:
+            run_id: Simulation run ID
+            posts: List of post data dicts
+
+        Returns:
+            Number of posts saved
+        """
+        if not posts:
+            return 0
+
+        cursor = self.conn.cursor()
+        for post_data in posts:
+            post_id = post_data.get("id", str(uuid.uuid4()))
+            cursor.execute(
+                """
+                INSERT OR REPLACE INTO social_posts
+                (id, run_id, timestep, agent_id, agent_name, statement,
+                 position, sentiment, conviction, created_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    post_id,
+                    run_id,
+                    post_data["timestep"],
+                    post_data["agent_id"],
+                    post_data.get("agent_name"),
+                    post_data["statement"],
+                    post_data.get("position"),
+                    post_data.get("sentiment"),
+                    post_data.get("conviction"),
+                    _now_iso(),
                 ),
-                "target_state_change": json.loads(row["target_state_change"] or "null"),
-                "priority_score": row["priority_score"],
-                "created_at": row["created_at"],
-            })
+            )
+        self.conn.commit()
+        return len(posts)
+
+    def get_social_posts_for_timestep(
+        self,
+        run_id: str,
+        timestep: int,
+    ) -> list[dict[str, Any]]:
+        """Get all social posts for a specific timestep.
+
+        Args:
+            run_id: Simulation run ID
+            timestep: Timestep to query
+
+        Returns:
+            List of post records
+        """
+        cursor = self.conn.cursor()
+        cursor.execute(
+            """
+            SELECT id, timestep, agent_id, agent_name, statement,
+                   position, sentiment, conviction, created_at
+            FROM social_posts
+            WHERE run_id = ? AND timestep = ?
+            ORDER BY created_at
+            """,
+            (run_id, timestep),
+        )
+        results = []
+        for row in cursor.fetchall():
+            results.append(
+                {
+                    "id": row["id"],
+                    "timestep": row["timestep"],
+                    "agent_id": row["agent_id"],
+                    "agent_name": row["agent_name"],
+                    "statement": row["statement"],
+                    "position": row["position"],
+                    "sentiment": row["sentiment"],
+                    "conviction": row["conviction"],
+                    "created_at": row["created_at"],
+                }
+            )
+        return results
+
+    def get_recent_social_posts(
+        self,
+        run_id: str,
+        current_timestep: int,
+        lookback: int = 3,
+        limit: int = 20,
+    ) -> list[dict[str, Any]]:
+        """Get recent social posts across multiple timesteps.
+
+        Args:
+            run_id: Simulation run ID
+            current_timestep: Current timestep
+            lookback: How many timesteps back to include
+            limit: Maximum posts to return
+
+        Returns:
+            List of post records, most recent first
+        """
+        min_timestep = max(0, current_timestep - lookback)
+        cursor = self.conn.cursor()
+        cursor.execute(
+            """
+            SELECT id, timestep, agent_id, agent_name, statement,
+                   position, sentiment, conviction, created_at
+            FROM social_posts
+            WHERE run_id = ? AND timestep >= ? AND timestep < ?
+            ORDER BY timestep DESC, created_at DESC
+            LIMIT ?
+            """,
+            (run_id, min_timestep, current_timestep, limit),
+        )
+        results = []
+        for row in cursor.fetchall():
+            results.append(
+                {
+                    "id": row["id"],
+                    "timestep": row["timestep"],
+                    "agent_id": row["agent_id"],
+                    "agent_name": row["agent_name"],
+                    "statement": row["statement"],
+                    "position": row["position"],
+                    "sentiment": row["sentiment"],
+                    "conviction": row["conviction"],
+                    "created_at": row["created_at"],
+                }
+            )
+        return results
+
+    def get_all_social_posts(
+        self,
+        run_id: str,
+    ) -> list[dict[str, Any]]:
+        """Get all social posts for a simulation run.
+
+        Args:
+            run_id: Simulation run ID
+
+        Returns:
+            List of all post records ordered by timestep
+        """
+        cursor = self.conn.cursor()
+        cursor.execute(
+            """
+            SELECT id, timestep, agent_id, agent_name, statement,
+                   position, sentiment, conviction, created_at
+            FROM social_posts
+            WHERE run_id = ?
+            ORDER BY timestep, created_at
+            """,
+            (run_id,),
+        )
+        results = []
+        for row in cursor.fetchall():
+            results.append(
+                {
+                    "id": row["id"],
+                    "timestep": row["timestep"],
+                    "agent_id": row["agent_id"],
+                    "agent_name": row["agent_name"],
+                    "statement": row["statement"],
+                    "position": row["position"],
+                    "sentiment": row["sentiment"],
+                    "conviction": row["conviction"],
+                    "created_at": row["created_at"],
+                }
+            )
         return results
 
     def run_select(
