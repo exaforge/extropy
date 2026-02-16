@@ -245,6 +245,87 @@ def build_conditional_base_schema() -> dict:
     }
 
 
+def build_household_config_schema() -> dict:
+    """Build JSON schema for household config hydration."""
+    return {
+        "type": "object",
+        "properties": {
+            "age_brackets": {
+                "type": "array",
+                "items": {
+                    "type": "array",
+                    "items": [
+                        {"type": "integer"},
+                        {"type": "string"},
+                    ],
+                },
+            },
+            "household_type_weights": {
+                "type": "object",
+                "additionalProperties": {
+                    "type": "object",
+                    "additionalProperties": {"type": "number"},
+                },
+            },
+            "same_group_rates": {
+                "type": "object",
+                "additionalProperties": {"type": "number"},
+            },
+            "default_same_group_rate": {"type": "number"},
+            "assortative_mating": {
+                "type": "object",
+                "additionalProperties": {"type": "number"},
+            },
+            "partner_age_gap_mean": {"type": "number"},
+            "partner_age_gap_std": {"type": "number"},
+            "min_adult_age": {"type": "integer"},
+            "child_min_parent_offset": {"type": "integer"},
+            "child_max_parent_offset": {"type": "integer"},
+            "max_dependent_child_age": {"type": "integer"},
+            "elderly_min_offset": {"type": "integer"},
+            "elderly_max_offset": {"type": "integer"},
+            "life_stages": {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "max_age": {"type": "integer"},
+                        "label": {"type": "string"},
+                    },
+                    "required": ["max_age", "label"],
+                    "additionalProperties": False,
+                },
+            },
+            "adult_stage_label": {"type": "string"},
+            "avg_household_size": {"type": "number"},
+            "sources": {
+                "type": "array",
+                "items": {"type": "string"},
+            },
+        },
+        "required": [
+            "age_brackets",
+            "household_type_weights",
+            "same_group_rates",
+            "default_same_group_rate",
+            "assortative_mating",
+            "partner_age_gap_mean",
+            "partner_age_gap_std",
+            "min_adult_age",
+            "child_min_parent_offset",
+            "child_max_parent_offset",
+            "max_dependent_child_age",
+            "elderly_min_offset",
+            "elderly_max_offset",
+            "life_stages",
+            "adult_stage_label",
+            "avg_household_size",
+            "sources",
+        ],
+        "additionalProperties": False,
+    }
+
+
 def build_modifiers_schema() -> dict:
     """Build JSON schema for conditional modifiers hydration."""
     return {

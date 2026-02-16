@@ -19,6 +19,7 @@ from ...core.models import (
     AttributeSpec,
     DiscoveredAttribute,
     HydratedAttribute,
+    HouseholdConfig,
 )
 from ...utils.callbacks import HydrationProgressCallback
 from .hydrators import (
@@ -26,6 +27,7 @@ from .hydrators import (
     hydrate_derived,
     hydrate_conditional_base,
     hydrate_conditional_modifiers,
+    hydrate_household_config,
 )
 
 
@@ -44,15 +46,16 @@ def hydrate_attributes(
     model: str | None = None,
     reasoning_effort: str = "low",
     on_progress: ProgressCallback | None = None,
-) -> tuple[list[HydratedAttribute], list[str], list[str]]:
+) -> tuple[list[HydratedAttribute], list[str], list[str], HouseholdConfig]:
     """
     Research distributions for discovered attributes using split hydration.
 
-    This function orchestrates the 4-step split hydration process:
+    This function orchestrates the 5-step split hydration process:
     - Step 2a: hydrate_independent() - Research distributions for independent attributes
     - Step 2b: hydrate_derived() - Specify formulas for derived attributes
     - Step 2c: hydrate_conditional_base() - Research base distributions for conditional
     - Step 2d: hydrate_conditional_modifiers() - Specify modifiers for conditional
+    - Step 2e: hydrate_household_config() - Research household composition parameters
 
     When context is provided (extend mode), the model can reference
     context attributes in formulas and modifiers.
@@ -67,10 +70,10 @@ def hydrate_attributes(
         on_progress: Optional callback for progress updates (step, status, count)
 
     Returns:
-        Tuple of (list of HydratedAttribute, list of source URLs, list of validation warnings)
+        Tuple of (list of HydratedAttribute, list of source URLs, list of validation warnings, HouseholdConfig)
     """
     if not attributes:
-        return [], [], []
+        return [], [], [], HouseholdConfig()
 
     all_sources = []
     all_warnings = []
@@ -216,6 +219,18 @@ def hydrate_attributes(
             len(modifier_sources),
         )
 
+    # Step 2e: Household config
+    report("2e", "Researching household composition...")
+    household_config, hh_sources = hydrate_household_config(
+        population=population,
+        geography=geography,
+        model=model,
+        reasoning_effort=reasoning_effort,
+        on_retry=make_retry_callback("2e"),
+    )
+    all_sources.extend(hh_sources)
+    report("2e", "Household config researched", len(hh_sources))
+
     # Combine all hydrated attributes
     all_hydrated = independent_attrs + derived_attrs + conditional_attrs
     unique_sources = list(set(all_sources))
@@ -226,4 +241,4 @@ def hydrate_attributes(
     # when validate_spec() is called on the final PopulationSpec
     report("strategy", "Strategy consistency check passed", None)
 
-    return all_hydrated, unique_sources, all_warnings
+    return all_hydrated, unique_sources, all_warnings, household_config

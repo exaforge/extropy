@@ -21,6 +21,7 @@ from ...core.models import (
     AttributeSpec,
     SamplingStats,
     SamplingResult,
+    HouseholdConfig,
 )
 from ...utils.callbacks import ItemProgressCallback
 from .distributions import sample_distribution, coerce_to_type
@@ -138,10 +139,19 @@ def sample_population(
     }
 
     use_households = _has_household_attributes(spec)
+    household_config = spec.meta.household_config
 
     if use_households:
         agents, households = _sample_population_households(
-            spec, attr_map, rng, n, id_width, stats, numeric_values, on_progress
+            spec,
+            attr_map,
+            rng,
+            n,
+            id_width,
+            stats,
+            numeric_values,
+            on_progress,
+            household_config,
         )
     else:
         agents = _sample_population_independent(
@@ -206,6 +216,7 @@ def _generate_npc_partner(
     household_attrs: set[str],
     categorical_options: dict[str, list[str]],
     rng: random.Random,
+    config: HouseholdConfig,
 ) -> dict[str, Any]:
     """Generate a lightweight NPC partner profile for context.
 
@@ -214,7 +225,7 @@ def _generate_npc_partner(
     partner: dict[str, Any] = {}
 
     if "age" in primary:
-        partner["age"] = correlate_partner_attribute("age", primary["age"], rng)
+        partner["age"] = correlate_partner_attribute("age", primary["age"], rng, config)
     partner["gender"] = rng.choice(["male", "female"])
 
     for attr in (
@@ -225,7 +236,7 @@ def _generate_npc_partner(
     ):
         if attr in primary:
             correlated = correlate_partner_attribute(
-                attr, primary[attr], rng, categorical_options.get(attr)
+                attr, primary[attr], rng, config, categorical_options.get(attr)
             )
             if correlated is not None:
                 partner[attr] = correlated
@@ -287,15 +298,18 @@ def _sample_population_households(
     stats: SamplingStats,
     numeric_values: dict[str, list[float]],
     on_progress: ItemProgressCallback | None = None,
+    config: HouseholdConfig | None = None,
 ) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
     """Sample agents in household units with correlated demographics.
 
     Returns (agents, households) where households is a list of household
     metadata dicts for DB persistence.
     """
+    if config is None:
+        config = HouseholdConfig()
     focus_mode = _classify_agent_focus(spec.meta.agent_focus)
 
-    num_households = estimate_household_count(target_n)
+    num_households = estimate_household_count(target_n, config)
     hh_id_width = len(str(num_households - 1))
 
     agents: list[dict[str, Any]] = []
@@ -327,7 +341,7 @@ def _sample_population_households(
         agent_index += 1
 
         # Determine household type
-        htype = sample_household_type(adult1_age, rng)
+        htype = sample_household_type(adult1_age, rng, config)
 
         has_partner = household_needs_partner(htype)
         has_kids = household_needs_kids(htype)
@@ -363,6 +377,7 @@ def _sample_population_households(
                     adult1,
                     household_attrs,
                     categorical_options,
+                    config,
                 )
                 adult2["household_id"] = household_id
                 adult2["household_role"] = "adult_secondary"
@@ -376,7 +391,7 @@ def _sample_population_households(
             else:
                 # Partner is NPC context on the primary agent
                 npc_partner = _generate_npc_partner(
-                    adult1, household_attrs, categorical_options, rng
+                    adult1, household_attrs, categorical_options, rng, config
                 )
                 adult1["partner_npc"] = npc_partner
                 adult1["partner_id"] = None
@@ -385,7 +400,12 @@ def _sample_population_households(
 
         # Dependents
         dependents = generate_dependents(
-            htype, household_size, num_adults, adult1_age, rng,
+            htype,
+            household_size,
+            num_adults,
+            adult1_age,
+            rng,
+            config,
             ethnicity=adult1.get("race_ethnicity"),
         )
 
@@ -458,6 +478,7 @@ def _sample_partner_agent(
     primary: dict[str, Any],
     household_attrs: set[str],
     categorical_options: dict[str, list[str]],
+    config: HouseholdConfig | None = None,
 ) -> dict[str, Any]:
     """Sample a partner agent with correlated demographics.
 
@@ -466,6 +487,8 @@ def _sample_partner_agent(
       use assortative mating tables.
     - Everything else is sampled independently.
     """
+    if config is None:
+        config = HouseholdConfig()
     agent: dict[str, Any] = {"_id": f"agent_{index:0{id_width}d}"}
 
     for attr_name in spec.sampling_order:
@@ -482,6 +505,7 @@ def _sample_partner_agent(
                 attr_name,
                 primary[attr_name],
                 rng,
+                config,
                 available_options=categorical_options.get(attr_name),
             )
             if correlated is not None:

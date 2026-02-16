@@ -15,6 +15,7 @@ from .spec_builder import (
     hydrate_derived,
     hydrate_conditional_base,
     hydrate_conditional_modifiers,
+    hydrate_household_config,
     bind_constraints,
     build_spec,
 )
@@ -54,6 +55,7 @@ __all__ = [
     "hydrate_derived",
     "hydrate_conditional_base",
     "hydrate_conditional_modifiers",
+    "hydrate_household_config",
     "bind_constraints",
     "build_spec",
     # Sampler

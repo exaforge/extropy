@@ -13,6 +13,7 @@ from ...core.models import (
     SpecMeta,
     GroundingSummary,
     SamplingConfig,
+    HouseholdConfig,
 )
 from ...utils import topological_sort, extract_names_from_expression
 
@@ -191,6 +192,7 @@ def build_spec(
     sampling_order: list[str],
     sources: list[str],
     agent_focus: str | None = None,
+    household_config: HouseholdConfig | None = None,
 ) -> PopulationSpec:
     """
     Assemble the final PopulationSpec from all components.
@@ -203,6 +205,7 @@ def build_spec(
         sampling_order: Order for sampling
         sources: List of source URLs from research
         agent_focus: Who the study agents represent (determines agent vs NPC)
+        household_config: LLM-researched household composition (defaults to US Census)
 
     Returns:
         Complete PopulationSpec ready for YAML export
@@ -213,6 +216,7 @@ def build_spec(
         geography=geography,
         agent_focus=agent_focus,
         created_at=datetime.now(),
+        household_config=household_config or HouseholdConfig(),
     )
 
     grounding = _compute_grounding_summary(attributes, sources)

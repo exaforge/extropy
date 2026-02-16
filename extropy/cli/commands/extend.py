@@ -148,10 +148,12 @@ def extend_command(
         current_step[0] = step
         current_step[1] = status
 
+    household_config = None
+
     def do_hydration():
-        nonlocal hydrated, sources, warnings, hydration_error
+        nonlocal hydrated, sources, warnings, hydration_error, household_config
         try:
-            hydrated, sources, warnings = hydrate_attributes(
+            hydrated, sources, warnings, household_config = hydrate_attributes(
                 attributes=new_attributes,
                 description=f"{base.meta.description} + {scenario}",
                 geography=base.meta.geography,

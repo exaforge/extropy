@@ -32,6 +32,7 @@ from .hydrators import (
     hydrate_derived,
     hydrate_conditional_base,
     hydrate_conditional_modifiers,
+    hydrate_household_config,
 )
 from .binder import bind_constraints, build_spec
 from ..validator import (
@@ -52,6 +53,7 @@ __all__ = [
     "hydrate_derived",
     "hydrate_conditional_base",
     "hydrate_conditional_modifiers",
+    "hydrate_household_config",
     "bind_constraints",
     "build_spec",
     # Validation types

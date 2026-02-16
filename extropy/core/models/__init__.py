@@ -37,6 +37,8 @@ from .population import (
     # Household models
     HouseholdType,
     Dependent,
+    LifeStageThreshold,
+    HouseholdConfig,
     STANDARD_PERSONALITY_ATTRIBUTES,
 )
 
@@ -146,6 +148,8 @@ __all__ = [
     # Population - Household models
     "HouseholdType",
     "Dependent",
+    "LifeStageThreshold",
+    "HouseholdConfig",
     "STANDARD_PERSONALITY_ATTRIBUTES",
     # Scenario - Event
     "EventType",

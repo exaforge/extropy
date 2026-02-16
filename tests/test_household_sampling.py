@@ -10,6 +10,7 @@ from extropy.core.models.population import (
     NormalDistribution,
     CategoricalDistribution,
     HouseholdType,
+    HouseholdConfig,
     Dependent,
     STANDARD_PERSONALITY_ATTRIBUTES,
 )
@@ -24,6 +25,9 @@ from extropy.population.sampler.households import (
 )
 
 import random
+
+# US defaults — identical behavior to old hardcoded constants
+_DEFAULT_CONFIG = HouseholdConfig()
 
 
 def _make_household_spec(
@@ -196,7 +200,7 @@ class TestHouseholdSamplingHelpers:
     def test_sample_household_type_returns_valid(self):
         rng = random.Random(42)
         for age in [22, 35, 55, 70]:
-            htype = sample_household_type(age, rng)
+            htype = sample_household_type(age, rng, _DEFAULT_CONFIG)
             assert isinstance(htype, HouseholdType)
 
     def test_household_needs_partner(self):
@@ -215,7 +219,7 @@ class TestHouseholdSamplingHelpers:
 
     def test_correlate_age(self):
         rng = random.Random(42)
-        partner_age = correlate_partner_attribute("age", 35, rng)
+        partner_age = correlate_partner_attribute("age", 35, rng, _DEFAULT_CONFIG)
         assert isinstance(partner_age, int)
         assert partner_age >= 18
 
@@ -228,6 +232,7 @@ class TestHouseholdSamplingHelpers:
                 "race_ethnicity",
                 "white",
                 rng,
+                _DEFAULT_CONFIG,
                 available_options=["white", "black", "hispanic"],
             )
             if result == "white":
@@ -245,6 +250,7 @@ class TestHouseholdSamplingHelpers:
                 "education_level",
                 "bachelors",
                 rng,
+                _DEFAULT_CONFIG,
                 available_options=["high_school", "bachelors", "masters", "doctorate"],
             )
             if result == "bachelors":
@@ -255,17 +261,21 @@ class TestHouseholdSamplingHelpers:
 
     def test_correlate_unknown_attribute_returns_none(self):
         rng = random.Random(42)
-        result = correlate_partner_attribute("personality", "introverted", rng)
+        result = correlate_partner_attribute(
+            "personality", "introverted", rng, _DEFAULT_CONFIG
+        )
         assert result is None
 
     def test_generate_dependents_no_kids(self):
         rng = random.Random(42)
-        deps = generate_dependents(HouseholdType.COUPLE, 2, 2, 40, rng)
+        deps = generate_dependents(HouseholdType.COUPLE, 2, 2, 40, rng, _DEFAULT_CONFIG)
         assert len(deps) == 0
 
     def test_generate_dependents_with_kids(self):
         rng = random.Random(42)
-        deps = generate_dependents(HouseholdType.COUPLE_WITH_KIDS, 4, 2, 40, rng)
+        deps = generate_dependents(
+            HouseholdType.COUPLE_WITH_KIDS, 4, 2, 40, rng, _DEFAULT_CONFIG
+        )
         assert len(deps) == 2
         for d in deps:
             assert isinstance(d, Dependent)
@@ -274,14 +284,16 @@ class TestHouseholdSamplingHelpers:
 
     def test_generate_dependents_multi_generational(self):
         rng = random.Random(42)
-        deps = generate_dependents(HouseholdType.MULTI_GENERATIONAL, 4, 2, 45, rng)
+        deps = generate_dependents(
+            HouseholdType.MULTI_GENERATIONAL, 4, 2, 45, rng, _DEFAULT_CONFIG
+        )
         assert len(deps) == 2
         relationships = [d.relationship for d in deps]
         assert any(r in ("father", "mother") for r in relationships)
 
     def test_estimate_household_count(self):
-        assert estimate_household_count(100) == 40
-        assert estimate_household_count(1) == 1
+        assert estimate_household_count(100, _DEFAULT_CONFIG) == 40
+        assert estimate_household_count(1, _DEFAULT_CONFIG) == 1
 
 
 class TestHouseholdPopulationSampling:

@@ -1,119 +1,16 @@
 """Household-based sampling for co-sampling correlated agent pairs.
 
-Contains Census-derived household composition rates and correlation tables
-for assortative mating on demographics.
+All household composition rates and correlation tables are read from
+a HouseholdConfig instance (populated by LLM research at spec time,
+with US Census defaults as the safety net).
 """
 
 import math
 import random
 from typing import Any
 
-from ...core.models.population import Dependent, HouseholdType
+from ...core.models.population import Dependent, HouseholdConfig, HouseholdType
 from ..names.generator import generate_name
-
-
-# =============================================================================
-# Census-derived household composition rates by age bracket of primary adult
-# =============================================================================
-
-# Keys: age bracket of Adult 1; values: dict of HouseholdType -> probability
-HOUSEHOLD_TYPE_WEIGHTS: dict[str, dict[HouseholdType, float]] = {
-    "18-29": {
-        HouseholdType.SINGLE: 0.45,
-        HouseholdType.COUPLE: 0.25,
-        HouseholdType.SINGLE_PARENT: 0.08,
-        HouseholdType.COUPLE_WITH_KIDS: 0.15,
-        HouseholdType.MULTI_GENERATIONAL: 0.07,
-    },
-    "30-44": {
-        HouseholdType.SINGLE: 0.20,
-        HouseholdType.COUPLE: 0.15,
-        HouseholdType.SINGLE_PARENT: 0.12,
-        HouseholdType.COUPLE_WITH_KIDS: 0.40,
-        HouseholdType.MULTI_GENERATIONAL: 0.13,
-    },
-    "45-64": {
-        HouseholdType.SINGLE: 0.25,
-        HouseholdType.COUPLE: 0.35,
-        HouseholdType.SINGLE_PARENT: 0.08,
-        HouseholdType.COUPLE_WITH_KIDS: 0.20,
-        HouseholdType.MULTI_GENERATIONAL: 0.12,
-    },
-    "65+": {
-        HouseholdType.SINGLE: 0.35,
-        HouseholdType.COUPLE: 0.40,
-        HouseholdType.SINGLE_PARENT: 0.02,
-        HouseholdType.COUPLE_WITH_KIDS: 0.05,
-        HouseholdType.MULTI_GENERATIONAL: 0.18,
-    },
-}
-
-# Intermarriage rates: probability partner shares same value.
-# Key: race_ethnicity group; value: probability of same-race partner.
-INTERMARRIAGE_RATES: dict[str, float] = {
-    "white": 0.90,
-    "black": 0.82,
-    "hispanic": 0.78,
-    "asian": 0.75,
-    "other": 0.50,
-}
-_DEFAULT_SAME_RACE_RATE = 0.85
-
-# Assortative mating correlation coefficients.
-# Higher = more likely partner shares similar value.
-ASSORTATIVE_MATING: dict[str, float] = {
-    "education_level": 0.6,
-    "religious_affiliation": 0.7,
-    "political_orientation": 0.5,
-}
-
-# Age gap parameters by gender combination.
-# (mean_offset, std) where offset is Adult2_age - Adult1_age.
-AGE_GAP_PARAMS: dict[str, tuple[float, float]] = {
-    "default": (-2.0, 3.0),
-}
-
-# Average household size used for estimating number of households from N.
-AVG_HOUSEHOLD_SIZE = 2.5
-
-
-def _age_bracket(age: int) -> str:
-    """Map age to bracket key for HOUSEHOLD_TYPE_WEIGHTS."""
-    if age < 30:
-        return "18-29"
-    elif age < 45:
-        return "30-44"
-    elif age < 65:
-        return "45-64"
-    else:
-        return "65+"
-
-
-def sample_household_type(primary_age: int, rng: random.Random) -> HouseholdType:
-    """Sample a household type based on the primary adult's age bracket."""
-    bracket = _age_bracket(primary_age)
-    weights = HOUSEHOLD_TYPE_WEIGHTS[bracket]
-    types = list(weights.keys())
-    probs = list(weights.values())
-    return rng.choices(types, weights=probs, k=1)[0]
-
-
-def household_needs_partner(htype: HouseholdType) -> bool:
-    """Whether this household type includes a second adult partner."""
-    return htype in (
-        HouseholdType.COUPLE,
-        HouseholdType.COUPLE_WITH_KIDS,
-        HouseholdType.MULTI_GENERATIONAL,
-    )
-
-
-def household_needs_kids(htype: HouseholdType) -> bool:
-    """Whether this household type includes children."""
-    return htype in (
-        HouseholdType.SINGLE_PARENT,
-        HouseholdType.COUPLE_WITH_KIDS,
-        HouseholdType.MULTI_GENERATIONAL,
-    )
 
 
 # Attributes that are always shared within a household
@@ -140,10 +37,58 @@ PARTNER_INDEPENDENT_ATTRIBUTES = [
 ]
 
 
+def _age_bracket(age: int, config: HouseholdConfig) -> str:
+    """Map age to bracket key using config age brackets."""
+    for upper_bound, label in config.age_brackets:
+        if age < upper_bound:
+            return label
+    # Fallback to last bracket
+    return config.age_brackets[-1][1] if config.age_brackets else "65+"
+
+
+def sample_household_type(
+    primary_age: int, rng: random.Random, config: HouseholdConfig
+) -> HouseholdType:
+    """Sample a household type based on the primary adult's age bracket."""
+    bracket = _age_bracket(primary_age, config)
+    weights = config.household_type_weights.get(bracket, {})
+    if not weights:
+        # Fallback: pick first available bracket
+        for b_weights in config.household_type_weights.values():
+            if b_weights:
+                weights = b_weights
+                break
+    if not weights:
+        return HouseholdType.SINGLE
+
+    types = [HouseholdType(k) for k in weights.keys()]
+    probs = list(weights.values())
+    return rng.choices(types, weights=probs, k=1)[0]
+
+
+def household_needs_partner(htype: HouseholdType) -> bool:
+    """Whether this household type includes a second adult partner."""
+    return htype in (
+        HouseholdType.COUPLE,
+        HouseholdType.COUPLE_WITH_KIDS,
+        HouseholdType.MULTI_GENERATIONAL,
+    )
+
+
+def household_needs_kids(htype: HouseholdType) -> bool:
+    """Whether this household type includes children."""
+    return htype in (
+        HouseholdType.SINGLE_PARENT,
+        HouseholdType.COUPLE_WITH_KIDS,
+        HouseholdType.MULTI_GENERATIONAL,
+    )
+
+
 def correlate_partner_attribute(
     attr_name: str,
     primary_value: Any,
     rng: random.Random,
+    config: HouseholdConfig,
     available_options: list[str] | None = None,
 ) -> Any:
     """Produce a correlated value for a partner based on the primary's value.
@@ -155,28 +100,32 @@ def correlate_partner_attribute(
     correlation tables (caller should sample independently).
     """
     if attr_name == "age" and isinstance(primary_value, (int, float)):
-        mean_offset, std = AGE_GAP_PARAMS.get("default", (-2.0, 3.0))
-        partner_age = int(round(rng.gauss(primary_value + mean_offset, std)))
-        return max(18, partner_age)
+        partner_age = int(
+            round(
+                rng.gauss(
+                    primary_value + config.partner_age_gap_mean,
+                    config.partner_age_gap_std,
+                )
+            )
+        )
+        return max(config.min_adult_age, partner_age)
 
     if attr_name == "race_ethnicity":
-        same_rate = INTERMARRIAGE_RATES.get(
-            str(primary_value).lower(), _DEFAULT_SAME_RACE_RATE
+        same_rate = config.same_group_rates.get(
+            str(primary_value).lower(), config.default_same_group_rate
         )
         if rng.random() < same_rate:
             return primary_value
-        # Pick a different value from available options
         if available_options:
             others = [o for o in available_options if o != primary_value]
             if others:
                 return rng.choice(others)
         return primary_value
 
-    if attr_name in ASSORTATIVE_MATING:
-        correlation = ASSORTATIVE_MATING[attr_name]
+    if attr_name in config.assortative_mating:
+        correlation = config.assortative_mating[attr_name]
         if rng.random() < correlation:
             return primary_value
-        # Pick a different value from available options
         if available_options:
             others = [o for o in available_options if o != primary_value]
             if others:
@@ -192,6 +141,7 @@ def generate_dependents(
     num_adults: int,
     primary_age: int,
     rng: random.Random,
+    config: HouseholdConfig,
     ethnicity: str | None = None,
 ) -> list[Dependent]:
     """Generate NPC dependents for a household.
@@ -209,7 +159,9 @@ def generate_dependents(
     elderly_count = 0
     if household_type == HouseholdType.MULTI_GENERATIONAL and num_dependents > 0:
         elderly_count = 1
-        elderly_age = primary_age + rng.randint(22, 35)
+        elderly_age = primary_age + rng.randint(
+            config.elderly_min_offset, config.elderly_max_offset
+        )
         elderly_gender = rng.choice(["male", "female"])
         relationship = "father" if elderly_gender == "male" else "mother"
         dep_first, _ = generate_name(
@@ -230,11 +182,11 @@ def generate_dependents(
 
     # Remaining dependents are children
     num_children = num_dependents - elderly_count
-    for c in range(num_children):
-        child_age = _sample_child_age(primary_age, rng)
+    for _c in range(num_children):
+        child_age = _sample_child_age(primary_age, rng, config)
         child_gender = rng.choice(["male", "female"])
         relationship = "son" if child_gender == "male" else "daughter"
-        school_status = _school_status(child_age)
+        school_status = _life_stage(child_age, config)
         child_first, _ = generate_name(
             gender=child_gender,
             ethnicity=ethnicity,
@@ -254,34 +206,29 @@ def generate_dependents(
     return dependents
 
 
-def _sample_child_age(parent_age: int, rng: random.Random) -> int:
+def _sample_child_age(
+    parent_age: int, rng: random.Random, config: HouseholdConfig
+) -> int:
     """Sample a realistic child age given parent age."""
-    # Parent had child between age 20-40 typically
-    max_child_age = max(0, parent_age - 20)
-    min_child_age = max(0, parent_age - 40)
-    # Clamp to 0-17 range (children only)
-    lo = min(17, min_child_age)
-    hi = min(17, max_child_age)
+    max_child_age = max(0, parent_age - config.child_min_parent_offset)
+    min_child_age = max(0, parent_age - config.child_max_parent_offset)
+    max_dep = config.max_dependent_child_age
+    lo = min(max_dep, min_child_age)
+    hi = min(max_dep, max_child_age)
     if hi <= lo:
         return max(0, hi)
     age = rng.randint(lo, hi)
     return max(0, age)
 
 
-def _school_status(age: int) -> str:
-    """Determine school status from age."""
-    if age < 5:
-        return "home"
-    elif age < 11:
-        return "elementary"
-    elif age < 14:
-        return "middle_school"
-    elif age < 18:
-        return "high_school"
-    else:
-        return "adult"
+def _life_stage(age: int, config: HouseholdConfig) -> str:
+    """Determine life stage from age using config thresholds."""
+    for stage in config.life_stages:
+        if age < stage.max_age:
+            return stage.label
+    return config.adult_stage_label
 
 
-def estimate_household_count(target_agents: int) -> int:
+def estimate_household_count(target_agents: int, config: HouseholdConfig) -> int:
     """Estimate number of households needed to produce target_agents individuals."""
-    return max(1, math.ceil(target_agents / AVG_HOUSEHOLD_SIZE))
+    return max(1, math.ceil(target_agents / config.avg_household_size))
