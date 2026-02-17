@@ -1,163 +1,189 @@
-# CLAUDE.md
+# AGENTS.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+Instructions for AI agents and automation tools using the Extropy CLI.
 
-## What Extropy Is
+## Agent Mode
 
-Extropy is a Python framework + CLI for agent-based population simulation.
+Set agent mode for structured JSON output and non-interactive operation:
 
-It:
-- builds synthetic populations from statistically grounded attribute distributions,
-- adds scenario-relevant psychographic/context attributes,
-- connects sampled agents in a social network,
-- simulates multi-timestep opinion/behavior updates with two-pass LLM reasoning,
-- outputs segmented distributional results.
+```bash
+extropy config set cli.mode agent
+```
 
-## Core CLI Pipeline
+Or use the `--json` flag per-command:
+
+```bash
+extropy results --json
+extropy query summary --json
+```
+
+**Agent mode behavior:**
+- All output is JSON (parseable, no ANSI formatting)
+- Exit codes indicate success/failure (0 = success, non-zero = error)
+- No interactive prompts — commands fail fast if missing required input
+- Clarification requests return exit code 2 with structured error
+
+## CLI Pipeline
 
 ```bash
 extropy spec → extropy scenario → extropy persona → extropy sample → extropy network → extropy simulate → extropy results
 ```
 
-Commands:
-- `spec` — Create base population spec with attribute definitions
-- `scenario` — Create scenario spec (absorbs old `extend` — adds scenario attributes + event config)
-- `persona` — Generate persona rendering config for the scenario
-- `sample` — Sample agents from merged population + scenario attributes
-- `network` — Generate social network from sampled agents
-- `simulate` — Run simulation
-- `results` — View simulation results
+| Command | Purpose |
+|---------|---------|
+| `spec` | Create population spec from description |
+| `scenario` | Create scenario with events and outcomes |
+| `persona` | Generate persona rendering config |
+| `sample` | Sample agents from merged spec |
+| `network` | Generate social network |
+| `simulate` | Run simulation |
+| `results` | View results (summary, timeline, segment, agent) |
+| `query` | Export raw data (agents, edges, states, SQL) |
+| `chat` | Chat with simulated agents |
+| `estimate` | Predict simulation cost |
+| `validate` | Validate spec files |
+| `config` | View/set configuration |
 
-Utility commands: `extropy validate`, `extropy config`, `extropy estimate`.
+## Non-Interactive Usage
 
-CLI entry point: `extropy` (from `pyproject.toml`), Python `>=3.11`.
+### Pre-supplying answers
 
-## Local Dev Commands
+For `spec` command, use `--answers` to skip clarification prompts:
 
 ```bash
-pip install -e ".[dev]"
-
-# tests
-pytest                          # all tests
-pytest tests/test_sampler.py    # single file
-pytest -k "test_sampling"       # pattern match
-pytest --tb=short -q            # CI style (quick output)
-
-# lint / format
-ruff check .
-ruff format .
-
-# config
-extropy config show
-extropy config set pipeline.provider claude
-extropy config set simulation.provider openai
+extropy spec "500 German surgeons" -o surgeons --answers '{"location": "Bavaria"}'
 ```
 
-## High-Level Architecture
+Or use `--use-defaults` to accept default values:
 
-Three phases map to top-level packages:
+```bash
+extropy spec "500 German surgeons" -o surgeons --use-defaults
+```
 
-1. Population creation (`extropy/population/`)
-- Sufficiency check (`spec_builder/sufficiency.py`)
-- Attribute selection (`spec_builder/selector.py`)
-- Hydration (`spec_builder/hydrator.py`, `hydrators/`)
-- Dependency binding (`spec_builder/binder.py`)
-- Sampling (`sampler/core.py`)
-- Network generation (`network/`)
+### Skip confirmations
 
-2. Scenario compilation (`extropy/scenario/`)
-- Compiler (`compiler.py`) orchestrates parse -> exposure -> interaction -> outcomes -> assembly
-- Event types in code: `announcement`, `news`, `rumor`, `policy_change`, `product_launch`, `emergency`, `observation`
-- Outcomes: `categorical`, `boolean`, `float`, `open_ended`
+Use `-y` / `--yes` to skip confirmation prompts:
 
-3. Simulation (`extropy/simulation/`)
-- Engine (`engine.py`) loops over timestep phases
-- Seed + network exposure propagation
-- Two-pass reasoning (role-play then classification)
-- Memory traces (sliding window)
-- Conviction-aware sharing + flip resistance
-- Checkpoint/resume via `simulation_metadata`
+```bash
+extropy scenario "AI adoption" -o ai-adoption -y
+extropy persona -s ai-adoption -y
+```
 
-## LLM Integration
+## Exit Codes
 
-All LLM calls go through `extropy/core/llm.py`.
+| Code | Meaning |
+|------|---------|
+| 0 | Success |
+| 1 | General error / validation failure |
+| 2 | Clarification needed (agent mode) / file not found |
+| 3 | Sampling error |
 
-Two-zone routing:
-- Pipeline zone (phases 1-2): `simple_call`, `reasoning_call`, `agentic_research`
-- Simulation zone (phase 3): `simple_call_async`
+## Querying Data
 
-Providers are created via `extropy/core/providers/`:
-- `openai`
-- `claude`
-- `azure_openai`
+Export raw data for downstream processing:
 
-Use provider factories (`get_pipeline_provider`, `get_simulation_provider`) rather than provider-specific calls in feature code.
+```bash
+# Agents as JSONL
+extropy query agents --to agents.jsonl
 
-## Configuration
+# Network edges
+extropy query edges --to edges.jsonl
 
-Config lives in `extropy/config.py` and `~/.config/extropy/config.json`.
+# Simulation states
+extropy query states --to states.jsonl
 
-Resolution order (highest first):
-1. Programmatic config (`configure(...)` / constructed `ExtropyConfig`)
-2. Environment variables
-3. Config file
-4. Pydantic model defaults
+# Arbitrary SQL (read-only)
+extropy query sql "SELECT * FROM agent_states WHERE aware = 1" --format json
+```
 
-Defaults in code:
-- `pipeline.provider = "openai"`
-- `simulation.provider = "openai"`
+## Chat API
 
-API keys are env-only:
-- `OPENAI_API_KEY`
-- `ANTHROPIC_API_KEY`
-- `AZURE_OPENAI_API_KEY`
+Non-interactive chat for automation:
 
-Azure extras:
-- `AZURE_OPENAI_ENDPOINT`
-- `AZURE_OPENAI_API_VERSION` (defaults to `2025-03-01-preview`)
-- `AZURE_OPENAI_DEPLOYMENT`
+```bash
+extropy chat ask \
+  --study-db study.db \
+  --agent-id agent_042 \
+  --prompt "What changed your mind?" \
+  --json
+```
 
-## Data Models
+List available agents:
 
-Primary Pydantic models are under `extropy/core/models/`:
-- `population.py`: `PopulationSpec`, attribute/distribution/sampling models
-- `scenario.py`: `ScenarioSpec`, event/exposure/interaction/outcomes/simulation config
-- `simulation.py`: `AgentState`, `ReasoningContext`, `ReasoningResponse`, conviction maps, timestep summaries
-- `network.py`, `results.py`, `validation.py`, `sampling.py`
+```bash
+extropy chat list --study-db study.db --json
+```
 
-YAML I/O helpers exist on core spec/config models (`to_yaml` / `from_yaml`).
+**Note:** The interactive REPL (`extropy chat`) requires a TTY and is not suitable for automation. Use `extropy chat ask` instead.
 
-## Validation
+## Configuration Keys
 
-Population validation (`extropy/population/validator/`):
-- Structural: hard errors
-- Semantic: warnings
+```bash
+extropy config set cli.mode agent           # Enable agent mode globally
+extropy config set models.strong openai/gpt-4o
+extropy config set models.fast openai/gpt-4o-mini
+extropy config set simulation.strong anthropic/claude-sonnet-4.5
+extropy config set simulation.fast anthropic/claude-haiku-3.5
+extropy config set show_cost true           # Show cost after commands
+```
 
-Scenario validation: `extropy/scenario/validator.py`.
+## Environment Variables
 
-## Conventions
+Required API keys (set at least one):
 
-- Use `_id` from agent JSON as primary ID (fallback to index string).
-- Network edges are traversed bidirectionally during simulation.
-- Keep LLM reasoning pass semantic; classification pass handles structured outcome extraction.
-- Prefer data-driven network behavior through `NetworkConfig` over hardcoded social rules.
-- Use Pydantic `BaseModel` for all config/model classes — no dataclasses.
-- Canonical state lives in SQLite (`study.db`); use `StateManager` for simulation state access.
+```bash
+export OPENAI_API_KEY=sk-...
+export ANTHROPIC_API_KEY=sk-ant-...
+export OPENROUTER_API_KEY=sk-or-...
+export DEEPSEEK_API_KEY=sk-...
+```
 
-## Testing & CI
+## Global Flags
 
-Tests are in `tests/` and run with `pytest`. Common fixtures are in `tests/conftest.py`:
-- `minimal_population_spec`, `complex_population_spec` — ready-to-use PopulationSpec objects
-- `ten_agents`, `sample_agents` — agent dicts for propagation/integration tests
-- `linear_network`, `star_network` — network topologies for testing propagation
+All commands accept:
 
-CI (`.github/workflows/test.yml`) runs:
-- lint: `ruff check`, `ruff format --check`
-- tests on Python 3.11/3.12/3.13 (via `uv`)
+| Flag | Purpose |
+|------|---------|
+| `--json` | JSON output (overrides cli.mode) |
+| `--cost` | Show cost summary after command |
+| `--study PATH` | Explicit study folder path |
 
-## File Formats
+## Study Folder Structure
 
-- YAML: population/spec/network/persona/scenario configs
-- JSON: sampled agents, network, result artifacts
-- SQLite: simulation state/checkpoints
-- JSONL: timeline events
+```
+my-study/
+├── study.db                    # Canonical SQLite store
+├── population.v1.yaml          # Base population spec
+├── scenario/
+│   └── my-scenario/
+│       ├── scenario.v1.yaml    # Scenario spec
+│       └── persona.v1.yaml     # Persona config
+└── results/
+    └── my-scenario/            # Simulation outputs
+```
+
+## Typical Automation Flow
+
+```bash
+# Setup
+cd my-study
+extropy config set cli.mode agent
+
+# Build pipeline
+extropy spec "Austin TX commuters" -o . --use-defaults
+extropy scenario "Congestion tax response" -o congestion-tax -y
+extropy persona -s congestion-tax -y
+extropy sample -s congestion-tax -n 500 --seed 42
+extropy network -s congestion-tax --seed 42
+
+# Estimate before running
+extropy estimate -s congestion-tax --json
+
+# Run simulation
+extropy simulate -s congestion-tax --seed 42
+
+# Extract results
+extropy results --json
+extropy query agents --to agents.jsonl
+extropy query states --to states.jsonl
+```

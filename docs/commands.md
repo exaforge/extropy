@@ -29,12 +29,36 @@ my-study/
 
 ---
 
+## Global Options
+
+All commands support these global options:
+
+| Flag | Description |
+|------|-------------|
+| `--json` | Output machine-readable JSON instead of human-friendly text |
+| `--version` | Show version and exit |
+| `--cost` | Show cost summary after command completes |
+| `--study PATH` | Study folder path (auto-detected from cwd if not specified) |
+
+---
+
 ## extropy spec
 
-Build a population specification from a natural language description.
+Generate a population spec from a natural language description.
 
 ```bash
-extropy spec "Austin TX commuters" -o population.v1.yaml -y
+# Create new study folder with population.v1.yaml
+extropy spec "500 German surgeons" -o surgeons
+
+# Create with custom name (surgeons/hospital-staff.v1.yaml)
+extropy spec "German surgeons" -o surgeons/hospital-staff
+
+# Iterate on existing (from within study folder)
+cd surgeons && extropy spec "add income distribution"
+# Creates population.v2.yaml
+
+# Explicit file path
+extropy spec "farmers" -o my-spec.yaml
 ```
 
 ### Arguments
@@ -47,26 +71,42 @@ extropy spec "Austin TX commuters" -o population.v1.yaml -y
 
 | Flag | Short | Type | Default | Description |
 |------|-------|------|---------|-------------|
-| `--output` | `-o` | path | required | Output YAML file path |
+| `--output` | `-o` | path | | Output path: study folder, folder/name, or explicit .yaml file |
 | `--yes` | `-y` | flag | false | Skip confirmation prompts |
+| `--answers` | | string | | JSON with pre-supplied clarification answers (for agent mode) |
+| `--use-defaults` | | flag | false | Use defaults for ambiguous values instead of prompting |
 
 ---
 
 ## extropy scenario
 
-Create a scenario spec with extended attributes and event configuration.
+Create a scenario with extended attributes and event configuration.
 
 ```bash
-extropy scenario -s "Response to $15/day congestion tax" -o scenario/congestion-tax -y
+# Create new scenario
+extropy scenario "AI diagnostic tool adoption" -o ai-adoption
+
+# Pin population version
+extropy scenario "vaccine mandate" -o vaccine @pop:v1
+
+# Rebase existing scenario to new population
+extropy scenario ai-adoption --rebase @pop:v2
 ```
+
+### Arguments
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `description` | string | yes | Scenario description (what event/situation to simulate) |
+| `population_ref` | string | no | Population version reference: `@pop:v1`, `@pop:latest`, or path to YAML |
 
 ### Options
 
 | Flag | Short | Type | Default | Description |
 |------|-------|------|---------|-------------|
-| `--scenario` | `-s` | string | required | Scenario description |
-| `--output` | `-o` | path | required | Output directory (creates `scenario.v1.yaml`) |
-| `--base-population` | | string | `population.v1` | Base population reference (`name` or `name.vN`) |
+| `--output` | `-o` | string | required | Scenario name (creates `scenario/{name}/scenario.v1.yaml`) |
+| `--rebase` | | string | | Rebase existing scenario to new population version (e.g. `@pop:v2`) |
+| `--timeline` | | string | `auto` | Timeline mode: `auto` (LLM decides), `static` (single event), `evolving` (multi-event) |
 | `--yes` | `-y` | flag | false | Skip confirmation prompts |
 
 The scenario spec includes:
@@ -84,7 +124,14 @@ The scenario spec includes:
 Generate persona rendering configuration for a scenario.
 
 ```bash
-extropy persona -s congestion-tax -y
+# Generate for a scenario (auto-versions)
+extropy persona -s ai-adoption
+
+# Pin scenario version
+extropy persona -s ai-adoption@v1
+
+# Preview existing config
+extropy persona -s ai-adoption --show
 ```
 
 ### Options
@@ -92,10 +139,11 @@ extropy persona -s congestion-tax -y
 | Flag | Short | Type | Default | Description |
 |------|-------|------|---------|-------------|
 | `--scenario` | `-s` | string | auto | Scenario name (auto-selects if only one exists) |
-| `--preview/--no-preview` | | flag | true | Show sample persona before saving |
-| `--agent` | | int | 0 | Agent index for preview |
+| `--output` | `-o` | path | | Output file (default: `scenario/{name}/persona.vN.yaml`) |
+| `--preview/--no-preview` | | flag | true | Show a sample persona before saving |
+| `--agent` | | int | 0 | Which agent to use for preview |
 | `--yes` | `-y` | flag | false | Skip confirmation prompts |
-| `--show` | | flag | false | Preview existing config without regenerating |
+| `--show` | | flag | false | Preview existing persona config without regenerating |
 
 ---
 
@@ -104,7 +152,9 @@ extropy persona -s congestion-tax -y
 Sample agents from a scenario's merged population spec.
 
 ```bash
-extropy sample -s congestion-tax -n 500 --seed 42
+extropy sample -s ai-adoption -n 500
+extropy sample -s ai-adoption -n 1000 --seed 42 --report
+extropy sample -n 500  # auto-selects scenario if only one exists
 ```
 
 ### Options
@@ -114,8 +164,10 @@ extropy sample -s congestion-tax -n 500 --seed 42
 | `--scenario` | `-s` | string | auto | Scenario name (auto-selects if only one exists) |
 | `--count` | `-n` | int | required | Number of agents to sample |
 | `--seed` | | int | random | Random seed for reproducibility |
-| `--report` | `-r` | flag | false | Show distribution summaries after sampling |
-| `--skip-validation` | | flag | false | Skip spec validation before sampling |
+| `--report` | `-r` | flag | false | Show distribution summaries and stats |
+| `--skip-validation` | | flag | false | Skip validator errors |
+
+**Exit codes:** 0 = Success, 1 = Validation error, 2 = File not found, 3 = Sampling error
 
 Sampling process:
 1. Loads scenario's `base_population` spec
@@ -128,10 +180,12 @@ Sampling process:
 
 ## extropy network
 
-Generate a social network connecting sampled agents.
+Generate a social network from sampled agents.
 
 ```bash
-extropy network -s congestion-tax --seed 42
+extropy network -s ai-adoption
+extropy network -s ai-adoption --avg-degree 15 --seed 42
+extropy network -s ai-adoption --generate-config
 ```
 
 ### Options
@@ -139,38 +193,53 @@ extropy network -s congestion-tax --seed 42
 | Flag | Short | Type | Default | Description |
 |------|-------|------|---------|-------------|
 | `--scenario` | `-s` | string | auto | Scenario name (auto-selects if only one exists) |
-| `--output` | `-o` | path | | Output network JSON (defaults to scenario folder) |
-| `--network-config` | `-c` | path | | Custom network config YAML |
-| `--generate-config` | | flag | false | Generate network config via LLM |
+| `--output` | `-o` | path | | Optional JSON export path (non-canonical) |
+| `--network-config` | `-c` | path | | Custom network config YAML file |
+| `--save-config` | | path | | Save the (generated or loaded) network config to YAML |
+| `--generate-config` | | flag | false | Generate network config via LLM from population spec |
+| `--avg-degree` | | float | 20.0 | Target average degree (connections per agent) |
+| `--rewire-prob` | | float | 0.05 | Watts-Strogatz rewiring probability |
 | `--seed` | | int | random | Random seed for reproducibility |
-| `--no-metrics` | | flag | false | Skip network metrics calculation |
-| `--resume` | | flag | false | Resume from checkpoint |
+| `--validate` | `-v` | flag | false | Print validation metrics |
+| `--no-metrics` | | flag | false | Skip computing node metrics (faster) |
 
-#### Performance Options
+#### Quality & Candidate Selection
 
 | Flag | Type | Default | Description |
 |------|------|---------|-------------|
-| `--candidate-mode` | string | `all` | Candidate selection: `all`, `blocked`, `sampled` |
-| `--candidate-pool-multiplier` | float | 4.0 | Multiplier for candidate pool size |
-| `--block-attr` | string | | Attribute for block-based candidate selection |
-| `--similarity-workers` | int | auto | Parallel workers for similarity computation |
-| `--similarity-chunk-size` | int | 100 | Chunk size for similarity batches |
+| `--quality-profile` | string | `balanced` | Quality profile: `fast`, `balanced`, `strict` |
+| `--candidate-mode` | string | `blocked` | Similarity candidate mode: `exact`, `blocked` |
+| `--candidate-pool-multiplier` | float | 12.0 | Blocked mode candidate pool size as multiple of avg_degree |
+| `--block-attr` | string (repeatable) | auto | Blocking attribute(s). If omitted, auto-selects top attributes |
+| `--similarity-workers` | int | 1 | Worker processes for similarity computation |
+| `--similarity-chunk-size` | int | 64 | Row chunk size for similarity worker tasks |
 
 #### Checkpointing
 
 | Flag | Type | Default | Description |
 |------|------|---------|-------------|
-| `--checkpoint` | path | | Path to study.db for checkpointing |
-| `--checkpoint-every` | int | 5 | Checkpoint frequency (iterations) |
+| `--checkpoint` | path | | DB path for similarity checkpointing (must be study.db) |
+| `--resume` | flag | false | Resume similarity and calibration checkpoints from study.db |
+| `--checkpoint-every` | int | 250 | Write checkpoint every N processed similarity rows |
+
+#### Resource Tuning
+
+| Flag | Type | Default | Description |
+|------|------|---------|-------------|
+| `--resource-mode` | string | `auto` | Resource tuning mode: `auto`, `manual` |
+| `--safe-auto-workers/--unsafe-auto-workers` | flag | true | Conservative auto tuning for laptops/VMs |
+| `--max-memory-gb` | float | | Optional memory budget cap for auto resource tuning |
 
 ---
 
 ## extropy simulate
 
-Run the simulation engine.
+Run a simulation from a scenario spec.
 
 ```bash
-extropy simulate -s congestion-tax --seed 42
+extropy simulate -s ai-adoption
+extropy simulate -s ai-adoption --seed 42 --strong gpt-4o
+extropy simulate -s ai-adoption --fidelity high
 ```
 
 ### Options
@@ -180,12 +249,10 @@ extropy simulate -s congestion-tax --seed 42
 | `--scenario` | `-s` | string | auto | Scenario name (auto-selects if only one exists) |
 | `--output` | `-o` | path | `results/{scenario}/` | Output results directory |
 | `--seed` | | int | random | Random seed for reproducibility |
-| `--fidelity` | `-f` | string | `medium` | Fidelity tier: `low`, `medium`, `high` |
-| `--merged-pass` | | flag | false | Single-pass reasoning (cheaper, less accurate) |
+| `--fidelity` | `-f` | string | `medium` | Fidelity level: `low`, `medium`, `high` |
+| `--merged-pass` | | flag | false | Use single merged reasoning pass instead of two-pass (experimental) |
 | `--threshold` | `-t` | int | 3 | Multi-touch threshold for re-reasoning |
-| `--chunk-size` | | int | 50 | Agents per reasoning chunk |
-| `--resume` | | flag | false | Resume from checkpoint |
-| `--run-id` | | string | auto | Simulation run ID |
+| `--chunk-size` | | int | 50 | Agents per reasoning chunk for checkpointing |
 
 #### Model Options
 
@@ -201,7 +268,30 @@ extropy simulate -s congestion-tax --seed 42
 | `--rate-tier` | int | config | Provider rate limit tier (1-4) |
 | `--rpm-override` | int | | Override requests per minute |
 | `--tpm-override` | int | | Override tokens per minute |
-| `--max-concurrent` | int | config | Max concurrent LLM calls |
+
+#### Checkpointing & Resume
+
+| Flag | Type | Default | Description |
+|------|------|---------|-------------|
+| `--run-id` | string | auto | Explicit run id (required with --resume) |
+| `--resume` | flag | false | Resume an existing run from study DB checkpoints |
+| `--checkpoint-every-chunks` | int | 1 | Persist simulation chunk checkpoints every N chunks |
+
+#### Database Tuning
+
+| Flag | Type | Default | Description |
+|------|------|---------|-------------|
+| `--writer-queue-size` | int | 256 | Max reasoning chunks buffered before DB writer backpressure |
+| `--db-write-batch-size` | int | 100 | Number of chunks applied per DB writer transaction |
+| `--retention-lite` | flag | false | Reduce retained payload volume (drops full raw reasoning text) |
+
+#### Resource Tuning
+
+| Flag | Type | Default | Description |
+|------|------|---------|-------------|
+| `--resource-mode` | string | `auto` | Resource tuning mode: `auto`, `manual` |
+| `--safe-auto-workers/--unsafe-auto-workers` | flag | true | Conservative auto tuning for laptop/VM environments |
+| `--max-memory-gb` | float | | Optional memory budget cap for auto resource tuning |
 
 #### Output Options
 
@@ -209,7 +299,7 @@ extropy simulate -s congestion-tax --seed 42
 |------|-------|------|---------|-------------|
 | `--quiet` | `-q` | flag | false | Suppress progress output |
 | `--verbose` | `-v` | flag | false | Show detailed logs |
-| `--debug` | | flag | false | Show debug-level logs |
+| `--debug` | | flag | false | Show debug-level logs (very verbose) |
 
 ---
 
@@ -367,7 +457,9 @@ Only `SELECT`, `WITH`, and `EXPLAIN` queries are allowed.
 Predict simulation cost without making API calls.
 
 ```bash
-extropy estimate -s congestion-tax
+extropy estimate -s ai-adoption
+extropy estimate -s ai-adoption --strong openai/gpt-5
+extropy estimate -s ai-adoption --strong openai/gpt-5 --fast openai/gpt-5-mini -v
 ```
 
 ### Options
@@ -406,6 +498,8 @@ extropy validate population.v1.yaml --strict
 
 Auto-detects file type: `*.scenario.yaml` runs scenario validation, other `*.yaml` runs population validation.
 
+**Exit codes:** 0 = Success (valid spec), 1 = Validation error (invalid spec), 2 = File not found
+
 ---
 
 ## extropy config
@@ -416,6 +510,7 @@ View and modify configuration.
 extropy config show
 extropy config set models.fast openai/gpt-5-mini
 extropy config set simulation.strong anthropic/claude-sonnet-4.5
+extropy config set simulation.strong openrouter/anthropic/claude-sonnet-4.5
 extropy config reset
 ```
 
@@ -448,19 +543,19 @@ extropy config reset
 
 ## extropy chat
 
-Interactive chat with simulated agents. Uses the same study folder auto-detection as other commands.
+Interactive chat with simulated agents.
 
 ### Interactive REPL
 
 ```bash
-extropy chat                                  # auto-detect study, use latest run/first agent
-extropy chat --run-id run_123 --agent-id a_42
+extropy chat --study-db austin/study.db
 ```
 
 | Flag | Type | Default | Description |
 |------|------|---------|-------------|
+| `--study-db` | path | required | Study database path |
 | `--run-id` | string | latest | Simulation run ID |
-| `--agent-id` | string | first agent in run | Agent ID |
+| `--agent-id` | string | auto | Agent ID (auto-selects first agent if not specified) |
 | `--session-id` | string | auto | Chat session ID |
 
 REPL commands: `/context`, `/timeline <n>`, `/history`, `/exit`
@@ -470,30 +565,33 @@ REPL commands: `/context`, `/timeline <n>`, `/history`, `/exit`
 Show recent runs and sample agents so users can pick chat targets quickly.
 
 ```bash
-extropy chat list
-extropy chat list --limit-runs 5
+extropy chat list --study-db austin/study.db
 ```
 
 | Flag | Type | Default | Description |
 |------|------|---------|-------------|
-| `--limit-runs` | int | `10` | Number of recent runs to list |
-| `--agents-per-run` | int | `5` | Number of sample agent IDs per run |
+| `--study-db` | path | required | Study database path |
+| `--limit-runs` | int | 10 | Number of recent runs to list |
+| `--agents-per-run` | int | 5 | Number of sample agent IDs per run |
+| `--json` | flag | false | Output JSON response |
 
 ### extropy chat ask
 
 Non-interactive API for automation.
 
 ```bash
-extropy chat ask --prompt "What changed your mind?"
-extropy chat ask --run-id r1 --agent-id a1 --prompt "What changed?"
+extropy chat ask --study-db austin/study.db \
+  --prompt "What changed your mind?" --json
 ```
 
 | Flag | Type | Default | Description |
 |------|------|---------|-------------|
+| `--study-db` | path | required | Study database path |
 | `--run-id` | string | latest | Simulation run ID |
-| `--agent-id` | string | first agent in run | Agent ID |
+| `--agent-id` | string | auto | Agent ID (auto-selects first agent if not specified) |
 | `--prompt` | string | required | Question to ask |
 | `--session-id` | string | auto | Chat session ID |
+| `--json` | flag | false | Output JSON response |
 
 ---
 
@@ -525,8 +623,8 @@ extropy chat ask --run-id r1 --agent-id a1 --prompt "What changed?"
 # Full pipeline
 cd my-study  # study folder
 
-extropy spec "Austin TX commuters" -o population.v1.yaml -y
-extropy scenario -s "Response to $15/day congestion tax" -o scenario/congestion-tax -y
+extropy spec "Austin TX commuters" -o .
+extropy scenario "Response to $15/day congestion tax" -o congestion-tax
 extropy persona -s congestion-tax -y
 extropy sample -s congestion-tax -n 500 --seed 42
 extropy network -s congestion-tax --seed 42
