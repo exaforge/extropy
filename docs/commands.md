@@ -448,17 +448,17 @@ extropy config reset
 
 ## extropy chat
 
-Interactive chat with simulated agents.
+Interactive chat with simulated agents. Uses the same study folder auto-detection as other commands.
 
 ### Interactive REPL
 
 ```bash
-extropy chat --study-db austin/study.db
+extropy chat                                  # auto-detect study, use latest run/first agent
+extropy chat --run-id run_123 --agent-id a_42
 ```
 
 | Flag | Type | Default | Description |
 |------|------|---------|-------------|
-| `--study-db` | path | required | Study database path |
 | `--run-id` | string | latest | Simulation run ID |
 | `--agent-id` | string | first agent in run | Agent ID |
 | `--session-id` | string | auto | Chat session ID |
@@ -470,33 +470,30 @@ REPL commands: `/context`, `/timeline <n>`, `/history`, `/exit`
 Show recent runs and sample agents so users can pick chat targets quickly.
 
 ```bash
-extropy chat list --study-db austin/study.db
+extropy chat list
+extropy chat list --limit-runs 5
 ```
 
 | Flag | Type | Default | Description |
 |------|------|---------|-------------|
-| `--study-db` | path | required | Study database path |
 | `--limit-runs` | int | `10` | Number of recent runs to list |
 | `--agents-per-run` | int | `5` | Number of sample agent IDs per run |
-| `--json` | flag | false | Output JSON response |
 
 ### extropy chat ask
 
 Non-interactive API for automation.
 
 ```bash
-extropy chat ask --study-db austin/study.db \
-  --prompt "What changed your mind?" --json
+extropy chat ask --prompt "What changed your mind?"
+extropy chat ask --run-id r1 --agent-id a1 --prompt "What changed?"
 ```
 
 | Flag | Type | Default | Description |
 |------|------|---------|-------------|
-| `--study-db` | path | required | Study database path |
 | `--run-id` | string | latest | Simulation run ID |
 | `--agent-id` | string | first agent in run | Agent ID |
 | `--prompt` | string | required | Question to ask |
 | `--session-id` | string | auto | Chat session ID |
-| `--json` | flag | false | Output JSON response |
 
 ---
 

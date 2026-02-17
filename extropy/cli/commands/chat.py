@@ -14,10 +14,29 @@ import typer
 
 from ...config import get_config
 from ...core.llm import simple_call
-from ..app import app, console, get_json_mode
+from ..app import app, console, get_study_path, is_agent_mode
+from ..study import StudyContext, detect_study_folder
+from ..utils import Output
 
 chat_app = typer.Typer(help="Chat with simulated agents using DB-backed history")
 app.add_typer(chat_app, name="chat")
+
+
+def _get_study_db() -> Path:
+    """Resolve study DB path via auto-detection or --study flag."""
+    study_path = get_study_path()
+    detected = detect_study_folder(study_path)
+    if detected is None:
+        console.print(
+            "[red]✗[/red] Not in a study folder. "
+            "Use --study to specify or run from a study folder."
+        )
+        raise typer.Exit(1)
+    study_ctx = StudyContext(detected)
+    if not study_ctx.db_path.exists():
+        console.print(f"[red]✗[/red] Study DB not found: {study_ctx.db_path}")
+        raise typer.Exit(1)
+    return study_ctx.db_path
 
 
 def _now_iso() -> str:
@@ -383,16 +402,14 @@ def _resolve_run_and_agent(
 
 @chat_app.command("list")
 def chat_list(
-    study_db: Path = typer.Option(..., "--study-db"),
     limit_runs: int = typer.Option(10, "--limit-runs", min=1, max=100),
     agents_per_run: int = typer.Option(5, "--agents-per-run", min=1, max=25),
-    json_output: bool = typer.Option(False, "--json"),
 ):
     """List recent runs with sample agents for quick chat selection."""
-    if not study_db.exists():
-        console.print(f"[red]✗[/red] Study DB not found: {study_db}")
-        raise typer.Exit(1)
+    agent_mode = is_agent_mode()
+    out = Output(console, json_mode=agent_mode)
 
+    study_db = _get_study_db()
     conn = sqlite3.connect(str(study_db))
     conn.row_factory = sqlite3.Row
     try:
@@ -437,10 +454,11 @@ def chat_list(
     finally:
         conn.close()
 
-    payload = {"study_db": str(study_db), "runs": runs}
-    if json_output or get_json_mode():
-        console.print_json(data=payload)
-        return
+    out.set_data("study_db", str(study_db))
+    out.set_data("runs", runs)
+
+    if agent_mode:
+        raise typer.Exit(out.finish())
 
     if not runs:
         console.print("[yellow]No simulation runs found.[/yellow]")
@@ -457,7 +475,6 @@ def chat_list(
 @chat_app.callback(invoke_without_command=True)
 def chat_interactive(
     ctx: typer.Context,
-    study_db: Path | None = typer.Option(None, "--study-db"),
     run_id: str | None = typer.Option(None, "--run-id"),
     agent_id: str | None = typer.Option(None, "--agent-id"),
     session_id: str | None = typer.Option(None, "--session-id"),
@@ -465,19 +482,12 @@ def chat_interactive(
     """Interactive chat REPL.
 
     Example:
-        extropy chat --study-db study.db --run-id run_123 --agent-id a_42
+        extropy chat --run-id run_123 --agent-id a_42
     """
     if ctx.invoked_subcommand is not None:
         return
 
-    if not study_db:
-        console.print("[red]✗[/red] interactive chat requires --study-db")
-        raise typer.Exit(1)
-
-    if not study_db.exists():
-        console.print(f"[red]✗[/red] Study DB not found: {study_db}")
-        raise typer.Exit(1)
-
+    study_db = _get_study_db()
     conn = sqlite3.connect(str(study_db))
     conn.row_factory = sqlite3.Row
     try:
@@ -579,22 +589,20 @@ def chat_interactive(
 
 @chat_app.command("ask")
 def chat_ask(
-    study_db: Path = typer.Option(..., "--study-db"),
     run_id: str | None = typer.Option(None, "--run-id"),
     agent_id: str | None = typer.Option(None, "--agent-id"),
     prompt: str = typer.Option(..., "--prompt"),
     session_id: str | None = typer.Option(None, "--session-id"),
-    json_output: bool = typer.Option(False, "--json"),
 ):
     """Non-interactive chat API for automation.
 
     Example:
-        extropy chat ask --study-db study.db --run-id r1 --agent-id a1 --prompt "What changed?" --json
+        extropy chat ask --run-id r1 --agent-id a1 --prompt "What changed?"
     """
-    if not study_db.exists():
-        console.print(f"[red]✗[/red] Study DB not found: {study_db}")
-        raise typer.Exit(1)
+    agent_mode = is_agent_mode()
+    out = Output(console, json_mode=agent_mode)
 
+    study_db = _get_study_db()
     started = time.time()
     conn = sqlite3.connect(str(study_db))
     conn.row_factory = sqlite3.Row
@@ -639,19 +647,17 @@ def chat_ask(
     finally:
         conn.close()
 
-    payload = {
-        "session_id": sid,
-        "run_id": resolved_run_id,
-        "agent_id": resolved_agent_id,
-        "user_turn_index": user_turn,
-        "turn_index": assistant_turn,
-        "assistant_text": answer,
-        "citations": {"sources": citations},
-        "token_usage": {"input_tokens": 0, "output_tokens": 0},
-        "latency_ms": latency_ms,
-    }
+    out.set_data("session_id", sid)
+    out.set_data("run_id", resolved_run_id)
+    out.set_data("agent_id", resolved_agent_id)
+    out.set_data("user_turn_index", user_turn)
+    out.set_data("turn_index", assistant_turn)
+    out.set_data("assistant_text", answer)
+    out.set_data("citations", {"sources": citations})
+    out.set_data("token_usage", {"input_tokens": 0, "output_tokens": 0})
+    out.set_data("latency_ms", latency_ms)
 
-    if json_output or get_json_mode():
-        console.print_json(data=payload)
-    else:
-        console.print(answer)
+    if agent_mode:
+        raise typer.Exit(out.finish())
+
+    console.print(answer)
