@@ -79,7 +79,7 @@ def _has_household_attributes(spec: PopulationSpec) -> bool:
 
 def sample_population(
     spec: PopulationSpec,
-    count: int | None = None,
+    count: int,
     seed: int | None = None,
     on_progress: ItemProgressCallback | None = None,
 ) -> SamplingResult:
@@ -92,7 +92,7 @@ def sample_population(
 
     Args:
         spec: The population specification to sample from
-        count: Number of agents to generate (defaults to spec.meta.size)
+        count: Number of agents to generate (required)
         seed: Random seed for reproducibility (None = random)
         on_progress: Optional callback(current, total) for progress updates
 
@@ -103,7 +103,7 @@ def sample_population(
         SamplingError: If sampling fails for any agent (e.g., formula error)
     """
     # Resolve count
-    n = count if count is not None else spec.meta.size
+    n = count
 
     # Initialize RNG
     if seed is None:

@@ -41,17 +41,13 @@ def _generate_scenario_name(description: str) -> str:
     return "_".join(words) or "scenario"
 
 
-def _determine_simulation_config(population_size: int) -> SimulationConfig:
-    """Determine default simulation configuration based on population size."""
-    if population_size < 500:
-        max_timesteps = 50
-    elif population_size <= 5000:
-        max_timesteps = 100
-    else:
-        max_timesteps = 168  # 1 week of hours
+def _determine_simulation_config() -> SimulationConfig:
+    """Determine default simulation configuration.
 
+    Uses a fixed default since population size is determined at sample time.
+    """
     return SimulationConfig(
-        max_timesteps=max_timesteps,
+        max_timesteps=100,
         timestep_unit=TimestepUnit.HOUR,
         stop_conditions=["exposure_rate > 0.95 and no_state_changes_for > 10"],
         seed=None,
@@ -212,8 +208,8 @@ def create_scenario(
 
     progress("5/6", "Generating timeline...")
 
-    # Generate simulation config based on population size
-    simulation_config = _determine_simulation_config(population_spec.meta.size)
+    # Generate simulation config
+    simulation_config = _determine_simulation_config()
 
     timeline_events, background_context = generate_timeline(
         scenario_description=description,
@@ -312,8 +308,8 @@ def create_scenario_spec(
     progress("2/5", "Generating seed exposure rules...")
 
     # Create a minimal network summary - exposure will use generic rules
+    # Node count isn't needed for generic rules; will be determined at sample time
     generic_network_summary = {
-        "node_count": population_spec.meta.size,
         "edge_types": ["colleague", "friend", "family"],  # Generic types
     }
 
@@ -344,7 +340,7 @@ def create_scenario_spec(
     # Step 5: Generate timeline + background context
     progress("5/5", "Generating timeline...")
 
-    simulation_config = _determine_simulation_config(population_spec.meta.size)
+    simulation_config = _determine_simulation_config()
 
     timeline_events, background_context = generate_timeline(
         scenario_description=description,

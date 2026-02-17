@@ -105,7 +105,6 @@ def parse_scenario(
     """
     population_context = f"""
 Population: {population_spec.meta.description}
-Size: {population_spec.meta.size} agents
 Geography: {population_spec.meta.geography or "Not specified"}
 
 Key attributes:

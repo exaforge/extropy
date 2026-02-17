@@ -188,7 +188,6 @@ def _compute_grounding_summary(
 
 def build_spec(
     description: str,
-    size: int,
     geography: str | None,
     attributes: list[AttributeSpec],
     sampling_order: list[str],
@@ -202,7 +201,6 @@ def build_spec(
 
     Args:
         description: Original population description
-        size: Number of agents
         geography: Geographic scope
         attributes: List of AttributeSpec
         sampling_order: Order for sampling
@@ -216,7 +214,6 @@ def build_spec(
     """
     meta = SpecMeta(
         description=description,
-        size=size,
         geography=geography,
         agent_focus=agent_focus,
         created_at=datetime.now(),

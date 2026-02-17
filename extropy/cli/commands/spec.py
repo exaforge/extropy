@@ -203,7 +203,6 @@ def spec_command(
             out.needs_clarification(
                 questions=questions,
                 resume_command=resume_cmd,
-                partial_data={"size": sufficiency_result.size},
             )
             raise typer.Exit(out.finish())
         else:
@@ -272,7 +271,6 @@ def spec_command(
                     console.print(f"  • {q}")
                 raise typer.Exit(1)
 
-    size = sufficiency_result.size
     geography = sufficiency_result.geography
     agent_focus = sufficiency_result.agent_focus
     geo_str = f", {geography}" if geography else ""
@@ -280,7 +278,7 @@ def spec_command(
 
     if not agent_mode:
         console.print(
-            f"[green]✓[/green] Context sufficient ({size} agents{geo_str}{focus_str})"
+            f"[green]✓[/green] Context sufficient{geo_str}{focus_str}"
         )
 
     # Step 1: Attribute Selection
@@ -293,7 +291,7 @@ def spec_command(
     def do_selection():
         nonlocal attributes, selection_error
         try:
-            attributes = select_attributes(description, size, geography)
+            attributes = select_attributes(description, geography)
         except Exception as e:
             selection_error = e
         finally:
@@ -430,7 +428,6 @@ def spec_command(
     with console.status("[cyan]Building spec...[/cyan]"):
         population_spec = build_spec(
             description=description,
-            size=size,
             geography=geography,
             attributes=bound_attrs,
             sampling_order=sampling_order,
@@ -484,7 +481,6 @@ def spec_command(
         out.success(
             "Spec saved",
             output=str(resolved_output),
-            size=size,
             geography=geography,
             agent_focus=agent_focus,
             attribute_count=len(population_spec.attributes),

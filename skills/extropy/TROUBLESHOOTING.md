@@ -54,8 +54,7 @@ If truly stuck:
 ### Sample Produces Wrong Count
 
 Check:
-- `--count` / `-n` flag value
-- `meta.size` in population spec
+- `--count` / `-n` flag value (this is the only way to set agent count)
 - Household mode: count is households, not individuals
 
 ### Network Has Isolated Agents

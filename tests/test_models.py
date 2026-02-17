@@ -305,18 +305,16 @@ class TestSpecMeta:
     def test_spec_meta_creation(self):
         """Test creating spec metadata."""
         meta = SpecMeta(
-            description="500 German surgeons",
-            size=500,
+            description="German surgeons",
             geography="Germany",
         )
-        assert meta.description == "500 German surgeons"
-        assert meta.size == 500
+        assert meta.description == "German surgeons"
         assert meta.geography == "Germany"
         assert meta.version == "1.0"
 
     def test_spec_meta_default_created_at(self):
         """Test that created_at defaults to now."""
-        meta = SpecMeta(description="Test", size=100)
+        meta = SpecMeta(description="Test")
         assert meta.created_at is not None
         assert isinstance(meta.created_at, datetime)
 
@@ -361,7 +359,6 @@ class TestPopulationSpec:
         """Test getting spec summary."""
         summary = minimal_population_spec.summary()
         assert "Test population" in summary
-        assert "Size: 100" in summary
         assert "age" in summary
 
     def test_population_spec_yaml_roundtrip(self, minimal_population_spec):
@@ -488,18 +485,16 @@ class TestIntermediateTypes:
         """Test SufficiencyResult model."""
         result = SufficiencyResult(
             sufficient=True,
-            size=500,
             geography="Germany",
         )
         assert result.sufficient is True
-        assert result.size == 500
+        assert result.geography == "Germany"
         assert result.clarifications_needed == []
 
     def test_sufficiency_result_insufficient(self):
         """Test SufficiencyResult when insufficient."""
         result = SufficiencyResult(
             sufficient=False,
-            size=1000,  # default
             clarifications_needed=[
                 "Please specify the target population",
                 "What region should be covered?",

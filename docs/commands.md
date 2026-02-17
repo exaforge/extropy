@@ -48,7 +48,7 @@ Generate a population spec from a natural language description.
 
 ```bash
 # Create new study folder with population.v1.yaml
-extropy spec "500 German surgeons" -o surgeons
+extropy spec "German surgeons" -o surgeons
 
 # Create with custom name (surgeons/hospital-staff.v1.yaml)
 extropy spec "German surgeons" -o surgeons/hospital-staff

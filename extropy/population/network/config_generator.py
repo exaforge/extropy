@@ -256,7 +256,6 @@ def _build_prompt(
 
 ## Population
 - Description: {population_spec.meta.description}
-- Size: {population_spec.meta.size} people
 - Location/context: {population_spec.meta.geography or "unspecified"}
 
 ## Available Attributes

@@ -58,7 +58,7 @@ def display_spec_summary(spec: PopulationSpec) -> None:
     console.print("└" + "─" * 58 + "┘")
     console.print()
 
-    console.print(f"[bold]{spec.meta.description}[/bold] ({spec.meta.size} agents)")
+    console.print(f"[bold]{spec.meta.description}[/bold]")
     console.print(
         f"Grounding: {grounding_indicator(spec.grounding.overall)} ({spec.grounding.sources_count} sources)"
     )

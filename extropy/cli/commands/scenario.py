@@ -127,7 +127,6 @@ def scenario_command(
         try:
             new_attributes = select_attributes(
                 description=description,
-                size=pop_spec.meta.size,
                 geography=pop_spec.meta.geography,
                 context=pop_spec.attributes,
             )

@@ -437,20 +437,6 @@ def validate_scenario(
             )
         )
 
-    # =========================================================================
-    # Validate Agent Count Consistency
-    # =========================================================================
-
-    if agent_count is not None and population_spec:
-        if agent_count != population_spec.meta.size:
-            warnings.append(
-                ValidationWarning(
-                    category="consistency",
-                    location="agents",
-                    message=f"Agent count ({agent_count}) differs from population spec size ({population_spec.meta.size})",
-                )
-            )
-
     # Validate IDs inside study DB when available.
     if study_db_path.exists():
         try:

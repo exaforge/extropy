@@ -30,7 +30,7 @@ Extropy predicts how populations respond to *any* scenario — real or hypotheti
 Ask these questions if not already answered:
 
 1. **What decision should this inform?** (policy choice, pricing, messaging)
-2. **Who is the population?** (geography, demographics, size)
+2. **Who is the population?** (geography, demographics)
 3. **What is the event/change?** (announcement, policy, product)
 4. **What outcomes matter?** (categorical choices, sentiment, likelihood)
 5. **Any constraints?** (budget, timeline, fidelity requirements)

@@ -51,13 +51,13 @@ extropy spec → extropy scenario → extropy persona → extropy sample → ext
 For `spec` command, use `--answers` to skip clarification prompts:
 
 ```bash
-extropy spec "500 German surgeons" -o surgeons --answers '{"location": "Bavaria"}'
+extropy spec "German surgeons" -o surgeons --answers '{"location": "Bavaria"}'
 ```
 
 Or use `--use-defaults` to accept default values:
 
 ```bash
-extropy spec "500 German surgeons" -o surgeons --use-defaults
+extropy spec "German surgeons" -o surgeons --use-defaults
 ```
 
 ### Skip confirmations

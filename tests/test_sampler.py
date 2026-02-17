@@ -431,10 +431,10 @@ class TestSamplePopulation:
         # salary has modifiers, so should have trigger counts
         assert "salary" in result.stats.modifier_triggers
 
-    def test_sample_uses_spec_size_by_default(self, minimal_population_spec):
-        """Test that sample_population uses spec size when count not provided."""
-        result = sample_population(minimal_population_spec, seed=42)
-        assert len(result.agents) == minimal_population_spec.meta.size
+    def test_sample_with_explicit_count(self, minimal_population_spec):
+        """Test that sample_population requires explicit count."""
+        result = sample_population(minimal_population_spec, count=50, seed=42)
+        assert len(result.agents) == 50
 
     def test_sample_progress_callback(self, minimal_population_spec):
         """Test progress callback is called."""
@@ -624,8 +624,6 @@ class TestEdgeCases:
 
     def test_large_population_sampling(self, minimal_population_spec):
         """Test sampling a large population."""
-        # Modify spec for larger population
-        minimal_population_spec.meta.size = 1000
         result = sample_population(minimal_population_spec, count=1000, seed=42)
 
         assert len(result.agents) == 1000

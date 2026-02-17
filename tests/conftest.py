@@ -167,7 +167,6 @@ def minimal_population_spec() -> PopulationSpec:
     return PopulationSpec(
         meta=SpecMeta(
             description="Test population",
-            size=100,
             geography="Test Region",
             created_at=datetime(2024, 1, 1),
             version="1.0",
@@ -230,7 +229,6 @@ def complex_population_spec() -> PopulationSpec:
     return PopulationSpec(
         meta=SpecMeta(
             description="Complex test population",
-            size=500,
             geography="Germany",
             created_at=datetime(2024, 1, 1),
             version="1.0",

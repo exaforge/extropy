@@ -422,10 +422,6 @@ class SpecMeta(BaseModel):
     """Metadata about the population spec."""
 
     description: str = Field(description="Original population description")
-    size: int = Field(
-        default=1000,
-        description="Suggested number of agents (actual count determined by sample -n)",
-    )
     geography: str | None = Field(default=None, description="Geographic scope")
     agent_focus: str | None = Field(
         default=None,
@@ -510,7 +506,6 @@ class PopulationSpec(BaseModel):
         """Get a text summary of the spec."""
         lines = [
             f"Population: {self.meta.description}",
-            f"Size: {self.meta.size}",
             f"Grounding: {self.grounding.overall} ({self.grounding.sources_count} sources)",
             f"Attributes: {len(self.attributes)}",
             "",
@@ -596,7 +591,6 @@ class PopulationSpec(BaseModel):
 
         merged_meta = SpecMeta(
             description=f"{self.meta.description} + {extension.meta.description}",
-            size=self.meta.size,
             geography=self.meta.geography,
             agent_focus=self.meta.agent_focus,
             created_at=datetime.now(),
@@ -732,7 +726,6 @@ class SufficiencyResult(BaseModel):
     """Result from context sufficiency check (Step 0)."""
 
     sufficient: bool
-    size: int = Field(default=1000, description="Extracted or default population size")
     geography: str | None = None
     agent_focus: str | None = Field(
         default=None,

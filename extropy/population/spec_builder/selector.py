@@ -152,7 +152,6 @@ ATTRIBUTE_SELECTION_SCHEMA = {
 
 def select_attributes(
     description: str,
-    size: int,
     geography: str | None = None,
     context: list[AttributeSpec] | None = None,
     model: str | None = None,
@@ -173,7 +172,6 @@ def select_attributes(
 
     Args:
         description: Natural language population description
-        size: Number of agents (for context)
         geography: Geographic scope if known
         context: Existing attributes from base population (for extend mode)
         model: Model to use
@@ -240,7 +238,7 @@ def select_attributes(
 
     ## Population
 
-    "{description}" ({size} agents{geo_context})
+    "{description}"{geo_context}
 
     {constraint_note}
 

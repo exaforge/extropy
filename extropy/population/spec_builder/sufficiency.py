@@ -15,10 +15,6 @@ SUFFICIENCY_SCHEMA = {
             "type": "boolean",
             "description": "Whether the description has enough information to create a population",
         },
-        "size": {
-            "type": "integer",
-            "description": "Extracted population size, or 1000 if not specified",
-        },
         "geography": {
             "type": ["string", "null"],
             "description": "Geographic scope if mentioned (e.g., 'Germany', 'US', 'California')",
@@ -44,7 +40,7 @@ SUFFICIENCY_SCHEMA = {
                 "properties": {
                     "id": {
                         "type": "string",
-                        "description": "snake_case identifier, e.g. 'geography', 'population_size'",
+                        "description": "snake_case identifier, e.g. 'geography'",
                     },
                     "question": {
                         "type": "string",
@@ -70,7 +66,6 @@ SUFFICIENCY_SCHEMA = {
     },
     "required": [
         "sufficient",
-        "size",
         "geography",
         "agent_focus",
         "clarifications_needed",
@@ -82,7 +77,6 @@ SUFFICIENCY_SCHEMA = {
 
 def check_sufficiency(
     description: str,
-    default_size: int = 1000,
     model: str | None = None,
 ) -> SufficiencyResult:
     """
@@ -90,16 +84,14 @@ def check_sufficiency(
 
     A sufficient description should specify:
     1. Who they are (identity/profession/demographic)
-    2. Size (number of agents) - optional, defaults to 1000
-    3. Geographic scope - optional but helpful
+    2. Geographic scope - optional but helpful
 
     Args:
         description: Natural language population description
-        default_size: Default size if not specified
         model: Model to use (gpt-5-mini recommended for speed)
 
     Returns:
-        SufficiencyResult with sufficient flag, size, and any clarifications needed
+        SufficiencyResult with sufficient flag and any clarifications needed
     """
     prompt = f"""Evaluate if this population description is sufficient to create a synthetic population:
 
@@ -110,15 +102,11 @@ A sufficient description should specify:
    ✓ Good: "surgeons", "Netflix subscribers", "German farmers", "Tesla owners"
    ✗ Bad: "people", "users" (too vague)
 
-2. SIZE (optional) - number of agents to create
-   - Extract if mentioned (e.g., "500 surgeons" → 500)
-   - Default to {default_size} if not specified
-
-3. GEOGRAPHY (optional) - geographic scope
+2. GEOGRAPHY (optional) - geographic scope
    - Extract if mentioned (e.g., "German surgeons" → Germany)
    - Can be country, region, or city
 
-4. AGENT FOCUS - who should be simulated as active agents?
+3. AGENT FOCUS - who should be simulated as active agents?
    This controls how households are sampled:
    - "families" or "households" → everyone in household gets simulated (both partners, older kids)
      Use for: communities, neighborhoods, social dynamics, local issues
@@ -129,7 +117,7 @@ A sufficient description should specify:
 
    Examples:
    - "community reacting to school policy" → "families" (both parents may have opinions)
-   - "500 German surgeons" → "surgeons" (study is about the surgeon, not their family)
+   - "German surgeons" → "surgeons" (study is about the surgeon, not their family)
    - "retired couples planning travel" → "couples" (both partners matter)
 
 If the description is too vague to create meaningful attributes, mark as insufficient
@@ -175,7 +163,6 @@ Be lenient - if you can reasonably infer a specific population, mark as sufficie
 
     return SufficiencyResult(
         sufficient=data.get("sufficient", False),
-        size=data.get("size", default_size),
         geography=data.get("geography"),
         agent_focus=data.get("agent_focus"),
         clarifications_needed=data.get("clarifications_needed", []),
@@ -186,7 +173,6 @@ Be lenient - if you can reasonably infer a specific population, mark as sufficie
 def check_sufficiency_with_answers(
     description: str,
     answers: dict[str, str | int],
-    default_size: int = 1000,
     model: str | None = None,
 ) -> SufficiencyResult:
     """Re-check sufficiency with pre-supplied answers.
@@ -196,7 +182,6 @@ def check_sufficiency_with_answers(
     Args:
         description: Original natural language population description
         answers: Dict mapping question IDs to answer values
-        default_size: Default size if not specified
         model: Model to use
 
     Returns:
@@ -207,4 +192,4 @@ def check_sufficiency_with_answers(
     for key, value in answers.items():
         enriched += f" | {key}: {value}"
 
-    return check_sufficiency(enriched, default_size, model)
+    return check_sufficiency(enriched, model)

@@ -40,38 +40,18 @@ class TestGenerateScenarioName:
 
 
 class TestDetermineSimulationConfig:
-    """Test auto-configuration based on population size."""
+    """Test default simulation configuration."""
 
-    def test_small_population(self):
-        config = _determine_simulation_config(100)
-        assert config.max_timesteps == 50
-
-    def test_medium_population(self):
-        config = _determine_simulation_config(1000)
+    def test_default_config(self):
+        config = _determine_simulation_config()
         assert config.max_timesteps == 100
-
-    def test_large_population(self):
-        config = _determine_simulation_config(10000)
-        assert config.max_timesteps == 168
-
-    def test_boundary_500(self):
-        config = _determine_simulation_config(500)
-        assert config.max_timesteps == 100
-
-    def test_boundary_5000(self):
-        config = _determine_simulation_config(5000)
-        assert config.max_timesteps == 100
-
-    def test_boundary_5001(self):
-        config = _determine_simulation_config(5001)
-        assert config.max_timesteps == 168
 
     def test_has_stop_conditions(self):
-        config = _determine_simulation_config(100)
+        config = _determine_simulation_config()
         assert len(config.stop_conditions) > 0
 
     def test_timestep_unit_is_hour(self):
-        config = _determine_simulation_config(100)
+        config = _determine_simulation_config()
         assert config.timestep_unit == TimestepUnit.HOUR
 
 
@@ -208,7 +188,7 @@ class TestCreateScenario:
         assert spec.meta.name is not None
         assert spec.event.type == EventType.PRODUCT_LAUNCH
         assert len(spec.seed_exposure.rules) == 1
-        assert spec.simulation.max_timesteps == 50  # small population
+        assert spec.simulation.max_timesteps == 100  # default config
 
     @patch("extropy.scenario.compiler.parse_scenario")
     @patch("extropy.scenario.compiler.generate_seed_exposure")

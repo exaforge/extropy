@@ -155,7 +155,7 @@ Emotional valence: {event.emotional_valence:.2f}
 
 ## Population
 
-{population_spec.meta.description} ({population_spec.meta.size} agents)
+{population_spec.meta.description}
 Geography: {population_spec.meta.geography or "Not specified"}
 
 ### Available Attributes (use these in 'when' clauses)

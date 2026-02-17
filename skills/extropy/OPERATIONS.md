@@ -71,7 +71,7 @@ extropy sample <population.yaml> --study-db <db> [--count N] [--seed S] [--repor
 ```
 
 Key flags:
-- `--count` / `-n`: Override population size (default: from spec metadata)
+- `--count` / `-n`: Number of agents to sample (required)
 - `--seed`: Random seed for reproducibility (always set this)
 - `--report` / `-r`: Show distribution summaries after sampling
 - `--household-mode`: Enable household-based sampling (couples, dependents)
