@@ -463,6 +463,15 @@ def _build_npc_schema() -> dict[str, Any]:
     }
 
 
+def _message_count_for_fidelity(fidelity: str) -> int:
+    """Get total message count for a conversation at the given fidelity."""
+    if fidelity == "high":
+        return 6
+    if fidelity == "medium":
+        return 4
+    return 2
+
+
 async def execute_conversation_async(
     request: ConversationRequest,
     initiator_context: ReasoningContext,
@@ -488,8 +497,8 @@ async def execute_conversation_async(
     Returns:
         ConversationResult with messages and state changes
     """
-    # Determine number of turns based on fidelity
-    turns = 2 if config.fidelity == "medium" else 3  # 4 or 6 messages
+    # Determine number of messages based on fidelity
+    total_messages = _message_count_for_fidelity(config.fidelity)
 
     messages: list[ConversationMessage] = []
     initiator_name = initiator_context.agent_name or "Agent"
@@ -507,10 +516,10 @@ async def execute_conversation_async(
     npc_schema = _build_npc_schema()
     model = config.fast or None  # Use fast model for conversations
 
-    for turn in range(turns):
+    for turn in range(total_messages):
         # Alternate speakers
         is_initiator_turn = turn % 2 == 0
-        is_final = turn == turns - 1 or (not is_initiator_turn and turn == turns - 2)
+        is_final = turn == total_messages - 1
 
         if is_initiator_turn:
             # Initiator speaks
@@ -522,7 +531,7 @@ async def execute_conversation_async(
                 topic=request.topic,
                 prior_messages=messages,
                 scenario=scenario,
-                is_final=is_final and turn == turns - 1,
+                is_final=is_final,
                 is_initiator=True,
             )
 
@@ -552,7 +561,7 @@ async def execute_conversation_async(
                             speaker_name=initiator_name,
                             content=content,
                             turn=turn,
-                            is_final=is_final and turn == turns - 1,
+                            is_final=is_final,
                         )
                     )
                     initiator_sentiment = response.get("updated_sentiment")
