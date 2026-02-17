@@ -39,6 +39,125 @@ from ...utils.eval_safe import eval_formula, FormulaError
 from ..names import generate_name
 from ..names.generator import age_to_birth_decade
 
+
+# =============================================================================
+# Minor Normalization (for promoted dependents)
+# =============================================================================
+
+
+def _coerce_minor_education(value: Any, age: int, options: list[str]) -> Any:
+    """Coerce education to age-appropriate level for minors."""
+    if age >= 18:
+        return value
+
+    # Max education stage by age
+    if age <= 10:
+        max_stage = 1  # elementary
+    elif age <= 13:
+        max_stage = 2  # middle school
+    elif age <= 17:
+        max_stage = 3  # high school
+    else:
+        max_stage = 4  # some college
+
+    # Try to find age-appropriate option
+    age_appropriate = ["none", "elementary", "middle_school", "high_school"][:max_stage + 1]
+    for opt in reversed(age_appropriate):
+        for available in options:
+            if opt in available.lower():
+                return available
+
+    # Fallback to first option or "none"
+    return options[0] if options else "none"
+
+
+def _coerce_minor_employment(value: Any, age: int, options: list[str]) -> Any:
+    """Coerce employment to age-appropriate status for minors."""
+    if age >= 18:
+        return value
+
+    # Minors should be students or not employed
+    preferred = ["student", "none", "unemployed", "not_employed", "n/a"]
+    if age >= 16:
+        preferred = ["student", "part_time", "intern", "none", "unemployed"]
+
+    for pref in preferred:
+        for opt in options:
+            if pref in opt.lower():
+                return opt
+
+    return options[0] if options else "student"
+
+
+def _coerce_minor_occupation(value: Any, options: list[str]) -> Any:
+    """Coerce occupation to age-appropriate value for minors."""
+    preferred = ["student", "none", "n/a", "not_applicable"]
+    for pref in preferred:
+        for opt in options:
+            if pref in opt.lower():
+                return opt
+    return options[0] if options else "student"
+
+
+def _coerce_minor_income(value: Any, options: list[str] | None) -> Any:
+    """Coerce income to zero for minors."""
+    if isinstance(value, (int, float)):
+        return 0
+    if options:
+        for opt in options:
+            if "none" in opt.lower() or "0" in opt or "zero" in opt.lower():
+                return opt
+        return options[0]
+    return 0
+
+
+def _normalize_minor_attributes(
+    agent: dict[str, Any],
+    spec: PopulationSpec,
+    parent: dict[str, Any],
+) -> None:
+    """Normalize attributes for minor dependents based on semantic_type.
+
+    Uses the semantic_type field on AttributeSpec (set by LLM during spec creation)
+    to determine which attributes need age-appropriate normalization.
+    """
+    age = agent.get("age")
+    if age is None or age >= 18:
+        return
+
+    for attr in spec.attributes:
+        if attr.name not in agent:
+            continue
+
+        value = agent[attr.name]
+        # Get options from categorical distribution if available
+        options: list[str] = []
+        if (
+            attr.sampling.distribution and
+            hasattr(attr.sampling.distribution, "options") and
+            attr.sampling.distribution.options
+        ):
+            dist_options = attr.sampling.distribution.options
+            # CategoricalDistribution.options is list[str]
+            if isinstance(dist_options, list):
+                options = list(dist_options)
+            # In case it's ever a dict (weighted options)
+            elif isinstance(dist_options, dict):
+                options = list(dist_options.keys())
+
+        if attr.semantic_type == "education":
+            agent[attr.name] = _coerce_minor_education(value, int(age), options)
+        elif attr.semantic_type == "employment":
+            agent[attr.name] = _coerce_minor_employment(value, int(age), options)
+        elif attr.semantic_type == "occupation":
+            agent[attr.name] = _coerce_minor_occupation(value, options)
+        elif attr.semantic_type == "income":
+            # Preserve household income, zero out personal income
+            if attr.scope == "household" and attr.name in parent:
+                agent[attr.name] = parent[attr.name]
+            else:
+                agent[attr.name] = _coerce_minor_income(value, options if options else None)
+
 logger = logging.getLogger(__name__)
 
 
@@ -320,6 +439,9 @@ def _sample_dependent_as_agent(
     for attr in spec.attributes:
         if attr.scope == "household" and attr.name in parent:
             agent[attr.name] = parent[attr.name]
+
+    # Normalize age-inappropriate attributes for minors
+    _normalize_minor_attributes(agent, spec, parent)
 
     return agent
 

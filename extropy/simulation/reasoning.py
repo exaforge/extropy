@@ -176,6 +176,10 @@ def build_pass1_prompt(
     if context.macro_summary:
         prompt_parts.extend(["", "## The Broader Climate", "", context.macro_summary])
 
+    # --- Identity relevance (from scenario's identity_dimensions) ---
+    if context.identity_threat_summary:
+        prompt_parts.extend(["", "## Identity Relevance", "", context.identity_threat_summary])
+
     # --- Timeline recap (Phase C) ---
     if context.timeline_recap:
         prompt_parts.extend(["", "## What's Happened So Far", ""])

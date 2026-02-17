@@ -76,6 +76,8 @@ from .scenario import (
     # Simulation config
     TimestepUnit,
     SimulationConfig,
+    # Identity
+    IdentityDimension,
     # Scenario
     ScenarioMeta,
     ScenarioSpec,

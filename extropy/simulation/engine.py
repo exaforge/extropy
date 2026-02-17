@@ -1475,7 +1475,68 @@ class SimulationEngine:
             ctx.timeline_recap = recap if recap else None
             ctx.current_development = current_dev
 
+        # Build identity threat summary from scenario's identity dimensions
+        ctx.identity_threat_summary = self._render_identity_threat_summary(agent)
+
         return ctx
+
+    def _render_identity_threat_summary(
+        self, agent: dict[str, Any]
+    ) -> str | None:
+        """Render identity threat framing from scenario's identity_dimensions.
+
+        Uses the identity_dimensions field from ScenarioSpec (set by LLM during
+        scenario creation) to determine which aspects of the agent's identity
+        might feel threatened.
+        """
+        if not self.scenario.identity_dimensions:
+            return None
+
+        # Map dimension names to agent attribute keys
+        dimension_attr_keys = {
+            "political_orientation": ("political_orientation", "political_ideology", "party_affiliation"),
+            "religious_affiliation": ("religious_affiliation", "religion", "faith_tradition"),
+            "race_ethnicity": ("race_ethnicity", "race", "ethnicity"),
+            "gender_identity": ("gender_identity", "gender"),
+            "sexual_orientation": ("sexual_orientation",),
+            "parental_status": ("parental_status", "household_role", "has_children"),
+            "citizenship": ("citizenship_status", "nationality", "country_of_origin"),
+            "socioeconomic_class": ("socioeconomic_class", "income_bracket", "social_class"),
+            "professional_identity": ("occupation", "profession", "job_title"),
+            "generational_identity": ("generation", "age_group"),
+        }
+
+        relevant_dimensions = []
+        for dim in self.scenario.identity_dimensions:
+            # Check if agent has a value for this dimension
+            attr_keys = dimension_attr_keys.get(dim.dimension, ())
+            agent_value = None
+            for key in attr_keys:
+                val = agent.get(key)
+                if val and str(val).lower() not in ("unknown", "none", "n/a", ""):
+                    agent_value = val
+                    break
+
+            # Special handling for parental_status - check dependents
+            if dim.dimension == "parental_status" and not agent_value:
+                if agent.get("dependents") or agent.get("has_children"):
+                    agent_value = "parent"
+
+            if agent_value:
+                relevant_dimensions.append(
+                    f"{dim.dimension.replace('_', ' ')} ({agent_value}): {dim.relevance}"
+                )
+
+        if not relevant_dimensions:
+            return None
+
+        return (
+            "This development can feel identity-relevant, not just practical. "
+            "Parts of who I am that may feel implicated:\n- " +
+            "\n- ".join(relevant_dimensions) +
+            "\n\nIf it feels personal, acknowledge that in both your internal reaction "
+            "and what you choose to say publicly."
+        )
 
     def _get_peer_opinions(self, agent_id: str) -> list[PeerOpinion]:
         """Get opinions of connected peers who have visibly shared.

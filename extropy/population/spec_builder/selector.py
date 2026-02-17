@@ -123,6 +123,11 @@ ATTRIBUTE_SELECTION_SCHEMA = {
                         "items": {"type": "string"},
                         "description": "Names of other attributes this depends on (empty for independent)",
                     },
+                    "semantic_type": {
+                        "type": "string",
+                        "enum": ["age", "income", "education", "employment", "occupation"],
+                        "description": "Semantic meaning for special handling. Set ONLY for: age (person's age), income (monetary earnings/salary), education (education level/degree), employment (employment status like employed/unemployed/student), occupation (job title/profession). Leave unset for all other attributes.",
+                    },
                 },
                 "required": [
                     "name",
@@ -374,6 +379,7 @@ def select_attributes(
             strategy=strategy,
             scope=attr_data.get("scope", "individual"),
             correlation_rate=attr_data.get("correlation_rate"),
+            semantic_type=attr_data.get("semantic_type"),
             depends_on=depends_on,
         )
         attributes.append(attr)

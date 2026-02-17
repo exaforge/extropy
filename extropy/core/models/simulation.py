@@ -340,6 +340,10 @@ class ReasoningContext(BaseModel):
         default_factory=list,
         description="Recent public statements from the broader population (beyond direct network)",
     )
+    identity_threat_summary: str | None = Field(
+        default=None,
+        description="Summary of which identity dimensions feel threatened by this scenario",
+    )
 
 
 # =============================================================================

@@ -13,6 +13,7 @@ from datetime import datetime
 from pathlib import Path
 
 from ..core.models import (
+    IdentityDimension,
     PopulationSpec,
     ScenarioMeta,
     ScenarioSpec,
@@ -20,6 +21,7 @@ from ..core.models import (
     TimestepUnit,
     ValidationResult,
 )
+from ..core.llm import simple_call
 from .parser import parse_scenario
 from .exposure import generate_seed_exposure
 from .interaction import determine_interaction_model
@@ -52,6 +54,112 @@ def _determine_simulation_config() -> SimulationConfig:
         stop_conditions=["exposure_rate > 0.95 and no_state_changes_for > 10"],
         seed=None,
     )
+
+
+# Schema for identity dimension detection
+_IDENTITY_DIMENSION_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "identity_dimensions": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "dimension": {
+                        "type": "string",
+                        "enum": [
+                            "political_orientation",
+                            "religious_affiliation",
+                            "race_ethnicity",
+                            "gender_identity",
+                            "sexual_orientation",
+                            "parental_status",
+                            "citizenship",
+                            "socioeconomic_class",
+                            "professional_identity",
+                            "generational_identity",
+                        ],
+                        "description": "The identity dimension being activated",
+                    },
+                    "relevance": {
+                        "type": "string",
+                        "description": "Why this dimension is relevant (1-2 sentences)",
+                    },
+                },
+                "required": ["dimension", "relevance"],
+            },
+            "description": "Identity dimensions that may feel threatened or activated by this scenario. Only include dimensions that are clearly relevant.",
+        },
+    },
+    "required": ["identity_dimensions"],
+}
+
+
+def _detect_identity_dimensions(
+    description: str,
+    event_content: str,
+    background_context: str | None = None,
+) -> list[IdentityDimension]:
+    """Detect which identity dimensions are activated by the scenario.
+
+    Uses LLM to analyze the scenario and determine which aspects of
+    people's identity might feel threatened or activated.
+    """
+    context_parts = [
+        f"Scenario: {description}",
+        f"Event: {event_content}",
+    ]
+    if background_context:
+        context_parts.append(f"Background: {background_context}")
+
+    prompt = f"""Analyze this scenario and identify which identity dimensions might feel threatened or activated.
+
+{chr(10).join(context_parts)}
+
+Identity dimensions to consider:
+- political_orientation: Liberal/conservative, party affiliation, political ideology
+- religious_affiliation: Faith traditions, religious identity, moral frameworks
+- race_ethnicity: Racial/ethnic identity, minority/majority status
+- gender_identity: Gender expression, gender roles
+- sexual_orientation: LGBTQ+ identity
+- parental_status: Parent/caregiver identity, family roles
+- citizenship: Immigration status, national identity
+- socioeconomic_class: Working class, professional class, wealth identity
+- professional_identity: Career/occupational identity
+- generational_identity: Boomer, millennial, gen-z identity
+
+Only include dimensions that are CLEARLY relevant to this specific scenario.
+A scenario about book bans might activate political_orientation and parental_status.
+A scenario about a new iPhone might not activate any identity dimensions.
+
+If no identity dimensions are clearly relevant, return an empty array."""
+
+    try:
+        response = simple_call(
+            prompt=prompt,
+            response_schema=_IDENTITY_DIMENSION_SCHEMA,
+            schema_name="identity_dimensions",
+        )
+
+        if not response:
+            return []
+
+        dimensions = []
+        for item in response.get("identity_dimensions", []):
+            try:
+                dim = IdentityDimension(
+                    dimension=item["dimension"],
+                    relevance=item["relevance"],
+                )
+                dimensions.append(dim)
+            except (KeyError, ValueError):
+                continue
+
+        return dimensions
+
+    except Exception:
+        # If detection fails, return empty list - not critical
+        return []
 
 
 def _load_network_summary(network_data: dict[str, object]) -> dict[str, object]:
@@ -338,7 +446,7 @@ def create_scenario_spec(
     )
 
     # Step 5: Generate timeline + background context
-    progress("5/5", "Generating timeline...")
+    progress("5/6", "Generating timeline...")
 
     simulation_config = _determine_simulation_config()
 
@@ -347,6 +455,15 @@ def create_scenario_spec(
         base_event=event,
         simulation_config=simulation_config,
         timeline_mode=timeline_mode,
+    )
+
+    # Step 6: Detect identity dimensions
+    progress("6/6", "Detecting identity dimensions...")
+
+    identity_dimensions = _detect_identity_dimensions(
+        description=description,
+        event_content=event.content,
+        background_context=background_context,
     )
 
     # Assemble scenario spec
@@ -368,6 +485,7 @@ def create_scenario_spec(
         outcomes=outcome_config,
         simulation=simulation_config,
         background_context=background_context,
+        identity_dimensions=identity_dimensions if identity_dimensions else None,
     )
 
     # Store extended attributes if provided
