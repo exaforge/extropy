@@ -264,7 +264,9 @@ def _generate_npc_partner(
     # Generate name for partner
     partner_age = partner.get("age")
     birth_decade = age_to_birth_decade(partner_age) if partner_age is not None else None
-    ethnicity = partner.get("race_ethnicity") or partner.get("ethnicity") or partner.get("race")
+    ethnicity = (
+        partner.get("race_ethnicity") or partner.get("ethnicity") or partner.get("race")
+    )
     first_name, _ = generate_name(
         gender=partner["gender"],
         ethnicity=str(ethnicity) if ethnicity else None,

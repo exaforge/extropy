@@ -125,7 +125,11 @@ def correlate_partner_attribute(
 
     # Country uses same_country_rate from config if no explicit rate
     if attr_name == "country":
-        rate = correlation_rate if correlation_rate is not None else config.same_country_rate
+        rate = (
+            correlation_rate
+            if correlation_rate is not None
+            else config.same_country_rate
+        )
         if rng.random() < rate:
             return primary_value
         if available_options:
@@ -135,7 +139,11 @@ def correlate_partner_attribute(
         return primary_value
 
     # For all other attributes, use the explicit correlation_rate or a default
-    rate = correlation_rate if correlation_rate is not None else config.default_same_group_rate
+    rate = (
+        correlation_rate
+        if correlation_rate is not None
+        else config.default_same_group_rate
+    )
     if rng.random() < rate:
         return primary_value
 
