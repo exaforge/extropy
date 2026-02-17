@@ -1,5 +1,6 @@
 """Validate command for population specs and scenario specs."""
 
+import re
 from pathlib import Path
 
 import typer
@@ -12,11 +13,16 @@ from ..utils import Output, ExitCode, format_validation_for_json
 
 def _is_scenario_file(path: Path) -> bool:
     """Check if file is a scenario spec based on naming convention."""
-    return (
-        path.name.endswith(".scenario.yaml")
-        or path.name.endswith(".scenario.yml")
-        or path.name in {"scenario.yaml", "scenario.yml"}
-    )
+    name = path.name
+    # Legacy patterns
+    if name.endswith(".scenario.yaml") or name.endswith(".scenario.yml"):
+        return True
+    if name in {"scenario.yaml", "scenario.yml"}:
+        return True
+    # Versioned pattern: scenario.v{N}.yaml or scenario.v{N}.yml
+    if re.match(r"^scenario\.v\d+\.ya?ml$", name):
+        return True
+    return False
 
 
 def _validate_population_spec(spec_file: Path, strict: bool, out: Output) -> int:

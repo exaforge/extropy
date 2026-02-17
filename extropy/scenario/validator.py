@@ -56,6 +56,35 @@ def ValidationWarning(
     )
 
 
+def _try_resolve_base_population(
+    scenario_path: Path, base_pop_ref: str
+) -> PopulationSpec | None:
+    """Try to resolve base_population reference from study folder structure."""
+    # Parse "population.v2" -> ("population", 2)
+    match = re.match(r"^(.+)\.v(\d+)$", base_pop_ref)
+    if not match:
+        return None
+
+    pop_name, pop_version = match.group(1), int(match.group(2))
+
+    # Navigate: {study_root}/scenario/{name}/scenario.v{N}.yaml -> {study_root}/
+    scenario_dir = scenario_path.parent
+    scenarios_dir = scenario_dir.parent
+    study_root = scenarios_dir.parent
+
+    if scenarios_dir.name != "scenario":
+        return None
+
+    pop_path = study_root / f"{pop_name}.v{pop_version}.yaml"
+    if not pop_path.exists():
+        return None
+
+    try:
+        return PopulationSpec.from_yaml(pop_path)
+    except Exception:
+        return None
+
+
 def validate_scenario(
     spec: ScenarioSpec,
     population_spec: PopulationSpec | None = None,
@@ -406,68 +435,110 @@ def validate_scenario(
     # Validate File References
     # =========================================================================
 
-    # Check if referenced files exist
-    if spec_file is not None:
-        from ..utils import resolve_relative_to
+    # Determine which flow is being used
+    has_base_population = bool(spec.meta.base_population)
+    has_legacy_refs = bool(spec.meta.population_spec and spec.meta.study_db)
 
-        base_file = Path(spec_file)
-        population_path = resolve_relative_to(spec.meta.population_spec, base_file)
-        study_db_path = resolve_relative_to(spec.meta.study_db, base_file)
-    else:
-        population_path = Path(spec.meta.population_spec)
-        study_db_path = Path(spec.meta.study_db)
-
-    if not population_path.exists():
-        errors.append(
-            ValidationError(
-                category="file_reference",
-                location="meta.population_spec",
-                message=f"Population spec not found: {spec.meta.population_spec}",
-                suggestion="Check the file path",
+    if has_base_population:
+        # New flow: validate base_population format
+        if not re.match(r"^.+\.v\d+$", spec.meta.base_population):
+            errors.append(
+                ValidationError(
+                    category="file_reference",
+                    location="meta.base_population",
+                    message=f"Invalid base_population format: {spec.meta.base_population}",
+                    suggestion="Use format like 'population.v1' or 'population.v2'",
+                )
             )
-        )
-
-    if not study_db_path.exists():
-        errors.append(
-            ValidationError(
-                category="file_reference",
-                location="meta.study_db",
-                message=f"Study DB not found: {spec.meta.study_db}",
-                suggestion="Check the file path",
+        # If we have a spec_file, try to resolve and validate the population exists
+        elif spec_file is not None:
+            resolved_pop = _try_resolve_base_population(
+                Path(spec_file), spec.meta.base_population
             )
-        )
+            if resolved_pop is None:
+                warnings.append(
+                    ValidationWarning(
+                        category="file_reference",
+                        location="meta.base_population",
+                        message=f"Could not resolve base_population: {spec.meta.base_population}",
+                        suggestion="Ensure the population file exists at the study root",
+                    )
+                )
 
-    # Validate IDs inside study DB when available.
-    if study_db_path.exists():
-        try:
-            with open_study_db(study_db_path) as db:
-                if db.get_agent_count(spec.meta.population_id) == 0:
-                    errors.append(
-                        ValidationError(
-                            category="file_reference",
-                            location="meta.population_id",
-                            message=f"Population ID not found in study DB: {spec.meta.population_id}",
-                            suggestion="Run `extropy sample ... --study-db ... --population-id ...` first",
-                        )
-                    )
-                if db.get_network_edge_count(spec.meta.network_id) == 0:
-                    errors.append(
-                        ValidationError(
-                            category="file_reference",
-                            location="meta.network_id",
-                            message=f"Network ID not found in study DB: {spec.meta.network_id}",
-                            suggestion="Run `extropy network ... --study-db ... --network-id ...` first",
-                        )
-                    )
-        except Exception:
+    elif has_legacy_refs:
+        # Legacy flow: validate population_spec + study_db paths
+        if spec_file is not None:
+            from ..utils import resolve_relative_to
+
+            base_file = Path(spec_file)
+            population_path = resolve_relative_to(spec.meta.population_spec, base_file)
+            study_db_path = resolve_relative_to(spec.meta.study_db, base_file)
+        else:
+            population_path = Path(spec.meta.population_spec)
+            study_db_path = Path(spec.meta.study_db)
+
+        if not population_path.exists():
+            errors.append(
+                ValidationError(
+                    category="file_reference",
+                    location="meta.population_spec",
+                    message=f"Population spec not found: {spec.meta.population_spec}",
+                    suggestion="Check the file path",
+                )
+            )
+
+        if not study_db_path.exists():
             errors.append(
                 ValidationError(
                     category="file_reference",
                     location="meta.study_db",
-                    message=f"Failed to read study DB: {spec.meta.study_db}",
-                    suggestion="Check that the file is a valid SQLite study DB",
+                    message=f"Study DB not found: {spec.meta.study_db}",
+                    suggestion="Check the file path",
                 )
             )
+
+        # Validate IDs inside study DB when available.
+        if study_db_path.exists():
+            try:
+                with open_study_db(study_db_path) as db:
+                    if db.get_agent_count(spec.meta.population_id) == 0:
+                        errors.append(
+                            ValidationError(
+                                category="file_reference",
+                                location="meta.population_id",
+                                message=f"Population ID not found in study DB: {spec.meta.population_id}",
+                                suggestion="Run `extropy sample ... --study-db ... --population-id ...` first",
+                            )
+                        )
+                    if db.get_network_edge_count(spec.meta.network_id) == 0:
+                        errors.append(
+                            ValidationError(
+                                category="file_reference",
+                                location="meta.network_id",
+                                message=f"Network ID not found in study DB: {spec.meta.network_id}",
+                                suggestion="Run `extropy network ... --study-db ... --network-id ...` first",
+                            )
+                        )
+            except Exception:
+                errors.append(
+                    ValidationError(
+                        category="file_reference",
+                        location="meta.study_db",
+                        message=f"Failed to read study DB: {spec.meta.study_db}",
+                        suggestion="Check that the file is a valid SQLite study DB",
+                    )
+                )
+
+    else:
+        # Neither flow configured
+        errors.append(
+            ValidationError(
+                category="file_reference",
+                location="meta",
+                message="Scenario must specify either base_population (new flow) or population_spec + study_db (legacy flow)",
+                suggestion="Add meta.base_population or both meta.population_spec and meta.study_db",
+            )
+        )
 
     return ValidationResult(issues=[*errors, *warnings])
 
@@ -539,23 +610,35 @@ def load_and_validate_scenario(
     agent_count = None
     network = None
 
-    from ..utils import resolve_relative_to
+    # Determine which flow to use
+    if spec.meta.base_population:
+        # New flow: resolve base_population from study folder structure
+        population_spec = _try_resolve_base_population(
+            scenario_path, spec.meta.base_population
+        )
+    elif spec.meta.population_spec:
+        # Legacy flow: resolve population_spec path directly
+        from ..utils import resolve_relative_to
 
-    pop_path = resolve_relative_to(spec.meta.population_spec, scenario_path)
-    if pop_path.exists():
-        try:
-            population_spec = PopulationSpec.from_yaml(pop_path)
-        except Exception:
-            pass  # Will be caught as validation error
+        pop_path = resolve_relative_to(spec.meta.population_spec, scenario_path)
+        if pop_path.exists():
+            try:
+                population_spec = PopulationSpec.from_yaml(pop_path)
+            except Exception:
+                pass  # Will be caught as validation error
 
-    study_db_path = resolve_relative_to(spec.meta.study_db, scenario_path)
-    if study_db_path.exists():
-        try:
-            with open_study_db(study_db_path) as db:
-                agent_count = db.get_agent_count(spec.meta.population_id)
-                network = db.get_network(spec.meta.network_id)
-        except Exception:
-            pass
+    # Load study DB if using legacy flow
+    if spec.meta.study_db:
+        from ..utils import resolve_relative_to
+
+        study_db_path = resolve_relative_to(spec.meta.study_db, scenario_path)
+        if study_db_path.exists():
+            try:
+                with open_study_db(study_db_path) as db:
+                    agent_count = db.get_agent_count(spec.meta.population_id)
+                    network = db.get_network(spec.meta.network_id)
+            except Exception:
+                pass
 
     # Validate
     result = validate_scenario(
