@@ -543,17 +543,17 @@ extropy config reset
 
 ## extropy chat
 
-Interactive chat with simulated agents.
+Interactive chat with simulated agents. Auto-detects study folder from current working directory.
 
 ### Interactive REPL
 
 ```bash
-extropy chat --study-db austin/study.db
+cd austin  # study folder
+extropy chat
 ```
 
 | Flag | Type | Default | Description |
 |------|------|---------|-------------|
-| `--study-db` | path | required | Study database path |
 | `--run-id` | string | latest | Simulation run ID |
 | `--agent-id` | string | auto | Agent ID (auto-selects first agent if not specified) |
 | `--session-id` | string | auto | Chat session ID |
@@ -565,33 +565,32 @@ REPL commands: `/context`, `/timeline <n>`, `/history`, `/exit`
 Show recent runs and sample agents so users can pick chat targets quickly.
 
 ```bash
-extropy chat list --study-db austin/study.db
+cd austin && extropy chat list
 ```
 
 | Flag | Type | Default | Description |
 |------|------|---------|-------------|
-| `--study-db` | path | required | Study database path |
 | `--limit-runs` | int | 10 | Number of recent runs to list |
 | `--agents-per-run` | int | 5 | Number of sample agent IDs per run |
-| `--json` | flag | false | Output JSON response |
 
 ### extropy chat ask
 
 Non-interactive API for automation.
 
 ```bash
-extropy chat ask --study-db austin/study.db \
-  --prompt "What changed your mind?" --json
+cd austin && extropy chat ask --prompt "What changed your mind?"
 ```
 
 | Flag | Type | Default | Description |
 |------|------|---------|-------------|
-| `--study-db` | path | required | Study database path |
 | `--run-id` | string | latest | Simulation run ID |
 | `--agent-id` | string | auto | Agent ID (auto-selects first agent if not specified) |
 | `--prompt` | string | required | Question to ask |
 | `--session-id` | string | auto | Chat session ID |
-| `--json` | flag | false | Output JSON response |
+
+**Output modes:**
+- Human mode (`cli.mode: human`): Rich terminal formatting
+- Agent mode (`cli.mode: agent`): Structured JSON output
 
 ---
 

@@ -45,7 +45,7 @@ Topological sort (Kahn's algorithm) resolves attribute dependencies into a valid
 
 Iterates through `sampling_order`, routing each attribute by strategy. Supports 6 distribution types: normal, lognormal, uniform, beta, categorical, boolean.
 
-### 6. Household Sampling (`sampler/household.py`)
+### 6. Household Sampling (`sampler/households.py`)
 
 When `household_mode: true`:
 - Sample primary adults first
@@ -345,8 +345,7 @@ pytest + pytest-asyncio. Key coverage:
 - `test_propagation.py` — exposure propagation and sharing
 - `test_stopping.py` — stopping conditions and convergence
 - `test_memory_traces.py` — memory window and multi-touch triggers
-- `test_household.py` — household sampling and partner correlation
+- `test_household_sampling.py` — household sampling and partner correlation
 - `test_conversations.py` — multi-turn conversation dynamics
-- `test_fidelity.py` — fidelity tier behavior differences
 
 CI: `.github/workflows/test.yml` — lint (ruff) + test (Python 3.11/3.12/3.13)
