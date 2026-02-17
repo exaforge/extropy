@@ -357,14 +357,16 @@ Query and export raw data from the study database.
 Dump agent attributes.
 
 ```bash
-extropy query agents                         # print to stdout
-extropy query agents --to agents.jsonl       # write JSONL file
+extropy query agents                              # print to stdout (uses latest run's scenario)
+extropy query agents --to agents.jsonl            # write JSONL file
+extropy query agents -s congestion-tax            # explicit scenario
 ```
 
-| Flag | Type | Default | Description |
-|------|------|---------|-------------|
-| `--to` | path | | Write JSONL to file |
-| `--population-id` | string | `default` | Population ID |
+| Flag | Short | Type | Default | Description |
+|------|-------|------|---------|-------------|
+| `--to` | | path | | Write JSONL to file |
+| `--scenario` | `-s` | string | auto | Scenario name (resolved from latest run if not specified) |
+| `--run-id` | | string | | Simulation run ID (used to resolve scenario if not specified) |
 
 ### extropy query edges
 
@@ -372,12 +374,14 @@ Dump network edges.
 
 ```bash
 extropy query edges --to edges.jsonl
+extropy query edges -s congestion-tax --to edges.jsonl
 ```
 
-| Flag | Type | Default | Description |
-|------|------|---------|-------------|
-| `--to` | path | | Write JSONL to file |
-| `--network-id` | string | `default` | Network ID |
+| Flag | Short | Type | Default | Description |
+|------|-------|------|---------|-------------|
+| `--to` | | path | | Write JSONL to file |
+| `--scenario` | `-s` | string | auto | Scenario name (resolved from latest run if not specified) |
+| `--run-id` | | string | | Simulation run ID (used to resolve scenario if not specified) |
 
 ### extropy query states
 
@@ -385,6 +389,7 @@ Dump agent states for a simulation run.
 
 ```bash
 extropy query states --to states.jsonl
+extropy query states --run-id abc123 --to states.jsonl
 ```
 
 | Flag | Type | Default | Description |
@@ -398,13 +403,13 @@ Show study entity counts (agents, edges, simulation states, timesteps, events).
 
 ```bash
 extropy query summary
+extropy query summary -s congestion-tax
 ```
 
-| Flag | Type | Default | Description |
-|------|------|---------|-------------|
-| `--run-id` | string | latest | Simulation run ID |
-| `--population-id` | string | `default` | Population ID |
-| `--network-id` | string | `default` | Network ID |
+| Flag | Short | Type | Default | Description |
+|------|-------|------|---------|-------------|
+| `--run-id` | | string | latest | Simulation run ID |
+| `--scenario` | `-s` | string | auto | Scenario name (resolved from latest run if not specified) |
 
 ### extropy query network
 
@@ -412,12 +417,14 @@ Show network statistics (edge count, average weight, top-degree nodes).
 
 ```bash
 extropy query network
+extropy query network -s congestion-tax
 ```
 
-| Flag | Type | Default | Description |
-|------|------|---------|-------------|
-| `--network-id` | string | `default` | Network ID |
-| `--top` | int | 10 | Number of top-degree nodes to show |
+| Flag | Short | Type | Default | Description |
+|------|-------|------|---------|-------------|
+| `--scenario` | `-s` | string | auto | Scenario name (resolved from latest run if not specified) |
+| `--run-id` | | string | | Simulation run ID (used to resolve scenario if not specified) |
+| `--top` | | int | 10 | Number of top-degree nodes to show |
 
 ### extropy query network-status \<network-run-id\>
 

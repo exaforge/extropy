@@ -83,8 +83,11 @@ extropy persona -s ai-adoption -y
 Export raw data for downstream processing:
 
 ```bash
-# Agents as JSONL
+# Agents as JSONL (auto-resolves scenario from latest run)
 extropy query agents --to agents.jsonl
+
+# Explicit scenario
+extropy query agents -s congestion-tax --to agents.jsonl
 
 # Network edges
 extropy query edges --to edges.jsonl
