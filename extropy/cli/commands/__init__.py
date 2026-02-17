@@ -2,7 +2,6 @@
 
 from . import (
     validate,
-    extend,
     spec,
     sample,
     network,
@@ -22,7 +21,6 @@ from . import (
 
 __all__ = [
     "validate",
-    "extend",
     "spec",
     "sample",
     "network",
