@@ -295,6 +295,12 @@ Agents and network edges are keyed by `scenario_id`, not `population_id`. This a
 
 Resolution order: programmatic > env vars > config file > defaults
 
+### CLI Zone
+
+| Field | Default | Description |
+|-------|---------|-------------|
+| `mode` | `human` | `human` = interactive prompts, rich output. `agent` = JSON output, exit codes, no prompts |
+
 ### Models Zone
 
 | Field | Default | Description |

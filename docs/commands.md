@@ -313,6 +313,7 @@ extropy config reset
 | `simulation.rate_tier` | Rate limit tier (1-4) |
 | `simulation.rpm_override` | RPM override |
 | `simulation.tpm_override` | TPM override |
+| `cli.mode` | CLI mode: `human` (interactive) or `agent` (JSON output) |
 | `show_cost` | Show cost tracking |
 | `providers.<name>.base_url` | Custom provider base URL |
 | `providers.<name>.api_key_env` | Custom provider API key env var |
@@ -557,4 +558,6 @@ extropy validate scenario/congestion-tax/scenario.v1.yaml
 # Config
 extropy config show
 extropy config set simulation.strong anthropic/claude-sonnet-4.5
+extropy config set cli.mode agent  # for AI harnesses
+extropy config set cli.mode human  # for terminal users (default)
 ```
