@@ -78,7 +78,7 @@ def persona_command(
 
     start_time = time.time()
     agent_mode = is_agent_mode()
-    out = Output(console, json_mode=agent_mode)
+    out = Output(console=console, json_mode=agent_mode)
 
     if not agent_mode:
         console.print()

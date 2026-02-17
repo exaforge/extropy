@@ -99,7 +99,7 @@ def query_agents(
     """Dump agent attributes."""
     study_db = _get_study_db()
     agent_mode = is_agent_mode()
-    out = Output(console, json_mode=agent_mode)
+    out = Output(console=console, json_mode=agent_mode)
 
     conn = sqlite3.connect(str(study_db))
     conn.row_factory = sqlite3.Row
@@ -145,7 +145,7 @@ def query_edges(
     """Dump network edges."""
     study_db = _get_study_db()
     agent_mode = is_agent_mode()
-    out = Output(console, json_mode=agent_mode)
+    out = Output(console=console, json_mode=agent_mode)
 
     conn = sqlite3.connect(str(study_db))
     conn.row_factory = sqlite3.Row
@@ -190,7 +190,7 @@ def query_states(
     """Dump agent states for a simulation run."""
     study_db = _get_study_db()
     agent_mode = is_agent_mode()
-    out = Output(console, json_mode=agent_mode)
+    out = Output(console=console, json_mode=agent_mode)
 
     conn = sqlite3.connect(str(study_db))
     conn.row_factory = sqlite3.Row
@@ -252,7 +252,7 @@ def query_summary(
     """Show study entity counts."""
     study_db = _get_study_db()
     agent_mode = is_agent_mode()
-    out = Output(console, json_mode=agent_mode)
+    out = Output(console=console, json_mode=agent_mode)
 
     conn = sqlite3.connect(str(study_db))
     conn.row_factory = sqlite3.Row
@@ -322,7 +322,7 @@ def query_network(
     """Show network statistics."""
     study_db = _get_study_db()
     agent_mode = is_agent_mode()
-    out = Output(console, json_mode=agent_mode)
+    out = Output(console=console, json_mode=agent_mode)
 
     conn = sqlite3.connect(str(study_db))
     conn.row_factory = sqlite3.Row
@@ -378,7 +378,7 @@ def query_network_status(
     """Show network calibration progress."""
     study_db = _get_study_db()
     agent_mode = is_agent_mode()
-    out = Output(console, json_mode=agent_mode)
+    out = Output(console=console, json_mode=agent_mode)
 
     conn = sqlite3.connect(str(study_db))
     conn.row_factory = sqlite3.Row

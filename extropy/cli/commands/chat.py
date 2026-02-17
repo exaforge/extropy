@@ -399,7 +399,7 @@ def chat_list(
 ):
     """List recent runs with sample agents for quick chat selection."""
     agent_mode = is_agent_mode()
-    out = Output(console, json_mode=agent_mode)
+    out = Output(console=console, json_mode=agent_mode)
 
     study_db = _get_study_db()
     conn = sqlite3.connect(str(study_db))
@@ -593,7 +593,7 @@ def chat_ask(
         extropy chat ask --run-id r1 --agent-id a1 --prompt "What changed?"
     """
     agent_mode = is_agent_mode()
-    out = Output(console, json_mode=agent_mode)
+    out = Output(console=console, json_mode=agent_mode)
 
     study_db = _get_study_db()
     started = time.time()

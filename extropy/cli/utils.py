@@ -9,7 +9,7 @@ Example:
 
     @app.command()
     def my_command():
-        out = Output(console, json_mode=get_json_mode())
+        out = Output(console=console, json_mode=get_json_mode())
         out.success("Loaded spec", spec_name="surgeons.yaml", count=500)
         out.table("Attributes", ["Name", "Type"], [["age", "int"], ["income", "float"]])
         return out.finish()

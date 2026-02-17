@@ -40,7 +40,7 @@ def results_callback(
         extropy results agent agent_123          # single agent details
     """
     agent_mode = is_agent_mode()
-    out = Output(console, json_mode=agent_mode)
+    out = Output(console=console, json_mode=agent_mode)
 
     # Resolve study context
     study_path = get_study_path()

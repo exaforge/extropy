@@ -286,7 +286,7 @@ def validate_command(
         extropy validate surgeons.scenario.yaml     # Scenario spec
         extropy validate surgeons.yaml --strict     # Treat warnings as errors
     """
-    out = Output(console, json_mode=_is_json_output())
+    out = Output(console=console, json_mode=_is_json_output())
     out.blank()
 
     # Check file exists

@@ -68,7 +68,7 @@ def sample_command(
     from ...population.sampler import sample_population, SamplingError
 
     agent_mode = is_agent_mode()
-    out = Output(console, json_mode=agent_mode)
+    out = Output(console=console, json_mode=agent_mode)
     start_time = time.time()
     out.blank()
 
@@ -107,7 +107,9 @@ def sample_command(
         scenario_path = study_ctx.get_scenario_path(scenario_name, scenario_version)
         scenario_spec = ScenarioSpec.from_yaml(scenario_path)
     except FileNotFoundError:
-        out.error(f"Scenario not found: {scenario_name}", exit_code=ExitCode.FILE_NOT_FOUND)
+        out.error(
+            f"Scenario not found: {scenario_name}", exit_code=ExitCode.FILE_NOT_FOUND
+        )
         raise typer.Exit(out.finish())
     except Exception as e:
         out.error(f"Failed to load scenario: {e}")

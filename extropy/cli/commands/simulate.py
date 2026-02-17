@@ -234,7 +234,7 @@ def simulate_command(
     setup_logging(verbose=verbose, debug=debug)
 
     agent_mode = is_agent_mode()
-    out = Output(console, json_mode=agent_mode)
+    out = Output(console=console, json_mode=agent_mode)
     start_time = time.time()
 
     if not agent_mode:
@@ -561,5 +561,3 @@ def simulate_command(
         console.print(f"Results saved to: [bold]{output}[/bold]")
 
     raise typer.Exit(out.finish())
-
-
