@@ -3,7 +3,6 @@
 import time
 from pathlib import Path
 from threading import Event, Thread
-from typing import Any
 
 import typer
 from rich.live import Live
@@ -71,9 +70,7 @@ def persona_command(
     """
     from ...population.persona import (
         generate_persona_config,
-        preview_persona,
         PersonaConfigError,
-        PersonaConfig,
     )
 
     start_time = time.time()
@@ -325,7 +322,7 @@ def _handle_show_mode(
     out: Output,
 ) -> None:
     """Handle --show mode: preview existing persona config."""
-    from ...population.persona import PersonaConfig, preview_persona
+    from ...population.persona import PersonaConfig
 
     # Find existing config
     try:

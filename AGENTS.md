@@ -16,12 +16,19 @@ It:
 ## Core CLI Pipeline
 
 ```bash
-extropy spec -> extropy extend -> extropy sample -> extropy network -> extropy persona -> extropy scenario -> extropy simulate
-                                                                                                          |              |
-                                                                                                   extropy estimate    extropy results
+extropy spec → extropy scenario → extropy persona → extropy sample → extropy network → extropy simulate → extropy results
 ```
 
-Utility commands: `extropy validate`, `extropy config`.
+Commands:
+- `spec` — Create base population spec with attribute definitions
+- `scenario` — Create scenario spec (absorbs old `extend` — adds scenario attributes + event config)
+- `persona` — Generate persona rendering config for the scenario
+- `sample` — Sample agents from merged population + scenario attributes
+- `network` — Generate social network from sampled agents
+- `simulate` — Run simulation
+- `results` — View simulation results
+
+Utility commands: `extropy validate`, `extropy config`, `extropy estimate`.
 
 CLI entry point: `extropy` (from `pyproject.toml`), Python `>=3.11`.
 

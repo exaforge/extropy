@@ -1,7 +1,6 @@
 """Scenario command for creating scenario specs with extended attributes."""
 
 import time
-from pathlib import Path
 from threading import Event, Thread
 
 import typer
@@ -14,16 +13,14 @@ from ...population.spec_builder import (
     hydrate_attributes,
     bind_constraints,
 )
-from ...population.validator import validate_spec
 from ...utils import topological_sort, CircularDependencyError
 from ..app import app, console, is_agent_mode, get_study_path
 from ..study import (
     StudyContext,
     detect_study_folder,
-    get_study_context,
     parse_population_ref,
 )
-from ..display import display_extend_attributes, display_validation_result
+from ..display import display_extend_attributes
 from ..utils import format_elapsed, Output, ExitCode
 
 
@@ -109,7 +106,9 @@ def scenario_command(
     scenario_path = scenario_dir / f"scenario.v{next_ver}.yaml"
 
     if not agent_mode:
-        console.print(f"[dim]Creating scenario: {scenario_name}/scenario.v{next_ver}.yaml[/dim]")
+        console.print(
+            f"[dim]Creating scenario: {scenario_name}/scenario.v{next_ver}.yaml[/dim]"
+        )
         console.print(f"[dim]Base population: population.v{pop_version}.yaml[/dim]")
         console.print()
 
@@ -204,7 +203,13 @@ def scenario_command(
     name_config = None
 
     def do_hydration():
-        nonlocal hydrated, sources, warnings, hydration_error, household_config, name_config
+        nonlocal \
+            hydrated, \
+            sources, \
+            warnings, \
+            hydration_error, \
+            household_config, \
+            name_config
         try:
             hydrated, sources, warnings, household_config, name_config = (
                 hydrate_attributes(
@@ -266,7 +271,9 @@ def scenario_command(
         console.print("[green]✓[/green] Constraints bound")
 
         if bind_warnings:
-            console.print(f"[yellow]⚠[/yellow] {len(bind_warnings)} binding warning(s):")
+            console.print(
+                f"[yellow]⚠[/yellow] {len(bind_warnings)} binding warning(s):"
+            )
             for w in bind_warnings[:5]:
                 console.print(f"  [dim]- {w}[/dim]")
             if len(bind_warnings) > 5:
@@ -378,7 +385,9 @@ def scenario_command(
     else:
         console.print()
         console.print("═" * 60)
-        console.print(f"[green]✓[/green] Scenario saved to [bold]{scenario_path}[/bold]")
+        console.print(
+            f"[green]✓[/green] Scenario saved to [bold]{scenario_path}[/bold]"
+        )
         console.print(f"[dim]Total time: {format_elapsed(elapsed)}[/dim]")
         console.print("═" * 60)
 
@@ -461,13 +470,14 @@ def _handle_rebase(
         raise typer.Exit(1)
 
     # Resolve new population
-    pop_spec, pop_version = _resolve_population(
-        study_ctx, new_pop_ref, out, agent_mode
-    )
+    pop_spec, pop_version = _resolve_population(study_ctx, new_pop_ref, out, agent_mode)
 
     # Safety check: ensure scenario's attribute dependencies exist in new population
     base_attr_names = {a.name for a in pop_spec.attributes}
-    if hasattr(scenario_spec, "extended_attributes") and scenario_spec.extended_attributes:
+    if (
+        hasattr(scenario_spec, "extended_attributes")
+        and scenario_spec.extended_attributes
+    ):
         for attr in scenario_spec.extended_attributes:
             for dep in getattr(attr, "depends_on", []) or []:
                 if dep not in base_attr_names:
@@ -528,7 +538,9 @@ def _display_scenario_summary(spec) -> None:
 
     # Extended attributes
     if hasattr(spec, "extended_attributes") and spec.extended_attributes:
-        console.print(f"[bold]Extended Attributes:[/bold] {len(spec.extended_attributes)}")
+        console.print(
+            f"[bold]Extended Attributes:[/bold] {len(spec.extended_attributes)}"
+        )
         for attr in spec.extended_attributes[:5]:
             console.print(f"  - {attr.name} ({attr.type.value})")
         if len(spec.extended_attributes) > 5:

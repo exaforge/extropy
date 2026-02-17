@@ -179,7 +179,9 @@ def _validate_scenario_spec(spec_file: Path, out: Output) -> int:
         if spec.meta.base_population:
             out.text(f"  [cyan]•[/cyan] base_population: {spec.meta.base_population}")
             if spec.extended_attributes:
-                out.text(f"  [cyan]•[/cyan] extended_attributes: {len(spec.extended_attributes)}")
+                out.text(
+                    f"  [cyan]•[/cyan] extended_attributes: {len(spec.extended_attributes)}"
+                )
 
         # Legacy flow: population_spec + study_db
         if spec.meta.population_spec:

@@ -24,7 +24,6 @@ from ..study import (
     StudyContext,
     create_study_folder,
     detect_study_folder,
-    generate_study_name,
 )
 from ..display import (
     display_discovered_attributes,
@@ -196,9 +195,7 @@ def spec_command(
 
         if agent_mode:
             # Agent mode: return structured questions with exit code 2
-            resume_cmd = (
-                f"extropy spec \"{description}\" -o {resolved_output} --answers '{{...}}'"
-            )
+            resume_cmd = f"extropy spec \"{description}\" -o {resolved_output} --answers '{{...}}'"
             out.needs_clarification(
                 questions=questions,
                 resume_command=resume_cmd,

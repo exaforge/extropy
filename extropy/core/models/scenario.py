@@ -23,7 +23,7 @@ import yaml
 from pydantic import BaseModel, Field
 
 if TYPE_CHECKING:
-    from .population import AttributeSpec
+    pass
 
 
 # =============================================================================

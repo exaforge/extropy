@@ -66,7 +66,6 @@ def sample_command(
         extropy sample -n 500  # auto-selects scenario if only one exists
     """
     from ...population.sampler import sample_population, SamplingError
-    from ...storage import open_study_db
 
     agent_mode = is_agent_mode()
     out = Output(console, json_mode=agent_mode)
@@ -90,7 +89,7 @@ def sample_command(
 
     # Pre-flight: Check persona config exists
     try:
-        persona_path = study_ctx.get_persona_path(scenario_name)
+        study_ctx.get_persona_path(scenario_name)
     except FileNotFoundError:
         out.error(
             f"No persona config found for scenario: {scenario_name}. "

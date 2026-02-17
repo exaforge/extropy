@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import json
 import sqlite3
-from pathlib import Path
 
 import typer
 
@@ -131,7 +130,9 @@ def results_command(
             _display_agent(conn, resolved_run_id, population_id, agent, out, agent_mode)
             raise typer.Exit(out.finish())
         if segment:
-            _display_segment(conn, resolved_run_id, population_id, segment, out, agent_mode)
+            _display_segment(
+                conn, resolved_run_id, population_id, segment, out, agent_mode
+            )
             raise typer.Exit(out.finish())
         if timeline:
             _display_timeline(conn, resolved_run_id, out, agent_mode)
@@ -315,7 +316,9 @@ def _display_segment(
     else:
         console.print()
         console.print(f"[bold]Segment by {attribute}[/bold]")
-        for key, data in sorted(groups.items(), key=lambda x: x[1]["total"], reverse=True):
+        for key, data in sorted(
+            groups.items(), key=lambda x: x[1]["total"], reverse=True
+        ):
             total = data["total"]
             aware = data["aware"]
             pct = aware / total if total else 0.0
@@ -362,11 +365,15 @@ def _display_agent(
         out.set_data("position", row["private_position"] or row["position"])
         out.set_data(
             "sentiment",
-            row["private_sentiment"] if row["private_sentiment"] is not None else row["sentiment"],
+            row["private_sentiment"]
+            if row["private_sentiment"] is not None
+            else row["sentiment"],
         )
         out.set_data(
             "conviction",
-            row["private_conviction"] if row["private_conviction"] is not None else row["conviction"],
+            row["private_conviction"]
+            if row["private_conviction"] is not None
+            else row["conviction"],
         )
         if row["public_statement"]:
             out.set_data("public_statement", row["public_statement"])

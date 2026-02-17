@@ -287,10 +287,10 @@ def simulate_command(
         )
         raise typer.Exit(out.finish())
 
-    # Load scenario spec
+    # Load scenario spec (validates it exists)
     try:
         scenario_path = study_ctx.get_scenario_path(scenario_name, scenario_version)
-        scenario_spec = ScenarioSpec.from_yaml(scenario_path)
+        ScenarioSpec.from_yaml(scenario_path)  # Validate it loads
     except FileNotFoundError:
         out.error(f"Scenario not found: {scenario_name}")
         raise typer.Exit(1)
@@ -543,7 +543,9 @@ def simulate_command(
             for outcome_name, distribution in result.outcome_distributions.items():
                 if isinstance(distribution, dict):
                     if "mean" in distribution:
-                        console.print(f"  {outcome_name}: mean={distribution['mean']:.2f}")
+                        console.print(
+                            f"  {outcome_name}: mean={distribution['mean']:.2f}"
+                        )
                     else:
                         top_3 = sorted(distribution.items(), key=lambda x: -x[1])[:3]
                         dist_str = ", ".join(f"{k}:{v:.1%}" for k, v in top_3)

@@ -299,6 +299,7 @@ def create_scenario_spec(
     Returns:
         Tuple of (ScenarioSpec, ValidationResult)
     """
+
     def progress(step: str, status: str):
         if on_progress:
             on_progress(step, status)
@@ -378,7 +379,7 @@ def create_scenario_spec(
         spec.extended_attributes = extended_attributes
 
     # Light validation (no agents/network to validate against)
-    from ..core.models.validation import ValidationResult as VResult, ValidationItem
+    from ..core.models.validation import ValidationResult as VResult
 
     validation_result = VResult(valid=True, errors=[], warnings=[])
 

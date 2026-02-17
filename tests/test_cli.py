@@ -2,7 +2,6 @@
 
 import json
 import sqlite3
-from types import SimpleNamespace
 from pathlib import Path
 
 from typer.testing import CliRunner
@@ -71,7 +70,6 @@ class TestNetworkCommand:
 
     def _setup_study_with_scenario(self, tmp_path):
         """Helper to create a study folder with a scenario and sampled agents."""
-        import os
 
         # Create study folder structure
         study_dir = tmp_path
@@ -283,7 +281,7 @@ simulation:
 """)
 
         # Just create an empty DB
-        with open_study_db(study_db) as db:
+        with open_study_db(study_db):
             pass
 
         old_cwd = os.getcwd()
@@ -292,7 +290,10 @@ simulation:
             result = runner.invoke(app, ["network", "-s", "test"])
             # Should fail because no agents exist
             assert result.exit_code != 0
-            assert "no agents" in result.output.lower() or "sample" in result.output.lower()
+            assert (
+                "no agents" in result.output.lower()
+                or "sample" in result.output.lower()
+            )
         finally:
             os.chdir(old_cwd)
 
@@ -300,7 +301,6 @@ simulation:
         import os
 
         study_dir = self._setup_study_with_scenario(tmp_path)
-        study_db = study_dir / "study.db"
         other_db = tmp_path / "other.db"
 
         old_cwd = os.getcwd()
@@ -511,7 +511,7 @@ class TestPersonaCommand:
 
         # Create a study folder without scenarios
         study_db = tmp_path / "study.db"
-        with open_study_db(study_db) as db:
+        with open_study_db(study_db):
             pass  # Just create the db
 
         old_cwd = os.getcwd()

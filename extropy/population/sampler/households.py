@@ -20,7 +20,7 @@ from ...core.models.population import Dependent, HouseholdConfig, HouseholdType
 from ..names.generator import generate_name
 
 if TYPE_CHECKING:
-    from ...core.models.population import AttributeSpec, NameConfig
+    from ...core.models.population import NameConfig
 
 
 def _age_bracket(age: int, config: HouseholdConfig) -> str:

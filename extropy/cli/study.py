@@ -131,9 +131,7 @@ class StudyContext:
         latest = self.get_latest_scenario_version(scenario_name)
         return (latest or 0) + 1
 
-    def get_scenario_path(
-        self, scenario_name: str, version: int | None = None
-    ) -> Path:
+    def get_scenario_path(self, scenario_name: str, version: int | None = None) -> Path:
         """Get path to a scenario spec.
 
         Args:
@@ -186,9 +184,7 @@ class StudyContext:
         latest = self.get_latest_persona_version(scenario_name)
         return (latest or 0) + 1
 
-    def get_persona_path(
-        self, scenario_name: str, version: int | None = None
-    ) -> Path:
+    def get_persona_path(self, scenario_name: str, version: int | None = None) -> Path:
         """Get path to a persona config.
 
         Args:
@@ -215,9 +211,7 @@ class StudyContext:
         """
         if not self.scenario_dir.exists():
             return []
-        return sorted(
-            d.name for d in self.scenario_dir.iterdir() if d.is_dir()
-        )
+        return sorted(d.name for d in self.scenario_dir.iterdir() if d.is_dir())
 
 
 def detect_study_folder(start: Path | None = None) -> Path | None:

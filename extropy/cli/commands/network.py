@@ -287,9 +287,7 @@ def network_command(
         checkpoint is not None
         and checkpoint.expanduser().resolve() != study_db.expanduser().resolve()
     ):
-        out.error(
-            "--checkpoint must point to the same canonical file as study.db"
-        )
+        out.error("--checkpoint must point to the same canonical file as study.db")
         raise typer.Exit(1)
     checkpoint_db = study_db if (resume_requested or checkpoint is not None) else None
 
@@ -338,7 +336,9 @@ def network_command(
         if auto_config_paths:
             auto_config_path = sorted(auto_config_paths)[-1]  # latest
             if not agent_mode:
-                with console.status("[cyan]Loading auto-detected network config...[/cyan]"):
+                with console.status(
+                    "[cyan]Loading auto-detected network config...[/cyan]"
+                ):
                     config = NetworkConfig.from_yaml(auto_config_path)
             else:
                 config = NetworkConfig.from_yaml(auto_config_path)
@@ -350,7 +350,9 @@ def network_command(
     # 3. --generate-config → LLM generation
     if config is None and generate_config:
         if merged_spec is None:
-            out.error("Cannot generate config: scenario has no base_population reference")
+            out.error(
+                "Cannot generate config: scenario has no base_population reference"
+            )
             raise typer.Exit(1)
 
         if not agent_mode:
@@ -463,7 +465,11 @@ def network_command(
         config.to_yaml(save_config)
         out.success(f"Saved network config to [bold]{save_config}[/bold]")
 
-    if generated_from_population and auto_save_generated_config and network_config is None:
+    if (
+        generated_from_population
+        and auto_save_generated_config
+        and network_config is None
+    ):
         seed_label = str(config.seed) if config.seed is not None else "noseed"
         ts = datetime.now().strftime("%Y%m%d-%H%M%S")
         auto_path = scenario_dir / f"network-config.seed{seed_label}.{ts}.yaml"
@@ -611,7 +617,12 @@ def network_command(
             console.print(f"  {edge_type}: {count} ({pct:.1f}%)")
 
     if validate and agent_mode:
-        out.set_data("network_metrics", result.network_metrics.model_dump(mode="json") if result.network_metrics else None)
+        out.set_data(
+            "network_metrics",
+            result.network_metrics.model_dump(mode="json")
+            if result.network_metrics
+            else None,
+        )
         edge_types: dict[str, int] = {}
         for edge in result.edges:
             t = edge.edge_type
@@ -664,7 +675,9 @@ def network_command(
             "Topology gate strict failed. Saved quarantined artifact; canonical network not overwritten."
         )
         if not agent_mode:
-            console.print(f"[yellow]![/yellow] Quarantined network_id={target_network_id}")
+            console.print(
+                f"[yellow]![/yellow] Quarantined network_id={target_network_id}"
+            )
             console.print(
                 f"[red]✗[/red] Failed gates with best metrics: {quality_meta.get('best_metrics', {})}"
             )
