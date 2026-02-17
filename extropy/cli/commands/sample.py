@@ -132,7 +132,7 @@ def sample_command(
     # Compute merged sampling order
     merged_sampling_order = list(pop_spec.sampling_order)
     for attr in extended_attrs:
-        if hasattr(attr, "name") and attr.name not in merged_sampling_order:
+        if attr.name not in merged_sampling_order:
             merged_sampling_order.append(attr.name)
 
     # Create merged spec for sampling

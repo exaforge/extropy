@@ -22,6 +22,8 @@ from typing import TYPE_CHECKING, Any, Literal
 import yaml
 from pydantic import BaseModel, Field
 
+from .population import AttributeSpec
+
 if TYPE_CHECKING:
     pass
 
@@ -354,7 +356,7 @@ class ScenarioSpec(BaseModel):
         description="Scenario-specific edge weights for conversation priority and peer ordering",
     )
     # Extended attributes from scenario (new CLI flow)
-    extended_attributes: list[Any] | None = Field(
+    extended_attributes: list[AttributeSpec] | None = Field(
         default=None,
         description="Scenario-specific attributes that extend the base population",
     )
