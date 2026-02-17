@@ -5,8 +5,6 @@ from __future__ import annotations
 import json
 import sqlite3
 import time
-import uuid
-from datetime import datetime
 from pathlib import Path
 from typing import Any
 
@@ -14,130 +12,11 @@ import typer
 
 from ...config import get_config
 from ...core.llm import simple_call
+from ...storage import open_study_db
 from ..app import app, console, get_json_mode
 
 chat_app = typer.Typer(help="Chat with simulated agents using DB-backed history")
 app.add_typer(chat_app, name="chat")
-
-
-def _now_iso() -> str:
-    return datetime.now().isoformat()
-
-
-def _ensure_chat_tables(conn: sqlite3.Connection) -> None:
-    cur = conn.cursor()
-    cur.executescript(
-        """
-        CREATE TABLE IF NOT EXISTS chat_sessions (
-            session_id TEXT PRIMARY KEY,
-            run_id TEXT NOT NULL,
-            agent_id TEXT NOT NULL,
-            mode TEXT NOT NULL,
-            created_at TEXT NOT NULL,
-            closed_at TEXT,
-            meta_json TEXT
-        );
-
-        CREATE TABLE IF NOT EXISTS chat_messages (
-            session_id TEXT NOT NULL,
-            turn_index INTEGER NOT NULL,
-            role TEXT NOT NULL,
-            content TEXT NOT NULL,
-            citations_json TEXT,
-            token_usage_json TEXT,
-            created_at TEXT NOT NULL,
-            PRIMARY KEY (session_id, turn_index)
-        );
-        """
-    )
-    conn.commit()
-
-
-def _create_chat_session(
-    conn: sqlite3.Connection,
-    run_id: str,
-    agent_id: str,
-    mode: str,
-    meta: dict[str, Any] | None = None,
-    session_id: str | None = None,
-) -> str:
-    _ensure_chat_tables(conn)
-    sid = session_id or str(uuid.uuid4())
-    cur = conn.cursor()
-    cur.execute(
-        """
-        INSERT OR REPLACE INTO chat_sessions
-        (session_id, run_id, agent_id, mode, created_at, meta_json)
-        VALUES (?, ?, ?, ?, ?, ?)
-        """,
-        (sid, run_id, agent_id, mode, _now_iso(), json.dumps(meta or {})),
-    )
-    conn.commit()
-    return sid
-
-
-def _append_chat_message(
-    conn: sqlite3.Connection,
-    session_id: str,
-    role: str,
-    content: str,
-    citations: dict[str, Any] | None = None,
-    token_usage: dict[str, Any] | None = None,
-) -> int:
-    _ensure_chat_tables(conn)
-    cur = conn.cursor()
-    cur.execute(
-        "SELECT COALESCE(MAX(turn_index), -1) AS max_turn FROM chat_messages WHERE session_id = ?",
-        (session_id,),
-    )
-    turn = int(cur.fetchone()["max_turn"]) + 1
-    cur.execute(
-        """
-        INSERT INTO chat_messages
-        (session_id, turn_index, role, content, citations_json, token_usage_json, created_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?)
-        """,
-        (
-            session_id,
-            turn,
-            role,
-            content,
-            json.dumps(citations or {}),
-            json.dumps(token_usage or {}),
-            _now_iso(),
-        ),
-    )
-    conn.commit()
-    return turn
-
-
-def _get_chat_messages(
-    conn: sqlite3.Connection, session_id: str
-) -> list[dict[str, Any]]:
-    _ensure_chat_tables(conn)
-    cur = conn.cursor()
-    cur.execute(
-        """
-        SELECT turn_index, role, content, citations_json, token_usage_json, created_at
-        FROM chat_messages
-        WHERE session_id = ?
-        ORDER BY turn_index
-        """,
-        (session_id,),
-    )
-    rows = []
-    for row in cur.fetchall():
-        rows.append(
-            {
-                "turn_index": int(row["turn_index"]),
-                "role": str(row["role"]),
-                "content": str(row["content"]),
-                "citations": json.loads(row["citations_json"] or "{}"),
-                "token_usage": json.loads(row["token_usage_json"] or "{}"),
-                "created_at": str(row["created_at"]),
-            }
-        )
-    return rows
 
 
 def _load_agent_chat_context(
@@ -489,14 +368,13 @@ def chat_interactive(
         console.print(f"[red]✗[/red] {e}")
         raise typer.Exit(1)
 
-    sid = _create_chat_session(
-        conn=conn,
-        run_id=resolved_run_id,
-        agent_id=resolved_agent_id,
-        mode="interactive",
-        meta={"entrypoint": "repl"},
-        session_id=session_id,
-    )
+    with open_study_db(study_db) as db:
+        sid = session_id or db.create_chat_session(
+            run_id=resolved_run_id,
+            agent_id=resolved_agent_id,
+            mode="interactive",
+            meta={"entrypoint": "repl"},
+        )
 
     console.print(f"[bold]Chat session[/bold] {sid}")
     console.print(
@@ -516,7 +394,8 @@ def chat_interactive(
             if prompt == "/exit":
                 break
             if prompt == "/history":
-                messages = _get_chat_messages(conn, sid)
+                with open_study_db(study_db) as db:
+                    messages = db.get_chat_messages(sid)
                 for m in messages:
                     console.print(f"[{m['role']}] {m['content']}")
                 continue
@@ -545,7 +424,8 @@ def chat_interactive(
             context, citations = _load_agent_chat_context(
                 conn, resolved_run_id, resolved_agent_id, timeline_n=12
             )
-            history = _get_chat_messages(conn, sid)
+            with open_study_db(study_db) as db:
+                history = db.get_chat_messages(sid)
             try:
                 answer, model_used = _generate_agent_chat_reply(
                     context=context,
@@ -557,19 +437,19 @@ def chat_interactive(
                 continue
             latency_ms = int((time.time() - started) * 1000)
 
-            _append_chat_message(conn, sid, "user", prompt)
-            _append_chat_message(
-                conn,
-                sid,
-                "assistant",
-                answer,
-                citations={"sources": citations, "model": model_used},
-                token_usage={
-                    "input_tokens": 0,
-                    "output_tokens": 0,
-                    "latency_ms": latency_ms,
-                },
-            )
+            with open_study_db(study_db) as db:
+                db.append_chat_message(sid, "user", prompt)
+                db.append_chat_message(
+                    sid,
+                    "assistant",
+                    answer,
+                    citations={"sources": citations, "model": model_used},
+                    token_usage={
+                        "input_tokens": 0,
+                        "output_tokens": 0,
+                        "latency_ms": latency_ms,
+                    },
+                )
 
             console.print(answer)
 
@@ -602,15 +482,24 @@ def chat_ask(
         resolved_run_id, resolved_agent_id = _resolve_run_and_agent(
             conn, run_id, agent_id
         )
-        sid = _create_chat_session(
-            conn=conn,
+    except ValueError as e:
+        console.print(f"[red]✗[/red] {e}")
+        raise typer.Exit(1)
+    finally:
+        conn.close()
+
+    with open_study_db(study_db) as db:
+        sid = session_id or db.create_chat_session(
             run_id=resolved_run_id,
             agent_id=resolved_agent_id,
             mode="machine",
             meta={"entrypoint": "ask"},
-            session_id=session_id,
         )
-        history = _get_chat_messages(conn, sid)
+        history = db.get_chat_messages(sid)
+
+    conn = sqlite3.connect(str(study_db))
+    conn.row_factory = sqlite3.Row
+    try:
         context, citations = _load_agent_chat_context(
             conn, resolved_run_id, resolved_agent_id, timeline_n=12
         )
@@ -619,10 +508,14 @@ def chat_ask(
             user_prompt=prompt,
             history=history,
         )
-        latency_ms = int((time.time() - started) * 1000)
-        user_turn = _append_chat_message(conn, sid, "user", prompt)
-        assistant_turn = _append_chat_message(
-            conn,
+    finally:
+        conn.close()
+
+    latency_ms = int((time.time() - started) * 1000)
+
+    with open_study_db(study_db) as db:
+        user_turn = db.append_chat_message(sid, "user", prompt)
+        assistant_turn = db.append_chat_message(
             sid,
             "assistant",
             answer,
@@ -633,11 +526,6 @@ def chat_ask(
                 "latency_ms": latency_ms,
             },
         )
-    except ValueError as e:
-        console.print(f"[red]✗[/red] {e}")
-        raise typer.Exit(1)
-    finally:
-        conn.close()
 
     payload = {
         "session_id": sid,
