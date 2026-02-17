@@ -117,6 +117,17 @@ def build_pass1_prompt(
             ]
         )
 
+    # --- Identity relevance framing ---
+    if context.identity_threat_summary:
+        prompt_parts.extend(
+            [
+                "## Identity Relevance",
+                "",
+                context.identity_threat_summary,
+                "",
+            ]
+        )
+
     # --- Exposure history (named + experiential) ---
     prompt_parts.extend(["## How This Reached You", ""])
 

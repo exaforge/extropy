@@ -1682,6 +1682,53 @@ class TestTokenAccumulation:
         text = engine._render_macro_summary(summary, prev_summary=prev_summary)
         assert "Most people are still watching and waiting" in text
 
+    def test_build_reasoning_context_adds_identity_threat_summary(
+        self,
+        minimal_scenario,
+        minimal_pop_spec,
+        tmp_path,
+    ):
+        minimal_scenario.event.content = (
+            "The school board voted to remove books discussing race, gender identity, "
+            "and sexuality from public school libraries."
+        )
+        minimal_scenario.background_context = (
+            "Faith groups and parent organizations are publicly campaigning."
+        )
+        agents = [
+            {
+                "_id": "a0",
+                "first_name": "Alex",
+                "age": 38,
+                "political_orientation": "liberal",
+                "religious_affiliation": "catholic",
+                "race_ethnicity": "latino",
+                "gender": "male",
+                "dependents": [{"name": "Sam", "age": 10}],
+            }
+        ]
+        network = {"meta": {"node_count": 1}, "nodes": [{"id": "a0"}], "edges": []}
+        config = SimulationRunConfig(
+            scenario_path="test.yaml",
+            output_dir=str(tmp_path / "output"),
+        )
+        engine = SimulationEngine(
+            scenario=minimal_scenario,
+            population_spec=minimal_pop_spec,
+            agents=agents,
+            network=network,
+            config=config,
+        )
+
+        state = engine.state_manager.get_agent_state("a0")
+        context = engine._build_reasoning_context("a0", state, timestep=1)
+
+        assert context.identity_threat_summary is not None
+        assert "political orientation (liberal)" in context.identity_threat_summary
+        assert "religious affiliation (catholic)" in context.identity_threat_summary
+        assert "race/ethnicity (latino)" in context.identity_threat_summary
+        assert "parent/family role" in context.identity_threat_summary
+
     def test_cost_unknown_model_returns_null_usd(
         self,
         minimal_scenario,

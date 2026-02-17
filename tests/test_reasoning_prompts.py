@@ -400,6 +400,16 @@ class TestPhaseAPromptFeatures:
         prompt = build_pass1_prompt(context, scenario)
         assert "The economy has been struggling" in prompt
 
+    def test_identity_relevance_included(self):
+        """Identity threat framing appears when context provides it."""
+        context = _make_context(
+            identity_threat_summary="Parts of my identity feel implicated in this conflict."
+        )
+        scenario = _make_scenario()
+        prompt = build_pass1_prompt(context, scenario)
+        assert "Identity Relevance" in prompt
+        assert "identity feel implicated" in prompt
+
     def test_channel_experience_template(self):
         """Channel experience template replaces generic channel display."""
         scenario = _make_scenario(

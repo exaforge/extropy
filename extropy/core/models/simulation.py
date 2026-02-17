@@ -310,6 +310,10 @@ class ReasoningContext(BaseModel):
     background_context: str | None = Field(
         default=None, description="Scenario-level background context"
     )
+    identity_threat_summary: str | None = Field(
+        default=None,
+        description="Deterministic identity-relevance framing when scenario content threatens group identity",
+    )
     agent_names: dict[str, str] = Field(
         default_factory=dict,
         description="Mapping of agent_id → first name for resolving peer references",
