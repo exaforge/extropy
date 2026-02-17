@@ -125,7 +125,13 @@ ATTRIBUTE_SELECTION_SCHEMA = {
                     },
                     "semantic_type": {
                         "type": "string",
-                        "enum": ["age", "income", "education", "employment", "occupation"],
+                        "enum": [
+                            "age",
+                            "income",
+                            "education",
+                            "employment",
+                            "occupation",
+                        ],
                         "description": "Semantic meaning for special handling. Set ONLY for: age (person's age), income (monetary earnings/salary), education (education level/degree), employment (employment status like employed/unemployed/student), occupation (job title/profession). Leave unset for all other attributes.",
                     },
                 },

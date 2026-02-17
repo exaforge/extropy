@@ -187,6 +187,8 @@ __all__ = [
     # Scenario - Spec
     "ScenarioMeta",
     "ScenarioSpec",
+    # Scenario - Identity
+    "IdentityDimension",
     # Validation (shared)
     "Severity",
     "ValidationIssue",

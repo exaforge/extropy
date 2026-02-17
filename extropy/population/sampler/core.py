@@ -61,7 +61,9 @@ def _coerce_minor_education(value: Any, age: int, options: list[str]) -> Any:
         max_stage = 4  # some college
 
     # Try to find age-appropriate option
-    age_appropriate = ["none", "elementary", "middle_school", "high_school"][:max_stage + 1]
+    age_appropriate = ["none", "elementary", "middle_school", "high_school"][
+        : max_stage + 1
+    ]
     for opt in reversed(age_appropriate):
         for available in options:
             if opt in available.lower():
@@ -133,9 +135,9 @@ def _normalize_minor_attributes(
         # Get options from categorical distribution if available
         options: list[str] = []
         if (
-            attr.sampling.distribution and
-            hasattr(attr.sampling.distribution, "options") and
-            attr.sampling.distribution.options
+            attr.sampling.distribution
+            and hasattr(attr.sampling.distribution, "options")
+            and attr.sampling.distribution.options
         ):
             dist_options = attr.sampling.distribution.options
             # CategoricalDistribution.options is list[str]
@@ -156,7 +158,10 @@ def _normalize_minor_attributes(
             if attr.scope == "household" and attr.name in parent:
                 agent[attr.name] = parent[attr.name]
             else:
-                agent[attr.name] = _coerce_minor_income(value, options if options else None)
+                agent[attr.name] = _coerce_minor_income(
+                    value, options if options else None
+                )
+
 
 logger = logging.getLogger(__name__)
 

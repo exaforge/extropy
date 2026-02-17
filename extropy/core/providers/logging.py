@@ -47,8 +47,7 @@ def _sanitize_for_logs(value: Any, key_hint: str = "") -> Any:
 
     if isinstance(value, dict):
         return {
-            str(k): _sanitize_for_logs(v, key_hint=str(k))
-            for k, v in value.items()
+            str(k): _sanitize_for_logs(v, key_hint=str(k)) for k, v in value.items()
         }
 
     if isinstance(value, list):

@@ -1480,9 +1480,7 @@ class SimulationEngine:
 
         return ctx
 
-    def _render_identity_threat_summary(
-        self, agent: dict[str, Any]
-    ) -> str | None:
+    def _render_identity_threat_summary(self, agent: dict[str, Any]) -> str | None:
         """Render identity threat framing from scenario's identity_dimensions.
 
         Uses the identity_dimensions field from ScenarioSpec (set by LLM during
@@ -1494,14 +1492,26 @@ class SimulationEngine:
 
         # Map dimension names to agent attribute keys
         dimension_attr_keys = {
-            "political_orientation": ("political_orientation", "political_ideology", "party_affiliation"),
-            "religious_affiliation": ("religious_affiliation", "religion", "faith_tradition"),
+            "political_orientation": (
+                "political_orientation",
+                "political_ideology",
+                "party_affiliation",
+            ),
+            "religious_affiliation": (
+                "religious_affiliation",
+                "religion",
+                "faith_tradition",
+            ),
             "race_ethnicity": ("race_ethnicity", "race", "ethnicity"),
             "gender_identity": ("gender_identity", "gender"),
             "sexual_orientation": ("sexual_orientation",),
             "parental_status": ("parental_status", "household_role", "has_children"),
             "citizenship": ("citizenship_status", "nationality", "country_of_origin"),
-            "socioeconomic_class": ("socioeconomic_class", "income_bracket", "social_class"),
+            "socioeconomic_class": (
+                "socioeconomic_class",
+                "income_bracket",
+                "social_class",
+            ),
             "professional_identity": ("occupation", "profession", "job_title"),
             "generational_identity": ("generation", "age_group"),
         }
@@ -1532,9 +1542,9 @@ class SimulationEngine:
 
         return (
             "This development can feel identity-relevant, not just practical. "
-            "Parts of who I am that may feel implicated:\n- " +
-            "\n- ".join(relevant_dimensions) +
-            "\n\nIf it feels personal, acknowledge that in both your internal reaction "
+            "Parts of who I am that may feel implicated:\n- "
+            + "\n- ".join(relevant_dimensions)
+            + "\n\nIf it feels personal, acknowledge that in both your internal reaction "
             "and what you choose to say publicly."
         )
 

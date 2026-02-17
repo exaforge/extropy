@@ -226,7 +226,9 @@ def validate_network(
             else "  Avg Path Length: N/A (disconnected)"
         )
         logger.info("  Modularity: %.3f", metrics.modularity)
-        logger.info("  Largest Component: %.1f%%", metrics.largest_component_ratio * 100)
+        logger.info(
+            "  Largest Component: %.1f%%", metrics.largest_component_ratio * 100
+        )
         logger.info("  Degree Assortativity: %.3f", metrics.degree_assortativity)
 
         if warnings:
