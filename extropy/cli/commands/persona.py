@@ -112,20 +112,19 @@ def persona_command(
         raise typer.Exit(1)
 
     # Load base population spec
-    base_pop_ref = scenario_spec.meta.base_population
-    if not base_pop_ref:
-        # Legacy scenario - try population_spec path
-        if scenario_spec.meta.population_spec:
-            pop_path = Path(scenario_spec.meta.population_spec)
-            if not pop_path.is_absolute():
-                pop_path = study_ctx.root / pop_path
-        else:
-            out.error("Scenario has no base_population reference")
-            raise typer.Exit(1)
-    else:
-        # Parse base_population reference (e.g., "population.v2")
-        pop_name, pop_version = _parse_base_population_ref(base_pop_ref)
+    try:
+        pop_name, pop_version = scenario_spec.meta.get_population_ref()
+    except ValueError as e:
+        out.error(str(e))
+        raise typer.Exit(1)
+
+    if pop_version is not None:
         pop_path = study_ctx.get_population_path(pop_name, pop_version)
+    else:
+        # Legacy scenario — population_spec is a file path
+        pop_path = Path(pop_name)
+        if not pop_path.is_absolute():
+            pop_path = study_ctx.root / pop_path
 
     try:
         pop_spec = PopulationSpec.from_yaml(pop_path)
@@ -299,21 +298,6 @@ def _resolve_scenario(
         raise typer.Exit(1)
 
     return name, version
-
-
-def _parse_base_population_ref(ref: str) -> tuple[str, int]:
-    """Parse base_population reference like 'population.v2'.
-
-    Returns:
-        Tuple of (name, version)
-    """
-    import re
-
-    match = re.match(r"^(.+)\.v(\d+)$", ref)
-    if match:
-        return match.group(1), int(match.group(2))
-    # Fallback: treat as name, get latest
-    return ref, None
 
 
 def _handle_show_mode(

@@ -260,9 +260,12 @@ def network_command(
 
     # Load base population spec (needed for config generation)
     merged_spec = None
-    base_pop_ref = scenario_spec.meta.base_population
-    if base_pop_ref:
-        pop_name, pop_version = _parse_base_population_ref(base_pop_ref)
+    try:
+        pop_name, pop_version = scenario_spec.meta.get_population_ref()
+    except ValueError:
+        pop_name, pop_version = None, None
+
+    if pop_name is not None:
         pop_path = study_ctx.get_population_path(pop_name, pop_version)
         try:
             pop_spec = PopulationSpec.from_yaml(pop_path)
@@ -755,14 +758,6 @@ def _resolve_scenario(
     return name, version
 
 
-def _parse_base_population_ref(ref: str) -> tuple[str, int | None]:
-    """Parse base_population reference like 'population.v2'."""
-    import re
-
-    match = re.match(r"^(.+)\.v(\d+)$", ref)
-    if match:
-        return match.group(1), int(match.group(2))
-    return ref, None
 
 
 def _save_network(

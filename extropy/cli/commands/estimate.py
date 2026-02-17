@@ -1,20 +1,10 @@
 """Estimate command for predicting simulation costs before running."""
 
-import re
-
 import typer
 
 from ..app import app, console, get_study_path
 from ..study import StudyContext, detect_study_folder, parse_version_ref
 from ..utils import Output, ExitCode
-
-
-def _parse_base_population_ref(ref: str) -> tuple[str, int | None]:
-    """Parse base_population reference like 'population.v2'."""
-    match = re.match(r"^(.+)\.v(\d+)$", ref)
-    if match:
-        return match.group(1), int(match.group(2))
-    return ref, None
 
 
 @app.command("estimate")
@@ -96,12 +86,12 @@ def estimate_command(
         raise typer.Exit(1)
 
     # Load population spec (resolve from base_population or population_spec)
-    base_pop_ref = scenario_spec.meta.base_population or scenario_spec.meta.population_spec
-    if not base_pop_ref:
-        out.error("Scenario has no base_population or population_spec reference")
+    try:
+        pop_name, pop_version = scenario_spec.meta.get_population_ref()
+    except ValueError as e:
+        out.error(str(e))
         raise typer.Exit(1)
 
-    pop_name, pop_version = _parse_base_population_ref(base_pop_ref)
     pop_path = study_ctx.get_population_path(pop_name, pop_version)
     if not pop_path.exists():
         out.error(f"Population spec not found: {pop_path}")

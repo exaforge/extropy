@@ -2136,10 +2136,18 @@ def run_simulation(
     # Load scenario
     scenario = ScenarioSpec.from_yaml(scenario_path)
 
-    # Load population spec
-    pop_path = Path(scenario.meta.population_spec)
-    if not pop_path.is_absolute():
-        pop_path = scenario_path.parent / pop_path
+    # Load population spec (resolve from base_population or legacy population_spec)
+    pop_name, pop_version = scenario.meta.get_population_ref()
+
+    if pop_version is not None:
+        # Versioned ref (e.g. "population.v1") — resolve relative to study root
+        # Study structure: study_root/scenario/<name>/scenario.v1.yaml
+        study_root = scenario_path.parent.parent.parent
+        pop_path = study_root / f"{pop_name}.v{pop_version}.yaml"
+    else:
+        pop_path = Path(pop_name)
+        if not pop_path.is_absolute():
+            pop_path = scenario_path.parent / pop_path
     population_spec = PopulationSpec.from_yaml(pop_path)
 
     # Resolve canonical study DB
@@ -2163,15 +2171,20 @@ def run_simulation(
     )
 
     with open_study_db(study_db_resolved) as db:
-        agents = db.get_agents(scenario.meta.population_id)
+        # Try scenario-based lookup first (new CLI flow), fall back to legacy IDs
+        agents = db.get_agents_by_scenario(scenario.meta.name)
+        if not agents:
+            agents = db.get_agents(scenario.meta.population_id)
         if not agents:
             raise ValueError(
-                f"No agents for population_id '{scenario.meta.population_id}' in {study_db_resolved}"
+                f"No agents for scenario '{scenario.meta.name}' in {study_db_resolved}"
             )
-        network = db.get_network(scenario.meta.network_id)
+        network = db.get_network(scenario.meta.name)
+        if not network.get("edges"):
+            network = db.get_network(scenario.meta.network_id)
         if not network.get("edges"):
             raise ValueError(
-                f"No network edges for network_id '{scenario.meta.network_id}' in {study_db_resolved}"
+                f"No network edges for scenario '{scenario.meta.name}' in {study_db_resolved}"
             )
         db.create_simulation_run(
             run_id=resolved_run_id,

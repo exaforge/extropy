@@ -14,6 +14,7 @@ This module contains:
 - Validation: ValidationError, ValidationWarning, ValidationResult
 """
 
+import re
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
@@ -331,6 +332,28 @@ class ScenarioMeta(BaseModel):
     )
     network_id: str = Field(default="default", description="Network ID in study DB")
     created_at: datetime = Field(default_factory=datetime.now)
+
+    def get_population_ref(self) -> tuple[str, int | None]:
+        """Parse the population reference from base_population or population_spec.
+
+        Handles versioned references like 'population.v2' → ('population', 2)
+        and plain names like 'population' → ('population', None).
+
+        Returns:
+            Tuple of (name, version) where version is None for unversioned refs.
+
+        Raises:
+            ValueError: If neither base_population nor population_spec is set.
+        """
+        ref = self.base_population or self.population_spec
+        if ref is None:
+            raise ValueError(
+                "Scenario has no base_population or population_spec reference"
+            )
+        match = re.match(r"^(.+)\.v(\d+)$", ref)
+        if match:
+            return match.group(1), int(match.group(2))
+        return ref, None
 
 
 class ScenarioSpec(BaseModel):

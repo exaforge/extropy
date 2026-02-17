@@ -110,12 +110,12 @@ def sample_command(
         raise typer.Exit(1)
 
     # Load base population spec
-    base_pop_ref = scenario_spec.meta.base_population
-    if not base_pop_ref:
-        out.error("Scenario has no base_population reference")
+    try:
+        pop_name, pop_version = scenario_spec.meta.get_population_ref()
+    except ValueError as e:
+        out.error(str(e))
         raise typer.Exit(1)
 
-    pop_name, pop_version = _parse_base_population_ref(base_pop_ref)
     pop_path = study_ctx.get_population_path(pop_name, pop_version)
 
     try:
@@ -334,14 +334,6 @@ def _resolve_scenario(
     return name, version
 
 
-def _parse_base_population_ref(ref: str) -> tuple[str, int | None]:
-    """Parse base_population reference like 'population.v2'."""
-    import re
-
-    match = re.match(r"^(.+)\.v(\d+)$", ref)
-    if match:
-        return match.group(1), int(match.group(2))
-    return ref, None
 
 
 def _save_to_db(
