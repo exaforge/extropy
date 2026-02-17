@@ -1,16 +1,20 @@
 """Estimate command for predicting simulation costs before running."""
 
-from pathlib import Path
-
 import typer
 
-from ..app import app, console
+from ..app import app, console, get_study_path
+from ..study import StudyContext, detect_study_folder, parse_version_ref
+from ..utils import Output, ExitCode
 
 
 @app.command("estimate")
 def estimate_command(
-    scenario_file: Path = typer.Argument(..., help="Scenario spec YAML file"),
-    study_db: Path = typer.Option(..., "--study-db", help="Canonical study DB file"),
+    scenario: str = typer.Option(
+        None,
+        "--scenario",
+        "-s",
+        help="Scenario name (auto-selects if only one exists)",
+    ),
     strong: str = typer.Option(
         "",
         "--strong",
@@ -36,51 +40,79 @@ def estimate_command(
     model, and predicts LLM calls, tokens, and USD cost. No API keys required.
 
     Example:
-        extropy estimate scenario.yaml --study-db study.db
-        extropy estimate scenario.yaml --study-db study.db --strong openai/gpt-5
-        extropy estimate scenario.yaml --study-db study.db \\
-            --strong openai/gpt-5 --fast openai/gpt-5-mini -v
+        extropy estimate -s ai-adoption
+        extropy estimate -s ai-adoption --strong openai/gpt-5
+        extropy estimate -s ai-adoption --strong openai/gpt-5 --fast openai/gpt-5-mini -v
     """
     from ...config import get_config
     from ...core.models import ScenarioSpec, PopulationSpec
     from ...simulation.estimator import estimate_simulation_cost
     from ...storage import open_study_db
+    from ...core.cost.tracker import CostTracker
 
-    # Validate input file
-    if not scenario_file.exists():
-        console.print(f"[red]x[/red] Scenario file not found: {scenario_file}")
-        raise typer.Exit(1)
+    CostTracker.get().set_context(command="estimate")
+
+    out = Output(console)
+
+    # Resolve study context
+    study_path = get_study_path()
+    detected = detect_study_folder(study_path)
+    if detected is None:
+        out.error(
+            "Not in a study folder. Use --study to specify or run from a study folder.",
+            exit_code=ExitCode.FILE_NOT_FOUND,
+        )
+        raise typer.Exit(out.finish())
+
+    study_ctx = StudyContext(detected)
+    study_db = study_ctx.db_path
+
     if not study_db.exists():
-        console.print(f"[red]x[/red] Study DB not found: {study_db}")
-        raise typer.Exit(1)
+        out.error(f"Study DB not found: {study_db}", exit_code=ExitCode.FILE_NOT_FOUND)
+        raise typer.Exit(out.finish())
 
-    # Load scenario
+    # Resolve scenario
+    scenario_name, scenario_version = _resolve_scenario(study_ctx, scenario, out)
+
+    # Load scenario spec
     try:
-        scenario = ScenarioSpec.from_yaml(scenario_file)
+        scenario_path = study_ctx.get_scenario_path(scenario_name, scenario_version)
+        scenario_spec = ScenarioSpec.from_yaml(scenario_path)
+    except FileNotFoundError:
+        out.error(f"Scenario not found: {scenario_name}")
+        raise typer.Exit(1)
     except Exception as e:
-        console.print(f"[red]x[/red] Failed to load scenario: {e}")
+        out.error(f"Failed to load scenario: {e}")
         raise typer.Exit(1)
 
-    # Load population spec
-    pop_path = Path(scenario.meta.population_spec)
-    if not pop_path.is_absolute():
-        pop_path = scenario_file.parent / pop_path
+    # Load population spec (resolve relative path from scenario meta)
+    pop_path = study_ctx.root / scenario_spec.meta.population_spec
     if not pop_path.exists():
-        console.print(f"[red]x[/red] Population spec not found: {pop_path}")
+        out.error(f"Population spec not found: {pop_path}")
         raise typer.Exit(1)
-    population_spec = PopulationSpec.from_yaml(pop_path)
+    try:
+        population_spec = PopulationSpec.from_yaml(pop_path)
+    except Exception as e:
+        out.error(f"Failed to load population spec: {e}")
+        raise typer.Exit(1)
 
+    # Load agents and network from study DB using scenario meta IDs
+    pop_id = scenario_spec.meta.population_id
+    net_id = scenario_spec.meta.network_id
     with open_study_db(study_db) as db:
-        agents = db.get_agents(scenario.meta.population_id)
-        network = db.get_network(scenario.meta.network_id)
+        agents = db.get_agents(pop_id)
+        network = db.get_network(net_id)
+
     if not agents:
-        console.print(
-            f"[red]x[/red] Population ID not found in study DB: {scenario.meta.population_id}"
+        out.error(
+            f"No agents found for population '{pop_id}'. "
+            f"Run 'extropy sample -s {scenario_name}' first.",
         )
         raise typer.Exit(1)
     if not network.get("edges"):
-        console.print(
-            f"[red]x[/red] Network ID not found in study DB: {scenario.meta.network_id}"
+        out.error(
+            f"No network found for network '{net_id}'. "
+            f"Run 'extropy network -s {scenario_name}' first.",
         )
         raise typer.Exit(1)
 
@@ -91,7 +123,7 @@ def estimate_command(
 
     # Run estimation
     est = estimate_simulation_cost(
-        scenario=scenario,
+        scenario=scenario_spec,
         population_spec=population_spec,
         agents=agents,
         network=network,
@@ -191,6 +223,34 @@ def estimate_command(
                     f"{row['reasoning_calls']:>10d}"
                 )
     console.print()
+
+
+def _resolve_scenario(
+    study_ctx: StudyContext, scenario_ref: str | None, out: Output
+) -> tuple[str, int | None]:
+    """Resolve scenario name and version."""
+    scenarios = study_ctx.list_scenarios()
+
+    if not scenarios:
+        out.error("No scenarios found. Run 'extropy scenario' first.")
+        raise typer.Exit(1)
+
+    if scenario_ref is None:
+        if len(scenarios) == 1:
+            return scenarios[0], None
+        else:
+            out.error(
+                f"Multiple scenarios found: {', '.join(scenarios)}. "
+                "Use -s to specify which one."
+            )
+            raise typer.Exit(1)
+
+    name, version = parse_version_ref(scenario_ref)
+    if name not in scenarios:
+        out.error(f"Scenario not found: {name}")
+        raise typer.Exit(1)
+
+    return name, version
 
 
 def _print_model_line(console, label: str, model: str, pricing):

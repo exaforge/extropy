@@ -77,6 +77,10 @@ def spec_command(
         # Explicit file path
         extropy spec "farmers" -o my-spec.yaml
     """
+    from ...core.cost.tracker import CostTracker
+
+    CostTracker.get().set_context(command="spec")
+
     start_time = time.time()
     agent_mode = is_agent_mode()
     out = Output(console, json_mode=agent_mode)

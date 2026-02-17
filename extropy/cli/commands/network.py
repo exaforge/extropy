@@ -209,6 +209,9 @@ def network_command(
     from ...core.models.scenario import ScenarioSpec
     from ...storage import open_study_db
     from ...utils import ResourceGovernor
+    from ...core.cost.tracker import CostTracker
+
+    CostTracker.get().set_context(command="network")
 
     agent_mode = is_agent_mode()
     out = Output(console, json_mode=agent_mode)
