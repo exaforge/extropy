@@ -38,23 +38,24 @@ Requires Python 3.11+. [uv](https://github.com/astral-sh/uv) recommended.
 ## Quick Start
 
 ```bash
-cd runs/congestion-tax  # study folder with study.db
+# Create study folder and build population spec
+extropy spec "Austin TX commuters" -o congestion-tax -y
+cd congestion-tax
 
-# Build population + scenario
-extropy spec "Austin TX commuters" -o population.v1.yaml -y
-extropy scenario -s "Response to $15/day congestion tax" -o scenario/congestion-tax -y
+# Create scenario with events and outcomes
+extropy scenario "Response to $15/day congestion tax" -o congestion-tax -y
 extropy persona -s congestion-tax -y
 
-# Sample + network
+# Sample agents and generate network
 extropy sample -s congestion-tax -n 500 --seed 42
 extropy network -s congestion-tax --seed 42
 
 # Run simulation
 extropy simulate -s congestion-tax --seed 42
 
-# Results
+# View results
 extropy results
-extropy results --segment income
+extropy results segment income
 ```
 
 ## How It Works

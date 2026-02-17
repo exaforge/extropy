@@ -167,14 +167,16 @@ my-study/
 ## Typical Automation Flow
 
 ```bash
-# Setup
+# Create study folder and setup agent mode
+extropy spec "Austin TX commuters" -o my-study --use-defaults
 cd my-study
 extropy config set cli.mode agent
 
-# Build pipeline
-extropy spec "Austin TX commuters" -o . --use-defaults
+# Build scenario
 extropy scenario "Congestion tax response" -o congestion-tax -y
 extropy persona -s congestion-tax -y
+
+# Sample agents and generate network (LLM config by default)
 extropy sample -s congestion-tax -n 500 --seed 42
 extropy network -s congestion-tax --seed 42
 

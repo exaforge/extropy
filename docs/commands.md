@@ -183,9 +183,10 @@ Sampling process:
 Generate a social network from sampled agents.
 
 ```bash
-extropy network -s ai-adoption
-extropy network -s ai-adoption --avg-degree 15 --seed 42
-extropy network -s ai-adoption --generate-config
+extropy network -s ai-adoption                             # Uses LLM-generated config (default)
+extropy network -s ai-adoption --avg-degree 15 --seed 42   # Custom degree and seed
+extropy network -s ai-adoption --no-generate-config        # Flat network, no similarity structure
+extropy network -s ai-adoption -c custom-network.yaml      # Load custom config
 ```
 
 ### Options
@@ -196,7 +197,7 @@ extropy network -s ai-adoption --generate-config
 | `--output` | `-o` | path | | Optional JSON export path (non-canonical) |
 | `--network-config` | `-c` | path | | Custom network config YAML file |
 | `--save-config` | | path | | Save the (generated or loaded) network config to YAML |
-| `--generate-config` | | flag | false | Generate network config via LLM from population spec |
+| `--generate-config` | | flag | true | Generate network config via LLM from population spec (default: enabled) |
 | `--avg-degree` | | float | 20.0 | Target average degree (connections per agent) |
 | `--rewire-prob` | | float | 0.05 | Watts-Strogatz rewiring probability |
 | `--seed` | | int | random | Random seed for reproducibility |
@@ -479,9 +480,10 @@ extropy estimate -s ai-adoption --strong openai/gpt-5 --fast openai/gpt-5-mini -
 Validate a population or scenario spec.
 
 ```bash
-extropy validate population.v1.yaml
-extropy validate scenario/congestion-tax/scenario.v1.yaml
-extropy validate population.v1.yaml --strict
+extropy validate population.v1.yaml                       # Population spec
+extropy validate scenario/congestion-tax/scenario.v1.yaml # Versioned scenario spec
+extropy validate my-scenario.scenario.yaml                # Legacy scenario spec
+extropy validate population.v1.yaml --strict              # Treat warnings as errors
 ```
 
 ### Arguments
@@ -496,7 +498,15 @@ extropy validate population.v1.yaml --strict
 |------|------|---------|-------------|
 | `--strict` | flag | false | Treat warnings as errors (population specs only) |
 
-Auto-detects file type: `*.scenario.yaml` runs scenario validation, other `*.yaml` runs population validation.
+Auto-detects file type based on naming:
+- `*.scenario.yaml` or `*.scenario.yml` → scenario spec validation
+- `scenario.yaml` or `scenario.yml` → scenario spec validation
+- `scenario.v{N}.yaml` or `scenario.v{N}.yml` → scenario spec validation (versioned)
+- Other `*.yaml` files → population spec validation
+
+Supports both flows for scenario validation:
+- **New flow**: `meta.base_population` references versioned population (e.g., `population.v2`)
+- **Legacy flow**: `meta.population_spec` + `meta.study_db` file paths
 
 **Exit codes:** 0 = Success (valid spec), 1 = Validation error (invalid spec), 2 = File not found
 
@@ -619,16 +629,19 @@ cd austin && extropy chat ask --prompt "What changed your mind?"
 ## Quick Reference
 
 ```bash
-# Full pipeline
-cd my-study  # study folder
+# Create study folder with population spec
+extropy spec "Austin TX commuters" -o my-study
+cd my-study
 
-extropy spec "Austin TX commuters" -o .
+# Create scenario and persona config
 extropy scenario "Response to $15/day congestion tax" -o congestion-tax
 extropy persona -s congestion-tax -y
+
+# Sample agents and generate network (LLM config by default)
 extropy sample -s congestion-tax -n 500 --seed 42
 extropy network -s congestion-tax --seed 42
 
-# Estimate cost
+# Estimate cost before running
 extropy estimate -s congestion-tax
 
 # Run simulation
@@ -647,9 +660,9 @@ extropy query summary
 extropy query network
 extropy query sql "SELECT count(*) FROM agents"
 
-# Validate
-extropy validate population.v1.yaml
-extropy validate scenario/congestion-tax/scenario.v1.yaml
+# Validate specs
+extropy validate population.v1.yaml                         # Population spec
+extropy validate scenario/congestion-tax/scenario.v1.yaml   # Versioned scenario
 
 # Config
 extropy config show
