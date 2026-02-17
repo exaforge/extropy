@@ -123,6 +123,33 @@ ATTRIBUTE_SELECTION_SCHEMA = {
                         "items": {"type": "string"},
                         "description": "Names of other attributes this depends on (empty for independent)",
                     },
+                    "semantic_type": {
+                        "type": "string",
+                        "enum": [
+                            "age",
+                            "income",
+                            "education",
+                            "employment",
+                            "occupation",
+                        ],
+                        "description": "Semantic meaning for special handling. Set ONLY for: age (person's age), income (monetary earnings/salary), education (education level/degree), employment (employment status like employed/unemployed/student), occupation (job title/profession). Leave unset for all other attributes.",
+                    },
+                    "identity_type": {
+                        "type": "string",
+                        "enum": [
+                            "political_orientation",
+                            "religious_affiliation",
+                            "race_ethnicity",
+                            "gender_identity",
+                            "sexual_orientation",
+                            "parental_status",
+                            "citizenship",
+                            "socioeconomic_class",
+                            "professional_identity",
+                            "generational_identity",
+                        ],
+                        "description": "Identity dimension this attribute represents. Set for attributes that capture identity: political_orientation (voting, ideology), religious_affiliation (faith, religion), race_ethnicity (race, ethnicity), gender_identity (gender), sexual_orientation, parental_status (has children, parent), citizenship (nationality, immigrant status), socioeconomic_class (class, wealth bracket), professional_identity (occupation, career), generational_identity (generation, age group). Leave unset for attributes that don't represent identity dimensions.",
+                    },
                 },
                 "required": [
                     "name",
@@ -374,6 +401,8 @@ def select_attributes(
             strategy=strategy,
             scope=attr_data.get("scope", "individual"),
             correlation_rate=attr_data.get("correlation_rate"),
+            semantic_type=attr_data.get("semantic_type"),
+            identity_type=attr_data.get("identity_type"),
             depends_on=depends_on,
         )
         attributes.append(attr)

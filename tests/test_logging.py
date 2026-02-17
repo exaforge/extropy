@@ -36,10 +36,7 @@ def test_provider_log_request_response_redacts_secrets_and_prompt_content(
     payload = json.loads(log_files[0].read_text())
     assert payload["request"]["api_key"] == "[REDACTED_SECRET]"
     assert payload["request"]["Authorization"] == "[REDACTED_SECRET]"
-    assert (
-        payload["request"]["messages"][0]["content"]
-        == "[REDACTED_TEXT length=24]"
-    )
+    assert payload["request"]["messages"][0]["content"] == "[REDACTED_TEXT length=24]"
     assert payload["response"]["output_text"] == "[REDACTED_TEXT length=38]"
     assert payload["response"]["usage"]["prompt_tokens"] == 21
     assert payload["sources_extracted"] == ["https://example.com/source"]

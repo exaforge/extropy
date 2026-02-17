@@ -176,6 +176,12 @@ def build_pass1_prompt(
     if context.macro_summary:
         prompt_parts.extend(["", "## The Broader Climate", "", context.macro_summary])
 
+    # --- Identity relevance (from scenario's identity_dimensions) ---
+    if context.identity_threat_summary:
+        prompt_parts.extend(
+            ["", "## Identity Relevance", "", context.identity_threat_summary]
+        )
+
     # --- Timeline recap (Phase C) ---
     if context.timeline_recap:
         prompt_parts.extend(["", "## What's Happened So Far", ""])
@@ -861,7 +867,9 @@ def _classify_text_sync(
                 log=True,
             )
             call_elapsed = time.time() - call_start
-            logger.info(f"[PASS2] Agent {context.agent_id} - API call took {call_elapsed:.2f}s")
+            logger.info(
+                f"[PASS2] Agent {context.agent_id} - API call took {call_elapsed:.2f}s"
+            )
 
             if pass2_response:
                 return dict(pass2_response)

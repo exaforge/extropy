@@ -141,6 +141,8 @@ def bind_constraints(
             description=attr.description,
             scope=attr.scope,
             correlation_rate=attr.correlation_rate,
+            semantic_type=attr.semantic_type,
+            identity_type=attr.identity_type,
             sampling=filtered_sampling,
             grounding=attr.grounding,
             constraints=attr.constraints,

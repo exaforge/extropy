@@ -76,6 +76,8 @@ from .scenario import (
     # Simulation config
     TimestepUnit,
     SimulationConfig,
+    # Identity
+    IdentityDimension,
     # Scenario
     ScenarioMeta,
     ScenarioSpec,
@@ -185,6 +187,8 @@ __all__ = [
     # Scenario - Spec
     "ScenarioMeta",
     "ScenarioSpec",
+    # Scenario - Identity
+    "IdentityDimension",
     # Validation (shared)
     "Severity",
     "ValidationIssue",

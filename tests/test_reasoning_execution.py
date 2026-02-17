@@ -148,9 +148,10 @@ def test_two_pass_high_fidelity_classifies_private_and_public_positions_separate
     assert response.pass2_input_tokens == 9
     assert response.pass2_output_tokens == 5
     assert mocked_call.await_count == 3
-    assert "I privately reject this policy" in mocked_call.await_args_list[1].kwargs[
-        "prompt"
-    ]
+    assert (
+        "I privately reject this policy"
+        in mocked_call.await_args_list[1].kwargs["prompt"]
+    )
     assert "give it a chance" in mocked_call.await_args_list[2].kwargs["prompt"]
 
 

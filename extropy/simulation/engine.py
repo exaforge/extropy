@@ -1475,7 +1475,59 @@ class SimulationEngine:
             ctx.timeline_recap = recap if recap else None
             ctx.current_development = current_dev
 
+        # Build identity threat summary from scenario's identity dimensions
+        ctx.identity_threat_summary = self._render_identity_threat_summary(agent)
+
         return ctx
+
+    def _render_identity_threat_summary(self, agent: dict[str, Any]) -> str | None:
+        """Render identity threat framing from scenario's identity_dimensions.
+
+        Uses the identity_dimensions field from ScenarioSpec (set by LLM during
+        scenario creation) and matches to agent attributes via their identity_type
+        field (set by LLM during spec creation).
+        """
+        if not self.scenario.identity_dimensions:
+            return None
+
+        # Build mapping from identity_type → attribute name using population spec
+        # This uses the LLM-classified identity_type, not hardcoded name patterns
+        identity_attr_map: dict[str, str] = {}
+        for attr in self.population_spec.attributes:
+            if attr.identity_type:
+                identity_attr_map[attr.identity_type] = attr.name
+
+        relevant_dimensions = []
+        for dim in self.scenario.identity_dimensions:
+            # Look up attribute by identity_type (LLM-classified)
+            attr_name = identity_attr_map.get(dim.dimension)
+            agent_value = None
+
+            if attr_name:
+                val = agent.get(attr_name)
+                if val and str(val).lower() not in ("unknown", "none", "n/a", ""):
+                    agent_value = val
+
+            # Special handling for parental_status - check dependents as fallback
+            if dim.dimension == "parental_status" and not agent_value:
+                if agent.get("dependents") or agent.get("has_children"):
+                    agent_value = "parent"
+
+            if agent_value:
+                relevant_dimensions.append(
+                    f"{dim.dimension.replace('_', ' ')} ({agent_value}): {dim.relevance}"
+                )
+
+        if not relevant_dimensions:
+            return None
+
+        return (
+            "This development can feel identity-relevant, not just practical. "
+            "Parts of who I am that may feel implicated:\n- "
+            + "\n- ".join(relevant_dimensions)
+            + "\n\nIf it feels personal, acknowledge that in both your internal reaction "
+            "and what you choose to say publicly."
+        )
 
     def _get_peer_opinions(self, agent_id: str) -> list[PeerOpinion]:
         """Get opinions of connected peers who have visibly shared.

@@ -360,6 +360,26 @@ class ScenarioMeta(BaseModel):
         return ref, None
 
 
+class IdentityDimension(BaseModel):
+    """An identity dimension that may be threatened or activated by a scenario."""
+
+    dimension: Literal[
+        "political_orientation",
+        "religious_affiliation",
+        "race_ethnicity",
+        "gender_identity",
+        "sexual_orientation",
+        "parental_status",
+        "citizenship",
+        "socioeconomic_class",
+        "professional_identity",
+        "generational_identity",
+    ] = Field(description="The identity dimension being activated")
+    relevance: str = Field(
+        description="Why this dimension is relevant to the scenario (1-2 sentences)"
+    )
+
+
 class ScenarioSpec(BaseModel):
     """Complete specification for a scenario simulation."""
 
@@ -386,6 +406,11 @@ class ScenarioSpec(BaseModel):
     extended_attributes: list[AttributeSpec] | None = Field(
         default=None,
         description="Scenario-specific attributes that extend the base population",
+    )
+    # Identity dimensions activated by this scenario (for identity-threat framing)
+    identity_dimensions: list[IdentityDimension] | None = Field(
+        default=None,
+        description="Identity dimensions that may feel threatened or activated by this scenario. Set by LLM during scenario creation.",
     )
 
     def to_yaml(self, path: Path | str) -> None:

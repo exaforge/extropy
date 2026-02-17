@@ -409,6 +409,28 @@ class AttributeSpec(BaseModel):
         default=None,
         description="For partner_correlated scope: probability (0-1) that partner has same value. None uses type-specific defaults (age uses gaussian, race uses per-group rates).",
     )
+    semantic_type: Literal[
+        "age", "income", "education", "employment", "occupation", None
+    ] = Field(
+        default=None,
+        description="Semantic meaning of attribute for special handling (e.g., age-appropriate normalization for minors). Set by LLM during spec creation.",
+    )
+    identity_type: Literal[
+        "political_orientation",
+        "religious_affiliation",
+        "race_ethnicity",
+        "gender_identity",
+        "sexual_orientation",
+        "parental_status",
+        "citizenship",
+        "socioeconomic_class",
+        "professional_identity",
+        "generational_identity",
+        None,
+    ] = Field(
+        default=None,
+        description="Identity dimension this attribute represents. Used by engine to match scenario identity_dimensions to agent attributes. Set by LLM during spec creation.",
+    )
     sampling: SamplingConfig
     grounding: GroundingInfo
     constraints: list[Constraint] = Field(default_factory=list)
@@ -680,6 +702,28 @@ class DiscoveredAttribute(BaseModel):
         default=None,
         description="For partner_correlated scope: probability (0-1) that partner has same value",
     )
+    semantic_type: Literal[
+        "age", "income", "education", "employment", "occupation", None
+    ] = Field(
+        default=None,
+        description="Semantic meaning for special handling (e.g., age-appropriate normalization for minors)",
+    )
+    identity_type: Literal[
+        "political_orientation",
+        "religious_affiliation",
+        "race_ethnicity",
+        "gender_identity",
+        "sexual_orientation",
+        "parental_status",
+        "citizenship",
+        "socioeconomic_class",
+        "professional_identity",
+        "generational_identity",
+        None,
+    ] = Field(
+        default=None,
+        description="Identity dimension this attribute represents",
+    )
     depends_on: list[str] = Field(default_factory=list)
 
 
@@ -706,6 +750,28 @@ class HydratedAttribute(BaseModel):
     correlation_rate: float | None = Field(
         default=None,
         description="For partner_correlated scope: probability (0-1) that partner has same value",
+    )
+    semantic_type: Literal[
+        "age", "income", "education", "employment", "occupation", None
+    ] = Field(
+        default=None,
+        description="Semantic meaning for special handling (e.g., age-appropriate normalization for minors)",
+    )
+    identity_type: Literal[
+        "political_orientation",
+        "religious_affiliation",
+        "race_ethnicity",
+        "gender_identity",
+        "sexual_orientation",
+        "parental_status",
+        "citizenship",
+        "socioeconomic_class",
+        "professional_identity",
+        "generational_identity",
+        None,
+    ] = Field(
+        default=None,
+        description="Identity dimension this attribute represents",
     )
     depends_on: list[str] = Field(default_factory=list)
     sampling: SamplingConfig
