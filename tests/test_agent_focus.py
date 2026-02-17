@@ -518,3 +518,28 @@ class TestAgentFocusMetadata:
         for focus in ["surgeons", "retired couples", "families", None]:
             spec = _make_household_spec(size=100, agent_focus=focus)
             assert spec.meta.agent_focus == focus
+
+
+class TestPromotedDependentNames:
+    def test_promoted_dependents_preserve_household_names(self):
+        spec = _make_household_spec(size=240, agent_focus="families")
+        result = sample_population(spec, count=240, seed=42)
+
+        promoted = [
+            a
+            for a in result.agents
+            if a.get("household_role", "").startswith("dependent_")
+        ]
+        assert promoted, "Expected promoted dependents in families mode"
+
+        households = {h["id"]: h for h in getattr(result, "_households", [])}
+        for dep in promoted:
+            first_name = dep.get("first_name")
+            assert first_name, "Promoted dependents must have first_name"
+
+            hh = households.get(dep["household_id"])
+            assert hh is not None
+            dependent_names = {d.get("name") for d in hh.get("dependent_data", [])}
+            assert first_name in dependent_names, (
+                "Promoted dependent names should stay aligned with generated dependent records"
+            )
