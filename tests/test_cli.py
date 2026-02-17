@@ -332,93 +332,36 @@ class TestInspectNetworkStatus:
 
 
 class TestPersonaCommand:
-    def test_persona_show_loads_agents_from_study_db(self, tmp_path, monkeypatch):
-        import extropy.cli.commands.persona as persona_cmd
-        import extropy.population.persona as persona_pkg
+    def test_persona_requires_study_folder(self, tmp_path):
+        """Persona command requires being in a study folder."""
+        import os
 
-        class DummyPopulationSpec:
-            @classmethod
-            def from_yaml(cls, _path):
-                return SimpleNamespace(
-                    meta=SimpleNamespace(description="test population"),
-                    attributes=[{"name": "age"}],
-                )
+        # Run from a non-study folder
+        old_cwd = os.getcwd()
+        try:
+            os.chdir(tmp_path)
+            result = runner.invoke(app, ["persona", "-s", "test"])
+            # Should fail with "Not in a study folder" error
+            assert result.exit_code != 0
+            assert "study folder" in result.output.lower()
+        finally:
+            os.chdir(old_cwd)
 
-        class DummyPersonaConfig:
-            @classmethod
-            def from_file(cls, _path):
-                return object()
+    def test_persona_requires_scenario(self, tmp_path):
+        """Persona command requires a scenario to exist."""
+        import os
 
-        monkeypatch.setattr(persona_cmd, "PopulationSpec", DummyPopulationSpec)
-        monkeypatch.setattr(persona_pkg, "PersonaConfig", DummyPersonaConfig)
-        monkeypatch.setattr(
-            persona_pkg,
-            "preview_persona",
-            lambda _agent, _config, max_width=80: "I am a test persona.",
-        )
-
-        spec_file = tmp_path / "population.yaml"
-        spec_file.write_text("meta: {}\n", encoding="utf-8")
-        persona_file = spec_file.with_suffix(".persona.yaml")
-        persona_file.write_text("dummy: true\n", encoding="utf-8")
-
+        # Create a study folder without scenarios
         study_db = tmp_path / "study.db"
         with open_study_db(study_db) as db:
-            db.save_sample_result(
-                population_id="default",
-                agents=[{"_id": "a0", "age": 30}, {"_id": "a1", "age": 41}],
-                meta={"source": "test"},
-            )
+            pass  # Just create the db
 
-        result = runner.invoke(
-            app,
-            [
-                "persona",
-                str(spec_file),
-                "--study-db",
-                str(study_db),
-                "--population-id",
-                "default",
-                "--show",
-            ],
-        )
-        assert result.exit_code == 0
-        assert "Loaded 2 agents from study DB population_id=default" in result.output
-        assert "Persona for Agent a0" in result.output
-
-    def test_persona_rejects_agents_and_study_db_together(self, tmp_path, monkeypatch):
-        import extropy.cli.commands.persona as persona_cmd
-
-        monkeypatch.setattr(
-            persona_cmd.PopulationSpec,
-            "from_yaml",
-            classmethod(
-                lambda cls, _path: SimpleNamespace(
-                    meta=SimpleNamespace(description="test population"),
-                    attributes=[{"name": "age"}],
-                )
-            ),
-        )
-        spec_file = tmp_path / "population.yaml"
-        spec_file.write_text("meta: {}\n", encoding="utf-8")
-        agents_file = tmp_path / "agents.json"
-        agents_file.write_text("[]\n", encoding="utf-8")
-        study_db = tmp_path / "study.db"
-        with open_study_db(study_db) as db:
-            db.save_sample_result(
-                population_id="default", agents=[{"_id": "a0"}], meta={}
-            )
-
-        result = runner.invoke(
-            app,
-            [
-                "persona",
-                str(spec_file),
-                "--agents",
-                str(agents_file),
-                "--study-db",
-                str(study_db),
-            ],
-        )
-        assert result.exit_code == 1
-        assert "Use either --agents or --study-db, not both" in result.output
+        old_cwd = os.getcwd()
+        try:
+            os.chdir(tmp_path)
+            result = runner.invoke(app, ["persona"])
+            # Should fail because no scenarios exist
+            assert result.exit_code != 0
+            assert "scenario" in result.output.lower()
+        finally:
+            os.chdir(old_cwd)

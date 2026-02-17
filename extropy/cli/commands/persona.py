@@ -1,6 +1,5 @@
 """Persona command for generating persona rendering configuration."""
 
-import json
 import time
 from pathlib import Path
 from threading import Event, Thread
@@ -11,34 +10,25 @@ from rich.live import Live
 from rich.spinner import Spinner
 
 from ...core.models import PopulationSpec
-from ...storage import open_study_db
-from ..app import app, console
-from ..utils import (
-    format_elapsed,
-)
+from ...core.models.scenario import ScenarioSpec
+from ..app import app, console, is_agent_mode, get_study_path
+from ..study import StudyContext, detect_study_folder, parse_version_ref
+from ..utils import format_elapsed, Output, ExitCode
 
 
 @app.command("persona")
 def persona_command(
-    spec_file: Path = typer.Argument(..., help="Population spec YAML file"),
-    agents_file: Path = typer.Option(
-        None, "--agents", "-a", help="Sampled agents JSON file (for population stats)"
-    ),
-    study_db: Path | None = typer.Option(
+    scenario: str = typer.Option(
         None,
-        "--study-db",
-        help="Canonical study DB file (preferred; loads sampled agents by population id)",
+        "--scenario",
+        "-s",
+        help="Scenario name (auto-selects if only one exists)",
     ),
-    population_id: str = typer.Option(
-        "default",
-        "--population-id",
-        help="Population id when loading agents from --study-db",
-    ),
-    output: Path = typer.Option(
+    output: Path | None = typer.Option(
         None,
         "--output",
         "-o",
-        help="Output file for persona config (default: adds to spec)",
+        help="Output file (default: scenario/{name}/persona.vN.yaml)",
     ),
     preview: bool = typer.Option(
         True, "--preview/--no-preview", help="Show a sample persona before saving"
@@ -50,12 +40,11 @@ def persona_command(
     show: bool = typer.Option(
         False,
         "--show",
-        "-s",
         help="Preview existing persona config without regenerating",
     ),
 ):
     """
-    Generate persona rendering configuration for a population.
+    Generate persona rendering configuration for a scenario.
 
     Creates a PersonaConfig that defines how to render agent attributes
     into first-person personas. The config is generated once via LLM,
@@ -70,148 +59,120 @@ def persona_command(
 
     Use --show to preview an existing persona config without regenerating.
 
-    EXIT CODES:
-        0 = Success
-        1 = Validation error
-        2 = File not found
-        3 = Generation error
+    Examples:
+        # Generate for a scenario (auto-versions)
+        extropy persona -s ai-adoption
 
-    EXAMPLES:
-        extropy persona population.yaml --study-db study.db --population-id default
-        extropy persona population.yaml --study-db study.db -o persona_config.yaml
-        extropy persona population.yaml --study-db study.db --agent 42 -y
-        extropy persona population.yaml --study-db study.db --show
-        extropy persona population.yaml --agents agents.json  # legacy input
+        # Pin scenario version
+        extropy persona -s ai-adoption@v1
+
+        # Preview existing config
+        extropy persona -s ai-adoption --show
     """
     from ...population.persona import (
         generate_persona_config,
         preview_persona,
         PersonaConfigError,
+        PersonaConfig,
     )
 
     start_time = time.time()
-    console.print()
+    agent_mode = is_agent_mode()
+    out = Output(console, json_mode=agent_mode)
 
-    # Load Spec
-    if not spec_file.exists():
-        console.print(f"[red]✗[/red] Spec file not found: {spec_file}")
-        raise typer.Exit(2)
+    if not agent_mode:
+        console.print()
 
-    with console.status("[cyan]Loading population spec...[/cyan]"):
-        try:
-            spec = PopulationSpec.from_yaml(spec_file)
-        except Exception as e:
-            console.print(f"[red]✗[/red] Failed to load spec: {e}")
-            raise typer.Exit(1)
+    # Resolve study context
+    study_path = get_study_path()
+    detected = detect_study_folder(study_path)
+    if detected is None:
+        out.error(
+            "Not in a study folder. Use --study to specify or run from a study folder.",
+            exit_code=ExitCode.FILE_NOT_FOUND,
+        )
+        raise typer.Exit(out.finish())
 
-    console.print(
-        f"[green]✓[/green] Loaded: [bold]{spec.meta.description}[/bold] ({len(spec.attributes)} attributes)"
-    )
+    study_ctx = StudyContext(detected)
 
-    # Load Agents (optional but recommended)
-    agents: list[dict[str, Any]] | None = None
-    if agents_file and study_db:
-        console.print("[red]✗[/red] Use either --agents or --study-db, not both")
+    # Resolve scenario
+    scenario_name, scenario_version = _resolve_scenario(study_ctx, scenario, out)
+
+    # Load scenario spec
+    try:
+        scenario_path = study_ctx.get_scenario_path(scenario_name, scenario_version)
+    except FileNotFoundError:
+        out.error(f"Scenario not found: {scenario_name}")
         raise typer.Exit(1)
 
-    if agents_file:
-        if not agents_file.exists():
-            console.print(f"[red]✗[/red] Agents file not found: {agents_file}")
-            raise typer.Exit(2)
+    try:
+        scenario_spec = ScenarioSpec.from_yaml(scenario_path)
+    except Exception as e:
+        out.error(f"Failed to load scenario: {e}")
+        raise typer.Exit(1)
 
-        with console.status("[cyan]Loading agents...[/cyan]"):
-            try:
-                with open(agents_file, "r") as f:
-                    agents_data = json.load(f)
-
-                # Handle both raw list and {meta, agents} format
-                if isinstance(agents_data, dict) and "agents" in agents_data:
-                    agents = agents_data["agents"]
-                elif isinstance(agents_data, list):
-                    agents = agents_data
-                else:
-                    raise ValueError("Unexpected agents file format")
-            except Exception as e:
-                console.print(f"[red]✗[/red] Failed to load agents: {e}")
-                raise typer.Exit(1)
-
-        console.print(f"[green]✓[/green] Loaded {len(agents)} agents")
-    elif study_db:
-        if not study_db.exists():
-            console.print(f"[red]✗[/red] Study DB not found: {study_db}")
-            raise typer.Exit(2)
-        with console.status("[cyan]Loading agents from study DB...[/cyan]"):
-            try:
-                with open_study_db(study_db) as db:
-                    agents = db.get_agents(population_id)
-            except Exception as e:
-                console.print(f"[red]✗[/red] Failed to load agents from study DB: {e}")
-                raise typer.Exit(1)
-        if not agents:
-            console.print(
-                f"[red]✗[/red] No agents found for population_id '{population_id}' in {study_db}"
-            )
-            raise typer.Exit(1)
-        console.print(
-            f"[green]✓[/green] Loaded {len(agents)} agents from study DB population_id={population_id}"
-        )
-    else:
-        console.print(
-            "[yellow]⚠[/yellow] No agent source provided (--study-db or --agents) - population stats will use defaults"
-        )
-
-    # Handle --show mode: preview existing config without regenerating
-    if show:
-        from ...population.persona import PersonaConfig
-
-        # Find existing config
-        if output and output.exists():
-            config_path = output
+    # Load base population spec
+    base_pop_ref = scenario_spec.meta.base_population
+    if not base_pop_ref:
+        # Legacy scenario - try population_spec path
+        if scenario_spec.meta.population_spec:
+            pop_path = Path(scenario_spec.meta.population_spec)
+            if not pop_path.is_absolute():
+                pop_path = study_ctx.root / pop_path
         else:
-            config_path = spec_file.with_suffix(".persona.yaml")
-
-        if not config_path.exists():
-            console.print(f"[red]✗[/red] No persona config found at {config_path}")
-            console.print("[dim]Run without --show to generate one.[/dim]")
-            raise typer.Exit(2)
-
-        try:
-            config = PersonaConfig.from_file(str(config_path))
-        except Exception as e:
-            console.print(f"[red]✗[/red] Failed to load persona config: {e}")
+            out.error("Scenario has no base_population reference")
             raise typer.Exit(1)
+    else:
+        # Parse base_population reference (e.g., "population.v2")
+        pop_name, pop_version = _parse_base_population_ref(base_pop_ref)
+        pop_path = study_ctx.get_population_path(pop_name, pop_version)
 
-        console.print(f"[green]✓[/green] Loaded persona config from {config_path}")
+    try:
+        pop_spec = PopulationSpec.from_yaml(pop_path)
+    except Exception as e:
+        out.error(f"Failed to load population spec: {e}")
+        raise typer.Exit(1)
+
+    # Merge attributes: base population + scenario extended attributes
+    merged_attributes = list(pop_spec.attributes)
+    if scenario_spec.extended_attributes:
+        merged_attributes.extend(scenario_spec.extended_attributes)
+
+    # Create a merged spec for persona generation
+    merged_spec = PopulationSpec(
+        meta=pop_spec.meta,
+        grounding=pop_spec.grounding,
+        attributes=merged_attributes,
+        sampling_order=pop_spec.sampling_order,
+    )
+
+    if not agent_mode:
+        console.print(
+            f"[green]✓[/green] Loaded scenario: [bold]{scenario_name}[/bold] "
+            f"({len(merged_attributes)} attributes: {len(pop_spec.attributes)} base + "
+            f"{len(scenario_spec.extended_attributes or [])} extended)"
+        )
+
+    # Resolve output path
+    scenario_dir = study_ctx.get_scenario_dir(scenario_name)
+    if output:
+        persona_path = output
+    else:
+        next_ver = study_ctx.get_next_persona_version(scenario_name)
+        persona_path = scenario_dir / f"persona.v{next_ver}.yaml"
+
+    # Handle --show mode: preview existing config
+    if show:
+        _handle_show_mode(
+            study_ctx, scenario_name, persona_path, merged_spec, agent_index, out
+        )
+        return
+
+    if not agent_mode:
+        console.print(f"[dim]Output: {persona_path.name}[/dim]")
         console.print()
-
-        if not agents:
-            console.print(
-                "[red]✗[/red] Need --study-db or --agents to preview personas"
-            )
-            raise typer.Exit(1)
-
-        if agent_index >= len(agents):
-            agent_index = 0
-        sample_agent = agents[agent_index]
-        agent_id = sample_agent.get("_id", str(agent_index))
-
-        console.print(f"[bold]Persona for Agent {agent_id}:[/bold]")
-        console.print()
-
-        persona_text = preview_persona(sample_agent, config, max_width=78)
-
-        for line in persona_text.split("\n"):
-            if line.startswith("##"):
-                console.print(f"[bold cyan]{line}[/bold cyan]")
-            elif line.strip():
-                console.print(line)
-            else:
-                console.print()
-
-        raise typer.Exit(0)
 
     # Generate Config with spinner
-    console.print()
     gen_start = time.time()
     config = None
     gen_error = None
@@ -225,9 +186,10 @@ def persona_command(
     def do_generation():
         nonlocal config, gen_error
         try:
+            # Note: agents=None means stats will be computed at render time
             config = generate_persona_config(
-                spec=spec,
-                agents=agents,
+                spec=merged_spec,
+                agents=None,  # Stats computed at render time
                 log=True,
                 on_progress=on_progress,
             )
@@ -252,14 +214,150 @@ def persona_command(
     gen_elapsed = time.time() - gen_start
 
     if gen_error:
-        console.print(f"[red]✗[/red] Failed to generate persona config: {gen_error}")
+        out.error(f"Failed to generate persona config: {gen_error}")
         raise typer.Exit(3)
 
-    console.print(
-        f"[green]✓[/green] Generated persona configuration ({format_elapsed(gen_elapsed)})"
-    )
+    if not agent_mode:
+        console.print(
+            f"[green]✓[/green] Generated persona configuration ({format_elapsed(gen_elapsed)})"
+        )
+        _display_config_summary(config)
 
-    # Show summary
+    # Confirmation
+    if not agent_mode and not yes:
+        choice = (
+            typer.prompt(
+                "[Y] Save config  [n] Cancel",
+                default="Y",
+                show_default=False,
+            )
+            .strip()
+            .lower()
+        )
+
+        if choice == "n":
+            console.print("[dim]Cancelled.[/dim]")
+            raise typer.Exit(0)
+
+    # Save
+    try:
+        config.to_file(str(persona_path))
+    except Exception as e:
+        out.error(f"Failed to save: {e}")
+        raise typer.Exit(1)
+
+    elapsed = time.time() - start_time
+
+    if agent_mode:
+        out.success(
+            "Persona config saved",
+            output=str(persona_path),
+            scenario=scenario_name,
+            attribute_count=len(merged_attributes),
+            elapsed_seconds=elapsed,
+        )
+        raise typer.Exit(out.finish())
+    else:
+        console.print()
+        console.print("═" * 60)
+        console.print(
+            f"[green]✓[/green] Persona config saved to [bold]{persona_path}[/bold]"
+        )
+        console.print(f"[dim]Total time: {format_elapsed(elapsed)}[/dim]")
+        console.print("═" * 60)
+
+
+def _resolve_scenario(
+    study_ctx: StudyContext, scenario_ref: str | None, out: Output
+) -> tuple[str, int | None]:
+    """Resolve scenario name and version.
+
+    Returns:
+        Tuple of (scenario_name, version) where version is None for latest
+    """
+    scenarios = study_ctx.list_scenarios()
+
+    if not scenarios:
+        out.error("No scenarios found. Run 'extropy scenario' first.")
+        raise typer.Exit(1)
+
+    if scenario_ref is None:
+        # Auto-select if only one exists
+        if len(scenarios) == 1:
+            return scenarios[0], None
+        else:
+            out.error(
+                f"Multiple scenarios found: {', '.join(scenarios)}. "
+                "Use -s to specify which one."
+            )
+            raise typer.Exit(1)
+
+    # Parse version reference (e.g., "ai-adoption@v1")
+    name, version = parse_version_ref(scenario_ref)
+    if name not in scenarios:
+        out.error(f"Scenario not found: {name}")
+        raise typer.Exit(1)
+
+    return name, version
+
+
+def _parse_base_population_ref(ref: str) -> tuple[str, int]:
+    """Parse base_population reference like 'population.v2'.
+
+    Returns:
+        Tuple of (name, version)
+    """
+    import re
+
+    match = re.match(r"^(.+)\.v(\d+)$", ref)
+    if match:
+        return match.group(1), int(match.group(2))
+    # Fallback: treat as name, get latest
+    return ref, None
+
+
+def _handle_show_mode(
+    study_ctx: StudyContext,
+    scenario_name: str,
+    persona_path: Path,
+    merged_spec: PopulationSpec,
+    agent_index: int,
+    out: Output,
+) -> None:
+    """Handle --show mode: preview existing persona config."""
+    from ...population.persona import PersonaConfig, preview_persona
+
+    # Find existing config
+    try:
+        config_path = study_ctx.get_persona_path(scenario_name)
+    except FileNotFoundError:
+        if persona_path.exists():
+            config_path = persona_path
+        else:
+            out.error(f"No persona config found for scenario: {scenario_name}")
+            console.print("[dim]Run without --show to generate one.[/dim]")
+            raise typer.Exit(2)
+
+    try:
+        config = PersonaConfig.from_file(str(config_path))
+    except Exception as e:
+        out.error(f"Failed to load persona config: {e}")
+        raise typer.Exit(1)
+
+    console.print(f"[green]✓[/green] Loaded persona config from {config_path}")
+    console.print()
+
+    _display_config_summary(config)
+
+    console.print(
+        "[dim]Note: To preview with actual agents, use 'extropy persona -s {scenario} --show' "
+        "after sampling.[/dim]"
+    )
+    raise typer.Exit(0)
+
+
+def _display_config_summary(config) -> None:
+    """Display persona config summary."""
     console.print()
     console.print("┌" + "─" * 58 + "┐")
     console.print("│" + " PERSONA CONFIGURATION".center(58) + "│")
@@ -280,103 +378,13 @@ def persona_command(
     # Groups
     console.print("  [bold]Groupings:[/bold]")
     for group in config.groups:
-        console.print(f"    • {group.label} ({len(group.attributes)} attributes)")
+        console.print(f"    - {group.label} ({len(group.attributes)} attributes)")
     console.print()
 
     # Phrasings summary
     console.print("  [bold]Phrasings:[/bold]")
-    console.print(f"    • {len(config.phrasings.boolean)} boolean")
-    console.print(f"    • {len(config.phrasings.categorical)} categorical")
-    console.print(f"    • {len(config.phrasings.relative)} relative")
-    console.print(f"    • {len(config.phrasings.concrete)} concrete")
+    console.print(f"    - {len(config.phrasings.boolean)} boolean")
+    console.print(f"    - {len(config.phrasings.categorical)} categorical")
+    console.print(f"    - {len(config.phrasings.relative)} relative")
+    console.print(f"    - {len(config.phrasings.concrete)} concrete")
     console.print()
-
-    # Preview
-    if preview and agents:
-        if agent_index >= len(agents):
-            agent_index = 0
-        sample_agent = agents[agent_index]
-        agent_id = sample_agent.get("_id", str(agent_index))
-
-        console.print(f"  [bold]Sample Persona (Agent {agent_id}):[/bold]")
-        console.print()
-
-        persona_text = preview_persona(sample_agent, config, max_width=74)
-
-        # Display persona with indentation
-        for line in persona_text.split("\n"):
-            if line.startswith("##"):
-                console.print(f"    [bold cyan]{line}[/bold cyan]")
-            elif line.strip():
-                console.print(f"    {line}")
-            else:
-                console.print()
-
-        console.print()
-
-    # Confirmation
-    if not yes:
-        choice = (
-            typer.prompt(
-                "[Y] Save config  [r] Regenerate  [n] Cancel",
-                default="Y",
-                show_default=False,
-            )
-            .strip()
-            .lower()
-        )
-
-        if choice == "n":
-            console.print("[dim]Cancelled.[/dim]")
-            raise typer.Exit(0)
-
-        if choice == "r":
-            # Regenerate
-            console.print()
-            gen_start = time.time()
-            gen_done.clear()
-
-            gen_thread = Thread(target=do_generation, daemon=True)
-            gen_thread.start()
-
-            spinner = Spinner("dots", text="Regenerating...", style="cyan")
-            with Live(
-                spinner, console=console, refresh_per_second=12.5, transient=True
-            ):
-                while not gen_done.is_set():
-                    elapsed = time.time() - gen_start
-                    step, status = current_step
-                    spinner.update(
-                        text=f"Step {step}: {status} ({format_elapsed(elapsed)})"
-                    )
-                    time.sleep(0.1)
-
-            if gen_error:
-                console.print(f"[red]✗[/red] Regeneration failed: {gen_error}")
-                raise typer.Exit(3)
-
-            console.print(
-                f"[green]✓[/green] Regenerated ({format_elapsed(time.time() - gen_start)})"
-            )
-
-    # Save
-    if output:
-        config_path = output
-    else:
-        config_path = spec_file.with_suffix(".persona.yaml")
-
-    try:
-        config.to_file(str(config_path))
-    except Exception as e:
-        console.print(f"[red]✗[/red] Failed to save: {e}")
-        raise typer.Exit(1)
-
-    elapsed = time.time() - start_time
-
-    console.print()
-    console.print("═" * 60)
-    console.print(
-        f"[green]✓[/green] Persona config saved to [bold]{config_path}[/bold]"
-    )
-    console.print(f"[dim]Total time: {format_elapsed(elapsed)}[/dim]")
-    console.print("═" * 60)
