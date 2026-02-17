@@ -1420,7 +1420,13 @@ class SimulationEngine:
         # Build macro and local mood summaries (zero API calls)
         macro_summary = None
         if self.recent_summaries:
-            macro_summary = self._render_macro_summary(self.recent_summaries[-1])
+            prev_summary = (
+                self.recent_summaries[-2] if len(self.recent_summaries) >= 2 else None
+            )
+            macro_summary = self._render_macro_summary(
+                self.recent_summaries[-1],
+                prev_summary=prev_summary,
+            )
         local_mood_summary = self._render_local_mood(agent_id)
 
         ctx = create_reasoning_context(
@@ -1695,7 +1701,11 @@ class SimulationEngine:
 
         return feed
 
-    def _render_macro_summary(self, summary: TimestepSummary) -> str:
+    def _render_macro_summary(
+        self,
+        summary: TimestepSummary,
+        prev_summary: TimestepSummary | None = None,
+    ) -> str:
         """Convert a TimestepSummary into a human-readable vibes sentence.
 
         Pure string formatting from numeric aggregates — zero API calls.
@@ -1709,27 +1719,77 @@ class SimulationEngine:
             top = sorted(dist.items(), key=lambda x: -x[1])
             leader, leader_count = top[0]
             leader_pct = leader_count / total * 100
+            runner_up = top[1][0] if len(top) > 1 else None
+            runner_up_pct = ((top[1][1] / total) * 100) if len(top) > 1 else 0.0
             if leader_pct > 60:
-                parts.append(f"Most people are leaning toward '{leader}'.")
+                msg = f"Most people are choosing '{leader}'."
             elif leader_pct > 40:
-                parts.append(f"Opinion is split, with '{leader}' slightly ahead.")
+                msg = (
+                    f"Opinion is split, with '{leader}' slightly ahead"
+                    f"{f' of {runner_up!r}' if runner_up else ''}."
+                )
             else:
-                parts.append("People are still quite divided on this.")
+                msg = "People are still quite divided on this."
+
+            if runner_up and runner_up_pct >= 20 and leader_pct >= 45:
+                msg += f" A sizable minority is backing '{runner_up}'."
+
+            if prev_summary and prev_summary.position_distribution:
+                prev_total = sum(prev_summary.position_distribution.values()) or 1
+                prev_leader_count = prev_summary.position_distribution.get(leader, 0)
+                prev_leader_pct = prev_leader_count / prev_total
+                delta = (leader_count / total) - prev_leader_pct
+                if delta >= 0.05:
+                    msg += f" Support for '{leader}' is growing."
+                elif delta <= -0.05:
+                    msg += f" Support for '{leader}' is slipping."
+
+            parts.append(msg)
 
         # Sentiment summary
         avg_sent = summary.average_sentiment
         if avg_sent is not None:
-            if avg_sent > 0.3:
-                parts.append("The general sentiment is cautiously positive.")
-            elif avg_sent < -0.3:
-                parts.append("The general sentiment is cautiously negative.")
+            if prev_summary and prev_summary.average_sentiment is not None:
+                delta = avg_sent - prev_summary.average_sentiment
             else:
-                parts.append("The general mood is mixed.")
+                delta = 0.0
+
+            if avg_sent > 0.3:
+                tone = "cautiously positive"
+            elif avg_sent < -0.3:
+                tone = "cautiously negative"
+            else:
+                tone = "mixed"
+
+            if delta >= 0.08:
+                trend = " and getting more positive"
+            elif delta <= -0.08:
+                trend = " and getting more negative"
+            else:
+                trend = ""
+
+            parts.append(f"The general mood is {tone}{trend}.")
 
         # Exposure rate
         if summary.exposure_rate is not None:
             pct = summary.exposure_rate * 100
-            parts.append(f"About {pct:.0f}% have heard about this.")
+            if summary.exposure_rate >= 0.95:
+                parts.append("Almost everyone has heard about this now.")
+            elif summary.exposure_rate >= 0.75:
+                parts.append("Most people have heard about this by now.")
+            else:
+                parts.append(f"About {pct:.0f}% have heard about this.")
+
+        # Action momentum
+        if prev_summary:
+            if summary.shares_occurred > prev_summary.shares_occurred:
+                parts.append("More people are actively taking action this round.")
+            elif (
+                summary.shares_occurred == 0
+                and prev_summary.shares_occurred == 0
+                and summary.state_changes == 0
+            ):
+                parts.append("Most people are still watching and waiting.")
 
         return " ".join(parts) if parts else ""
 

@@ -174,7 +174,7 @@ def build_pass1_prompt(
 
     # --- Macro summary ---
     if context.macro_summary:
-        prompt_parts.extend(["", context.macro_summary])
+        prompt_parts.extend(["", "## The Broader Climate", "", context.macro_summary])
 
     # --- Timeline recap (Phase C) ---
     if context.timeline_recap:

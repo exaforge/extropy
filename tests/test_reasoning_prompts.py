@@ -383,6 +383,7 @@ class TestPhaseAPromptFeatures:
         context = _make_context(macro_summary="Most people are still undecided.")
         scenario = _make_scenario()
         prompt = build_pass1_prompt(context, scenario)
+        assert "The Broader Climate" in prompt
         assert "Most people are still undecided" in prompt
 
     def test_local_mood_included(self):
