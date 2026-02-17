@@ -473,32 +473,47 @@ Interactive chat with simulated agents.
 ### Interactive REPL
 
 ```bash
-extropy chat --run-id <id> --agent-id agent_042
+extropy chat --study-db austin/study.db
 ```
 
 | Flag | Type | Default | Description |
 |------|------|---------|-------------|
-| `--study-db` | path | `./study.db` | Study database path |
-| `--run-id` | string | required | Simulation run ID |
-| `--agent-id` | string | required | Agent ID |
+| `--study-db` | path | required | Study database path |
+| `--run-id` | string | latest | Simulation run ID |
+| `--agent-id` | string | first agent in run | Agent ID |
 | `--session-id` | string | auto | Chat session ID |
 
 REPL commands: `/context`, `/timeline <n>`, `/history`, `/exit`
+
+### extropy chat list
+
+Show recent runs and sample agents so users can pick chat targets quickly.
+
+```bash
+extropy chat list --study-db austin/study.db
+```
+
+| Flag | Type | Default | Description |
+|------|------|---------|-------------|
+| `--study-db` | path | required | Study database path |
+| `--limit-runs` | int | `10` | Number of recent runs to list |
+| `--agents-per-run` | int | `5` | Number of sample agent IDs per run |
+| `--json` | flag | false | Output JSON response |
 
 ### extropy chat ask
 
 Non-interactive API for automation.
 
 ```bash
-extropy chat ask --run-id <id> --agent-id agent_042 \
+extropy chat ask --study-db austin/study.db \
   --prompt "What changed your mind?" --json
 ```
 
 | Flag | Type | Default | Description |
 |------|------|---------|-------------|
-| `--study-db` | path | `./study.db` | Study database path |
-| `--run-id` | string | required | Simulation run ID |
-| `--agent-id` | string | required | Agent ID |
+| `--study-db` | path | required | Study database path |
+| `--run-id` | string | latest | Simulation run ID |
+| `--agent-id` | string | first agent in run | Agent ID |
 | `--prompt` | string | required | Question to ask |
 | `--session-id` | string | auto | Chat session ID |
 | `--json` | flag | false | Output JSON response |

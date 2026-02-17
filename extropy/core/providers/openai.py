@@ -86,6 +86,12 @@ class OpenAIProvider(LLMProvider):
         Returns:
             Raw text string, or None if not found.
         """
+        # Newer SDKs expose a convenience property that already concatenates
+        # message text segments (empty string when no assistant text exists).
+        direct = getattr(response, "output_text", None)
+        if isinstance(direct, str) and direct:
+            return direct
+
         for item in response.output:
             if hasattr(item, "type") and item.type == "message":
                 for content_item in item.content:
@@ -96,6 +102,25 @@ class OpenAIProvider(LLMProvider):
                         if hasattr(content_item, "text"):
                             return content_item.text
         return None
+
+    @staticmethod
+    def _is_max_tokens_incomplete(response) -> bool:
+        """Whether a Responses API call ended incomplete due to token cap."""
+        if getattr(response, "status", None) != "incomplete":
+            return False
+        details = getattr(response, "incomplete_details", None)
+        if details is None:
+            return False
+        if isinstance(details, dict):
+            return details.get("reason") == "max_output_tokens"
+        return getattr(details, "reason", None) == "max_output_tokens"
+
+    @staticmethod
+    def _bump_max_tokens(max_tokens: int | None) -> int:
+        """Increase max output budget for an incomplete retry."""
+        if max_tokens is None:
+            return 2048
+        return min(8192, max(256, int(max_tokens * 2)))
 
     @staticmethod
     def _extract_chat_completions_text(response) -> str | None:
@@ -255,44 +280,70 @@ class OpenAIProvider(LLMProvider):
         self._acquire_rate_limit(prompt, model, max_output=max_tokens or 4096)
 
         use_chat = self._api_format == "chat_completions"
-
-        if use_chat:
-            request_params = self._build_chat_completions_params(
-                model, prompt, response_schema, schema_name, max_tokens
-            )
-        else:
-            request_params = self._build_responses_params(
-                model, prompt, response_schema, schema_name, max_tokens
-            )
+        request_params: dict = {}
+        response = None
+        structured_data = None
+        max_tokens_eff = max_tokens
 
         logger.info(f"[LLM] simple_call starting - model={model}, schema={schema_name}")
         logger.info(f"[LLM] prompt length: {len(prompt)} chars")
 
-        api_start = time.time()
-        if use_chat:
-            response = self._with_retry(
-                lambda: client.chat.completions.create(**request_params)
-            )
-        else:
-            response = self._with_retry(
-                lambda: client.responses.create(**request_params)
-            )
-        api_elapsed = time.time() - api_start
+        for attempt in range(2):
+            if use_chat:
+                request_params = self._build_chat_completions_params(
+                    model, prompt, response_schema, schema_name, max_tokens_eff
+                )
+            else:
+                request_params = self._build_responses_params(
+                    model, prompt, response_schema, schema_name, max_tokens_eff
+                )
 
-        logger.info(f"[LLM] API response received in {api_elapsed:.2f}s")
+            api_start = time.time()
+            if use_chat:
+                response = self._with_retry(
+                    lambda: client.chat.completions.create(**request_params)
+                )
+            else:
+                response = self._with_retry(
+                    lambda: client.responses.create(**request_params)
+                )
+            api_elapsed = time.time() - api_start
+            logger.info(f"[LLM] API response received in {api_elapsed:.2f}s")
 
-        # Extract structured data
-        if use_chat:
-            raw_text = self._extract_chat_completions_text(response)
-        else:
-            raw_text = self._extract_output_text(response)
-        structured_data = json.loads(raw_text) if raw_text else None
+            usage = self._extract_usage(response, use_chat=use_chat)
+            self._record_usage(model, usage, call_type="simple")
 
-        # Extract and record token usage
-        usage = self._extract_usage(response, use_chat=use_chat)
-        self._record_usage(model, usage, call_type="simple")
+            if use_chat:
+                raw_text = self._extract_chat_completions_text(response)
+            else:
+                raw_text = self._extract_output_text(response)
 
-        if log:
+            if raw_text:
+                try:
+                    structured_data = json.loads(raw_text)
+                except json.JSONDecodeError:
+                    if (
+                        not use_chat
+                        and self._is_max_tokens_incomplete(response)
+                        and attempt == 0
+                    ):
+                        max_tokens_eff = self._bump_max_tokens(max_tokens_eff)
+                        continue
+                    raise
+            else:
+                structured_data = None
+
+            if (
+                not use_chat
+                and structured_data is None
+                and self._is_max_tokens_incomplete(response)
+                and attempt == 0
+            ):
+                max_tokens_eff = self._bump_max_tokens(max_tokens_eff)
+                continue
+            break
+
+        if log and response is not None:
             log_request_response(
                 function_name="simple_call",
                 request=request_params,
@@ -314,35 +365,63 @@ class OpenAIProvider(LLMProvider):
         client = self._get_async_client()
 
         use_chat = self._api_format == "chat_completions"
+        request_params: dict = {}
+        response = None
+        structured_data = None
+        usage = TokenUsage()
+        max_tokens_eff = max_tokens
 
-        if use_chat:
-            request_params = self._build_chat_completions_params(
-                model, prompt, response_schema, schema_name, max_tokens
-            )
-        else:
-            request_params = self._build_responses_params(
-                model, prompt, response_schema, schema_name, max_tokens
-            )
+        for attempt in range(2):
+            if use_chat:
+                request_params = self._build_chat_completions_params(
+                    model, prompt, response_schema, schema_name, max_tokens_eff
+                )
+            else:
+                request_params = self._build_responses_params(
+                    model, prompt, response_schema, schema_name, max_tokens_eff
+                )
 
-        if use_chat:
-            response = await self._with_retry_async(
-                lambda: client.chat.completions.create(**request_params)
-            )
-        else:
-            response = await self._with_retry_async(
-                lambda: client.responses.create(**request_params)
-            )
+            if use_chat:
+                response = await self._with_retry_async(
+                    lambda: client.chat.completions.create(**request_params)
+                )
+            else:
+                response = await self._with_retry_async(
+                    lambda: client.responses.create(**request_params)
+                )
 
-        # Extract structured data
-        if use_chat:
-            raw_text = self._extract_chat_completions_text(response)
-        else:
-            raw_text = self._extract_output_text(response)
-        structured_data = json.loads(raw_text) if raw_text else None
+            usage = self._extract_usage(response, use_chat=use_chat)
+            self._record_usage(model, usage, call_type="async")
 
-        # Extract and record token usage
-        usage = self._extract_usage(response, use_chat=use_chat)
-        self._record_usage(model, usage, call_type="async")
+            if use_chat:
+                raw_text = self._extract_chat_completions_text(response)
+            else:
+                raw_text = self._extract_output_text(response)
+
+            if raw_text:
+                try:
+                    structured_data = json.loads(raw_text)
+                except json.JSONDecodeError:
+                    if (
+                        not use_chat
+                        and self._is_max_tokens_incomplete(response)
+                        and attempt == 0
+                    ):
+                        max_tokens_eff = self._bump_max_tokens(max_tokens_eff)
+                        continue
+                    raise
+            else:
+                structured_data = None
+
+            if (
+                not use_chat
+                and structured_data is None
+                and self._is_max_tokens_incomplete(response)
+                and attempt == 0
+            ):
+                max_tokens_eff = self._bump_max_tokens(max_tokens_eff)
+                continue
+            break
 
         return structured_data or {}, usage
 
