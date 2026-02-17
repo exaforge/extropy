@@ -38,9 +38,9 @@ def network_command(
         help="Save the (generated or loaded) network config to YAML",
     ),
     generate_config: bool = typer.Option(
-        False,
-        "--generate-config",
-        help="Generate network config via LLM from population spec",
+        True,
+        "--generate-config/--no-generate-config",
+        help="Generate network config via LLM from population spec (default: enabled)",
     ),
     avg_degree: float = typer.Option(
         20.0, "--avg-degree", help="Target average degree (connections per agent)"
@@ -188,8 +188,8 @@ def network_command(
     Network config resolution:
       1. --network-config file → load from YAML
       2. Auto-detect scenario/name/*.network-config.yaml if it exists
-      3. --generate-config → generate config via LLM from scenario
-      4. None of the above → empty config (flat network, no similarity structure)
+      3. Generate config via LLM from scenario (default)
+      4. --no-generate-config → empty config (flat network, no similarity structure)
 
     Prerequisites:
         - Agents must be sampled (run 'extropy sample' first)
@@ -258,29 +258,28 @@ def network_command(
         out.error(f"Failed to load scenario: {e}")
         raise typer.Exit(1)
 
-    # Load base population spec for config generation (only if needed)
+    # Load base population spec (needed for config generation)
     merged_spec = None
-    if generate_config:
-        base_pop_ref = scenario_spec.meta.base_population
-        if base_pop_ref:
-            pop_name, pop_version = _parse_base_population_ref(base_pop_ref)
-            pop_path = study_ctx.get_population_path(pop_name, pop_version)
-            try:
-                pop_spec = PopulationSpec.from_yaml(pop_path)
-            except Exception as e:
-                out.error(f"Failed to load population spec: {e}")
-                raise typer.Exit(1)
+    base_pop_ref = scenario_spec.meta.base_population
+    if base_pop_ref:
+        pop_name, pop_version = _parse_base_population_ref(base_pop_ref)
+        pop_path = study_ctx.get_population_path(pop_name, pop_version)
+        try:
+            pop_spec = PopulationSpec.from_yaml(pop_path)
+        except Exception as e:
+            out.error(f"Failed to load population spec: {e}")
+            raise typer.Exit(1)
 
-            # Merge attributes for config generation
-            merged_attributes = list(pop_spec.attributes)
-            if scenario_spec.extended_attributes:
-                merged_attributes.extend(scenario_spec.extended_attributes)
-            merged_spec = PopulationSpec(
-                meta=pop_spec.meta,
-                grounding=pop_spec.grounding,
-                attributes=merged_attributes,
-                sampling_order=pop_spec.sampling_order,
-            )
+        # Merge attributes for config generation
+        merged_attributes = list(pop_spec.attributes)
+        if scenario_spec.extended_attributes:
+            merged_attributes.extend(scenario_spec.extended_attributes)
+        merged_spec = PopulationSpec(
+            meta=pop_spec.meta,
+            grounding=pop_spec.grounding,
+            attributes=merged_attributes,
+            sampling_order=pop_spec.sampling_order,
+        )
 
     # Checkpoint handling
     resume_requested = (
