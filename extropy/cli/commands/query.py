@@ -54,7 +54,7 @@ def _resolve_run(conn: sqlite3.Connection, run_id: str | None) -> sqlite3.Row | 
     if run_id:
         cur.execute(
             """
-            SELECT run_id, population_id, network_id, status, started_at, completed_at
+            SELECT run_id, scenario_name, population_id, network_id, status, started_at, completed_at
             FROM simulation_runs
             WHERE run_id = ?
             """,
@@ -63,13 +63,29 @@ def _resolve_run(conn: sqlite3.Connection, run_id: str | None) -> sqlite3.Row | 
     else:
         cur.execute(
             """
-            SELECT run_id, population_id, network_id, status, started_at, completed_at
+            SELECT run_id, scenario_name, population_id, network_id, status, started_at, completed_at
             FROM simulation_runs
             ORDER BY started_at DESC
             LIMIT 1
             """
         )
     return cur.fetchone()
+
+
+def _resolve_scenario_name(
+    conn: sqlite3.Connection, scenario: str | None, run_id: str | None
+) -> str:
+    """Resolve the scenario_id value for WHERE clauses.
+
+    If --scenario is given explicitly, use it directly.
+    Otherwise resolve from the latest simulation_runs.scenario_name.
+    """
+    if scenario:
+        return scenario
+    run_row = _resolve_run(conn, run_id)
+    if run_row:
+        return str(run_row["scenario_name"] or run_row["population_id"])
+    return "default"
 
 
 def _write_jsonl(path: Path, rows: list[dict]) -> None:
@@ -85,7 +101,8 @@ def _write_jsonl(path: Path, rows: list[dict]) -> None:
 @query_app.command("agents")
 def query_agents(
     to: Path | None = typer.Option(None, "--to", help="Write JSONL to file"),
-    population_id: str = typer.Option("default", "--population-id"),
+    scenario: str = typer.Option(None, "--scenario", "-s", help="Scenario name"),
+    run_id: str | None = typer.Option(None, "--run-id"),
 ):
     """Dump agent attributes."""
     study_db = _get_study_db()
@@ -95,10 +112,11 @@ def query_agents(
     conn = sqlite3.connect(str(study_db))
     conn.row_factory = sqlite3.Row
     try:
+        scenario_name = _resolve_scenario_name(conn, scenario, run_id)
         cur = conn.cursor()
         cur.execute(
-            "SELECT agent_id, attrs_json FROM agents WHERE population_id = ? ORDER BY agent_id",
-            (population_id,),
+            "SELECT agent_id, attrs_json FROM agents WHERE scenario_id = ? ORDER BY agent_id",
+            (scenario_name,),
         )
         rows = []
         for row in cur.fetchall():
@@ -129,7 +147,8 @@ def query_agents(
 @query_app.command("edges")
 def query_edges(
     to: Path | None = typer.Option(None, "--to", help="Write JSONL to file"),
-    network_id: str = typer.Option("default", "--network-id"),
+    scenario: str = typer.Option(None, "--scenario", "-s", help="Scenario name"),
+    run_id: str | None = typer.Option(None, "--run-id"),
 ):
     """Dump network edges."""
     study_db = _get_study_db()
@@ -139,15 +158,16 @@ def query_edges(
     conn = sqlite3.connect(str(study_db))
     conn.row_factory = sqlite3.Row
     try:
+        scenario_name = _resolve_scenario_name(conn, scenario, run_id)
         cur = conn.cursor()
         cur.execute(
             """
             SELECT source_id, target_id, weight, edge_type, influence_st, influence_ts
             FROM network_edges
-            WHERE network_id = ?
+            WHERE scenario_id = ?
             ORDER BY source_id, target_id
             """,
-            (network_id,),
+            (scenario_name,),
         )
         rows = [dict(row) for row in cur.fetchall()]
     finally:
@@ -235,26 +255,23 @@ def query_states(
 @query_app.command("summary")
 def query_summary(
     run_id: str | None = typer.Option(None, "--run-id"),
-    population_id: str = typer.Option("default", "--population-id"),
-    network_id: str = typer.Option("default", "--network-id"),
+    scenario: str = typer.Option(None, "--scenario", "-s", help="Scenario name"),
 ):
     """Show study entity counts."""
     study_db = _get_study_db()
     agent_mode = is_agent_mode()
     out = Output(console, json_mode=agent_mode)
 
-    with open_study_db(study_db) as db:
-        agent_count = db.get_agent_count(population_id)
-        edge_count = db.get_network_edge_count(network_id)
-
     conn = sqlite3.connect(str(study_db))
     conn.row_factory = sqlite3.Row
     try:
         run_row = _resolve_run(conn, run_id)
         resolved_run_id = str(run_row["run_id"]) if run_row else None
-        if run_row:
-            population_id = str(run_row["population_id"])
-            network_id = str(run_row["network_id"])
+        scenario_name = _resolve_scenario_name(conn, scenario, run_id)
+
+        with open_study_db(study_db) as db:
+            agent_count = db.get_agent_count_by_scenario(scenario_name)
+            edge_count = db.get_network_edge_count_by_scenario(scenario_name)
 
         cur = conn.cursor()
         if resolved_run_id:
@@ -282,9 +299,8 @@ def query_summary(
 
     if agent_mode:
         out.set_data("study_db", str(study_db))
-        out.set_data("population_id", population_id)
+        out.set_data("scenario_name", scenario_name)
         out.set_data("agents", agent_count)
-        out.set_data("network_id", network_id)
         out.set_data("edges", edge_count)
         if resolved_run_id:
             out.set_data("run_id", resolved_run_id)
@@ -294,8 +310,8 @@ def query_summary(
     else:
         console.print("[bold]Study Summary[/bold]")
         console.print(f"study_db: {study_db}")
-        console.print(f"population_id={population_id} agents={agent_count}")
-        console.print(f"network_id={network_id} edges={edge_count}")
+        console.print(f"scenario={scenario_name} agents={agent_count}")
+        console.print(f"edges={edge_count}")
         if resolved_run_id:
             console.print(f"run_id={resolved_run_id}")
         console.print(f"simulation.agent_states={sim_agents}")
@@ -307,7 +323,8 @@ def query_summary(
 
 @query_app.command("network")
 def query_network(
-    network_id: str = typer.Option("default", "--network-id"),
+    scenario: str = typer.Option(None, "--scenario", "-s", help="Scenario name"),
+    run_id: str | None = typer.Option(None, "--run-id"),
     top: int = typer.Option(10, "--top", min=1),
 ):
     """Show network statistics."""
@@ -318,10 +335,11 @@ def query_network(
     conn = sqlite3.connect(str(study_db))
     conn.row_factory = sqlite3.Row
     try:
+        scenario_name = _resolve_scenario_name(conn, scenario, run_id)
         cur = conn.cursor()
         cur.execute(
-            "SELECT COUNT(*) AS cnt, AVG(weight) AS avg_w FROM network_edges WHERE network_id = ?",
-            (network_id,),
+            "SELECT COUNT(*) AS cnt, AVG(weight) AS avg_w FROM network_edges WHERE scenario_id = ?",
+            (scenario_name,),
         )
         row = cur.fetchone()
         edge_count = int(row["cnt"]) if row else 0
@@ -331,19 +349,19 @@ def query_network(
             """
             SELECT source_id, COUNT(*) AS degree
             FROM network_edges
-            WHERE network_id = ?
+            WHERE scenario_id = ?
             GROUP BY source_id
             ORDER BY degree DESC
             LIMIT ?
             """,
-            (network_id, top),
+            (scenario_name, top),
         )
         top_rows = cur.fetchall()
     finally:
         conn.close()
 
     if agent_mode:
-        out.set_data("network_id", network_id)
+        out.set_data("scenario_name", scenario_name)
         out.set_data("edge_count", edge_count)
         out.set_data("avg_weight", avg_w)
         out.set_data(
@@ -351,7 +369,7 @@ def query_network(
             [{"source_id": r["source_id"], "degree": r["degree"]} for r in top_rows],
         )
     else:
-        console.print(f"[bold]Network {network_id}[/bold]")
+        console.print(f"[bold]Network (scenario={scenario_name})[/bold]")
         console.print(f"edges={edge_count} avg_weight={avg_w:.4f}")
         if top_rows:
             console.print("top source degrees:")

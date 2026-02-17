@@ -1127,7 +1127,7 @@ class SimulationEngine:
             List of conversation results
         """
         # Get households for NPC resolution
-        households = self.study_db.get_households(self.scenario.meta.population_id)
+        households = self.study_db.get_households(self.scenario.meta.name)
 
         # Collect conversation requests from actions
         requests = collect_conversation_requests(
@@ -2189,8 +2189,8 @@ def run_simulation(
         db.create_simulation_run(
             run_id=resolved_run_id,
             scenario_name=scenario.meta.name,
-            population_id=scenario.meta.population_id,
-            network_id=scenario.meta.network_id,
+            population_id=scenario.meta.name,
+            network_id=scenario.meta.name,
             config={
                 "scenario_path": str(scenario_path),
                 "output_dir": str(output_dir),

@@ -102,7 +102,12 @@ class OpenAICompatProvider(LLMProvider):
             },
         }
         if max_tokens is not None:
-            params["max_tokens"] = max_tokens
+            # Azure rejects max_tokens for newer models (gpt-5, gpt-5-mini);
+            # use max_completion_tokens for Azure, max_tokens everywhere else.
+            if self.provider_name == "azure":
+                params["max_completion_tokens"] = max_tokens
+            else:
+                params["max_tokens"] = max_tokens
         return params
 
     @staticmethod

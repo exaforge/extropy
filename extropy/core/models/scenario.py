@@ -328,9 +328,9 @@ class ScenarioMeta(BaseModel):
         default=None, description="Path to canonical study DB (legacy)"
     )
     population_id: str = Field(
-        default="default", description="Population ID in study DB"
+        default="default", description="[Deprecated] Population ID in study DB — use scenario name via scenario_id instead"
     )
-    network_id: str = Field(default="default", description="Network ID in study DB")
+    network_id: str = Field(default="default", description="[Deprecated] Network ID in study DB — use scenario name via scenario_id instead")
     created_at: datetime = Field(default_factory=datetime.now)
 
     def get_population_ref(self) -> tuple[str, int | None]:

@@ -167,23 +167,23 @@ def _load_agent_chat_context(
 ) -> tuple[dict[str, Any], list[dict[str, Any]]]:
     cur = conn.cursor()
     cur.execute(
-        "SELECT population_id FROM simulation_runs WHERE run_id = ? LIMIT 1",
+        "SELECT scenario_name, population_id FROM simulation_runs WHERE run_id = ? LIMIT 1",
         (run_id,),
     )
     run_row = cur.fetchone()
     if not run_row:
         return {"run_id": run_id, "agent_id": agent_id, "error": "run_id not found"}, []
-    population_id = str(run_row["population_id"])
+    scenario_name = str(run_row["scenario_name"] or run_row["population_id"])
 
     cur.execute(
         """
         SELECT attrs_json
         FROM agents
-        WHERE population_id = ? AND agent_id = ?
+        WHERE scenario_id = ? AND agent_id = ?
         ORDER BY rowid DESC
         LIMIT 1
         """,
-        (population_id, agent_id),
+        (scenario_name, agent_id),
     )
     attrs_row = cur.fetchone()
     attrs = {}
@@ -214,7 +214,7 @@ def _load_agent_chat_context(
 
     context = {
         "run_id": run_id,
-        "population_id": population_id,
+        "scenario_name": scenario_name,
         "agent_id": agent_id,
         "attributes": attrs,
         "state": state,
@@ -222,7 +222,7 @@ def _load_agent_chat_context(
     }
 
     citations = [
-        {"table": "agents", "population_id": population_id, "agent_id": agent_id},
+        {"table": "agents", "scenario_id": scenario_name, "agent_id": agent_id},
         {"table": "agent_states", "run_id": run_id, "agent_id": agent_id},
         {
             "table": "timeline",
@@ -260,7 +260,7 @@ def _build_agent_chat_prompt(
     # Keep this compact so chat stays cheap/fast while still grounded.
     context_payload = {
         "run_id": context.get("run_id"),
-        "population_id": context.get("population_id"),
+        "scenario_name": context.get("scenario_name"),
         "agent_id": context.get("agent_id"),
         "attributes": attrs,
         "state": {
@@ -347,7 +347,7 @@ def _resolve_run_and_agent(
     if run_id:
         cur.execute(
             """
-            SELECT run_id, population_id
+            SELECT run_id, scenario_name, population_id
             FROM simulation_runs
             WHERE run_id = ?
             LIMIT 1
@@ -357,7 +357,7 @@ def _resolve_run_and_agent(
     else:
         cur.execute(
             """
-            SELECT run_id, population_id
+            SELECT run_id, scenario_name, population_id
             FROM simulation_runs
             ORDER BY started_at DESC
             LIMIT 1
@@ -367,7 +367,7 @@ def _resolve_run_and_agent(
     if not run_row:
         raise ValueError("No simulation runs found in study DB")
     resolved_run_id = str(run_row["run_id"])
-    population_id = str(run_row["population_id"])
+    scenario_name = str(run_row["scenario_name"] or run_row["population_id"])
 
     if agent_id:
         cur.execute(
@@ -377,12 +377,12 @@ def _resolve_run_and_agent(
         if cur.fetchone():
             return resolved_run_id, agent_id
         cur.execute(
-            "SELECT 1 FROM agents WHERE population_id = ? AND agent_id = ? LIMIT 1",
-            (population_id, agent_id),
+            "SELECT 1 FROM agents WHERE scenario_id = ? AND agent_id = ? LIMIT 1",
+            (scenario_name, agent_id),
         )
         if cur.fetchone():
             return resolved_run_id, agent_id
-        raise ValueError(f"agent_id not found for run/population: {agent_id}")
+        raise ValueError(f"agent_id not found for run/scenario: {agent_id}")
 
     cur.execute(
         "SELECT agent_id FROM agent_states WHERE run_id = ? ORDER BY agent_id LIMIT 1",
@@ -391,8 +391,8 @@ def _resolve_run_and_agent(
     agent_row = cur.fetchone()
     if not agent_row:
         cur.execute(
-            "SELECT agent_id FROM agents WHERE population_id = ? ORDER BY agent_id LIMIT 1",
-            (population_id,),
+            "SELECT agent_id FROM agents WHERE scenario_id = ? ORDER BY agent_id LIMIT 1",
+            (scenario_name,),
         )
         agent_row = cur.fetchone()
     if not agent_row:
@@ -416,7 +416,7 @@ def chat_list(
         cur = conn.cursor()
         cur.execute(
             """
-            SELECT run_id, status, started_at, completed_at, population_id
+            SELECT run_id, scenario_name, status, started_at, completed_at, population_id
             FROM simulation_runs
             ORDER BY started_at DESC
             LIMIT ?
@@ -426,7 +426,7 @@ def chat_list(
         runs = [dict(r) for r in cur.fetchall()]
         for run in runs:
             run_id = str(run["run_id"])
-            population_id = str(run["population_id"])
+            scenario_name = str(run.get("scenario_name") or run["population_id"])
             cur.execute(
                 """
                 SELECT agent_id
@@ -443,11 +443,11 @@ def chat_list(
                     """
                     SELECT agent_id
                     FROM agents
-                    WHERE population_id = ?
+                    WHERE scenario_id = ?
                     ORDER BY agent_id
                     LIMIT ?
                     """,
-                    (population_id, agents_per_run),
+                    (scenario_name, agents_per_run),
                 )
                 sample_agents = [str(r["agent_id"]) for r in cur.fetchall()]
             run["sample_agents"] = sample_agents
@@ -466,9 +466,10 @@ def chat_list(
     console.print(f"[bold]Recent Runs[/bold] ({len(runs)})")
     for run in runs:
         agents = ", ".join(run["sample_agents"]) if run["sample_agents"] else "-"
+        scenario_name = run.get("scenario_name") or run["population_id"]
         console.print(
             f"- {run['run_id']} status={run['status']} started={run['started_at']} "
-            f"population={run['population_id']} sample_agents=[{agents}]"
+            f"scenario={scenario_name} sample_agents=[{agents}]"
         )
 
 

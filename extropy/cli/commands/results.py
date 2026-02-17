@@ -74,7 +74,7 @@ def results_callback(
         if run_id:
             cur.execute(
                 """
-                SELECT run_id, status, started_at, completed_at, stopped_reason, population_id
+                SELECT run_id, scenario_name, status, started_at, completed_at, stopped_reason, population_id
                 FROM simulation_runs
                 WHERE run_id = ?
                 """,
@@ -83,7 +83,7 @@ def results_callback(
         elif scenario_name:
             cur.execute(
                 """
-                SELECT run_id, status, started_at, completed_at, stopped_reason, population_id
+                SELECT run_id, scenario_name, status, started_at, completed_at, stopped_reason, population_id
                 FROM simulation_runs
                 WHERE scenario_name = ?
                 ORDER BY started_at DESC
@@ -94,7 +94,7 @@ def results_callback(
         else:
             cur.execute(
                 """
-                SELECT run_id, status, started_at, completed_at, stopped_reason, population_id
+                SELECT run_id, scenario_name, status, started_at, completed_at, stopped_reason, population_id
                 FROM simulation_runs
                 ORDER BY started_at DESC
                 LIMIT 1
@@ -109,7 +109,7 @@ def results_callback(
             raise typer.Exit(0)
 
         resolved_run_id = str(run_row["run_id"])
-        population_id = str(run_row["population_id"])
+        scenario_name = str(run_row["scenario_name"] or run_row["population_id"])
 
         if not agent_mode:
             console.print(
@@ -126,7 +126,7 @@ def results_callback(
         ctx.ensure_object(dict)
         ctx.obj["conn"] = conn
         ctx.obj["run_id"] = resolved_run_id
-        ctx.obj["population_id"] = population_id
+        ctx.obj["scenario_name"] = scenario_name
         ctx.obj["out"] = out
         ctx.obj["agent_mode"] = agent_mode
         ctx.obj["_keep_conn"] = True
@@ -187,15 +187,15 @@ def results_segment(
 ):
     """Segment results by an agent attribute."""
     obj = ctx.ensure_object(dict)
-    conn, run_id, population_id, out, agent_mode = (
+    conn, run_id, scenario_name, out, agent_mode = (
         obj["conn"],
         obj["run_id"],
-        obj["population_id"],
+        obj["scenario_name"],
         obj["out"],
         obj["agent_mode"],
     )
     try:
-        _display_segment(conn, run_id, population_id, attribute, out, agent_mode)
+        _display_segment(conn, run_id, scenario_name, attribute, out, agent_mode)
     finally:
         conn.close()
     raise typer.Exit(out.finish())
@@ -208,15 +208,15 @@ def results_agent(
 ):
     """Show single agent details."""
     obj = ctx.ensure_object(dict)
-    conn, run_id, population_id, out, agent_mode = (
+    conn, run_id, scenario_name, out, agent_mode = (
         obj["conn"],
         obj["run_id"],
-        obj["population_id"],
+        obj["scenario_name"],
         obj["out"],
         obj["agent_mode"],
     )
     try:
-        _display_agent(conn, run_id, population_id, agent_id, out, agent_mode)
+        _display_agent(conn, run_id, scenario_name, agent_id, out, agent_mode)
     finally:
         conn.close()
     raise typer.Exit(out.finish())
@@ -341,15 +341,15 @@ def _display_timeline(
 def _display_segment(
     conn: sqlite3.Connection,
     run_id: str,
-    population_id: str,
+    scenario_name: str,
     attribute: str,
     out: Output,
     agent_mode: bool,
 ) -> None:
     cur = conn.cursor()
     cur.execute(
-        "SELECT agent_id, attrs_json FROM agents WHERE population_id = ?",
-        (population_id,),
+        "SELECT agent_id, attrs_json FROM agents WHERE scenario_id = ?",
+        (scenario_name,),
     )
     attr_by_agent: dict[str, str] = {}
     for row in cur.fetchall():
@@ -407,7 +407,7 @@ def _display_segment(
 def _display_agent(
     conn: sqlite3.Connection,
     run_id: str,
-    population_id: str,
+    scenario_name: str,
     agent_id: str,
     out: Output,
     agent_mode: bool,
@@ -427,8 +427,8 @@ def _display_agent(
         return
 
     cur.execute(
-        "SELECT attrs_json FROM agents WHERE population_id = ? AND agent_id = ? LIMIT 1",
-        (population_id, agent_id),
+        "SELECT attrs_json FROM agents WHERE scenario_id = ? AND agent_id = ? LIMIT 1",
+        (scenario_name, agent_id),
     )
     attrs_row = cur.fetchone()
     attrs = {}

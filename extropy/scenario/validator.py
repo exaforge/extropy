@@ -501,22 +501,28 @@ def validate_scenario(
         if study_db_path.exists():
             try:
                 with open_study_db(study_db_path) as db:
-                    if db.get_agent_count(spec.meta.population_id) == 0:
+                    agent_count = db.get_agent_count_by_scenario(spec.meta.name)
+                    if agent_count == 0:
+                        agent_count = db.get_agent_count(spec.meta.population_id)
+                    if agent_count == 0:
                         errors.append(
                             ValidationError(
                                 category="file_reference",
                                 location="meta.population_id",
-                                message=f"Population ID not found in study DB: {spec.meta.population_id}",
-                                suggestion="Run `extropy sample ... --study-db ... --population-id ...` first",
+                                message=f"No agents found for scenario '{spec.meta.name}' or population_id '{spec.meta.population_id}' in study DB",
+                                suggestion="Run `extropy sample -s <scenario>` first",
                             )
                         )
-                    if db.get_network_edge_count(spec.meta.network_id) == 0:
+                    edge_count = db.get_network_edge_count_by_scenario(spec.meta.name)
+                    if edge_count == 0:
+                        edge_count = db.get_network_edge_count(spec.meta.network_id)
+                    if edge_count == 0:
                         errors.append(
                             ValidationError(
                                 category="file_reference",
                                 location="meta.network_id",
-                                message=f"Network ID not found in study DB: {spec.meta.network_id}",
-                                suggestion="Run `extropy network ... --study-db ... --network-id ...` first",
+                                message=f"No network edges found for scenario '{spec.meta.name}' or network_id '{spec.meta.network_id}' in study DB",
+                                suggestion="Run `extropy network -s <scenario>` first",
                             )
                         )
             except Exception:

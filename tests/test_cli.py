@@ -342,13 +342,13 @@ def _seed_run_scoped_state(study_db: Path) -> None:
     ]
     with open_study_db(study_db) as db:
         db.save_sample_result(
-            population_id="default", agents=agents, meta={"source": "test"}
+            population_id="s", agents=agents, meta={"source": "test"}, scenario_id="s"
         )
         db.create_simulation_run(
             run_id="run_old",
             scenario_name="s",
-            population_id="default",
-            network_id="default",
+            population_id="s",
+            network_id="s",
             config={},
             seed=1,
             status="completed",
@@ -356,8 +356,8 @@ def _seed_run_scoped_state(study_db: Path) -> None:
         db.create_simulation_run(
             run_id="run_new",
             scenario_name="s",
-            population_id="default",
-            network_id="default",
+            population_id="s",
+            network_id="s",
             config={},
             seed=2,
             status="running",
