@@ -330,8 +330,12 @@ def build_pass1_prompt(
         prompt_parts.extend(
             [
                 "",
-                f'Last time I said I intended to: "{context.prior_action_intent}". '
-                "Has anything changed?",
+                "## Follow Through Check",
+                "",
+                f'Last time I said I intended to: "{context.prior_action_intent}".',
+                "Did I actually do it? Be explicit:",
+                "- If yes: what exactly did I do, and what happened?",
+                "- If no: what stopped me (time, money, logistics, fear, competing priorities)?",
             ]
         )
 
@@ -444,6 +448,10 @@ def build_pass1_schema() -> dict[str, Any]:
                 "type": "string",
                 "description": "A single sentence capturing your core reaction (for your own memory).",
             },
+            "action_intent": {
+                "type": "string",
+                "description": "The concrete action you intend to take next. Use an empty string only if you truly have no plan.",
+            },
             "sentiment": {
                 "type": "number",
                 "minimum": -1.0,
@@ -487,6 +495,7 @@ def build_pass1_schema() -> dict[str, Any]:
             "private_thought",
             "public_statement",
             "reasoning_summary",
+            "action_intent",
             "sentiment",
             "conviction",
             "will_share",
@@ -622,6 +631,10 @@ def build_merged_schema(outcomes: OutcomeConfig) -> dict[str, Any]:
             "type": "string",
             "description": "A single sentence capturing your core reaction (for your own memory).",
         },
+        "action_intent": {
+            "type": "string",
+            "description": "The concrete action you intend to take next. Use an empty string only if you truly have no plan.",
+        },
         "sentiment": {
             "type": "number",
             "minimum": -1.0,
@@ -664,6 +677,7 @@ def build_merged_schema(outcomes: OutcomeConfig) -> dict[str, Any]:
         "reasoning",
         "public_statement",
         "reasoning_summary",
+        "action_intent",
         "sentiment",
         "conviction",
         "will_share",
@@ -752,6 +766,14 @@ def _sentiment_to_tone(sentiment: float) -> str:
         return "skeptical"
     else:
         return "strongly opposed"
+
+
+def _normalize_action_intent(value: Any) -> str | None:
+    """Normalize action intent to None when empty."""
+    if value is None:
+        return None
+    text = str(value).strip()
+    return text or None
 
 
 # =============================================================================
@@ -844,6 +866,7 @@ async def _reason_agent_two_pass_async(
     conviction_score = pass1_response.get("conviction")
     will_share = pass1_response.get("will_share", False)
     actions = pass1_response.get("actions", [])
+    pass1_action_intent = _normalize_action_intent(pass1_response.get("action_intent"))
 
     # Map conviction score (0-100) to float via bucketing
     conviction_float = score_to_conviction_float(conviction_score)
@@ -909,6 +932,11 @@ async def _reason_agent_two_pass_async(
     # Merge sentiment into outcomes for backwards compat
     if sentiment is not None:
         outcomes["sentiment"] = sentiment
+    action_intent = pass1_action_intent or _normalize_action_intent(
+        outcomes.get("action_intent")
+    )
+    if action_intent is not None:
+        outcomes["action_intent"] = action_intent
 
     return ReasoningResponse(
         position=position,
@@ -916,7 +944,7 @@ async def _reason_agent_two_pass_async(
         conviction=conviction_float,
         public_statement=public_statement,
         reasoning_summary=reasoning_summary,
-        action_intent=outcomes.get("action_intent"),
+        action_intent=action_intent,
         will_share=will_share,
         reasoning=reasoning,
         outcomes=outcomes,
@@ -1014,6 +1042,7 @@ async def _reason_agent_merged_async(
     conviction_score = response.get("conviction")
     will_share = response.get("will_share", False)
     actions = response.get("actions", [])
+    action_intent = _normalize_action_intent(response.get("action_intent"))
 
     conviction_float = score_to_conviction_float(conviction_score)
 
@@ -1027,6 +1056,7 @@ async def _reason_agent_merged_async(
         "reasoning",
         "public_statement",
         "reasoning_summary",
+        "action_intent",
         "sentiment",
         "conviction",
         "will_share",
@@ -1037,6 +1067,8 @@ async def _reason_agent_merged_async(
     # Merge sentiment into outcomes for backwards compat
     if sentiment is not None:
         outcomes["sentiment"] = sentiment
+    if action_intent is not None:
+        outcomes["action_intent"] = action_intent
 
     return ReasoningResponse(
         position=position,
@@ -1044,7 +1076,7 @@ async def _reason_agent_merged_async(
         conviction=conviction_float,
         public_statement=public_statement,
         reasoning_summary=reasoning_summary,
-        action_intent=outcomes.get("action_intent"),
+        action_intent=action_intent,
         will_share=will_share,
         reasoning=reasoning,
         outcomes=outcomes,
@@ -1138,6 +1170,7 @@ def reason_agent(
     sentiment = pass1_response.get("sentiment")
     conviction_score = pass1_response.get("conviction")
     will_share = pass1_response.get("will_share", False)
+    pass1_action_intent = _normalize_action_intent(pass1_response.get("action_intent"))
     conviction_float = score_to_conviction_float(conviction_score)
 
     # === Pass 2: Classification ===
@@ -1181,6 +1214,11 @@ def reason_agent(
 
     if sentiment is not None:
         outcomes["sentiment"] = sentiment
+    action_intent = pass1_action_intent or _normalize_action_intent(
+        outcomes.get("action_intent")
+    )
+    if action_intent is not None:
+        outcomes["action_intent"] = action_intent
 
     logger.info(
         f"[REASON] Agent {context.agent_id} - SUCCESS: position={position}, "
@@ -1193,7 +1231,7 @@ def reason_agent(
         conviction=conviction_float,
         public_statement=public_statement,
         reasoning_summary=reasoning_summary,
-        action_intent=outcomes.get("action_intent"),
+        action_intent=action_intent,
         will_share=will_share,
         reasoning=reasoning,
         outcomes=outcomes,
