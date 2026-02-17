@@ -1020,3 +1020,34 @@ Four completely different lives. Same simulation engine.
 | **Aggregate mood** | Universal anxiety | Brief annoyance → apathy | Local fury → resignation | Split euphoria/FOMO/resentment |
 | **Temporal feel** | Urgent daily countdown | 2-day blip | Slow grinding weeks | Volatile hourly swings |
 | **Convergence** | Everyone scared, same plan | Quick resolution, move on | Bitter acceptance | Depends on price action |
+
+---
+
+## Implementation Status (Feb 2026)
+
+Audit of current codebase against the issues above.
+
+| Issue | Status | Notes |
+|-------|--------|-------|
+| **1. Population ↔ Network** | PARTIAL | Edge type rules infrastructure exists (`NetworkConfig.edge_type_rules`) but not populated by default. Partner matching done at sampling but not linked as network edges. |
+| **2. Agent Names** | DONE | Full name generation via SSA/Census data in `extropy/population/names/`. Names used throughout: sampling, persona, engine, conversations. |
+| **3. Family Members** | DONE | Partner linking + NPC dependents (kids, elders) generated in `households.py`. Available for conversations. |
+| **4. Temporal Awareness** | DONE | Timestep + unit in prompts. Memory timestamps now show elapsed time ("2 days ago" not "Day 3"). |
+| **5. Exposures** | PARTIAL | Experience templates exist but not demographic-aware. No aggregation of network sources. |
+| **6. Peer Opinions** | DONE | Names and relationships rendered. Conviction comes through naturally in the public statement — explicit labels would be unnatural. |
+| **7. Aggregate Sentiment** | DONE | Both macro (global) and local (neighborhood) mood rendered in natural language via `_render_macro_summary()` and `_render_local_mood()`. |
+| **8. Memory** | DONE | Full history retained (no sliding window cap). Fidelity controls raw reasoning visibility: low=summaries only, medium=last 3 with excerpts, high=last 5 with excerpts. |
+| **9. Private vs Public** | PARTIAL | Fields exist in state model but agent doesn't explicitly reason about the gap. Mechanical splitting still applied post-hoc. |
+| **10. Narrative Prompt Structure** | OUT OF SCOPE | Day phase templates decided against. Current linear prompt structure is sufficient. |
+| **11. Pass 2 Context** | NOT NEEDED | Pass 1 reasoning already contains enough demographic context. Adding demographics to Pass 2 would be redundant. |
+| **12. Channel → Experience** | PARTIAL | Experience templates exist but not demographic-variant. |
+| **13. Agent Interactions** | DONE | Full conversation system in `conversation.py`. Social posts recorded. Available contacts rendered. |
+| **14. Cognitive Architecture** | PARTIAL | Emotional trajectory + conviction self-awareness + repetition detection implemented. Semantic memory consolidation not done. |
+
+### Summary
+
+- **DONE**: 2, 3, 4, 6, 7, 8, 13
+- **PARTIAL**: 1, 5, 9, 12, 14
+- **OUT OF SCOPE**: 10, 11
+
+The simulation is in good shape. Remaining gaps are either edge cases (network edge rules, demographic channel variants) or ambitious features (semantic memory consolidation).

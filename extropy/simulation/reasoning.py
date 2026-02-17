@@ -233,9 +233,18 @@ def build_pass1_prompt(
             original_idx = len(context.memory_trace) - len(display_memories) + i
             conviction_label = float_to_conviction(memory.conviction) or "uncertain"
             unit = context.timestep_unit
+
+            # Elapsed time label (e.g., "2 days ago" instead of "Day 3")
+            elapsed = context.timestep - memory.timestep
+            if elapsed == 0:
+                time_label = "Earlier today"
+            elif elapsed == 1:
+                time_label = f"1 {unit} ago"
+            else:
+                time_label = f"{elapsed} {unit}s ago"
+
             prompt_parts.append(
-                f'- {unit} {memory.timestep + 1}: "{memory.summary}" '
-                f"(conviction: {conviction_label})"
+                f'- {time_label}: "{memory.summary}" (conviction: {conviction_label})'
             )
             # Show raw excerpt for recent steps in medium/high fidelity
             if (
