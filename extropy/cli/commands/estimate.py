@@ -1,10 +1,20 @@
 """Estimate command for predicting simulation costs before running."""
 
+import re
+
 import typer
 
 from ..app import app, console, get_study_path
 from ..study import StudyContext, detect_study_folder, parse_version_ref
 from ..utils import Output, ExitCode
+
+
+def _parse_base_population_ref(ref: str) -> tuple[str, int | None]:
+    """Parse base_population reference like 'population.v2'."""
+    match = re.match(r"^(.+)\.v(\d+)$", ref)
+    if match:
+        return match.group(1), int(match.group(2))
+    return ref, None
 
 
 @app.command("estimate")
@@ -85,8 +95,14 @@ def estimate_command(
         out.error(f"Failed to load scenario: {e}")
         raise typer.Exit(1)
 
-    # Load population spec (resolve relative path from scenario meta)
-    pop_path = study_ctx.root / scenario_spec.meta.population_spec
+    # Load population spec (resolve from base_population or population_spec)
+    base_pop_ref = scenario_spec.meta.base_population or scenario_spec.meta.population_spec
+    if not base_pop_ref:
+        out.error("Scenario has no base_population or population_spec reference")
+        raise typer.Exit(1)
+
+    pop_name, pop_version = _parse_base_population_ref(base_pop_ref)
+    pop_path = study_ctx.get_population_path(pop_name, pop_version)
     if not pop_path.exists():
         out.error(f"Population spec not found: {pop_path}")
         raise typer.Exit(1)
@@ -96,22 +112,20 @@ def estimate_command(
         out.error(f"Failed to load population spec: {e}")
         raise typer.Exit(1)
 
-    # Load agents and network from study DB using scenario meta IDs
-    pop_id = scenario_spec.meta.population_id
-    net_id = scenario_spec.meta.network_id
+    # Load agents and network from study DB using scenario ID
     with open_study_db(study_db) as db:
-        agents = db.get_agents(pop_id)
-        network = db.get_network(net_id)
+        agents = db.get_agents_by_scenario(scenario_name)
+        network = db.get_network(scenario_name)
 
     if not agents:
         out.error(
-            f"No agents found for population '{pop_id}'. "
+            f"No agents found for scenario '{scenario_name}'. "
             f"Run 'extropy sample -s {scenario_name}' first.",
         )
         raise typer.Exit(1)
     if not network.get("edges"):
         out.error(
-            f"No network found for network '{net_id}'. "
+            f"No network found for scenario '{scenario_name}'. "
             f"Run 'extropy network -s {scenario_name}' first.",
         )
         raise typer.Exit(1)
