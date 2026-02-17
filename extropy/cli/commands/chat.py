@@ -111,7 +111,9 @@ def _append_chat_message(
     return turn
 
 
-def _get_chat_messages(conn: sqlite3.Connection, session_id: str) -> list[dict[str, Any]]:
+def _get_chat_messages(
+    conn: sqlite3.Connection, session_id: str
+) -> list[dict[str, Any]]:
     _ensure_chat_tables(conn)
     cur = conn.cursor()
     cur.execute(
