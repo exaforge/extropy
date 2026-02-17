@@ -57,8 +57,8 @@ def sample_command(
     EXIT CODES:
         0 = Success
         1 = Validation error
-        2 = File not found
-        3 = Sampling error
+        3 = File not found
+        4 = Sampling error
 
     Examples:
         extropy sample -s ai-adoption -n 500

@@ -167,7 +167,7 @@ extropy sample -n 500  # auto-selects scenario if only one exists
 | `--report` | `-r` | flag | false | Show distribution summaries and stats |
 | `--skip-validation` | | flag | false | Skip validator errors |
 
-**Exit codes:** 0 = Success, 1 = Validation error, 2 = File not found, 3 = Sampling error
+**Exit codes:** 0 = Success, 1 = Validation error, 3 = File not found, 4 = Sampling error
 
 Sampling process:
 1. Loads scenario's `base_population` spec
@@ -201,7 +201,7 @@ extropy network -s ai-adoption -c custom-network.yaml      # Load custom config
 | `--avg-degree` | | float | 20.0 | Target average degree (connections per agent) |
 | `--rewire-prob` | | float | 0.05 | Watts-Strogatz rewiring probability |
 | `--seed` | | int | random | Random seed for reproducibility |
-| `--validate` | `-v` | flag | false | Print validation metrics |
+| `--validate` | | flag | false | Print validation metrics |
 | `--no-metrics` | | flag | false | Skip computing node metrics (faster) |
 
 #### Quality & Candidate Selection
@@ -239,7 +239,7 @@ Run a simulation from a scenario spec.
 
 ```bash
 extropy simulate -s ai-adoption
-extropy simulate -s ai-adoption --seed 42 --strong gpt-4o
+extropy simulate -s ai-adoption --seed 42 --strong openai/gpt-5
 extropy simulate -s ai-adoption --fidelity high
 ```
 
@@ -259,7 +259,7 @@ extropy simulate -s ai-adoption --fidelity high
 
 | Flag | Short | Type | Default | Description |
 |------|-------|------|---------|-------------|
-| `--strong` | `-m` | string | config | Strong model for Pass 1 (`provider/model`) |
+| `--strong` | | string | config | Strong model for Pass 1 (`provider/model`) |
 | `--fast` | | string | config | Fast model for Pass 2 (`provider/model`) |
 
 #### Rate Limiting
@@ -475,7 +475,7 @@ extropy estimate -s ai-adoption --strong openai/gpt-5 --fast openai/gpt-5-mini -
 | Flag | Short | Type | Default | Description |
 |------|-------|------|---------|-------------|
 | `--scenario` | `-s` | string | auto | Scenario name |
-| `--strong` | `-m` | string | config | Strong model for Pass 1 |
+| `--strong` | | string | config | Strong model for Pass 1 |
 | `--fast` | | string | config | Fast model for Pass 2 |
 | `--threshold` | `-t` | int | 3 | Multi-touch threshold |
 | `--verbose` | `-v` | flag | false | Show per-timestep breakdown |
@@ -515,7 +515,7 @@ Supports both flows for scenario validation:
 - **New flow**: `meta.base_population` references versioned population (e.g., `population.v2`)
 - **Legacy flow**: `meta.population_spec` + `meta.study_db` file paths
 
-**Exit codes:** 0 = Success (valid spec), 1 = Validation error (invalid spec), 2 = File not found
+**Exit codes:** 0 = Success (valid spec), 1 = Validation error (invalid spec), 3 = File not found
 
 ---
 

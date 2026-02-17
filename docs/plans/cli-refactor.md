@@ -337,7 +337,7 @@ extropy simulate -s ai-adoption
 # → saves results to study.db
 
 # With options
-extropy simulate -s ai-adoption --seed 42 --strong gpt-4o --fast gpt-4o-mini
+extropy simulate -s ai-adoption --seed 42 --strong openai/gpt-5 --fast openai/gpt-5-mini
 ```
 
 **Flags:**
