@@ -11,8 +11,9 @@ from rich.logging import RichHandler
 from rich.spinner import Spinner
 from rich.text import Text
 
-from ..app import app, console
-from ..utils import format_elapsed
+from ..app import app, console, is_agent_mode, get_study_path
+from ..study import StudyContext, detect_study_folder, parse_version_ref
+from ..utils import format_elapsed, Output, ExitCode
 
 
 _BAR_WIDTH = 20
@@ -99,9 +100,15 @@ def setup_logging(verbose: bool = False, debug: bool = False):
 
 @app.command("simulate")
 def simulate_command(
-    scenario_file: Path = typer.Argument(..., help="Scenario spec YAML file"),
-    output: Path = typer.Option(..., "--output", "-o", help="Output results directory"),
-    study_db: Path = typer.Option(..., "--study-db", help="Canonical study DB file"),
+    scenario: str = typer.Option(
+        None,
+        "--scenario",
+        "-s",
+        help="Scenario name (auto-selects if only one exists)",
+    ),
+    output: Path | None = typer.Option(
+        None, "--output", "-o", help="Output results directory (defaults to results/)"
+    ),
     strong: str = typer.Option(
         "",
         "--strong",
@@ -180,12 +187,6 @@ def simulate_command(
     seed: int | None = typer.Option(
         None, "--seed", help="Random seed for reproducibility"
     ),
-    persona_config: Path | None = typer.Option(
-        None,
-        "--persona",
-        "-p",
-        help="PersonaConfig YAML for embodied personas (auto-detected if not specified)",
-    ),
     merged_pass: bool = typer.Option(
         False,
         "--merged-pass",
@@ -209,36 +210,105 @@ def simulate_command(
     Executes the scenario against its population, simulating opinion
     dynamics with agent reasoning, network propagation, and state evolution.
 
-    If a persona config exists at <population>.persona.yaml, it will be
-    used automatically for embodied first-person personas.
+    Prerequisites:
+        - Population spec must exist
+        - Scenario spec must exist
+        - Persona config must exist for the scenario
+        - Agents must be sampled
+        - Network must be generated
 
     Example:
-        extropy simulate scenario.yaml --study-db study.db -o results/
-        extropy simulate scenario.yaml --study-db study.db -o results/ --model gpt-5-nano --seed 42
-        extropy simulate scenario.yaml --study-db study.db -o results/ --persona population.persona.yaml
+        extropy simulate -s ai-adoption
+        extropy simulate -s ai-adoption --seed 42 --strong gpt-4o
+        extropy simulate -s ai-adoption --fidelity high
     """
     from ...simulation import run_simulation
     from ...simulation.progress import SimulationProgress
+    from ...core.models.scenario import ScenarioSpec
+    from ...storage import open_study_db
     from ...utils import ResourceGovernor
 
     # Setup logging based on verbosity
     setup_logging(verbose=verbose, debug=debug)
 
+    agent_mode = is_agent_mode()
+    out = Output(console, json_mode=agent_mode)
     start_time = time.time()
-    console.print()
 
-    # Validate input file
-    if not scenario_file.exists():
-        console.print(f"[red]✗[/red] Scenario file not found: {scenario_file}")
+    if not agent_mode:
+        console.print()
+
+    # Resolve study context
+    study_path = get_study_path()
+    detected = detect_study_folder(study_path)
+    if detected is None:
+        out.error(
+            "Not in a study folder. Use --study to specify or run from a study folder.",
+            exit_code=ExitCode.FILE_NOT_FOUND,
+        )
+        raise typer.Exit(out.finish())
+
+    study_ctx = StudyContext(detected)
+    study_db = study_ctx.db_path
+
+    # Resolve scenario
+    scenario_name, scenario_version = _resolve_scenario(study_ctx, scenario, out)
+
+    # Pre-flight: Check agents exist for this scenario
+    with open_study_db(study_db) as db:
+        agent_count = db.get_agent_count_by_scenario(scenario_name)
+    if agent_count == 0:
+        out.error(
+            f"No agents found for scenario: {scenario_name}. "
+            f"Run 'extropy sample -s {scenario_name} -n COUNT' first.",
+            exit_code=ExitCode.FILE_NOT_FOUND,
+        )
+        raise typer.Exit(out.finish())
+
+    # Pre-flight: Check network exists for this scenario
+    with open_study_db(study_db) as db:
+        edge_count = db.get_network_edge_count_by_scenario(scenario_name)
+    if edge_count == 0:
+        out.error(
+            f"No network found for scenario: {scenario_name}. "
+            f"Run 'extropy network -s {scenario_name}' first.",
+            exit_code=ExitCode.FILE_NOT_FOUND,
+        )
+        raise typer.Exit(out.finish())
+
+    # Pre-flight: Check persona config exists
+    try:
+        persona_path = study_ctx.get_persona_path(scenario_name)
+    except FileNotFoundError:
+        out.error(
+            f"No persona config found for scenario: {scenario_name}. "
+            f"Run 'extropy persona -s {scenario_name}' first.",
+            exit_code=ExitCode.FILE_NOT_FOUND,
+        )
+        raise typer.Exit(out.finish())
+
+    # Load scenario spec
+    try:
+        scenario_path = study_ctx.get_scenario_path(scenario_name, scenario_version)
+        scenario_spec = ScenarioSpec.from_yaml(scenario_path)
+    except FileNotFoundError:
+        out.error(f"Scenario not found: {scenario_name}")
         raise typer.Exit(1)
-    if not study_db.exists():
-        console.print(f"[red]✗[/red] Study DB not found: {study_db}")
+    except Exception as e:
+        out.error(f"Failed to load scenario: {e}")
         raise typer.Exit(1)
+
+    # Resolve output directory
+    if output is None:
+        output = study_ctx.root / "results" / scenario_name
+    output.mkdir(parents=True, exist_ok=True)
+
+    # Validate flags
     if resume and not run_id:
-        console.print("[red]✗[/red] --resume requires --run-id")
+        out.error("--resume requires --run-id")
         raise typer.Exit(1)
     if resource_mode not in {"auto", "manual"}:
-        console.print("[red]✗[/red] --resource-mode must be 'auto' or 'manual'")
+        out.error("--resource-mode must be 'auto' or 'manual'")
         raise typer.Exit(1)
 
     from ...config import get_config
@@ -252,23 +322,31 @@ def simulate_command(
     effective_rpm = rpm_override or config.simulation.rpm_override
     effective_tpm = tpm_override or config.simulation.tpm_override
 
-    console.print(f"Simulating: [bold]{scenario_file}[/bold]")
-    console.print(f"Output: {output}")
-    console.print(f"Study DB: {study_db}")
-    console.print(
-        f"Strong: {effective_strong} | Fast: {effective_fast} | Threshold: {threshold}"
+    out.success(
+        f"Loaded scenario: [bold]{scenario_name}[/bold] "
+        f"({agent_count} agents, {edge_count} edges)",
+        scenario=scenario_name,
+        agent_count=agent_count,
+        edge_count=edge_count,
     )
-    if effective_tier:
-        console.print(f"Rate tier: {effective_tier}")
-    if effective_rpm or effective_tpm:
-        parts = []
-        if effective_rpm:
-            parts.append(f"RPM: {effective_rpm}")
-        if effective_tpm:
-            parts.append(f"TPM: {effective_tpm}")
-        console.print(f"Rate overrides: {' | '.join(parts)}")
-    if seed:
-        console.print(f"Seed: {seed}")
+
+    if not agent_mode:
+        console.print(f"Output: {output}")
+        console.print(
+            f"Strong: {effective_strong} | Fast: {effective_fast} | Threshold: {threshold}"
+        )
+        if effective_tier:
+            console.print(f"Rate tier: {effective_tier}")
+        if effective_rpm or effective_tpm:
+            parts = []
+            if effective_rpm:
+                parts.append(f"RPM: {effective_rpm}")
+            if effective_tpm:
+                parts.append(f"TPM: {effective_tpm}")
+            console.print(f"Rate overrides: {' | '.join(parts)}")
+        if seed:
+            console.print(f"Seed: {seed}")
+
     governor = ResourceGovernor(
         resource_mode=resource_mode,
         safe_auto_workers=safe_auto_workers,
@@ -279,15 +357,16 @@ def simulate_command(
         min_chunk_size=8,
         max_chunk_size=2000,
     )
-    if resource_mode == "auto":
+    if resource_mode == "auto" and not agent_mode:
         snap = governor.snapshot()
         console.print(
             f"Resources(auto): cpu={snap.cpu_count} mem={snap.total_memory_gb:.1f}GB "
             f"budget={snap.memory_budget_gb:.1f}GB chunk={tuned_chunk_size}"
         )
-    if verbose or debug:
+    if (verbose or debug) and not agent_mode:
         console.print(f"Logging: {'DEBUG' if debug else 'VERBOSE'}")
-    console.print()
+    if not agent_mode:
+        console.print()
 
     # Shared progress state for live display
     progress_state = SimulationProgress()
@@ -300,13 +379,18 @@ def simulate_command(
         current_progress[1] = max_timesteps
         current_progress[2] = status
 
+    # Run simulation
+    simulation_error = None
+    result = None
+
     # When verbose/debug, run synchronously to see all logs clearly
     if verbose or debug:
-        console.print("[dim]Running with verbose logging (no spinner)...[/dim]")
-        console.print()
+        if not agent_mode:
+            console.print("[dim]Running with verbose logging (no spinner)...[/dim]")
+            console.print()
         try:
             result = run_simulation(
-                scenario_path=scenario_file,
+                scenario_path=scenario_path,
                 output_dir=output,
                 study_db_path=study_db,
                 strong=effective_strong,
@@ -314,7 +398,7 @@ def simulate_command(
                 multi_touch_threshold=threshold,
                 random_seed=seed,
                 on_progress=on_progress,
-                persona_config_path=persona_config,
+                persona_config_path=persona_path,
                 rate_tier=effective_tier,
                 rpm_override=effective_rpm,
                 tpm_override=effective_tpm,
@@ -330,21 +414,47 @@ def simulate_command(
                 merged_pass=merged_pass,
                 fidelity=fidelity,
             )
-            simulation_error = None
         except Exception as e:
             simulation_error = e
-            result = None
+    elif agent_mode:
+        # Agent mode: no spinner, just run
+        try:
+            result = run_simulation(
+                scenario_path=scenario_path,
+                output_dir=output,
+                study_db_path=study_db,
+                strong=effective_strong,
+                fast=effective_fast,
+                multi_touch_threshold=threshold,
+                random_seed=seed,
+                on_progress=on_progress if not quiet else None,
+                persona_config_path=persona_path,
+                rate_tier=effective_tier,
+                rpm_override=effective_rpm,
+                tpm_override=effective_tpm,
+                chunk_size=tuned_chunk_size,
+                progress=progress_state,
+                run_id=run_id,
+                resume=resume,
+                checkpoint_every_chunks=checkpoint_every_chunks,
+                retention_lite=retention_lite,
+                writer_queue_size=writer_queue_size,
+                db_write_batch_size=db_write_batch_size,
+                resource_governor=governor,
+                merged_pass=merged_pass,
+                fidelity=fidelity,
+            )
+        except Exception as e:
+            simulation_error = e
     else:
         # Run simulation in thread with live display
         simulation_done = Event()
-        simulation_error = None
-        result = None
 
         def do_simulation():
             nonlocal result, simulation_error
             try:
                 result = run_simulation(
-                    scenario_path=scenario_file,
+                    scenario_path=scenario_path,
                     output_dir=output,
                     study_db_path=study_db,
                     strong=effective_strong,
@@ -352,7 +462,7 @@ def simulate_command(
                     multi_touch_threshold=threshold,
                     random_seed=seed,
                     on_progress=on_progress if not quiet else None,
-                    persona_config_path=persona_config,
+                    persona_config_path=persona_path,
                     rate_tier=effective_tier,
                     rpm_override=effective_rpm,
                     tpm_override=effective_tpm,
@@ -392,38 +502,82 @@ def simulate_command(
             simulation_done.wait()
 
     if simulation_error:
-        console.print(f"[red]✗[/red] Simulation failed: {simulation_error}")
+        out.error(f"Simulation failed: {simulation_error}")
         raise typer.Exit(1)
 
     elapsed = time.time() - start_time
 
-    # Display summary
-    console.print()
-    console.print("═" * 60)
-    console.print("[green]✓[/green] Simulation complete")
-    console.print("═" * 60)
-    console.print()
-
-    console.print(
-        f"Duration: {format_elapsed(elapsed)} ({result.total_timesteps} timesteps)"
-    )
+    # Set data for JSON output
+    out.set_data("scenario_id", scenario_name)
+    out.set_data("study_db", str(study_db))
+    out.set_data("output_dir", str(output))
+    out.set_data("total_time_seconds", elapsed)
+    out.set_data("total_timesteps", result.total_timesteps)
+    out.set_data("total_reasoning_calls", result.total_reasoning_calls)
+    out.set_data("final_exposure_rate", result.final_exposure_rate)
     if result.stopped_reason:
-        console.print(f"Stopped: {result.stopped_reason}")
-    console.print(f"Reasoning calls: {result.total_reasoning_calls:,}")
-    console.print(f"Final exposure rate: {result.final_exposure_rate:.1%}")
-    console.print()
-
-    # Show outcome distributions
+        out.set_data("stopped_reason", result.stopped_reason)
     if result.outcome_distributions:
-        console.print("[bold]Outcome Distributions:[/bold]")
-        for outcome_name, distribution in result.outcome_distributions.items():
-            if isinstance(distribution, dict):
-                if "mean" in distribution:
-                    console.print(f"  {outcome_name}: mean={distribution['mean']:.2f}")
-                else:
-                    top_3 = sorted(distribution.items(), key=lambda x: -x[1])[:3]
-                    dist_str = ", ".join(f"{k}:{v:.1%}" for k, v in top_3)
-                    console.print(f"  {outcome_name}: {dist_str}")
+        out.set_data("outcome_distributions", result.outcome_distributions)
+
+    # Display summary
+    if not agent_mode:
+        console.print()
+        console.print("═" * 60)
+        console.print("[green]✓[/green] Simulation complete")
+        console.print("═" * 60)
         console.print()
 
-    console.print(f"Results saved to: [bold]{output}[/bold]")
+        console.print(
+            f"Duration: {format_elapsed(elapsed)} ({result.total_timesteps} timesteps)"
+        )
+        if result.stopped_reason:
+            console.print(f"Stopped: {result.stopped_reason}")
+        console.print(f"Reasoning calls: {result.total_reasoning_calls:,}")
+        console.print(f"Final exposure rate: {result.final_exposure_rate:.1%}")
+        console.print()
+
+        # Show outcome distributions
+        if result.outcome_distributions:
+            console.print("[bold]Outcome Distributions:[/bold]")
+            for outcome_name, distribution in result.outcome_distributions.items():
+                if isinstance(distribution, dict):
+                    if "mean" in distribution:
+                        console.print(f"  {outcome_name}: mean={distribution['mean']:.2f}")
+                    else:
+                        top_3 = sorted(distribution.items(), key=lambda x: -x[1])[:3]
+                        dist_str = ", ".join(f"{k}:{v:.1%}" for k, v in top_3)
+                        console.print(f"  {outcome_name}: {dist_str}")
+            console.print()
+
+        console.print(f"Results saved to: [bold]{output}[/bold]")
+
+    raise typer.Exit(out.finish())
+
+
+def _resolve_scenario(
+    study_ctx: StudyContext, scenario_ref: str | None, out: Output
+) -> tuple[str, int | None]:
+    """Resolve scenario name and version."""
+    scenarios = study_ctx.list_scenarios()
+
+    if not scenarios:
+        out.error("No scenarios found. Run 'extropy scenario' first.")
+        raise typer.Exit(1)
+
+    if scenario_ref is None:
+        if len(scenarios) == 1:
+            return scenarios[0], None
+        else:
+            out.error(
+                f"Multiple scenarios found: {', '.join(scenarios)}. "
+                "Use -s to specify which one."
+            )
+            raise typer.Exit(1)
+
+    name, version = parse_version_ref(scenario_ref)
+    if name not in scenarios:
+        out.error(f"Scenario not found: {name}")
+        raise typer.Exit(1)
+
+    return name, version
