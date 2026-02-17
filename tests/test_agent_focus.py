@@ -26,6 +26,7 @@ from extropy.core.models.population import (
     GroundingInfo,
     NormalDistribution,
     CategoricalDistribution,
+    HouseholdConfig,
 )
 from extropy.population.sampler.core import sample_population, _classify_agent_focus
 
@@ -129,6 +130,176 @@ def _make_household_spec(
             ),
         ],
         sampling_order=["age", "gender", "state", "race_ethnicity", "education_level"],
+    )
+
+
+def _make_dependent_promotion_spec(size: int = 220) -> PopulationSpec:
+    """Create a spec that stress-tests promoted dependent realism."""
+    return PopulationSpec(
+        meta=SpecMeta(
+            description="Dependent promotion realism spec",
+            size=size,
+            agent_focus="families",
+            household_config=HouseholdConfig(min_agent_age=5),
+        ),
+        grounding=GroundingSummary(
+            overall="medium",
+            sources_count=1,
+            strong_count=2,
+            medium_count=2,
+            low_count=1,
+        ),
+        attributes=[
+            AttributeSpec(
+                name="age",
+                type="int",
+                category="universal",
+                description="Age",
+                scope="individual",
+                sampling=SamplingConfig(
+                    strategy="independent",
+                    distribution=NormalDistribution(
+                        type="normal", mean=37, std=10, min=22, max=55
+                    ),
+                ),
+                grounding=GroundingInfo(level="strong", method="researched"),
+            ),
+            AttributeSpec(
+                name="gender",
+                type="categorical",
+                category="universal",
+                description="Gender",
+                scope="individual",
+                sampling=SamplingConfig(
+                    strategy="independent",
+                    distribution=CategoricalDistribution(
+                        type="categorical",
+                        options=["male", "female"],
+                        weights=[0.5, 0.5],
+                    ),
+                ),
+                grounding=GroundingInfo(level="strong", method="researched"),
+            ),
+            AttributeSpec(
+                name="state",
+                type="categorical",
+                category="universal",
+                description="State",
+                scope="household",
+                sampling=SamplingConfig(
+                    strategy="independent",
+                    distribution=CategoricalDistribution(
+                        type="categorical",
+                        options=["CA", "TX", "NY"],
+                        weights=[0.4, 0.3, 0.3],
+                    ),
+                ),
+                grounding=GroundingInfo(level="medium", method="estimated"),
+            ),
+            AttributeSpec(
+                name="race_ethnicity",
+                type="categorical",
+                category="universal",
+                description="Race/ethnicity",
+                scope="individual",
+                sampling=SamplingConfig(
+                    strategy="independent",
+                    distribution=CategoricalDistribution(
+                        type="categorical",
+                        options=["white", "black", "hispanic", "asian"],
+                        weights=[0.6, 0.13, 0.18, 0.09],
+                    ),
+                ),
+                grounding=GroundingInfo(level="medium", method="researched"),
+            ),
+            AttributeSpec(
+                name="education_level",
+                type="categorical",
+                category="universal",
+                description="Education level",
+                scope="individual",
+                sampling=SamplingConfig(
+                    strategy="independent",
+                    distribution=CategoricalDistribution(
+                        type="categorical",
+                        options=["high_school", "bachelors", "masters", "doctorate"],
+                        weights=[0.4, 0.3, 0.2, 0.1],
+                    ),
+                ),
+                grounding=GroundingInfo(level="medium", method="researched"),
+            ),
+            AttributeSpec(
+                name="employment_status",
+                type="categorical",
+                category="context_specific",
+                description="Employment status",
+                scope="individual",
+                sampling=SamplingConfig(
+                    strategy="independent",
+                    distribution=CategoricalDistribution(
+                        type="categorical",
+                        options=["full_time", "self_employed", "part_time", "student", "none"],
+                        weights=[0.45, 0.2, 0.15, 0.1, 0.1],
+                    ),
+                ),
+                grounding=GroundingInfo(level="medium", method="estimated"),
+            ),
+            AttributeSpec(
+                name="occupation",
+                type="categorical",
+                category="context_specific",
+                description="Occupation",
+                scope="individual",
+                sampling=SamplingConfig(
+                    strategy="independent",
+                    distribution=CategoricalDistribution(
+                        type="categorical",
+                        options=["management", "professional", "student", "none"],
+                        weights=[0.35, 0.35, 0.15, 0.15],
+                    ),
+                ),
+                grounding=GroundingInfo(level="medium", method="estimated"),
+            ),
+            AttributeSpec(
+                name="personal_income",
+                type="int",
+                category="context_specific",
+                description="Personal income",
+                scope="individual",
+                sampling=SamplingConfig(
+                    strategy="independent",
+                    distribution=NormalDistribution(
+                        type="normal", mean=70000, std=20000, min=10000, max=200000
+                    ),
+                ),
+                grounding=GroundingInfo(level="medium", method="estimated"),
+            ),
+            AttributeSpec(
+                name="household_income",
+                type="int",
+                category="context_specific",
+                description="Household income",
+                scope="household",
+                sampling=SamplingConfig(
+                    strategy="independent",
+                    distribution=NormalDistribution(
+                        type="normal", mean=110000, std=30000, min=25000, max=300000
+                    ),
+                ),
+                grounding=GroundingInfo(level="medium", method="estimated"),
+            ),
+        ],
+        sampling_order=[
+            "age",
+            "gender",
+            "state",
+            "race_ethnicity",
+            "education_level",
+            "employment_status",
+            "occupation",
+            "personal_income",
+            "household_income",
+        ],
     )
 
 
@@ -520,10 +691,10 @@ class TestAgentFocusMetadata:
             assert spec.meta.agent_focus == focus
 
 
-class TestPromotedDependentNames:
-    def test_promoted_dependents_preserve_household_names(self):
-        spec = _make_household_spec(size=240, agent_focus="families")
-        result = sample_population(spec, count=240, seed=42)
+class TestPromotedDependentQuality:
+    def test_promoted_dependents_keep_household_names(self):
+        spec = _make_dependent_promotion_spec()
+        result = sample_population(spec, count=220, seed=42)
 
         promoted = [
             a
@@ -535,11 +706,50 @@ class TestPromotedDependentNames:
         households = {h["id"]: h for h in getattr(result, "_households", [])}
         for dep in promoted:
             first_name = dep.get("first_name")
-            assert first_name, "Promoted dependents must have first_name"
+            assert first_name, "Promoted dependents must always have first_name"
 
             hh = households.get(dep["household_id"])
             assert hh is not None
             dependent_names = {d.get("name") for d in hh.get("dependent_data", [])}
             assert first_name in dependent_names, (
-                "Promoted dependent names should stay aligned with generated dependent records"
+                "Promoted dependent name should come from generated household dependents"
             )
+
+    def test_promoted_minors_have_age_appropriate_fields(self):
+        spec = _make_dependent_promotion_spec()
+        result = sample_population(spec, count=220, seed=42)
+
+        minors = [
+            a
+            for a in result.agents
+            if a.get("household_role", "").startswith("dependent_")
+            and isinstance(a.get("age"), int)
+            and a["age"] < 18
+        ]
+        assert minors, "Expected promoted minor dependents"
+
+        allowed_employment = {"student", "part_time", "none", "unemployed", "not_employed"}
+        allowed_occupation = {"student", "none", "unemployed"}
+
+        for kid in minors:
+            assert kid.get("education_level") in {
+                "high_school",
+                "middle_school",
+                "elementary",
+                "home",
+            }, "Minor education should be capped at age-appropriate levels"
+            assert kid.get("employment_status") in allowed_employment
+            assert kid.get("occupation") in allowed_occupation
+            assert kid.get("personal_income") == 0
+
+            parent = next(
+                (
+                    a
+                    for a in result.agents
+                    if a.get("household_id") == kid["household_id"]
+                    and a.get("household_role") == "adult_primary"
+                ),
+                None,
+            )
+            assert parent is not None
+            assert kid.get("household_income") == parent.get("household_income")
