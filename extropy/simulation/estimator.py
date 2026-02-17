@@ -9,7 +9,7 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from ..core.models import ScenarioSpec, PopulationSpec
-from ..core.pricing import ModelPricing, get_pricing
+from ..core.cost.pricing import ModelPricing, get_pricing
 from ..utils.eval_safe import eval_condition, ConditionError
 
 

@@ -1902,7 +1902,7 @@ class SimulationEngine:
         Returns:
             Cost dictionary with token counts and estimated USD.
         """
-        from ..core.pricing import get_pricing
+        from ..core.cost.pricing import get_pricing
         from ..config import get_config
 
         cost: dict[str, Any] = {

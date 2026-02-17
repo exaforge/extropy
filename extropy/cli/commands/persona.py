@@ -72,6 +72,9 @@ def persona_command(
         generate_persona_config,
         PersonaConfigError,
     )
+    from ...core.cost.tracker import CostTracker
+
+    CostTracker.get().set_context(command="persona")
 
     start_time = time.time()
     agent_mode = is_agent_mode()

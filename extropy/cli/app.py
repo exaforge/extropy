@@ -147,6 +147,13 @@ def main_callback(
     _show_cost = show
     if _show_cost:
         atexit.register(_print_cost_footer)
+        # Pre-warm pricing cache so cost display uses fresh prices
+        try:
+            from ..core.cost.pricing import _ensure_cache_loaded
+
+            _ensure_cache_loaded()
+        except Exception:
+            pass  # Best-effort; falls through to hardcoded fallback
 
 
 # Import commands to register them with the app

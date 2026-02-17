@@ -227,6 +227,9 @@ def simulate_command(
     from ...core.models.scenario import ScenarioSpec
     from ...storage import open_study_db
     from ...utils import ResourceGovernor
+    from ...core.cost.tracker import CostTracker
+
+    CostTracker.get().set_context(command="simulate")
 
     # Setup logging based on verbosity
     setup_logging(verbose=verbose, debug=debug)

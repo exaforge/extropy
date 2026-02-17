@@ -236,8 +236,10 @@ class CostTracker:
         """One-line cost summary for CLI footer.
 
         Returns:
-            Formatted string like "$0.38 · openai/gpt-5 · 8 calls · 87k in / 12k out",
-            or None if no calls were recorded.
+            Formatted string with per-model breakdown when multiple models are used:
+            Single model:  "$0.38 · gpt-5 · 8 calls · 87k in / 12k out"
+            Multi model:   "$0.42 — gpt-5: $0.35 (4 calls, 52k in / 8k out) · gpt-5-mini: $0.07 (4 calls, 35k in / 4k out)"
+            Or None if no calls were recorded.
         """
         with self._lock:
             total_calls = sum(mu.calls for mu in self._by_model.values())
@@ -246,31 +248,49 @@ class CostTracker:
 
             total_in = sum(mu.input_tokens for mu in self._by_model.values())
             total_out = sum(mu.output_tokens for mu in self._by_model.values())
-            models = list(self._by_model.keys())
+            model_snapshot = dict(self._by_model)
 
         cost = self.total_cost()
 
-        parts = []
+        if len(model_snapshot) == 1:
+            # Single model: compact format
+            parts = []
+            if cost is not None:
+                parts.append(f"${cost:.2f}")
+            else:
+                parts.append("cost unknown")
+            parts.append(list(model_snapshot.keys())[0])
+            parts.append(f"{total_calls} call{'s' if total_calls != 1 else ''}")
+            parts.append(
+                f"{_format_tokens(total_in)} in / {_format_tokens(total_out)} out"
+            )
+            return " · ".join(parts)
 
-        # Cost
-        if cost is not None:
-            parts.append(f"${cost:.2f}")
-        else:
-            parts.append("cost unknown")
+        # Multiple models: per-model breakdown
+        total_str = f"${cost:.2f}" if cost is not None else "cost unknown"
+        model_parts = []
+        for model, mu in model_snapshot.items():
+            pricing = get_pricing(model)
+            if pricing:
+                model_cost = (
+                    mu.input_tokens * pricing.input_per_mtok
+                    + mu.output_tokens * pricing.output_per_mtok
+                ) / 1_000_000
+                model_parts.append(
+                    f"{model}: ${model_cost:.2f} "
+                    f"({mu.calls} call{'s' if mu.calls != 1 else ''}, "
+                    f"{_format_tokens(mu.input_tokens)} in / "
+                    f"{_format_tokens(mu.output_tokens)} out)"
+                )
+            else:
+                model_parts.append(
+                    f"{model}: ? "
+                    f"({mu.calls} call{'s' if mu.calls != 1 else ''}, "
+                    f"{_format_tokens(mu.input_tokens)} in / "
+                    f"{_format_tokens(mu.output_tokens)} out)"
+                )
 
-        # Model(s)
-        if len(models) == 1:
-            parts.append(models[0])
-        elif len(models) > 1:
-            parts.append(f"{len(models)} models")
-
-        # Call count
-        parts.append(f"{total_calls} call{'s' if total_calls != 1 else ''}")
-
-        # Token counts
-        parts.append(f"{_format_tokens(total_in)} in / {_format_tokens(total_out)} out")
-
-        return " · ".join(parts)
+        return f"{total_str} \u2014 " + " \u00b7 ".join(model_parts)
 
     @property
     def has_records(self) -> bool:

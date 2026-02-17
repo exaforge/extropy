@@ -69,6 +69,10 @@ def scenario_command(
         # Rebase existing scenario to new population
         extropy scenario ai-adoption --rebase @pop:v2
     """
+    from ...core.cost.tracker import CostTracker
+
+    CostTracker.get().set_context(command="scenario")
+
     start_time = time.time()
     agent_mode = is_agent_mode()
     out = Output(console, json_mode=agent_mode)
