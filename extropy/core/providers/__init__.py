@@ -178,14 +178,16 @@ def get_pipeline_provider() -> LLMProvider:
     return _get_or_create_provider(provider, f"pipeline:{provider}")
 
 
-def get_simulation_provider() -> LLMProvider:
-    """Get the cached provider for simulation phase (agent reasoning).
+def get_simulation_provider(model_string: str | None = None) -> LLMProvider:
+    """Get a cached provider for simulation phase async calls.
 
-    Uses the provider from the resolved simulation strong model.
+    Args:
+        model_string: Optional explicit model string ("provider/model"). If
+            omitted, uses resolved simulation strong model from config.
     """
     config = get_config()
-    strong_model = config.resolve_sim_strong()
-    provider, _ = parse_model_string(strong_model)
+    resolved_model = model_string or config.resolve_sim_strong()
+    provider, _ = parse_model_string(resolved_model)
     return _get_or_create_provider(provider, f"simulation:{provider}")
 
 

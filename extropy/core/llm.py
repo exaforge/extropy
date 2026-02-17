@@ -11,7 +11,7 @@ to the correct backend; the model name is passed through.
 Configure via `extropy config` CLI or programmatically via extropy.config.configure().
 """
 
-from .providers import get_provider
+from .providers import get_provider, get_simulation_provider
 from .providers.base import TokenUsage, ValidatorCallback, RetryCallback
 from ..config import get_config, parse_model_string
 
@@ -80,12 +80,10 @@ async def simple_call_async(
     Model is passed explicitly from simulation caller (provider/model format).
     Returns (structured_data, token_usage) tuple.
     """
-    if model:
-        provider, model_name = _resolve_provider_and_model(model)
-    else:
-        config = get_config()
-        model_string = config.resolve_sim_strong()
-        provider, model_name = _resolve_provider_and_model(model_string)
+    config = get_config()
+    model_string = model or config.resolve_sim_strong()
+    _, model_name = parse_model_string(model_string)
+    provider = get_simulation_provider(model_string)
     return await provider.simple_call_async(
         prompt=prompt,
         response_schema=response_schema,
