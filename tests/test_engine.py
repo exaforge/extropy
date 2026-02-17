@@ -18,6 +18,7 @@ from extropy.core.models import (
     ExposureRecord,
     ReasoningResponse,
     SimulationRunConfig,
+    TimestepSummary,
 )
 from extropy.simulation.progress import SimulationProgress
 from extropy.utils.resource_governor import ResourceGovernor
@@ -1555,6 +1556,91 @@ class TestTokenAccumulation:
         assert cost["total_output_tokens"] == 600_000
         assert cost["estimated_usd"] is not None
         assert cost["estimated_usd"] > 0
+
+    def test_macro_summary_renders_trend_and_saturation(
+        self,
+        minimal_scenario,
+        simple_agents,
+        simple_network,
+        minimal_pop_spec,
+        tmp_path,
+    ):
+        config = SimulationRunConfig(
+            scenario_path="test.yaml",
+            output_dir=str(tmp_path / "output"),
+        )
+        engine = SimulationEngine(
+            scenario=minimal_scenario,
+            population_spec=minimal_pop_spec,
+            agents=simple_agents,
+            network=simple_network,
+            config=config,
+        )
+
+        prev_summary = TimestepSummary(
+            timestep=1,
+            exposure_rate=0.92,
+            position_distribution={"oppose": 60, "support": 30, "monitor": 10},
+            average_sentiment=-0.2,
+            shares_occurred=4,
+            state_changes=5,
+        )
+        summary = TimestepSummary(
+            timestep=2,
+            exposure_rate=1.0,
+            position_distribution={"oppose": 72, "support": 20, "monitor": 8},
+            average_sentiment=-0.5,
+            shares_occurred=10,
+            state_changes=6,
+        )
+
+        text = engine._render_macro_summary(summary, prev_summary=prev_summary)
+
+        assert "Most people are choosing 'oppose'" in text
+        assert "Support for 'oppose' is growing" in text
+        assert "getting more negative" in text
+        assert "Almost everyone has heard about this now" in text
+        assert "More people are actively taking action" in text
+
+    def test_macro_summary_renders_waiting_momentum(
+        self,
+        minimal_scenario,
+        simple_agents,
+        simple_network,
+        minimal_pop_spec,
+        tmp_path,
+    ):
+        config = SimulationRunConfig(
+            scenario_path="test.yaml",
+            output_dir=str(tmp_path / "output"),
+        )
+        engine = SimulationEngine(
+            scenario=minimal_scenario,
+            population_spec=minimal_pop_spec,
+            agents=simple_agents,
+            network=simple_network,
+            config=config,
+        )
+
+        prev_summary = TimestepSummary(
+            timestep=0,
+            exposure_rate=0.3,
+            position_distribution={"wait": 3},
+            average_sentiment=0.0,
+            shares_occurred=0,
+            state_changes=1,
+        )
+        summary = TimestepSummary(
+            timestep=1,
+            exposure_rate=0.5,
+            position_distribution={"wait": 3},
+            average_sentiment=0.0,
+            shares_occurred=0,
+            state_changes=0,
+        )
+
+        text = engine._render_macro_summary(summary, prev_summary=prev_summary)
+        assert "Most people are still watching and waiting" in text
 
     def test_cost_unknown_model_returns_null_usd(
         self,
