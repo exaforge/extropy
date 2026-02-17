@@ -215,24 +215,150 @@ extropy simulate -s congestion-tax --seed 42
 
 ## extropy results
 
-Display simulation results.
+Display simulation results. Supports subcommands for different views.
 
 ```bash
-extropy results
-extropy results --segment income
-extropy results --timeline
-extropy results --agent agent_042
+extropy results                              # summary (default)
+extropy results timeline                     # timestep progression
+extropy results segment income               # segment by attribute
+extropy results agent agent_042              # single agent details
 ```
 
-### Options
+### Shared Options
 
 | Flag | Short | Type | Default | Description |
 |------|-------|------|---------|-------------|
 | `--scenario` | `-s` | string | | Filter by scenario |
 | `--run-id` | | string | latest | Simulation run ID |
-| `--segment` | | string | | Attribute to segment results by |
-| `--timeline` | `-t` | flag | false | Show timeline view |
-| `--agent` | `-a` | string | | Show single agent details |
+
+### extropy results summary
+
+Default view when no subcommand is given. Shows agent count, awareness rate, and position distribution.
+
+### extropy results timeline
+
+Shows timestep-by-timestep progression including new exposures, agents reasoned, shares, and exposure rate.
+
+### extropy results segment \<attribute\>
+
+| Argument | Type | Required | Description |
+|----------|------|----------|-------------|
+| `attribute` | string | yes | Agent attribute to segment by |
+
+### extropy results agent \<agent_id\>
+
+| Argument | Type | Required | Description |
+|----------|------|----------|-------------|
+| `agent_id` | string | yes | Agent ID to inspect |
+
+**Output modes:**
+- Human mode (`cli.mode: human`): Rich terminal formatting
+- Agent mode (`cli.mode: agent`): Structured JSON output
+
+---
+
+## extropy query
+
+Query and export raw data from the study database.
+
+### extropy query agents
+
+Dump agent attributes.
+
+```bash
+extropy query agents                         # print to stdout
+extropy query agents --to agents.jsonl       # write JSONL file
+```
+
+| Flag | Type | Default | Description |
+|------|------|---------|-------------|
+| `--to` | path | | Write JSONL to file |
+| `--population-id` | string | `default` | Population ID |
+
+### extropy query edges
+
+Dump network edges.
+
+```bash
+extropy query edges --to edges.jsonl
+```
+
+| Flag | Type | Default | Description |
+|------|------|---------|-------------|
+| `--to` | path | | Write JSONL to file |
+| `--network-id` | string | `default` | Network ID |
+
+### extropy query states
+
+Dump agent states for a simulation run.
+
+```bash
+extropy query states --to states.jsonl
+```
+
+| Flag | Type | Default | Description |
+|------|------|---------|-------------|
+| `--run-id` | string | latest | Simulation run ID |
+| `--to` | path | | Write JSONL to file |
+
+### extropy query summary
+
+Show study entity counts (agents, edges, simulation states, timesteps, events).
+
+```bash
+extropy query summary
+```
+
+| Flag | Type | Default | Description |
+|------|------|---------|-------------|
+| `--run-id` | string | latest | Simulation run ID |
+| `--population-id` | string | `default` | Population ID |
+| `--network-id` | string | `default` | Network ID |
+
+### extropy query network
+
+Show network statistics (edge count, average weight, top-degree nodes).
+
+```bash
+extropy query network
+```
+
+| Flag | Type | Default | Description |
+|------|------|---------|-------------|
+| `--network-id` | string | `default` | Network ID |
+| `--top` | int | 10 | Number of top-degree nodes to show |
+
+### extropy query network-status \<network-run-id\>
+
+Show network calibration progress.
+
+```bash
+extropy query network-status <run-id>
+```
+
+| Argument | Type | Required | Description |
+|----------|------|----------|-------------|
+| `network_run_id` | string | yes | Network generation run ID |
+
+### extropy query sql \<sql\>
+
+Run a read-only SQL query against the study database.
+
+```bash
+extropy query sql "SELECT count(*) FROM agents"
+extropy query sql "SELECT * FROM agent_states LIMIT 10" --format json
+```
+
+| Argument | Type | Required | Description |
+|----------|------|----------|-------------|
+| `sql` | string | yes | Read-only SQL statement |
+
+| Flag | Type | Default | Description |
+|------|------|---------|-------------|
+| `--limit` | int | 1000 | Max rows to return |
+| `--format` | string | `table` | Output format: `table`, `json`, `jsonl` |
+
+Only `SELECT`, `WITH`, and `EXPLAIN` queries are allowed.
 
 ---
 
@@ -317,152 +443,6 @@ extropy config reset
 | `show_cost` | Show cost tracking |
 | `providers.<name>.base_url` | Custom provider base URL |
 | `providers.<name>.api_key_env` | Custom provider API key env var |
-
----
-
-## extropy export
-
-Export data from the study database.
-
-### extropy export agents
-
-```bash
-extropy export agents --to agents.jsonl
-```
-
-| Flag | Type | Default | Description |
-|------|------|---------|-------------|
-| `--study-db` | path | `./study.db` | Study database path |
-| `--scenario` | string | | Filter by scenario ID |
-| `--to` | path | required | Output file path |
-
-### extropy export edges
-
-```bash
-extropy export edges --to edges.jsonl
-```
-
-| Flag | Type | Default | Description |
-|------|------|---------|-------------|
-| `--study-db` | path | `./study.db` | Study database path |
-| `--scenario` | string | | Filter by scenario ID |
-| `--to` | path | required | Output file path |
-
-### extropy export states
-
-```bash
-extropy export states --to states.jsonl
-```
-
-| Flag | Type | Default | Description |
-|------|------|---------|-------------|
-| `--study-db` | path | `./study.db` | Study database path |
-| `--run-id` | string | latest | Simulation run ID |
-| `--to` | path | required | Output file path |
-
----
-
-## extropy inspect
-
-Inspect study database entities.
-
-### extropy inspect summary
-
-```bash
-extropy inspect summary
-```
-
-| Flag | Type | Default | Description |
-|------|------|---------|-------------|
-| `--study-db` | path | `./study.db` | Study database path |
-| `--scenario` | string | | Filter by scenario |
-| `--run-id` | string | latest | Simulation run ID |
-
-### extropy inspect agent
-
-```bash
-extropy inspect agent --agent-id agent_042
-```
-
-| Flag | Type | Default | Description |
-|------|------|---------|-------------|
-| `--study-db` | path | `./study.db` | Study database path |
-| `--agent-id` | string | required | Agent ID |
-| `--run-id` | string | latest | Simulation run ID |
-
-### extropy inspect network
-
-```bash
-extropy inspect network
-```
-
-| Flag | Type | Default | Description |
-|------|------|---------|-------------|
-| `--study-db` | path | `./study.db` | Study database path |
-| `--scenario` | string | | Filter by scenario |
-| `--top` | int | 10 | Number of top-degree nodes to show |
-
-### extropy inspect network-status
-
-```bash
-extropy inspect network-status --network-run-id <id>
-```
-
-| Flag | Type | Default | Description |
-|------|------|---------|-------------|
-| `--study-db` | path | `./study.db` | Study database path |
-| `--network-run-id` | string | required | Network generation run ID |
-
----
-
-## extropy query
-
-Run read-only SQL queries against the study database.
-
-```bash
-extropy query sql --sql "SELECT * FROM agents LIMIT 10"
-```
-
-### extropy query sql
-
-| Flag | Type | Default | Description |
-|------|------|---------|-------------|
-| `--study-db` | path | `./study.db` | Study database path |
-| `--sql` | string | required | Read-only SQL statement |
-| `--limit` | int | 1000 | Max rows to return |
-| `--format` | string | `table` | Output format: `table`, `json`, `jsonl` |
-
-Only `SELECT`, `WITH`, and `EXPLAIN` queries are allowed.
-
----
-
-## extropy report
-
-Generate JSON reports from simulation data.
-
-### extropy report run
-
-```bash
-extropy report run -o report.json
-```
-
-| Flag | Short | Type | Default | Description |
-|------|-------|------|---------|-------------|
-| `--study-db` | | path | `./study.db` | Study database path |
-| `--run-id` | | string | latest | Simulation run ID |
-| `--output` | `-o` | path | required | Output JSON file |
-
-### extropy report network
-
-```bash
-extropy report network -o network-report.json
-```
-
-| Flag | Short | Type | Default | Description |
-|------|-------|------|---------|-------------|
-| `--study-db` | | path | `./study.db` | Study database path |
-| `--scenario` | | string | | Filter by scenario |
-| `--output` | `-o` | path | required | Output JSON file |
 
 ---
 
@@ -562,9 +542,16 @@ extropy simulate -s congestion-tax --seed 42
 
 # View results
 extropy results
-extropy results --segment income
-extropy results --timeline
-extropy results --agent agent_042
+extropy results timeline
+extropy results segment income
+extropy results agent agent_042
+
+# Query data
+extropy query agents --to agents.jsonl
+extropy query states --to states.jsonl
+extropy query summary
+extropy query network
+extropy query sql "SELECT count(*) FROM agents"
 
 # Validate
 extropy validate population.v1.yaml

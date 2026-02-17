@@ -168,10 +168,6 @@ from .commands import (  # noqa: E402, F401
     estimate,
     results,
     config_cmd,
-    inspect,
     query,
-    report,
-    export,
     chat,
-    migrate,
 )

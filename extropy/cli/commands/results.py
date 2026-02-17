@@ -11,9 +11,16 @@ from ..app import app, console, is_agent_mode, get_study_path
 from ..study import StudyContext, detect_study_folder, parse_version_ref
 from ..utils import Output, ExitCode
 
+results_app = typer.Typer(
+    help="Display simulation results",
+    invoke_without_command=True,
+)
+app.add_typer(results_app, name="results")
 
-@app.command("results")
-def results_command(
+
+@results_app.callback()
+def results_callback(
+    ctx: typer.Context,
     scenario: str = typer.Option(
         None,
         "--scenario",
@@ -21,26 +28,16 @@ def results_command(
         help="Scenario name (uses latest run if not specified)",
     ),
     run_id: str | None = typer.Option(None, "--run-id", help="Simulation run id"),
-    segment: str | None = typer.Option(
-        None, "--segment", help="Attribute to segment by"
-    ),
-    timeline: bool = typer.Option(False, "--timeline", "-t", help="Show timeline view"),
-    agent: str | None = typer.Option(
-        None, "--agent", "-a", help="Show single agent details"
-    ),
 ):
-    """
-    Display simulation results from the canonical study DB.
+    """Display simulation results from the canonical study DB.
 
-    By default shows results from the latest simulation run. Use -s to
-    filter by scenario, or --run-id for a specific run.
+    By default shows a summary of the latest simulation run. Use subcommands
+    for different views:
 
-    Examples:
-        extropy results                     # latest run
-        extropy results -s ai-adoption      # latest run for scenario
-        extropy results --timeline          # show timestep progression
-        extropy results --segment age_group # segment by attribute
-        extropy results --agent agent_123   # show single agent
+        extropy results                          # summary (default)
+        extropy results timeline                 # timestep progression
+        extropy results segment age_group        # segment by attribute
+        extropy results agent agent_123          # single agent details
     """
     agent_mode = is_agent_mode()
     out = Output(console, json_mode=agent_mode)
@@ -84,7 +81,6 @@ def results_command(
                 (run_id,),
             )
         elif scenario_name:
-            # Find latest run for this scenario
             cur.execute(
                 """
                 SELECT run_id, status, started_at, completed_at, stopped_reason, population_id
@@ -126,21 +122,104 @@ def results_command(
         out.set_data("started_at", run_row["started_at"])
         out.set_data("completed_at", run_row["completed_at"])
 
-        if agent:
-            _display_agent(conn, resolved_run_id, population_id, agent, out, agent_mode)
+        # Store shared state for subcommands
+        ctx.ensure_object(dict)
+        ctx.obj["conn"] = conn
+        ctx.obj["run_id"] = resolved_run_id
+        ctx.obj["population_id"] = population_id
+        ctx.obj["out"] = out
+        ctx.obj["agent_mode"] = agent_mode
+        ctx.obj["_keep_conn"] = True
+
+        # If no subcommand invoked, show summary
+        if ctx.invoked_subcommand is None:
+            _display_summary(conn, resolved_run_id, out, agent_mode)
+            ctx.obj["_keep_conn"] = False
+            conn.close()
             raise typer.Exit(out.finish())
-        if segment:
-            _display_segment(
-                conn, resolved_run_id, population_id, segment, out, agent_mode
-            )
-            raise typer.Exit(out.finish())
-        if timeline:
-            _display_timeline(conn, resolved_run_id, out, agent_mode)
-            raise typer.Exit(out.finish())
-        _display_summary(conn, resolved_run_id, out, agent_mode)
-        raise typer.Exit(out.finish())
+    except typer.Exit:
+        if not ctx.obj.get("_keep_conn", False):
+            conn.close()
+        raise
+    except Exception:
+        conn.close()
+        raise
+
+
+@results_app.command("summary")
+def results_summary(ctx: typer.Context):
+    """Show result summary (default view)."""
+    obj = ctx.ensure_object(dict)
+    conn, run_id, out, agent_mode = (
+        obj["conn"],
+        obj["run_id"],
+        obj["out"],
+        obj["agent_mode"],
+    )
+    try:
+        _display_summary(conn, run_id, out, agent_mode)
     finally:
         conn.close()
+    raise typer.Exit(out.finish())
+
+
+@results_app.command("timeline")
+def results_timeline(ctx: typer.Context):
+    """Show timestep progression."""
+    obj = ctx.ensure_object(dict)
+    conn, run_id, out, agent_mode = (
+        obj["conn"],
+        obj["run_id"],
+        obj["out"],
+        obj["agent_mode"],
+    )
+    try:
+        _display_timeline(conn, run_id, out, agent_mode)
+    finally:
+        conn.close()
+    raise typer.Exit(out.finish())
+
+
+@results_app.command("segment")
+def results_segment(
+    ctx: typer.Context,
+    attribute: str = typer.Argument(..., help="Attribute to segment by"),
+):
+    """Segment results by an agent attribute."""
+    obj = ctx.ensure_object(dict)
+    conn, run_id, population_id, out, agent_mode = (
+        obj["conn"],
+        obj["run_id"],
+        obj["population_id"],
+        obj["out"],
+        obj["agent_mode"],
+    )
+    try:
+        _display_segment(conn, run_id, population_id, attribute, out, agent_mode)
+    finally:
+        conn.close()
+    raise typer.Exit(out.finish())
+
+
+@results_app.command("agent")
+def results_agent(
+    ctx: typer.Context,
+    agent_id: str = typer.Argument(..., help="Agent ID to inspect"),
+):
+    """Show single agent details."""
+    obj = ctx.ensure_object(dict)
+    conn, run_id, population_id, out, agent_mode = (
+        obj["conn"],
+        obj["run_id"],
+        obj["population_id"],
+        obj["out"],
+        obj["agent_mode"],
+    )
+    try:
+        _display_agent(conn, run_id, population_id, agent_id, out, agent_mode)
+    finally:
+        conn.close()
+    raise typer.Exit(out.finish())
 
 
 def _resolve_scenario(

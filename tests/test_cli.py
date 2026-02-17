@@ -1,6 +1,7 @@
 """CLI smoke tests using typer's CliRunner."""
 
 import json
+import os
 import sqlite3
 from pathlib import Path
 
@@ -177,8 +178,6 @@ phrasings:
         return study_dir
 
     def test_network_command_supports_fast_mode_and_checkpoint(self, tmp_path):
-        import os
-
         study_dir = self._setup_study_with_scenario(tmp_path)
         study_db = study_dir / "study.db"
         config_path = tmp_path / "network-config.yaml"
@@ -227,8 +226,6 @@ phrasings:
 
     def test_network_requires_study_folder(self, tmp_path):
         """Network command requires being in a study folder."""
-        import os
-
         old_cwd = os.getcwd()
         try:
             os.chdir(tmp_path)
@@ -241,8 +238,6 @@ phrasings:
 
     def test_network_requires_agents(self, tmp_path):
         """Network command requires sampled agents for the scenario."""
-        import os
-
         # Create study folder with scenario but no agents
         study_dir = tmp_path
         study_db = study_dir / "study.db"
@@ -298,8 +293,6 @@ simulation:
             os.chdir(old_cwd)
 
     def test_network_checkpoint_must_match_study_db(self, tmp_path):
-        import os
-
         study_dir = self._setup_study_with_scenario(tmp_path)
         other_db = tmp_path / "other.db"
 
@@ -383,8 +376,6 @@ def _seed_run_scoped_state(study_db: Path) -> None:
 
 class TestRunScopedCliReads:
     def test_results_defaults_to_latest_run(self, tmp_path):
-        import os
-
         study_db = tmp_path / "study.db"
         _seed_run_scoped_state(study_db)
 
@@ -399,9 +390,50 @@ class TestRunScopedCliReads:
         finally:
             os.chdir(old_cwd)
 
+    def test_results_timeline_subcommand(self, tmp_path):
+        study_db = tmp_path / "study.db"
+        _seed_run_scoped_state(study_db)
 
-class TestInspectNetworkStatus:
-    def test_inspect_network_status(self, tmp_path):
+        old_cwd = os.getcwd()
+        try:
+            os.chdir(tmp_path)
+            result = runner.invoke(app, ["results", "timeline"])
+            assert result.exit_code == 0
+            assert "Timeline" in result.output
+            assert "t=" in result.output
+        finally:
+            os.chdir(old_cwd)
+
+    def test_results_segment_subcommand(self, tmp_path):
+        study_db = tmp_path / "study.db"
+        _seed_run_scoped_state(study_db)
+
+        old_cwd = os.getcwd()
+        try:
+            os.chdir(tmp_path)
+            result = runner.invoke(app, ["results", "segment", "team"])
+            assert result.exit_code == 0
+            assert "Segment by team" in result.output
+        finally:
+            os.chdir(old_cwd)
+
+    def test_results_agent_subcommand(self, tmp_path):
+        study_db = tmp_path / "study.db"
+        _seed_run_scoped_state(study_db)
+
+        old_cwd = os.getcwd()
+        try:
+            os.chdir(tmp_path)
+            result = runner.invoke(app, ["results", "agent", "a0"])
+            assert result.exit_code == 0
+            assert "Agent a0" in result.output
+            assert "new_pos" in result.output
+        finally:
+            os.chdir(old_cwd)
+
+
+class TestQueryCommand:
+    def test_query_network_status(self, tmp_path):
         study_db = tmp_path / "study.db"
         with open_study_db(study_db) as db:
             db.upsert_network_generation_status(
@@ -430,30 +462,31 @@ class TestInspectNetworkStatus:
                 score=1.23,
                 accepted=False,
             )
-        result = runner.invoke(
-            app,
-            [
-                "inspect",
-                "network-status",
-                "--study-db",
-                str(study_db),
-                "--network-run-id",
-                "run_123",
-            ],
-        )
-        assert result.exit_code == 0
-        assert "Network Run Status" in result.output
-        assert "run_123" in result.output
+        old_cwd = os.getcwd()
+        try:
+            os.chdir(tmp_path)
+            result = runner.invoke(app, ["query", "network-status", "run_123"])
+            assert result.exit_code == 0
+            assert "Network Run Status" in result.output
+            assert "run_123" in result.output
+        finally:
+            os.chdir(old_cwd)
 
-    def test_export_states_defaults_to_latest_run(self, tmp_path):
+    def test_query_states_defaults_to_latest_run(self, tmp_path):
         study_db = tmp_path / "study.db"
         out = tmp_path / "states.jsonl"
         _seed_run_scoped_state(study_db)
 
-        result = runner.invoke(
-            app,
-            ["export", "states", "--study-db", str(study_db), "--to", str(out)],
-        )
+        old_cwd = os.getcwd()
+        try:
+            os.chdir(tmp_path)
+            result = runner.invoke(
+                app,
+                ["query", "states", "--to", str(out)],
+            )
+        finally:
+            os.chdir(old_cwd)
+
         assert result.exit_code == 0
         rows = [
             json.loads(line) for line in out.read_text(encoding="utf-8").splitlines()
@@ -462,6 +495,60 @@ class TestInspectNetworkStatus:
         assert rows[0]["run_id"] == "run_new"
         assert rows[0]["private_position"] == "new_pos"
 
+    def test_query_agents(self, tmp_path):
+        study_db = tmp_path / "study.db"
+        _seed_run_scoped_state(study_db)
+
+        old_cwd = os.getcwd()
+        try:
+            os.chdir(tmp_path)
+            out = tmp_path / "agents.jsonl"
+            result = runner.invoke(
+                app,
+                ["query", "agents", "--to", str(out)],
+            )
+        finally:
+            os.chdir(old_cwd)
+
+        assert result.exit_code == 0
+        rows = [
+            json.loads(line) for line in out.read_text(encoding="utf-8").splitlines()
+        ]
+        assert len(rows) == 2
+
+    def test_query_summary(self, tmp_path):
+        study_db = tmp_path / "study.db"
+        _seed_run_scoped_state(study_db)
+
+        old_cwd = os.getcwd()
+        try:
+            os.chdir(tmp_path)
+            result = runner.invoke(app, ["query", "summary"])
+        finally:
+            os.chdir(old_cwd)
+
+        assert result.exit_code == 0
+        assert "Study Summary" in result.output
+
+    def test_query_sql_positional(self, tmp_path):
+        study_db = tmp_path / "study.db"
+        _seed_run_scoped_state(study_db)
+
+        old_cwd = os.getcwd()
+        try:
+            os.chdir(tmp_path)
+            result = runner.invoke(
+                app,
+                ["query", "sql", "SELECT count(*) AS cnt FROM agents"],
+            )
+        finally:
+            os.chdir(old_cwd)
+
+        assert result.exit_code == 0
+        assert "cnt" in result.output
+
+
+class TestChatCommand:
     def test_chat_ask_reads_state_for_requested_run(self, tmp_path, monkeypatch):
         study_db = tmp_path / "study.db"
         _seed_run_scoped_state(study_db)
@@ -631,8 +718,6 @@ class TestInspectNetworkStatus:
 class TestPersonaCommand:
     def test_persona_requires_study_folder(self, tmp_path):
         """Persona command requires being in a study folder."""
-        import os
-
         # Run from a non-study folder
         old_cwd = os.getcwd()
         try:
@@ -646,8 +731,6 @@ class TestPersonaCommand:
 
     def test_persona_requires_scenario(self, tmp_path):
         """Persona command requires a scenario to exist."""
-        import os
-
         # Create a study folder without scenarios
         study_db = tmp_path / "study.db"
         with open_study_db(study_db):
