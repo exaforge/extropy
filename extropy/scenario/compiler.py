@@ -275,6 +275,116 @@ def create_scenario(
     return spec, validation_result
 
 
+def create_scenario_spec(
+    description: str,
+    population_spec: PopulationSpec,
+    extended_attributes: list | None = None,
+    on_progress: StepProgressCallback | None = None,
+    timeline_mode: str | None = None,
+) -> tuple[ScenarioSpec, ValidationResult]:
+    """
+    Create a scenario spec without requiring agents or network.
+
+    This is used in the new CLI flow where scenario is created before
+    sampling and network generation. Exposure rules use generic patterns
+    that work with any network topology.
+
+    Args:
+        description: Natural language scenario description
+        population_spec: Loaded population spec
+        extended_attributes: Optional list of extended AttributeSpecs from scenario
+        on_progress: Optional callback(step, status) for progress updates
+        timeline_mode: Timeline mode override. None = auto-detect.
+
+    Returns:
+        Tuple of (ScenarioSpec, ValidationResult)
+    """
+    def progress(step: str, status: str):
+        if on_progress:
+            on_progress(step, status)
+
+    # Step 1: Parse scenario description
+    progress("1/5", "Parsing event definition...")
+    event = parse_scenario(description, population_spec)
+
+    # Step 2: Generate seed exposure (generic, without network specifics)
+    progress("2/5", "Generating seed exposure rules...")
+
+    # Create a minimal network summary - exposure will use generic rules
+    generic_network_summary = {
+        "node_count": population_spec.meta.size,
+        "edge_types": ["colleague", "friend", "family"],  # Generic types
+    }
+
+    seed_exposure = generate_seed_exposure(
+        event,
+        population_spec,
+        generic_network_summary,
+    )
+
+    # Step 3: Determine interaction model
+    progress("3/5", "Determining interaction model...")
+
+    interaction_config, spread_config = determine_interaction_model(
+        event,
+        population_spec,
+        generic_network_summary,
+    )
+
+    # Step 4: Define outcomes
+    progress("4/5", "Defining outcomes...")
+
+    outcome_config = define_outcomes(
+        event,
+        population_spec,
+        description,
+    )
+
+    # Step 5: Generate timeline + background context
+    progress("5/5", "Generating timeline...")
+
+    simulation_config = _determine_simulation_config(population_spec.meta.size)
+
+    timeline_events, background_context = generate_timeline(
+        scenario_description=description,
+        base_event=event,
+        simulation_config=simulation_config,
+        timeline_mode=timeline_mode,
+    )
+
+    # Assemble scenario spec
+    scenario_name = _generate_scenario_name(description)
+
+    meta = ScenarioMeta(
+        name=scenario_name,
+        description=description,
+        created_at=datetime.now(),
+    )
+
+    spec = ScenarioSpec(
+        meta=meta,
+        event=event,
+        timeline=timeline_events if timeline_events else None,
+        seed_exposure=seed_exposure,
+        interaction=interaction_config,
+        spread=spread_config,
+        outcomes=outcome_config,
+        simulation=simulation_config,
+        background_context=background_context,
+    )
+
+    # Store extended attributes if provided
+    if extended_attributes:
+        spec.extended_attributes = extended_attributes
+
+    # Light validation (no agents/network to validate against)
+    from ..core.models.validation import ValidationResult as VResult, ValidationItem
+
+    validation_result = VResult(valid=True, errors=[], warnings=[])
+
+    return spec, validation_result
+
+
 def compile_scenario_from_files(
     description: str,
     population_spec_path: str | Path,

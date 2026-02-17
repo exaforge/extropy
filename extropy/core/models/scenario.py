@@ -309,8 +309,18 @@ class ScenarioMeta(BaseModel):
 
     name: str = Field(description="Short identifier for the scenario")
     description: str = Field(description="Full scenario description")
-    population_spec: str = Field(description="Path to population YAML")
-    study_db: str = Field(description="Path to canonical study DB")
+    # New flow: base_population is the versioned reference (e.g. "population.v2")
+    base_population: str | None = Field(
+        default=None,
+        description="Base population version reference (e.g. population.v2)",
+    )
+    # Legacy fields for backwards compatibility
+    population_spec: str | None = Field(
+        default=None, description="Path to population YAML (legacy)"
+    )
+    study_db: str | None = Field(
+        default=None, description="Path to canonical study DB (legacy)"
+    )
     population_id: str = Field(
         default="default", description="Population ID in study DB"
     )
