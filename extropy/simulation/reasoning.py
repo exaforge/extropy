@@ -395,7 +395,8 @@ def build_pass1_prompt(
                 "Consider whether your thinking has changed given new information.",
                 "- Has your view changed? If so, own it. If not, say so plainly.",
                 "- What are you actually going to DO about this now?",
-                "- What would you bluntly tell a friend?",
+                "- What do you ACTUALLY think privately? (Raw, unfiltered)",
+                "- What would you actually SAY to others? (May differ from private thought)",
                 "",
                 "Commit to where you stand now. Don't hedge just because your opinion changed.",
             ]
@@ -409,7 +410,8 @@ def build_pass1_prompt(
                 "Think honestly about how this lands for someone in your exact situation.",
                 "- What is your immediate, honest reaction? Don't overthink it.",
                 "- What are you actually going to DO about this? Decide now.",
-                "- What would you bluntly tell a friend?",
+                "- What do you ACTUALLY think privately? (Raw, unfiltered — might not say this out loud)",
+                "- What would you actually SAY to others? (May be softer or more diplomatic)",
                 "",
                 "Commit to a clear position. Saying 'I'll wait and see' is only valid if you genuinely don't care.",
             ]
@@ -430,9 +432,13 @@ def build_pass1_schema() -> dict[str, Any]:
                 "type": "string",
                 "description": "Your honest first reaction in 2-4 sentences. Be direct — state what you think, not both sides.",
             },
+            "private_thought": {
+                "type": "string",
+                "description": "What you ACTUALLY think but might not say out loud. Raw, unfiltered, honest. Can differ from public_statement.",
+            },
             "public_statement": {
                 "type": "string",
-                "description": "What would you bluntly tell a friend about this? One strong sentence.",
+                "description": "What you would actually SAY to others. May be softer, more diplomatic, or different from your private thought.",
             },
             "reasoning_summary": {
                 "type": "string",
@@ -478,6 +484,7 @@ def build_pass1_schema() -> dict[str, Any]:
         },
         "required": [
             "reasoning",
+            "private_thought",
             "public_statement",
             "reasoning_summary",
             "sentiment",

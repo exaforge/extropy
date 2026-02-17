@@ -1042,7 +1042,7 @@ Audit of current codebase against the issues above.
 | **11. Pass 2 Context** | NOT NEEDED | Pass 1 reasoning already contains enough demographic context. Adding demographics to Pass 2 would be redundant. |
 | **12. Channel → Experience** | PARTIAL | Experience templates exist but not demographic-variant. |
 | **13. Agent Interactions** | DONE | Full conversation system in `conversation.py`. Social posts recorded. Available contacts rendered. |
-| **14. Cognitive Architecture** | PARTIAL | Emotional trajectory + conviction self-awareness + repetition detection implemented. Semantic memory consolidation not done. |
+| **14. Cognitive Architecture** | PARTIAL | Emotional trajectory + conviction self-awareness + repetition detection + private/public thought separation implemented. Semantic memory consolidation (14d) and context-triggered recall (14f) not done. |
 
 ### Summary
 
