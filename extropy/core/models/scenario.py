@@ -18,7 +18,7 @@ import re
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Literal
+from typing import TYPE_CHECKING, Literal
 
 import yaml
 from pydantic import BaseModel, Field

@@ -147,7 +147,7 @@ def sample_command(
         f"Loaded scenario: [bold]{scenario_name}[/bold] "
         f"({len(merged_attributes)} attributes: {len(pop_spec.attributes)} base + {len(extended_attrs)} extended)",
         scenario=scenario_name,
-        base_population=base_pop_ref,
+        base_population=f"{pop_name}.v{pop_version}",
         attribute_count=len(merged_attributes),
         agent_count=count,
     )
