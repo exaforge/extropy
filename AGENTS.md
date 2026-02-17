@@ -130,8 +130,7 @@ extropy chat list --study-db study.db --json
 extropy config set cli.mode agent           # Enable agent mode globally
 extropy config set models.strong openai/gpt-5
 extropy config set models.fast openai/gpt-5-mini
-extropy config set simulation.strong anthropic/claude-sonnet-4.5
-extropy config set simulation.fast anthropic/claude-haiku-4.5
+extropy config set simulation.strong anthropic/claude-sonnet-4-6
 extropy config set show_cost true           # Show cost after commands
 ```
 

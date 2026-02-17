@@ -143,7 +143,7 @@ Condensed operational reference. Everything you need to run simulations.
      ```bash
      extropy config set cli.mode agent
      extropy config set models.strong openai/gpt-5
-     extropy config set simulation.strong anthropic/claude-sonnet-4.5
+     extropy config set simulation.strong anthropic/claude-sonnet-4-6
      ```
 
 ---
