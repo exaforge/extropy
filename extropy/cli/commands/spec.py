@@ -19,7 +19,13 @@ from ...population.spec_builder import (
 )
 from ...utils import topological_sort, CircularDependencyError
 from ...population.validator import validate_spec
-from ..app import app, console, is_agent_mode
+from ..app import app, console, is_agent_mode, get_study_path
+from ..study import (
+    StudyContext,
+    create_study_folder,
+    detect_study_folder,
+    generate_study_name,
+)
 from ..display import (
     display_discovered_attributes,
     display_spec_summary,
@@ -33,7 +39,13 @@ def spec_command(
     description: str = typer.Argument(
         ..., help="Natural language population description"
     ),
-    output: Path = typer.Option(..., "--output", "-o", help="Output YAML file path"),
+    output: Path | None = typer.Option(
+        None,
+        "--output",
+        "-o",
+        help="Output path: study folder (creates population.v1.yaml), "
+        "folder/name (creates folder/name.v1.yaml), or explicit .yaml file",
+    ),
     yes: bool = typer.Option(False, "--yes", "-y", help="Skip confirmation prompts"),
     answers: str | None = typer.Option(
         None,
@@ -52,9 +64,19 @@ def spec_command(
     Discovers attributes, researches distributions, and saves
     a complete PopulationSpec to YAML.
 
-    Example:
-        extropy spec "500 German surgeons" -o surgeons.yaml
-        extropy spec "1000 Indian smallholder farmers" -o farmers.yaml
+    Examples:
+        # Create new study folder with population.v1.yaml
+        extropy spec "500 German surgeons" -o surgeons
+
+        # Create with custom name (surgeons/hospital-staff.v1.yaml)
+        extropy spec "German surgeons" -o surgeons/hospital-staff
+
+        # Iterate on existing (from within study folder)
+        cd surgeons && extropy spec "add income distribution"
+        # Creates population.v2.yaml
+
+        # Explicit file path
+        extropy spec "farmers" -o my-spec.yaml
     """
     start_time = time.time()
     agent_mode = is_agent_mode()
@@ -62,6 +84,46 @@ def spec_command(
 
     if not agent_mode:
         console.print()
+
+    # Resolve output path with auto-versioning
+    study_ctx: StudyContext | None = None
+    resolved_output: Path
+    pop_name = "population"
+
+    if output is None:
+        # No -o: must be in a study folder, auto-version
+        study_path = get_study_path()
+        detected = detect_study_folder(study_path)
+        if detected is None:
+            out.error(
+                "Not in a study folder. Use -o to specify output path or create a new study.",
+                exit_code=ExitCode.FILE_NOT_FOUND,
+            )
+            raise typer.Exit(out.finish())
+        study_ctx = StudyContext(detected)
+        next_ver = study_ctx.get_next_population_version(pop_name)
+        resolved_output = study_ctx.root / f"{pop_name}.v{next_ver}.yaml"
+        if not agent_mode:
+            console.print(f"[dim]Auto-versioning to {resolved_output.name}[/dim]")
+    elif output.suffix in (".yaml", ".yml"):
+        # Explicit YAML file path
+        resolved_output = output
+    elif "/" in str(output) or output.parent != Path("."):
+        # folder/name format: create study folder with custom population name
+        study_root = output.parent
+        pop_name = output.name
+        study_ctx = create_study_folder(study_root)
+        next_ver = study_ctx.get_next_population_version(pop_name)
+        resolved_output = study_ctx.root / f"{pop_name}.v{next_ver}.yaml"
+        if not agent_mode:
+            console.print(f"[dim]Created study folder: {study_ctx.root}[/dim]")
+    else:
+        # Just a name: create study folder with that name
+        study_ctx = create_study_folder(output)
+        next_ver = study_ctx.get_next_population_version(pop_name)
+        resolved_output = study_ctx.root / f"{pop_name}.v{next_ver}.yaml"
+        if not agent_mode:
+            console.print(f"[dim]Created study folder: {study_ctx.root}[/dim]")
 
     # Parse answers if provided
     parsed_answers: dict[str, str | int] = {}
@@ -135,7 +197,7 @@ def spec_command(
         if agent_mode:
             # Agent mode: return structured questions with exit code 2
             resume_cmd = (
-                f"extropy spec \"{description}\" -o {output} --answers '{{...}}'"
+                f"extropy spec \"{description}\" -o {resolved_output} --answers '{{...}}'"
             )
             out.needs_clarification(
                 questions=questions,
@@ -385,7 +447,7 @@ def spec_command(
 
     if not display_validation_result(validation_result):
         # Save with .invalid.yaml suffix so work isn't lost
-        invalid_path = output.with_suffix(".invalid.yaml")
+        invalid_path = resolved_output.with_suffix(".invalid.yaml")
         population_spec.to_yaml(invalid_path)
         console.print()
         console.print(
@@ -414,23 +476,24 @@ def spec_command(
                 raise typer.Exit(0)
 
     # Save
-    population_spec.to_yaml(output)
+    population_spec.to_yaml(resolved_output)
     elapsed = time.time() - start_time
 
     if agent_mode:
         out.success(
             "Spec saved",
-            output=str(output),
+            output=str(resolved_output),
             size=size,
             geography=geography,
             agent_focus=agent_focus,
             attribute_count=len(population_spec.attributes),
             elapsed_seconds=elapsed,
+            study_folder=str(study_ctx.root) if study_ctx else None,
         )
         raise typer.Exit(out.finish())
     else:
         console.print()
         console.print("═" * 60)
-        console.print(f"[green]✓[/green] Spec saved to [bold]{output}[/bold]")
+        console.print(f"[green]✓[/green] Spec saved to [bold]{resolved_output}[/bold]")
         console.print(f"[dim]Total time: {format_elapsed(elapsed)}[/dim]")
         console.print("═" * 60)

@@ -422,7 +422,10 @@ class SpecMeta(BaseModel):
     """Metadata about the population spec."""
 
     description: str = Field(description="Original population description")
-    size: int = Field(description="Number of agents to generate")
+    size: int = Field(
+        default=1000,
+        description="Suggested number of agents (actual count determined by sample -n)",
+    )
     geography: str | None = Field(default=None, description="Geographic scope")
     agent_focus: str | None = Field(
         default=None,
