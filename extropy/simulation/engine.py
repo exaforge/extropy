@@ -926,7 +926,8 @@ class SimulationEngine:
                 public_conviction = max(0.0, min(1.0, public_conviction))
 
             public_will_share = response.will_share
-            public_position = response.position
+            candidate_public_position = response.public_position or response.position
+            public_position = candidate_public_position
 
             if (
                 old_public_conviction is not None
@@ -934,8 +935,8 @@ class SimulationEngine:
             ):
                 if (
                     old_public_position is not None
-                    and response.position is not None
-                    and old_public_position != response.position
+                    and candidate_public_position is not None
+                    and old_public_position != candidate_public_position
                 ):
                     new_conviction = (
                         public_conviction if public_conviction is not None else 0.0
@@ -943,7 +944,7 @@ class SimulationEngine:
                     if new_conviction < _MODERATE_CONVICTION:
                         logger.info(
                             f"[CONVICTION] Agent {agent_id}: public flip from {old_public_position} "
-                            f"to {response.position} rejected (old conviction={float_to_conviction(old_public_conviction)}, "
+                            f"to {candidate_public_position} rejected (old conviction={float_to_conviction(old_public_conviction)}, "
                             f"new conviction={float_to_conviction(public_conviction)})"
                         )
                         public_position = old_public_position
@@ -2041,6 +2042,7 @@ class SimulationEngine:
             "population_size": len(self.agents),
             "strong_model": self.config.strong,
             "fast_model": self.config.fast,
+            "fidelity": self.config.fidelity,
             "seed": self.seed,
             "multi_touch_threshold": self.config.multi_touch_threshold,
             "completed_at": datetime.now().isoformat(),

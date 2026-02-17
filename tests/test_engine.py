@@ -298,6 +298,45 @@ class TestFlipResistance:
         assert final_state.public_position == "reject"
         assert final_state.position == "adopt"
 
+    def test_public_position_prefers_explicit_public_field(
+        self,
+        minimal_scenario,
+        simple_agents,
+        simple_network,
+        minimal_pop_spec,
+        tmp_path,
+    ):
+        """Public state should use response.public_position when provided."""
+        config = SimulationRunConfig(
+            scenario_path="test.yaml",
+            output_dir=str(tmp_path / "output"),
+        )
+        engine = SimulationEngine(
+            scenario=minimal_scenario,
+            population_spec=minimal_pop_spec,
+            agents=simple_agents,
+            network=simple_network,
+            config=config,
+        )
+
+        old_state = AgentState(
+            agent_id="a0",
+            position="undecided",
+            conviction=CONVICTION_MAP[ConvictionLevel.VERY_UNCERTAIN],
+        )
+        response = _make_reasoning_response(
+            position="reject",
+            public_position="adopt",
+            conviction=CONVICTION_MAP[ConvictionLevel.MODERATE],
+        )
+
+        engine._process_reasoning_chunk(
+            timestep=1, results=[("a0", response)], old_states={"a0": old_state}
+        )
+
+        final_state = engine.state_manager.get_agent_state("a0")
+        assert final_state.public_position == "adopt"
+
 
 class TestConvictionGatedSharing:
     """Test that very_uncertain agents don't share."""
@@ -1547,6 +1586,7 @@ class TestTokenAccumulation:
             meta = json.load(f)
 
         assert "cost" in meta
+        assert meta["fidelity"] == config.fidelity
         cost = meta["cost"]
         assert cost["pivotal_input_tokens"] == 1_000_000
         assert cost["pivotal_output_tokens"] == 500_000
