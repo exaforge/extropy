@@ -198,7 +198,10 @@ class TestOpenAISimpleCall:
         complete_response.incomplete_details = None
 
         mock_client = MagicMock()
-        mock_client.responses.create.side_effect = [incomplete_response, complete_response]
+        mock_client.responses.create.side_effect = [
+            incomplete_response,
+            complete_response,
+        ]
         mock_get_client.return_value = mock_client
 
         result = provider.simple_call(
