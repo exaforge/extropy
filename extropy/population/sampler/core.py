@@ -172,27 +172,22 @@ class SamplingError(Exception):
     pass
 
 
-def _classify_agent_focus(
-    agent_focus: str | None,
+def _get_agent_focus_mode(
+    spec: PopulationSpec,
 ) -> Literal["all", "couples", "primary_only"]:
-    """Determine household agent scope from agent_focus metadata.
+    """Get household agent scope from spec metadata.
+
+    Uses the LLM-classified agent_focus_mode field set during spec creation.
+    Falls back to primary_only if not set.
 
     Returns:
         "all" — everyone in household is an agent (families, communities)
         "couples" — both partners are agents, kids are NPCs (retired couples, married couples)
         "primary_only" — only the primary adult is an agent, partner + kids are NPCs (surgeons, students, subscribers)
     """
-    if not agent_focus:
-        return "primary_only"
-
-    focus_lower = agent_focus.lower()
-
-    if any(kw in focus_lower for kw in ("famil", "household", "everyone")):
-        return "all"
-
-    if any(kw in focus_lower for kw in ("couple", "pair", "partners", "spouses")):
-        return "couples"
-
+    mode = spec.meta.agent_focus_mode
+    if mode in ("all", "couples", "primary_only"):
+        return mode
     return "primary_only"
 
 
@@ -469,7 +464,7 @@ def _sample_population_households(
     """
     if config is None:
         config = HouseholdConfig()
-    focus_mode = _classify_agent_focus(spec.meta.agent_focus)
+    focus_mode = _get_agent_focus_mode(spec)
 
     num_households = estimate_household_count(target_n, config)
     hh_id_width = len(str(num_households - 1))

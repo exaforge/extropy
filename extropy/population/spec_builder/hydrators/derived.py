@@ -153,6 +153,7 @@ Return JSON array with formula for each attribute."""
                 scope=original.scope,
                 semantic_type=original.semantic_type,
                 identity_type=original.identity_type,
+                display_format=original.display_format,
                 depends_on=original.depends_on,
                 sampling=sampling,
                 grounding=grounding,

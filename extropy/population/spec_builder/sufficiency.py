@@ -21,11 +21,16 @@ SUFFICIENCY_SCHEMA = {
         },
         "agent_focus": {
             "type": ["string", "null"],
-            "description": "Who should be simulated as active agents? This controls household sampling: "
-            "- 'families' or 'households' = everyone in household is simulated (use for communities, neighborhoods, social scenarios) "
-            "- 'couples' or 'partners' = both adults simulated, children are background NPCs "
-            "- specific roles like 'surgeons', 'subscribers' = one person per household, others are NPCs. "
-            "For community/neighborhood/social scenarios, prefer 'families'. null if unclear.",
+            "description": "Natural language description of who should be simulated (e.g., 'families', 'surgeons', 'couples'). Used for documentation.",
+        },
+        "agent_focus_mode": {
+            "type": "string",
+            "enum": ["primary_only", "couples", "all"],
+            "description": "Household agent scope: "
+            "'all' = everyone in household is an agent (use for families, communities, neighborhoods, social scenarios); "
+            "'couples' = both partners are agents, children are NPCs (use for couples studies, dual-income households); "
+            "'primary_only' = only one adult per household is an agent (use for professional studies like surgeons, subscribers). "
+            "Default to 'primary_only' unless the scenario clearly involves family/community dynamics.",
         },
         "clarifications_needed": {
             "type": "array",
@@ -68,6 +73,7 @@ SUFFICIENCY_SCHEMA = {
         "sufficient",
         "geography",
         "agent_focus",
+        "agent_focus_mode",
         "clarifications_needed",
         "questions",
     ],
@@ -165,6 +171,7 @@ Be lenient - if you can reasonably infer a specific population, mark as sufficie
         sufficient=data.get("sufficient", False),
         geography=data.get("geography"),
         agent_focus=data.get("agent_focus"),
+        agent_focus_mode=data.get("agent_focus_mode"),
         clarifications_needed=data.get("clarifications_needed", []),
         questions=questions,
     )
