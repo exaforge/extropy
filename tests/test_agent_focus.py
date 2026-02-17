@@ -1,21 +1,23 @@
 """Tests for agent_focus-aware sampling (Phase B2).
 
 Tests the classification of household members as agents vs NPCs based on
-the agent_focus field in SpecMeta.
+the agent_focus_mode field in SpecMeta.
 
 Agent focus determines who in a household becomes a full agent vs NPC:
-- "surgeons" / "students" / None → primary_only mode: only primary adult is agent
-- "retired couples" / "married couples" → couples mode: both partners are agents
-- "families" / "households" → all mode: everyone including kids are agents
+- "primary_only" mode: only primary adult is agent
+- "couples" mode: both partners are agents
+- "all" mode: everyone including kids are agents
 
 This test suite verifies:
-1. _classify_agent_focus() correctly maps agent_focus strings to modes
+1. _get_agent_focus_mode() correctly reads agent_focus_mode from spec
 2. Primary-only mode creates NPC partners (partner_npc field)
 3. Couples mode creates both partners as full agents with partner_id links
 4. Families mode promotes kids to full agents with household_role="dependent_*"
 5. NPC partners and kids have correlated demographics
 6. Household-scoped attributes are properly shared/inherited
 """
+
+from typing import Literal
 
 from extropy.core.models.population import (
     PopulationSpec,
@@ -27,11 +29,12 @@ from extropy.core.models.population import (
     NormalDistribution,
     CategoricalDistribution,
 )
-from extropy.population.sampler.core import sample_population, _classify_agent_focus
+from extropy.population.sampler.core import sample_population, _get_agent_focus_mode
 
 
 def _make_household_spec(
-    size: int = 100, agent_focus: str | None = None
+    size: int = 100,
+    agent_focus_mode: Literal["primary_only", "couples", "all"] | None = None,
 ) -> PopulationSpec:
     """Create a minimal spec with household-scoped attributes.
 
@@ -39,7 +42,8 @@ def _make_household_spec(
     """
     return PopulationSpec(
         meta=SpecMeta(
-            description="Test household spec", size=size, agent_focus=agent_focus
+            description="Test household spec",
+            agent_focus_mode=agent_focus_mode,
         ),
         grounding=GroundingSummary(
             overall="medium",
@@ -132,56 +136,28 @@ def _make_household_spec(
     )
 
 
-class TestClassifyAgentFocus:
-    """Test the _classify_agent_focus classification logic."""
+class TestGetAgentFocusMode:
+    """Test the _get_agent_focus_mode reads agent_focus_mode from spec."""
 
     def test_none_defaults_to_primary_only(self):
-        assert _classify_agent_focus(None) == "primary_only"
+        spec = _make_household_spec(agent_focus_mode=None)
+        assert _get_agent_focus_mode(spec) == "primary_only"
 
-    def test_empty_string_defaults_to_primary_only(self):
-        assert _classify_agent_focus("") == "primary_only"
+    def test_primary_only_mode(self):
+        spec = _make_household_spec(agent_focus_mode="primary_only")
+        assert _get_agent_focus_mode(spec) == "primary_only"
 
-    def test_surgeons_is_primary_only(self):
-        assert _classify_agent_focus("surgeons") == "primary_only"
+    def test_couples_mode(self):
+        spec = _make_household_spec(agent_focus_mode="couples")
+        assert _get_agent_focus_mode(spec) == "couples"
 
-    def test_students_is_primary_only(self):
-        assert _classify_agent_focus("high school students") == "primary_only"
-
-    def test_subscribers_is_primary_only(self):
-        assert _classify_agent_focus("subscribers") == "primary_only"
-
-    def test_retired_couples_is_couples(self):
-        assert _classify_agent_focus("retired couples") == "couples"
-
-    def test_married_couples_is_couples(self):
-        assert _classify_agent_focus("married couples") == "couples"
-
-    def test_couples_keyword_detected(self):
-        assert _classify_agent_focus("young couples in NYC") == "couples"
-
-    def test_partners_keyword_detected(self):
-        assert _classify_agent_focus("domestic partners") == "couples"
-
-    def test_families_is_all(self):
-        assert _classify_agent_focus("families") == "all"
-
-    def test_families_with_qualifier_is_all(self):
-        assert _classify_agent_focus("families with young children") == "all"
-
-    def test_households_is_all(self):
-        assert _classify_agent_focus("households") == "all"
-
-    def test_everyone_is_all(self):
-        assert _classify_agent_focus("everyone in the community") == "all"
-
-    def test_case_insensitive(self):
-        assert _classify_agent_focus("SURGEONS") == "primary_only"
-        assert _classify_agent_focus("COUPLES") == "couples"
-        assert _classify_agent_focus("FAMILIES") == "all"
+    def test_all_mode(self):
+        spec = _make_household_spec(agent_focus_mode="all")
+        assert _get_agent_focus_mode(spec) == "all"
 
 
 class TestAgentFocusPrimaryOnly:
-    """Test agent_focus="surgeons" (primary_only mode).
+    """Test agent_focus_mode="primary_only".
 
     In this mode:
     - Only primary adult is a full agent
@@ -191,7 +167,7 @@ class TestAgentFocusPrimaryOnly:
     """
 
     def test_partners_are_npc(self):
-        spec = _make_household_spec(size=200, agent_focus="surgeons")
+        spec = _make_household_spec(size=200, agent_focus_mode="primary_only")
         result = sample_population(spec, count=200, seed=42)
         agents = result.agents
 
@@ -219,7 +195,7 @@ class TestAgentFocusPrimaryOnly:
             assert npc["relationship"] == "partner"
 
     def test_no_partner_agents_in_result(self):
-        spec = _make_household_spec(size=200, agent_focus="surgeons")
+        spec = _make_household_spec(size=200, agent_focus_mode="primary_only")
         result = sample_population(spec, count=200, seed=42)
         agents = result.agents
 
@@ -233,7 +209,7 @@ class TestAgentFocusPrimaryOnly:
         )
 
     def test_total_agent_count_matches(self):
-        spec = _make_household_spec(size=100, agent_focus="surgeons")
+        spec = _make_household_spec(size=100, agent_focus_mode="primary_only")
         result = sample_population(spec, count=100, seed=42)
 
         # Should produce at most the requested count
@@ -242,7 +218,7 @@ class TestAgentFocusPrimaryOnly:
         )
 
     def test_npc_partner_has_correlated_demographics(self):
-        spec = _make_household_spec(size=300, agent_focus="surgeons")
+        spec = _make_household_spec(size=300, agent_focus_mode="primary_only")
         result = sample_population(spec, count=300, seed=42)
         agents = result.agents
 
@@ -265,7 +241,7 @@ class TestAgentFocusPrimaryOnly:
             assert avg_diff < 10, f"Average age gap {avg_diff:.1f} too large"
 
     def test_npc_partner_shares_last_name(self):
-        spec = _make_household_spec(size=200, agent_focus="surgeons")
+        spec = _make_household_spec(size=200, agent_focus_mode="primary_only")
         result = sample_population(spec, count=200, seed=42)
 
         for agent in result.agents:
@@ -277,7 +253,7 @@ class TestAgentFocusPrimaryOnly:
 
 
 class TestAgentFocusCouples:
-    """Test agent_focus="retired couples" (couples mode).
+    """Test agent_focus_mode="couples".
 
     In this mode:
     - Both partners are full agents
@@ -286,7 +262,7 @@ class TestAgentFocusCouples:
     """
 
     def test_both_partners_are_agents(self):
-        spec = _make_household_spec(size=200, agent_focus="retired couples")
+        spec = _make_household_spec(size=200, agent_focus_mode="couples")
         result = sample_population(spec, count=200, seed=42)
         agents = result.agents
         id_map = {a["_id"]: a for a in agents}
@@ -314,7 +290,7 @@ class TestAgentFocusCouples:
             )
 
     def test_no_npc_partners(self):
-        spec = _make_household_spec(size=200, agent_focus="retired couples")
+        spec = _make_household_spec(size=200, agent_focus_mode="couples")
         result = sample_population(spec, count=200, seed=42)
 
         # No agents should have partner_npc field
@@ -324,7 +300,7 @@ class TestAgentFocusCouples:
         )
 
     def test_partners_share_household_id(self):
-        spec = _make_household_spec(size=200, agent_focus="retired couples")
+        spec = _make_household_spec(size=200, agent_focus_mode="couples")
         result = sample_population(spec, count=200, seed=42)
         id_map = {a["_id"]: a for a in result.agents}
 
@@ -338,7 +314,7 @@ class TestAgentFocusCouples:
                 )
 
     def test_partners_share_household_scoped_attrs(self):
-        spec = _make_household_spec(size=200, agent_focus="retired couples")
+        spec = _make_household_spec(size=200, agent_focus_mode="couples")
         result = sample_population(spec, count=200, seed=42)
         id_map = {a["_id"]: a for a in result.agents}
 
@@ -353,7 +329,7 @@ class TestAgentFocusCouples:
                 )
 
     def test_kids_are_npcs(self):
-        spec = _make_household_spec(size=200, agent_focus="retired couples")
+        spec = _make_household_spec(size=200, agent_focus_mode="couples")
         result = sample_population(spec, count=200, seed=42)
 
         # Check that dependents (kids) are in dependents list, not as full agents
@@ -373,7 +349,7 @@ class TestAgentFocusCouples:
 
 
 class TestAgentFocusFamilies:
-    """Test agent_focus="families" (all mode).
+    """Test agent_focus_mode="all".
 
     In this mode:
     - Both partners are full agents
@@ -382,7 +358,7 @@ class TestAgentFocusFamilies:
     """
 
     def test_kids_become_agents(self):
-        spec = _make_household_spec(size=200, agent_focus="families")
+        spec = _make_household_spec(size=200, agent_focus_mode="all")
         result = sample_population(spec, count=200, seed=42)
 
         # Find kid agents
@@ -395,7 +371,7 @@ class TestAgentFocusFamilies:
         assert len(kid_agents) > 0, "In families mode, kids should be full agents"
 
     def test_kid_agents_have_correct_structure(self):
-        spec = _make_household_spec(size=200, agent_focus="families")
+        spec = _make_household_spec(size=200, agent_focus_mode="all")
         result = sample_population(spec, count=200, seed=42)
 
         kid_agents = [
@@ -418,7 +394,7 @@ class TestAgentFocusFamilies:
             assert "gender" in kid, "Kid should have gender"
 
     def test_kid_agents_inherit_household_attrs(self):
-        spec = _make_household_spec(size=200, agent_focus="families")
+        spec = _make_household_spec(size=200, agent_focus_mode="all")
         result = sample_population(spec, count=200, seed=42)
 
         kid_agents = [
@@ -447,7 +423,7 @@ class TestAgentFocusFamilies:
                 )
 
     def test_both_partners_still_agents(self):
-        spec = _make_household_spec(size=200, agent_focus="families")
+        spec = _make_household_spec(size=200, agent_focus_mode="all")
         result = sample_population(spec, count=200, seed=42)
 
         # Should still have both partners as agents
@@ -461,7 +437,7 @@ class TestAgentFocusFamilies:
 
     def test_overflow_kids_remain_npc(self):
         """If we hit the agent count limit, remaining kids should be NPCs."""
-        spec = _make_household_spec(size=50, agent_focus="families")
+        spec = _make_household_spec(size=50, agent_focus_mode="all")
         result = sample_population(spec, count=50, seed=42)
 
         # Should not exceed requested count
@@ -472,10 +448,10 @@ class TestAgentFocusFamilies:
 
 
 class TestAgentFocusDefault:
-    """Test default behavior when agent_focus is None."""
+    """Test default behavior when agent_focus_mode is None."""
 
     def test_none_defaults_to_primary_only(self):
-        spec = _make_household_spec(size=200, agent_focus=None)
+        spec = _make_household_spec(size=200, agent_focus_mode=None)
         result = sample_population(spec, count=200, seed=42)
 
         # Should behave like primary_only
@@ -491,7 +467,7 @@ class TestAgentFocusDefault:
         )
 
     def test_no_secondary_agents_by_default(self):
-        spec = _make_household_spec(size=200, agent_focus=None)
+        spec = _make_household_spec(size=200, agent_focus_mode=None)
         result = sample_population(spec, count=200, seed=42)
 
         secondary_adults = [
@@ -506,23 +482,23 @@ class TestAgentFocusDefault:
 class TestAgentFocusMetadata:
     """Test that agent_focus is preserved in metadata."""
 
-    def test_agent_focus_preserved_in_spec_meta(self):
-        spec = _make_household_spec(size=100, agent_focus="surgeons")
-        assert spec.meta.agent_focus == "surgeons"
+    def test_agent_focus_mode_preserved_in_spec_meta(self):
+        spec = _make_household_spec(size=100, agent_focus_mode="primary_only")
+        assert spec.meta.agent_focus_mode == "primary_only"
 
-    def test_agent_focus_none_preserved(self):
-        spec = _make_household_spec(size=100, agent_focus=None)
-        assert spec.meta.agent_focus is None
+    def test_agent_focus_mode_none_preserved(self):
+        spec = _make_household_spec(size=100, agent_focus_mode=None)
+        assert spec.meta.agent_focus_mode is None
 
-    def test_different_focus_values(self):
-        for focus in ["surgeons", "retired couples", "families", None]:
-            spec = _make_household_spec(size=100, agent_focus=focus)
-            assert spec.meta.agent_focus == focus
+    def test_different_focus_mode_values(self):
+        for mode in ["primary_only", "couples", "all", None]:
+            spec = _make_household_spec(size=100, agent_focus_mode=mode)
+            assert spec.meta.agent_focus_mode == mode
 
 
 class TestPromotedDependentNames:
     def test_promoted_dependents_preserve_household_names(self):
-        spec = _make_household_spec(size=240, agent_focus="families")
+        spec = _make_household_spec(size=240, agent_focus_mode="all")
         result = sample_population(spec, count=240, seed=42)
 
         promoted = [

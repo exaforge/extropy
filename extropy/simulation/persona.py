@@ -64,8 +64,24 @@ def get_value_range(attr: AttributeSpec) -> tuple[float | None, float | None]:
     return min_val, max_val
 
 
+def _format_time(value: float, use_12hr: bool = True) -> str:
+    """Format a numeric hour value as clock time."""
+    hours = int(value)
+    minutes = int((value - hours) * 60)
+    if use_12hr:
+        suffix = "AM" if hours < 12 else "PM"
+        display_hour = hours % 12
+        if display_hour == 0:
+            display_hour = 12
+        return f"{display_hour}:{minutes:02d} {suffix}"
+    return f"{hours:02d}:{minutes:02d}"
+
+
 def format_value(value: Any, attr: AttributeSpec) -> str:
     """Convert raw value to human-readable string.
+
+    Uses display_format from AttributeSpec (set by LLM during spec creation)
+    for time, currency, percentage formatting.
 
     - Booleans → "Yes" / "No"
     - Floats 0-1 → "Very low" / "Low" / "Moderate" / "High" / "Very high"
@@ -75,6 +91,22 @@ def format_value(value: Any, attr: AttributeSpec) -> str:
     """
     if value is None:
         return "Unknown"
+
+    # Check LLM-classified display_format first (for time, currency, percentage)
+    if attr.display_format and isinstance(value, (int, float)):
+        if attr.display_format == "time_12h" and 0 <= float(value) <= 24:
+            return _format_time(float(value), use_12hr=True)
+        elif attr.display_format == "time_24h" and 0 <= float(value) <= 24:
+            return _format_time(float(value), use_12hr=False)
+        elif attr.display_format == "currency":
+            if value >= 1000:
+                return f"${value:,.0f}"
+            return f"${value:.2f}"
+        elif attr.display_format == "percentage":
+            # If value is 0-1, convert to percentage
+            if 0 <= value <= 1:
+                return f"{value * 100:.0f}%"
+            return f"{value:.0f}%"
 
     # Booleans
     if isinstance(value, bool) or attr.type == "boolean":
@@ -242,7 +274,18 @@ def generate_persona(
     if persona_config is not None:
         from ..population.persona import render_persona as render_new_persona
 
-        return render_new_persona(agent, persona_config, decision_relevant_attributes)
+        # Build display_format_map from population_spec if available
+        display_format_map = None
+        if population_spec:
+            display_format_map = {
+                attr.name: attr.display_format
+                for attr in population_spec.attributes
+                if attr.display_format
+            }
+
+        return render_new_persona(
+            agent, persona_config, decision_relevant_attributes, display_format_map
+        )
 
     # Legacy rendering below
     if not population_spec:

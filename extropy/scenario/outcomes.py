@@ -41,8 +41,20 @@ OUTCOME_DEFINITION_SCHEMA = {
                     "items": {"type": "string"},
                     "description": "3-5 mutually exclusive options in snake_case",
                 },
+                "option_friction": {
+                    "type": "object",
+                    "description": "Behavioral friction for each option (0-1). Higher = harder to sustain in real behavior. "
+                    "Low friction (0.1-0.3): status quo, inaction, keeping current state. "
+                    "Medium friction (0.4-0.6): partial changes, delays, conditional actions. "
+                    "High friction (0.7-0.9): major changes, cancellations, adoptions, switches.",
+                    "additionalProperties": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 1,
+                    },
+                },
             },
-            "required": ["name", "description", "options"],
+            "required": ["name", "description", "options", "option_friction"],
             "additionalProperties": False,
         },
         "reasoning": {
@@ -101,10 +113,15 @@ Requirements:
 - Prefer behavioral options (what people DO) over attitudinal ones (what people FEEL)
 - Options should NOT be orderable on a single scale — each should capture a qualitatively different response
 
-Examples of good decision outcomes:
-- adoption_intent: [adopt_immediately, try_pilot_first, interested_but_blocked, not_relevant_to_me]
-- cancel_decision: [cancel_immediately, downgrade_plan, stay_but_unhappy, satisfied_staying]
-- compliance_stance: [comply_fully, comply_with_workarounds, openly_resist, ignore_entirely]"""
+## Option Friction
+For EACH option, assign a friction score (0-1) indicating how hard it is to sustain that behavior:
+- Low friction (0.1-0.3): Status quo, inaction, keeping current state (e.g., "keep_subscription", "no_change", "stay")
+- Medium friction (0.4-0.6): Partial changes, delays, conditional actions (e.g., "reduce_usage", "pause", "wait_for_more_info")
+- High friction (0.7-0.9): Major changes requiring effort (e.g., "cancel", "switch_provider", "adopt_immediately", "purchase")
+
+Examples of good decision outcomes with friction:
+- adoption_intent: {{adopt_immediately: 0.75, try_pilot_first: 0.5, interested_but_blocked: 0.3, not_relevant_to_me: 0.2}}
+- cancel_decision: {{cancel_immediately: 0.8, downgrade_plan: 0.5, stay_but_unhappy: 0.2, satisfied_staying: 0.15}}"""
 
     data = simple_call(
         prompt=prompt,
@@ -115,14 +132,20 @@ Examples of good decision outcomes:
 
     # Build the two outcomes
     decision_data = data.get("decision", {})
+    options = decision_data.get("options", ["positive", "neutral", "negative"])
+    raw_friction = decision_data.get("option_friction", {})
+
+    # Ensure option_friction has values for all options (default to 0.5 if missing)
+    option_friction = {opt: raw_friction.get(opt, 0.5) for opt in options}
 
     decision_outcome = OutcomeDefinition(
         name=decision_data.get("name", "decision"),
         type=OutcomeType.CATEGORICAL,
         description=decision_data.get("description", "Primary decision"),
-        options=decision_data.get("options", ["positive", "neutral", "negative"]),
+        options=options,
         range=None,
         required=True,
+        option_friction=option_friction,
     )
 
     sentiment_outcome = OutcomeDefinition(

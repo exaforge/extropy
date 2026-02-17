@@ -279,10 +279,21 @@ def _ensure_period(phrase: str) -> str:
     return phrase
 
 
-def render_intro(agent: dict[str, Any], config: PersonaConfig) -> str:
-    """Render the narrative intro section."""
-    # Time-related attribute name patterns
-    time_attrs = {"start_time", "departure_time", "arrival_time", "end_time"}
+def render_intro(
+    agent: dict[str, Any],
+    config: PersonaConfig,
+    display_format_map: dict[str, str] | None = None,
+) -> str:
+    """Render the narrative intro section.
+
+    Args:
+        agent: Agent attribute dictionary
+        config: Persona configuration
+        display_format_map: Optional mapping of attr_name -> display_format
+            (from AttributeSpec.display_format, set by LLM during spec creation)
+    """
+    if display_format_map is None:
+        display_format_map = {}
 
     try:
         # Format values for template
@@ -293,10 +304,22 @@ def render_intro(agent: dict[str, Any], config: PersonaConfig) -> str:
             elif isinstance(value, bool):
                 formatted[key] = "yes" if value else "no"
             elif isinstance(value, (int, float)):
-                # Check if this looks like a time attribute
-                is_time = any(t in key.lower() for t in time_attrs)
-                if is_time and 0 <= float(value) <= 24:
+                # Check LLM-classified display_format first
+                display_fmt = display_format_map.get(key)
+                if display_fmt == "time_12h" and 0 <= float(value) <= 24:
                     formatted[key] = _format_time(float(value), use_12hr=True)
+                elif display_fmt == "time_24h" and 0 <= float(value) <= 24:
+                    formatted[key] = _format_time(float(value), use_12hr=False)
+                elif display_fmt == "currency":
+                    if value >= 1000:
+                        formatted[key] = f"${value:,.0f}"
+                    else:
+                        formatted[key] = f"${value:.2f}"
+                elif display_fmt == "percentage":
+                    if 0 <= value <= 1:
+                        formatted[key] = f"{value * 100:.0f}%"
+                    else:
+                        formatted[key] = f"{value:.0f}%"
                 elif isinstance(value, float) and value == int(value):
                     formatted[key] = (
                         f"{int(value):,}" if value >= 1000 else str(int(value))
@@ -501,6 +524,7 @@ def render_persona(
     agent: dict[str, Any],
     config: PersonaConfig,
     decision_relevant_attributes: list[str] | None = None,
+    display_format_map: dict[str, str] | None = None,
 ) -> str:
     """Render complete first-person persona for an agent.
 
@@ -510,6 +534,8 @@ def render_persona(
         decision_relevant_attributes: Attributes most relevant to scenario outcome.
             If provided, these are pulled out and rendered first under a dedicated
             "Most Relevant to This Decision" section.
+        display_format_map: Optional mapping of attr_name -> display_format
+            (from AttributeSpec.display_format, set by LLM during spec creation)
 
     Returns:
         Complete persona as markdown string
@@ -517,7 +543,7 @@ def render_persona(
     sections = []
 
     # Render intro
-    intro = render_intro(agent, config)
+    intro = render_intro(agent, config, display_format_map)
     if intro:
         sections.append(intro)
 

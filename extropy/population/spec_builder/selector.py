@@ -150,6 +150,17 @@ ATTRIBUTE_SELECTION_SCHEMA = {
                         ],
                         "description": "Identity dimension this attribute represents. Set for attributes that capture identity: political_orientation (voting, ideology), religious_affiliation (faith, religion), race_ethnicity (race, ethnicity), gender_identity (gender), sexual_orientation, parental_status (has children, parent), citizenship (nationality, immigrant status), socioeconomic_class (class, wealth bracket), professional_identity (occupation, career), generational_identity (generation, age group). Leave unset for attributes that don't represent identity dimensions.",
                     },
+                    "display_format": {
+                        "type": "string",
+                        "enum": [
+                            "time_12h",
+                            "time_24h",
+                            "currency",
+                            "percentage",
+                            "number",
+                        ],
+                        "description": "Display format for persona rendering. Set for: time_12h (clock times displayed as '7:30 AM', e.g. departure_time, wake_time, shift_start), time_24h (clock times as '19:30'), currency (monetary values with $ symbol, e.g. monthly_rent, salary), percentage (values with % symbol, e.g. savings_rate). Leave unset for regular numbers.",
+                    },
                 },
                 "required": [
                     "name",
@@ -403,6 +414,7 @@ def select_attributes(
             correlation_rate=attr_data.get("correlation_rate"),
             semantic_type=attr_data.get("semantic_type"),
             identity_type=attr_data.get("identity_type"),
+            display_format=attr_data.get("display_format"),
             depends_on=depends_on,
         )
         attributes.append(attr)

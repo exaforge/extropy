@@ -5,6 +5,7 @@ and assembles the final PopulationSpec.
 """
 
 from datetime import datetime
+from typing import Literal
 
 from ...core.models import (
     HydratedAttribute,
@@ -143,6 +144,7 @@ def bind_constraints(
             correlation_rate=attr.correlation_rate,
             semantic_type=attr.semantic_type,
             identity_type=attr.identity_type,
+            display_format=attr.display_format,
             sampling=filtered_sampling,
             grounding=attr.grounding,
             constraints=attr.constraints,
@@ -195,6 +197,7 @@ def build_spec(
     sampling_order: list[str],
     sources: list[str],
     agent_focus: str | None = None,
+    agent_focus_mode: Literal["primary_only", "couples", "all"] | None = None,
     household_config: HouseholdConfig | None = None,
     name_config: NameConfig | None = None,
 ) -> PopulationSpec:
@@ -207,7 +210,8 @@ def build_spec(
         attributes: List of AttributeSpec
         sampling_order: Order for sampling
         sources: List of source URLs from research
-        agent_focus: Who the study agents represent (determines agent vs NPC)
+        agent_focus: Who the study agents represent (natural language)
+        agent_focus_mode: Household agent scope (primary_only, couples, all)
         household_config: LLM-researched household composition (defaults to US Census)
         name_config: LLM-researched name frequency tables (None = use bundled CSVs)
 
@@ -218,6 +222,7 @@ def build_spec(
         description=description,
         geography=geography,
         agent_focus=agent_focus,
+        agent_focus_mode=agent_focus_mode,
         created_at=datetime.now(),
         household_config=household_config or HouseholdConfig(),
         name_config=name_config,
