@@ -368,6 +368,8 @@ class TestPhaseAPromptFeatures:
         prompt = build_pass1_prompt(context, scenario)
         assert "cancel my subscription" in prompt
         assert "intended to" in prompt.lower()
+        assert "did i actually do it" in prompt.lower()
+        assert "what stopped me" in prompt.lower()
 
     def test_no_intent_on_first_reasoning(self):
         """No intent accountability section when prior_action_intent is None."""
@@ -545,6 +547,7 @@ class TestBuildPass1Schema:
             "reasoning",
             "public_statement",
             "reasoning_summary",
+            "action_intent",
             "sentiment",
             "conviction",
             "will_share",
