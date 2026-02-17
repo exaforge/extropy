@@ -119,9 +119,18 @@ class TestOpenAIExtractOutputText:
         text = provider._extract_output_text(response)
         assert text == '{"hello": "world"}'
 
+    def test_extracts_from_output_text_property(self):
+        provider = _make_openai_provider()
+        response = MagicMock()
+        response.output_text = '{"assistant_text":"ok"}'
+        response.output = []
+        text = provider._extract_output_text(response)
+        assert text == '{"assistant_text":"ok"}'
+
     def test_returns_none_on_empty(self):
         provider = _make_openai_provider()
         response = MagicMock()
+        response.output_text = ""
         response.output = []
         text = provider._extract_output_text(response)
         assert text is None
@@ -164,6 +173,46 @@ class TestOpenAISimpleCall:
             log=False,
         )
         assert result == {}
+
+    @patch.object(OpenAIProvider, "_get_client")
+    def test_retries_when_incomplete_due_to_max_output_tokens(self, mock_get_client):
+        provider = _make_openai_provider()
+
+        incomplete_details = MagicMock()
+        incomplete_details.reason = "max_output_tokens"
+
+        reasoning_item = MagicMock()
+        reasoning_item.type = "reasoning"
+
+        incomplete_response = MagicMock()
+        incomplete_response.status = "incomplete"
+        incomplete_response.incomplete_details = incomplete_details
+        incomplete_response.output = [reasoning_item]
+        incomplete_response.output_text = ""
+        incomplete_response.usage = MagicMock()
+        incomplete_response.usage.input_tokens = 10
+        incomplete_response.usage.output_tokens = 20
+
+        complete_response = _make_openai_response('{"assistant_text":"ok"}')
+        complete_response.status = "completed"
+        complete_response.incomplete_details = None
+
+        mock_client = MagicMock()
+        mock_client.responses.create.side_effect = [
+            incomplete_response,
+            complete_response,
+        ]
+        mock_get_client.return_value = mock_client
+
+        result = provider.simple_call(
+            prompt="test",
+            response_schema={"type": "object", "properties": {}},
+            max_tokens=120,
+            log=False,
+        )
+
+        assert result == {"assistant_text": "ok"}
+        assert mock_client.responses.create.call_count == 2
 
 
 class TestOpenAIRetry:

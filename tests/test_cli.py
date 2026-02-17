@@ -462,9 +462,27 @@ class TestInspectNetworkStatus:
         assert rows[0]["run_id"] == "run_new"
         assert rows[0]["private_position"] == "new_pos"
 
-    def test_chat_ask_reads_state_for_requested_run(self, tmp_path):
+    def test_chat_ask_reads_state_for_requested_run(self, tmp_path, monkeypatch):
         study_db = tmp_path / "study.db"
         _seed_run_scoped_state(study_db)
+        import extropy.cli.commands.chat as chat_cmd
+
+        captured: dict[str, str] = {}
+
+        def fake_simple_call(
+            prompt: str,
+            response_schema: dict,
+            schema_name: str = "response",
+            model: str | None = None,
+            log: bool = True,
+            max_tokens: int | None = None,
+        ):
+            del response_schema, schema_name, log, max_tokens
+            captured["prompt"] = prompt
+            captured["model"] = model or ""
+            return {"assistant_text": "I am still at old_pos."}
+
+        monkeypatch.setattr(chat_cmd, "simple_call", fake_simple_call)
 
         result = runner.invoke(
             app,
@@ -485,8 +503,129 @@ class TestInspectNetworkStatus:
         assert result.exit_code == 0
         payload = json.loads(result.stdout.strip())
         assert payload["session_id"]
-        assert "old_pos" in payload["assistant_text"]
-        assert "new_pos" not in payload["assistant_text"]
+        assert payload["assistant_text"] == "I am still at old_pos."
+        assert "old_pos" in captured["prompt"]
+        assert "new_pos" not in captured["prompt"]
+
+    def test_chat_ask_includes_session_history(self, tmp_path, monkeypatch):
+        study_db = tmp_path / "study.db"
+        _seed_run_scoped_state(study_db)
+        import extropy.cli.commands.chat as chat_cmd
+
+        with open_study_db(study_db) as db:
+            sid = db.create_chat_session(
+                run_id="run_old",
+                agent_id="a0",
+                mode="machine",
+                meta={"entrypoint": "test"},
+            )
+            db.append_chat_message(sid, "user", "first question")
+            db.append_chat_message(sid, "assistant", "first answer")
+
+        captured: dict[str, str] = {}
+
+        def fake_simple_call(
+            prompt: str,
+            response_schema: dict,
+            schema_name: str = "response",
+            model: str | None = None,
+            log: bool = True,
+            max_tokens: int | None = None,
+        ):
+            del response_schema, schema_name, model, log, max_tokens
+            captured["prompt"] = prompt
+            return {"assistant_text": "second answer"}
+
+        monkeypatch.setattr(chat_cmd, "simple_call", fake_simple_call)
+
+        result = runner.invoke(
+            app,
+            [
+                "chat",
+                "ask",
+                "--study-db",
+                str(study_db),
+                "--run-id",
+                "run_old",
+                "--agent-id",
+                "a0",
+                "--session-id",
+                sid,
+                "--prompt",
+                "second question",
+                "--json",
+            ],
+        )
+        assert result.exit_code == 0
+        assert "first question" in captured["prompt"]
+        assert "first answer" in captured["prompt"]
+        assert "second question" in captured["prompt"]
+
+    def test_chat_ask_defaults_to_latest_run_and_first_agent(
+        self, tmp_path, monkeypatch
+    ):
+        study_db = tmp_path / "study.db"
+        _seed_run_scoped_state(study_db)
+        import extropy.cli.commands.chat as chat_cmd
+
+        captured: dict[str, str] = {}
+
+        def fake_simple_call(
+            prompt: str,
+            response_schema: dict,
+            schema_name: str = "response",
+            model: str | None = None,
+            log: bool = True,
+            max_tokens: int | None = None,
+        ):
+            del response_schema, schema_name, model, log, max_tokens
+            captured["prompt"] = prompt
+            return {"assistant_text": "latest run default works"}
+
+        monkeypatch.setattr(chat_cmd, "simple_call", fake_simple_call)
+
+        result = runner.invoke(
+            app,
+            [
+                "chat",
+                "ask",
+                "--study-db",
+                str(study_db),
+                "--prompt",
+                "default target?",
+                "--json",
+            ],
+        )
+        assert result.exit_code == 0
+        payload = json.loads(result.stdout.strip())
+        assert payload["run_id"] == "run_new"
+        assert payload["agent_id"] == "a0"
+        assert "new_pos" in captured["prompt"]
+        assert "old_pos" not in captured["prompt"]
+
+    def test_chat_list_outputs_recent_runs_and_sample_agents(self, tmp_path):
+        study_db = tmp_path / "study.db"
+        _seed_run_scoped_state(study_db)
+
+        result = runner.invoke(
+            app,
+            [
+                "chat",
+                "list",
+                "--study-db",
+                str(study_db),
+                "--limit-runs",
+                "2",
+                "--agents-per-run",
+                "2",
+                "--json",
+            ],
+        )
+        assert result.exit_code == 0
+        payload = json.loads(result.stdout.strip())
+        assert payload["runs"]
+        assert payload["runs"][0]["run_id"] == "run_new"
+        assert "a0" in payload["runs"][0]["sample_agents"]
 
 
 class TestPersonaCommand:
