@@ -26,9 +26,9 @@ from extropy.core.models.scenario import (
     OutcomeDefinition,
     OutcomeType,
     ScenarioMeta,
+    ScenarioSimConfig,
     ScenarioSpec,
     SeedExposure,
-    SimulationConfig,
     SpreadConfig,
 )
 from extropy.simulation.reasoning import (
@@ -92,7 +92,7 @@ def _make_scenario(**overrides):
                 ),
             ],
         ),
-        simulation=SimulationConfig(max_timesteps=5),
+        simulation=ScenarioSimConfig(max_timesteps=5),
     )
     defaults.update(overrides)
     return ScenarioSpec(**defaults)

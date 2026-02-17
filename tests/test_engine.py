@@ -33,9 +33,9 @@ from extropy.core.models.scenario import (
     OutcomeDefinition,
     OutcomeType,
     ScenarioMeta,
+    ScenarioSimConfig,
     ScenarioSpec,
     SeedExposure,
-    SimulationConfig,
     SpreadConfig,
     TimestepUnit,
 )
@@ -100,7 +100,7 @@ def minimal_scenario():
                 ),
             ],
         ),
-        simulation=SimulationConfig(
+        simulation=ScenarioSimConfig(
             max_timesteps=5,
             timestep_unit=TimestepUnit.HOUR,
         ),

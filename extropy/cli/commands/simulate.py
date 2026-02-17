@@ -12,7 +12,7 @@ from rich.spinner import Spinner
 from rich.text import Text
 
 from ..app import app, console, is_agent_mode, get_study_path
-from ..study import StudyContext, detect_study_folder, parse_version_ref
+from ..study import StudyContext, detect_study_folder, resolve_scenario
 from ..utils import format_elapsed, Output, ExitCode
 
 
@@ -112,7 +112,6 @@ def simulate_command(
     strong: str = typer.Option(
         "",
         "--strong",
-        "-m",
         help="Strong model for Pass 1 (provider/model format)",
     ),
     fast: str = typer.Option(
@@ -255,7 +254,11 @@ def simulate_command(
     study_db = study_ctx.db_path
 
     # Resolve scenario
-    scenario_name, scenario_version = _resolve_scenario(study_ctx, scenario, out)
+    try:
+        scenario_name, scenario_version = resolve_scenario(study_ctx, scenario)
+    except ValueError as e:
+        out.error(str(e), exit_code=ExitCode.FILE_NOT_FOUND)
+        raise typer.Exit(out.finish())
 
     # Pre-flight: Check agents exist for this scenario
     with open_study_db(study_db) as db:
@@ -560,29 +563,3 @@ def simulate_command(
     raise typer.Exit(out.finish())
 
 
-def _resolve_scenario(
-    study_ctx: StudyContext, scenario_ref: str | None, out: Output
-) -> tuple[str, int | None]:
-    """Resolve scenario name and version."""
-    scenarios = study_ctx.list_scenarios()
-
-    if not scenarios:
-        out.error("No scenarios found. Run 'extropy scenario' first.")
-        raise typer.Exit(1)
-
-    if scenario_ref is None:
-        if len(scenarios) == 1:
-            return scenarios[0], None
-        else:
-            out.error(
-                f"Multiple scenarios found: {', '.join(scenarios)}. "
-                "Use -s to specify which one."
-            )
-            raise typer.Exit(1)
-
-    name, version = parse_version_ref(scenario_ref)
-    if name not in scenarios:
-        out.error(f"Scenario not found: {name}")
-        raise typer.Exit(1)
-
-    return name, version

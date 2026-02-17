@@ -3,7 +3,7 @@
 import typer
 
 from ..app import app, console, get_study_path
-from ..study import StudyContext, detect_study_folder, parse_version_ref
+from ..study import StudyContext, detect_study_folder, resolve_scenario
 from ..utils import Output, ExitCode
 
 
@@ -18,7 +18,6 @@ def estimate_command(
     strong: str = typer.Option(
         "",
         "--strong",
-        "-m",
         help="Strong model for Pass 1 (provider/model format)",
     ),
     fast: str = typer.Option(
@@ -72,18 +71,22 @@ def estimate_command(
         raise typer.Exit(out.finish())
 
     # Resolve scenario
-    scenario_name, scenario_version = _resolve_scenario(study_ctx, scenario, out)
+    try:
+        scenario_name, scenario_version = resolve_scenario(study_ctx, scenario)
+    except ValueError as e:
+        out.error(str(e), exit_code=ExitCode.FILE_NOT_FOUND)
+        raise typer.Exit(out.finish())
 
     # Load scenario spec
     try:
         scenario_path = study_ctx.get_scenario_path(scenario_name, scenario_version)
         scenario_spec = ScenarioSpec.from_yaml(scenario_path)
     except FileNotFoundError:
-        out.error(f"Scenario not found: {scenario_name}")
-        raise typer.Exit(1)
+        out.error(f"Scenario not found: {scenario_name}", exit_code=ExitCode.FILE_NOT_FOUND)
+        raise typer.Exit(out.finish())
     except Exception as e:
         out.error(f"Failed to load scenario: {e}")
-        raise typer.Exit(1)
+        raise typer.Exit(out.finish())
 
     # Load population spec (resolve from base_population or population_spec)
     try:
@@ -227,34 +230,6 @@ def estimate_command(
                     f"{row['reasoning_calls']:>10d}"
                 )
     console.print()
-
-
-def _resolve_scenario(
-    study_ctx: StudyContext, scenario_ref: str | None, out: Output
-) -> tuple[str, int | None]:
-    """Resolve scenario name and version."""
-    scenarios = study_ctx.list_scenarios()
-
-    if not scenarios:
-        out.error("No scenarios found. Run 'extropy scenario' first.")
-        raise typer.Exit(1)
-
-    if scenario_ref is None:
-        if len(scenarios) == 1:
-            return scenarios[0], None
-        else:
-            out.error(
-                f"Multiple scenarios found: {', '.join(scenarios)}. "
-                "Use -s to specify which one."
-            )
-            raise typer.Exit(1)
-
-    name, version = parse_version_ref(scenario_ref)
-    if name not in scenarios:
-        out.error(f"Scenario not found: {name}")
-        raise typer.Exit(1)
-
-    return name, version
 
 
 def _print_model_line(console, label: str, model: str, pricing):

@@ -13,9 +13,9 @@ from extropy.core.models.scenario import (
     OutcomeDefinition,
     OutcomeType,
     ScenarioMeta,
+    ScenarioSimConfig,
     ScenarioSpec,
     SeedExposure,
-    SimulationConfig,
     SpreadModifier,
     SpreadConfig,
 )
@@ -76,7 +76,7 @@ def _make_scenario_spec(
                 )
             ]
         ),
-        simulation=SimulationConfig(max_timesteps=10),
+        simulation=ScenarioSimConfig(max_timesteps=10),
     )
 
 

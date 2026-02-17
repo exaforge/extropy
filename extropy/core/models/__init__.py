@@ -75,7 +75,7 @@ from .scenario import (
     OutcomeConfig,
     # Simulation config
     TimestepUnit,
-    SimulationConfig,
+    ScenarioSimConfig,
     # Identity
     IdentityDimension,
     # Scenario
@@ -183,7 +183,7 @@ __all__ = [
     "OutcomeConfig",
     # Scenario - Config
     "TimestepUnit",
-    "SimulationConfig",
+    "ScenarioSimConfig",
     # Scenario - Spec
     "ScenarioMeta",
     "ScenarioSpec",

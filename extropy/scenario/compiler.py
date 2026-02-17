@@ -16,8 +16,8 @@ from ..core.models import (
     IdentityDimension,
     PopulationSpec,
     ScenarioMeta,
+    ScenarioSimConfig,
     ScenarioSpec,
-    SimulationConfig,
     TimestepUnit,
     ValidationResult,
 )
@@ -43,12 +43,12 @@ def _generate_scenario_name(description: str) -> str:
     return "_".join(words) or "scenario"
 
 
-def _determine_simulation_config() -> SimulationConfig:
+def _determine_simulation_config() -> ScenarioSimConfig:
     """Determine default simulation configuration.
 
     Uses a fixed default since population size is determined at sample time.
     """
-    return SimulationConfig(
+    return ScenarioSimConfig(
         max_timesteps=100,
         timestep_unit=TimestepUnit.HOUR,
         stop_conditions=["exposure_rate > 0.95 and no_state_changes_for > 10"],

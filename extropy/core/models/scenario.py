@@ -271,7 +271,7 @@ class TimestepUnit(str, Enum):
     MONTH = "month"
 
 
-class SimulationConfig(BaseModel):
+class ScenarioSimConfig(BaseModel):
     """Configuration for simulation execution."""
 
     max_timesteps: int = Field(ge=1, description="Maximum number of timesteps to run")
@@ -393,7 +393,7 @@ class ScenarioSpec(BaseModel):
     interaction: InteractionConfig
     spread: SpreadConfig
     outcomes: OutcomeConfig
-    simulation: SimulationConfig
+    simulation: ScenarioSimConfig
     background_context: str | None = Field(
         default=None,
         description="Optional background context injected into reasoning prompts",

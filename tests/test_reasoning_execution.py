@@ -17,9 +17,9 @@ from extropy.core.models.scenario import (
     OutcomeDefinition,
     OutcomeType,
     ScenarioMeta,
+    ScenarioSimConfig,
     ScenarioSpec,
     SeedExposure,
-    SimulationConfig,
     SpreadConfig,
     TimestepUnit,
 )
@@ -79,7 +79,7 @@ def _make_scenario() -> ScenarioSpec:
                 )
             ]
         ),
-        simulation=SimulationConfig(max_timesteps=3),
+        simulation=ScenarioSimConfig(max_timesteps=3),
     )
 
 
@@ -251,7 +251,7 @@ def _make_scenario_no_pass2() -> ScenarioSpec:
                 )
             ]
         ),
-        simulation=SimulationConfig(max_timesteps=2, timestep_unit=TimestepUnit.DAY),
+        simulation=ScenarioSimConfig(max_timesteps=2, timestep_unit=TimestepUnit.DAY),
     )
 
 

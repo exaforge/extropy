@@ -7,7 +7,7 @@ like max timesteps, exposure rate thresholds, or convergence.
 import logging
 import re
 
-from ..core.models import SimulationConfig, TimestepSummary
+from ..core.models import ScenarioSimConfig, TimestepSummary
 from .state import StateManager
 
 logger = logging.getLogger(__name__)
@@ -216,7 +216,7 @@ def evaluate_condition(
 
 def evaluate_stopping_conditions(
     timestep: int,
-    config: SimulationConfig,
+    config: ScenarioSimConfig,
     state_manager: StateManager,
     recent_summaries: list[TimestepSummary],
 ) -> tuple[bool, str | None]:
@@ -257,7 +257,7 @@ def evaluate_stopping_conditions(
 
 def estimate_remaining_timesteps(
     current_timestep: int,
-    config: SimulationConfig,
+    config: ScenarioSimConfig,
     state_manager: StateManager,
     recent_summaries: list[TimestepSummary],
 ) -> int | None:

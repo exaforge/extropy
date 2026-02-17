@@ -352,3 +352,48 @@ def parse_population_ref(ref: str) -> tuple[str, int | None]:
             raise ValueError(f"Invalid version in population reference: {ref}")
     else:
         raise ValueError(f"Invalid population reference: {ref}")
+
+
+def resolve_scenario(
+    study_ctx: StudyContext,
+    scenario_ref: str | None,
+) -> tuple[str, int | None]:
+    """Resolve scenario name and version from reference or auto-detect.
+
+    If scenario_ref is None:
+    - If exactly one scenario exists, use it
+    - If multiple scenarios exist, raise ValueError
+
+    If scenario_ref is provided:
+    - Parse it as "name" or "name@vN"
+    - Verify it exists in the study
+
+    Args:
+        study_ctx: Study context
+        scenario_ref: Scenario reference (e.g., "my-scenario" or "my-scenario@v2")
+
+    Returns:
+        Tuple of (scenario_name, version) where version is None for latest
+
+    Raises:
+        ValueError: If scenario not found or ambiguous
+    """
+    scenarios = study_ctx.list_scenarios()
+
+    if not scenarios:
+        raise ValueError("No scenarios found. Run 'extropy scenario' first.")
+
+    if scenario_ref is None:
+        if len(scenarios) == 1:
+            return scenarios[0], None
+        else:
+            raise ValueError(
+                f"Multiple scenarios found: {', '.join(scenarios)}. "
+                "Use -s to specify which one."
+            )
+
+    name, version = parse_version_ref(scenario_ref)
+    if name not in scenarios:
+        raise ValueError(f"Scenario not found: {name}")
+
+    return name, version

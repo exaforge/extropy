@@ -28,9 +28,9 @@ from extropy.core.models.scenario import (
     InteractionType,
     OutcomeConfig,
     ScenarioMeta,
+    ScenarioSimConfig,
     ScenarioSpec,
     SeedExposure,
-    SimulationConfig,
     SpreadConfig,
     TimestepUnit,
 )
@@ -79,7 +79,7 @@ def _make_scenario() -> ScenarioSpec:
         ),
         spread=SpreadConfig(share_probability=0.4),
         outcomes=OutcomeConfig(suggested_outcomes=[]),
-        simulation=SimulationConfig(max_timesteps=3, timestep_unit=TimestepUnit.DAY),
+        simulation=ScenarioSimConfig(max_timesteps=3, timestep_unit=TimestepUnit.DAY),
     )
 
 

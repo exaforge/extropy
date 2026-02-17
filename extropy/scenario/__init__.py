@@ -46,7 +46,7 @@ from ..core.models import (
     OutcomeConfig,
     # Simulation
     TimestepUnit,
-    SimulationConfig,
+    ScenarioSimConfig,
     # Scenario
     ScenarioMeta,
     ScenarioSpec,
@@ -86,7 +86,7 @@ __all__ = [
     "OutcomeConfig",
     # Models - Simulation
     "TimestepUnit",
-    "SimulationConfig",
+    "ScenarioSimConfig",
     # Models - Scenario
     "ScenarioMeta",
     "ScenarioSpec",

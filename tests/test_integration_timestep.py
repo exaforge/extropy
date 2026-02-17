@@ -30,9 +30,9 @@ from extropy.core.models.scenario import (
     OutcomeDefinition,
     OutcomeType,
     ScenarioMeta,
+    ScenarioSimConfig,
     ScenarioSpec,
     SeedExposure,
-    SimulationConfig,
     SpreadConfig,
     TimestepUnit,
 )
@@ -117,7 +117,7 @@ def _make_scenario(
                 ),
             ],
         ),
-        simulation=SimulationConfig(
+        simulation=ScenarioSimConfig(
             max_timesteps=max_timesteps,
             timestep_unit=TimestepUnit.HOUR,
             stop_conditions=stop_conditions,

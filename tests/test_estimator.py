@@ -39,7 +39,7 @@ from extropy.core.models.scenario import (
     OutcomeConfig,
     OutcomeDefinition,
     OutcomeType,
-    SimulationConfig,
+    ScenarioSimConfig,
 )
 
 
@@ -187,7 +187,7 @@ def small_scenario() -> ScenarioSpec:
                 ),
             ],
         ),
-        simulation=SimulationConfig(
+        simulation=ScenarioSimConfig(
             max_timesteps=50,
         ),
     )

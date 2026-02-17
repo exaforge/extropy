@@ -19,7 +19,7 @@ from extropy.core.models.scenario import (
     OutcomeDefinition,
     OutcomeConfig,
     TimestepUnit,
-    SimulationConfig,
+    ScenarioSimConfig,
     ScenarioMeta,
     ScenarioSpec,
 )
@@ -307,7 +307,7 @@ class TestSimulationConfig:
 
     def test_simulation_config_creation(self):
         """Test creating simulation config."""
-        config = SimulationConfig(
+        config = ScenarioSimConfig(
             max_timesteps=100,
             timestep_unit=TimestepUnit.HOUR,
             seed=42,
@@ -326,7 +326,7 @@ class TestSimulationConfig:
 
     def test_simulation_config_with_stop_conditions(self):
         """Test simulation config with stop conditions."""
-        config = SimulationConfig(
+        config = ScenarioSimConfig(
             max_timesteps=500,
             stop_conditions=["exposure_rate > 0.95", "no_state_changes_for > 10"],
         )
@@ -401,7 +401,7 @@ class TestScenarioSpec:
                     ),
                 ],
             ),
-            simulation=SimulationConfig(max_timesteps=50),
+            simulation=ScenarioSimConfig(max_timesteps=50),
         )
 
     def test_scenario_spec_creation(self, sample_scenario_spec):
@@ -662,7 +662,7 @@ class TestComplexScenarios:
                     ),
                 ],
             ),
-            simulation=SimulationConfig(
+            simulation=ScenarioSimConfig(
                 max_timesteps=100,
                 timestep_unit=TimestepUnit.HOUR,
                 stop_conditions=["exposure_rate > 0.95"],

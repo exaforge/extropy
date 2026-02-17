@@ -6,7 +6,7 @@ Functions under test in extropy/simulation/stopping.py.
 """
 
 from extropy.core.models import TimestepSummary
-from extropy.core.models.scenario import SimulationConfig
+from extropy.core.models.scenario import ScenarioSimConfig
 from extropy.simulation.state import StateManager
 from extropy.simulation.stopping import (
     evaluate_convergence,
@@ -188,7 +188,7 @@ class TestEvaluateStoppingConditions:
         """Stops when timestep >= max_timesteps - 1."""
         agents = [{"_id": "a0"}]
         sm = self._make_state_manager(tmp_path, agents)
-        config = SimulationConfig(max_timesteps=100)
+        config = ScenarioSimConfig(max_timesteps=100)
 
         should_stop, reason = evaluate_stopping_conditions(99, config, sm, [])
         assert should_stop is True
@@ -198,7 +198,7 @@ class TestEvaluateStoppingConditions:
         """Doesn't stop before max_timesteps with no conditions."""
         agents = [{"_id": "a0"}]
         sm = self._make_state_manager(tmp_path, agents)
-        config = SimulationConfig(max_timesteps=100)
+        config = ScenarioSimConfig(max_timesteps=100)
 
         should_stop, reason = evaluate_stopping_conditions(50, config, sm, [])
         assert should_stop is False
@@ -211,7 +211,7 @@ class TestEvaluateStoppingConditions:
         sm = self._make_state_manager(
             tmp_path, agents, aware_ids=[f"a{i}" for i in range(10)]
         )
-        config = SimulationConfig(
+        config = ScenarioSimConfig(
             max_timesteps=100,
             stop_conditions=["exposure_rate > 0.95"],
         )
@@ -225,7 +225,7 @@ class TestEvaluateStoppingConditions:
         agents = [{"_id": f"a{i}"} for i in range(10)]
         # Make 3/10 agents aware → 30% exposure rate
         sm = self._make_state_manager(tmp_path, agents, aware_ids=["a0", "a1", "a2"])
-        config = SimulationConfig(
+        config = ScenarioSimConfig(
             max_timesteps=100,
             stop_conditions=["exposure_rate > 0.95"],
         )
@@ -238,7 +238,7 @@ class TestEvaluateStoppingConditions:
         """No custom conditions and not at max → doesn't stop."""
         agents = [{"_id": "a0"}]
         sm = self._make_state_manager(tmp_path, agents)
-        config = SimulationConfig(max_timesteps=100, stop_conditions=None)
+        config = ScenarioSimConfig(max_timesteps=100, stop_conditions=None)
 
         should_stop, reason = evaluate_stopping_conditions(50, config, sm, [])
         assert should_stop is False
@@ -247,7 +247,7 @@ class TestEvaluateStoppingConditions:
         """Convergence condition triggers when distribution is stable."""
         agents = [{"_id": "a0"}]
         sm = self._make_state_manager(tmp_path, agents)
-        config = SimulationConfig(
+        config = ScenarioSimConfig(
             max_timesteps=100,
             stop_conditions=["convergence"],
         )
@@ -261,7 +261,7 @@ class TestEvaluateStoppingConditions:
         """No state changes condition triggers after enough stable timesteps."""
         agents = [{"_id": "a0"}]
         sm = self._make_state_manager(tmp_path, agents)
-        config = SimulationConfig(
+        config = ScenarioSimConfig(
             max_timesteps=100,
             stop_conditions=["no_state_changes_for > 5"],
         )
@@ -274,7 +274,7 @@ class TestEvaluateStoppingConditions:
         """Simulation stops when no agents reason for 3 consecutive timesteps."""
         agents = [{"_id": "a0"}]
         sm = self._make_state_manager(tmp_path, agents)
-        config = SimulationConfig(max_timesteps=100)
+        config = ScenarioSimConfig(max_timesteps=100)
 
         summaries = [
             _make_summary(0, agents_reasoned=5),
@@ -291,7 +291,7 @@ class TestEvaluateStoppingConditions:
         """Quiescence should NOT trigger if agents reasoned in one of the last 3 timesteps."""
         agents = [{"_id": "a0"}]
         sm = self._make_state_manager(tmp_path, agents)
-        config = SimulationConfig(max_timesteps=100)
+        config = ScenarioSimConfig(max_timesteps=100)
 
         summaries = [
             _make_summary(0, agents_reasoned=5),
@@ -307,7 +307,7 @@ class TestEvaluateStoppingConditions:
         """Quiescence should NOT trigger with fewer than 3 summaries."""
         agents = [{"_id": "a0"}]
         sm = self._make_state_manager(tmp_path, agents)
-        config = SimulationConfig(max_timesteps=100)
+        config = ScenarioSimConfig(max_timesteps=100)
 
         summaries = [
             _make_summary(0, agents_reasoned=0),

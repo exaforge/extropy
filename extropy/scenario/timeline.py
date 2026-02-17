@@ -8,7 +8,7 @@ import logging
 from typing import Any
 
 from ..core.llm import reasoning_call
-from ..core.models import Event, SimulationConfig, TimelineEvent, TimestepUnit
+from ..core.models import Event, ScenarioSimConfig, TimelineEvent, TimestepUnit
 
 logger = logging.getLogger(__name__)
 
@@ -108,7 +108,7 @@ TIMELINE_SCHEMA: dict[str, Any] = {
 def _build_timeline_prompt(
     scenario_description: str,
     base_event: Event,
-    simulation_config: SimulationConfig,
+    simulation_config: ScenarioSimConfig,
     timeline_mode: str | None,
 ) -> str:
     """Build the LLM prompt for timeline generation."""
@@ -197,9 +197,9 @@ def _build_timeline_prompt(
 def generate_timeline(
     scenario_description: str,
     base_event: Event,
-    simulation_config: SimulationConfig,
+    simulation_config: ScenarioSimConfig,
     timeline_mode: str | None = None,
-) -> tuple[list[TimelineEvent], str | None, SimulationConfig]:
+) -> tuple[list[TimelineEvent], str | None, ScenarioSimConfig]:
     """Generate timeline events and background context.
 
     Args:
@@ -247,14 +247,14 @@ def generate_timeline(
             "day": TimestepUnit.DAY,
         }
         resolved_unit = unit_map.get(llm_unit, simulation_config.timestep_unit)
-        simulation_config = SimulationConfig(
+        simulation_config = ScenarioSimConfig(
             max_timesteps=llm_max if llm_max else simulation_config.max_timesteps,
             timestep_unit=resolved_unit,
             stop_conditions=simulation_config.stop_conditions,
             seed=simulation_config.seed,
         )
     elif llm_max:
-        simulation_config = SimulationConfig(
+        simulation_config = ScenarioSimConfig(
             max_timesteps=llm_max,
             timestep_unit=simulation_config.timestep_unit,
             stop_conditions=simulation_config.stop_conditions,
