@@ -570,24 +570,28 @@ class TestChatCommand:
             return {"assistant_text": "I am still at old_pos."}
 
         monkeypatch.setattr(chat_cmd, "simple_call", fake_simple_call)
+        monkeypatch.setattr(chat_cmd, "is_agent_mode", lambda: True)
 
-        result = runner.invoke(
-            app,
-            [
-                "chat",
-                "ask",
-                "--study-db",
-                str(study_db),
-                "--run-id",
-                "run_old",
-                "--agent-id",
-                "a0",
-                "--prompt",
-                "what is my stance",
-                "--json",
-            ],
-        )
-        assert result.exit_code == 0
+        old_cwd = os.getcwd()
+        try:
+            os.chdir(tmp_path)
+            result = runner.invoke(
+                app,
+                [
+                    "chat",
+                    "ask",
+                    "--run-id",
+                    "run_old",
+                    "--agent-id",
+                    "a0",
+                    "--prompt",
+                    "what is my stance",
+                ],
+            )
+        finally:
+            os.chdir(old_cwd)
+
+        assert result.exit_code == 0, result.output
         payload = json.loads(result.stdout.strip())
         assert payload["session_id"]
         assert payload["assistant_text"] == "I am still at old_pos."
@@ -624,26 +628,30 @@ class TestChatCommand:
             return {"assistant_text": "second answer"}
 
         monkeypatch.setattr(chat_cmd, "simple_call", fake_simple_call)
+        monkeypatch.setattr(chat_cmd, "is_agent_mode", lambda: True)
 
-        result = runner.invoke(
-            app,
-            [
-                "chat",
-                "ask",
-                "--study-db",
-                str(study_db),
-                "--run-id",
-                "run_old",
-                "--agent-id",
-                "a0",
-                "--session-id",
-                sid,
-                "--prompt",
-                "second question",
-                "--json",
-            ],
-        )
-        assert result.exit_code == 0
+        old_cwd = os.getcwd()
+        try:
+            os.chdir(tmp_path)
+            result = runner.invoke(
+                app,
+                [
+                    "chat",
+                    "ask",
+                    "--run-id",
+                    "run_old",
+                    "--agent-id",
+                    "a0",
+                    "--session-id",
+                    sid,
+                    "--prompt",
+                    "second question",
+                ],
+            )
+        finally:
+            os.chdir(old_cwd)
+
+        assert result.exit_code == 0, result.output
         assert "first question" in captured["prompt"]
         assert "first answer" in captured["prompt"]
         assert "second question" in captured["prompt"]
@@ -670,45 +678,57 @@ class TestChatCommand:
             return {"assistant_text": "latest run default works"}
 
         monkeypatch.setattr(chat_cmd, "simple_call", fake_simple_call)
+        monkeypatch.setattr(chat_cmd, "is_agent_mode", lambda: True)
 
-        result = runner.invoke(
-            app,
-            [
-                "chat",
-                "ask",
-                "--study-db",
-                str(study_db),
-                "--prompt",
-                "default target?",
-                "--json",
-            ],
-        )
-        assert result.exit_code == 0
+        old_cwd = os.getcwd()
+        try:
+            os.chdir(tmp_path)
+            result = runner.invoke(
+                app,
+                [
+                    "chat",
+                    "ask",
+                    "--prompt",
+                    "default target?",
+                ],
+            )
+        finally:
+            os.chdir(old_cwd)
+
+        assert result.exit_code == 0, result.output
         payload = json.loads(result.stdout.strip())
         assert payload["run_id"] == "run_new"
         assert payload["agent_id"] == "a0"
         assert "new_pos" in captured["prompt"]
         assert "old_pos" not in captured["prompt"]
 
-    def test_chat_list_outputs_recent_runs_and_sample_agents(self, tmp_path):
+    def test_chat_list_outputs_recent_runs_and_sample_agents(
+        self, tmp_path, monkeypatch
+    ):
         study_db = tmp_path / "study.db"
         _seed_run_scoped_state(study_db)
+        import extropy.cli.commands.chat as chat_cmd
 
-        result = runner.invoke(
-            app,
-            [
-                "chat",
-                "list",
-                "--study-db",
-                str(study_db),
-                "--limit-runs",
-                "2",
-                "--agents-per-run",
-                "2",
-                "--json",
-            ],
-        )
-        assert result.exit_code == 0
+        monkeypatch.setattr(chat_cmd, "is_agent_mode", lambda: True)
+
+        old_cwd = os.getcwd()
+        try:
+            os.chdir(tmp_path)
+            result = runner.invoke(
+                app,
+                [
+                    "chat",
+                    "list",
+                    "--limit-runs",
+                    "2",
+                    "--agents-per-run",
+                    "2",
+                ],
+            )
+        finally:
+            os.chdir(old_cwd)
+
+        assert result.exit_code == 0, result.output
         payload = json.loads(result.stdout.strip())
         assert payload["runs"]
         assert payload["runs"][0]["run_id"] == "run_new"
