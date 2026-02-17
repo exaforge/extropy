@@ -7,12 +7,25 @@ Complete reference for all Extropy CLI commands, flags, and options.
 ## Pipeline Overview
 
 ```
-extropy spec ──> extropy extend ──> extropy sample ──> extropy network ──> extropy persona ──> extropy scenario ──> extropy simulate
-                                                                                                                     │              │
-                                                                                                              extropy estimate    extropy results
+extropy spec ──> extropy scenario ──> extropy persona ──> extropy sample ──> extropy network ──> extropy simulate ──> extropy results
+                                                                                                      │
+                                                                                               extropy estimate
 ```
 
-Canonical data store: `study.db` (SQLite). All commands read from and write to this database.
+All commands operate within a **study folder** — a directory containing `study.db` and scenario subdirectories. Commands auto-detect the study folder from the current working directory.
+
+**Study folder structure:**
+```
+my-study/
+├── study.db                    # Canonical data store (SQLite)
+├── population.v1.yaml          # Base population spec
+├── scenario/
+│   └── my-scenario/
+│       ├── scenario.v1.yaml    # Scenario spec
+│       └── persona.v1.yaml     # Persona config
+└── results/
+    └── my-scenario/            # Simulation outputs
+```
 
 ---
 
@@ -21,7 +34,7 @@ Canonical data store: `study.db` (SQLite). All commands read from and write to t
 Build a population specification from a natural language description.
 
 ```bash
-extropy spec "500 Austin TX commuters" -o austin/base.yaml -y
+extropy spec "Austin TX commuters" -o population.v1.yaml -y
 ```
 
 ### Arguments
@@ -39,54 +52,77 @@ extropy spec "500 Austin TX commuters" -o austin/base.yaml -y
 
 ---
 
-## extropy extend
+## extropy scenario
 
-Extend a base population spec with scenario-relevant attributes.
+Create a scenario spec with extended attributes and event configuration.
 
 ```bash
-extropy extend austin/base.yaml -s "Response to $15/day congestion tax" -o austin/population.yaml -y
+extropy scenario -s "Response to $15/day congestion tax" -o scenario/congestion-tax -y
 ```
-
-### Arguments
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `base_spec` | path | yes | Path to base population spec YAML |
 
 ### Options
 
 | Flag | Short | Type | Default | Description |
 |------|-------|------|---------|-------------|
 | `--scenario` | `-s` | string | required | Scenario description |
-| `--output` | `-o` | path | required | Output merged spec YAML |
+| `--output` | `-o` | path | required | Output directory (creates `scenario.v1.yaml`) |
+| `--base-population` | | string | `population.v1` | Base population reference (`name` or `name.vN`) |
 | `--yes` | `-y` | flag | false | Skip confirmation prompts |
+
+The scenario spec includes:
+- Extended attributes specific to the scenario
+- Event definition (type, content, source)
+- Seed exposure rules
+- Interaction model
+- Outcome configuration
+- Simulation settings
 
 ---
 
-## extropy sample
+## extropy persona
 
-Sample concrete agents from a population specification.
+Generate persona rendering configuration for a scenario.
 
 ```bash
-extropy sample austin/population.yaml --study-db austin/study.db --seed 42
+extropy persona -s congestion-tax -y
 ```
-
-### Arguments
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `spec_file` | path | yes | Population spec YAML to sample from |
 
 ### Options
 
 | Flag | Short | Type | Default | Description |
 |------|-------|------|---------|-------------|
-| `--study-db` | | path | required | Canonical study database path |
-| `--population-id` | | string | `default` | Population ID in study DB |
-| `--count` | `-n` | int | spec size | Number of agents to sample |
+| `--scenario` | `-s` | string | auto | Scenario name (auto-selects if only one exists) |
+| `--preview/--no-preview` | | flag | true | Show sample persona before saving |
+| `--agent` | | int | 0 | Agent index for preview |
+| `--yes` | `-y` | flag | false | Skip confirmation prompts |
+| `--show` | | flag | false | Preview existing config without regenerating |
+
+---
+
+## extropy sample
+
+Sample agents from a scenario's merged population spec.
+
+```bash
+extropy sample -s congestion-tax -n 500 --seed 42
+```
+
+### Options
+
+| Flag | Short | Type | Default | Description |
+|------|-------|------|---------|-------------|
+| `--scenario` | `-s` | string | auto | Scenario name (auto-selects if only one exists) |
+| `--count` | `-n` | int | required | Number of agents to sample |
 | `--seed` | | int | random | Random seed for reproducibility |
 | `--report` | `-r` | flag | false | Show distribution summaries after sampling |
 | `--skip-validation` | | flag | false | Skip spec validation before sampling |
+
+Sampling process:
+1. Loads scenario's `base_population` spec
+2. Merges with scenario's `extended_attributes`
+3. Validates the merged spec
+4. Samples agents
+5. Saves to `study.db` keyed by `scenario_id`
 
 ---
 
@@ -95,87 +131,37 @@ extropy sample austin/population.yaml --study-db austin/study.db --seed 42
 Generate a social network connecting sampled agents.
 
 ```bash
-extropy network --study-db austin/study.db -p austin/population.yaml --seed 42
+extropy network -s congestion-tax --seed 42
 ```
 
 ### Options
 
 | Flag | Short | Type | Default | Description |
 |------|-------|------|---------|-------------|
-| `--study-db` | | path | required | Canonical study database path |
-| `--population-id` | | string | `default` | Population ID to load agents from |
-| `--network-id` | | string | `default` | Network ID to write |
-| `--population` | `-p` | path | | Population spec YAML (generates network config via LLM) |
-| `--network-config` | `-c` | path | | Custom network config YAML file |
-| `--quality-profile` | | string | `balanced` | Quality profile: `fast`, `balanced`, `strict` |
-| `--avg-degree` | | int | 20 | Target average connections per agent |
-| `--rewire-prob` | | float | 0.05 | Watts-Strogatz rewiring probability |
+| `--scenario` | `-s` | string | auto | Scenario name (auto-selects if only one exists) |
+| `--output` | `-o` | path | | Output network JSON (defaults to scenario folder) |
+| `--network-config` | `-c` | path | | Custom network config YAML |
+| `--generate-config` | | flag | false | Generate network config via LLM |
 | `--seed` | | int | random | Random seed for reproducibility |
-| `--validate` | `-v` | flag | false | Print network validation metrics |
-| `--resume` | | flag | false | Resume from checkpoint in study DB |
+| `--no-metrics` | | flag | false | Skip network metrics calculation |
+| `--resume` | | flag | false | Resume from checkpoint |
 
-#### Resource Tuning Options
+#### Performance Options
 
 | Flag | Type | Default | Description |
 |------|------|---------|-------------|
-| `--num-restarts` | int | profile | Number of calibration restarts |
-| `--max-iters` | int | profile | Max iterations per restart |
-| `--calibration-metric` | string | profile | Metric to optimize |
-| `--min-degree` | int | profile | Minimum node degree |
-| `--clustering-target` | float | profile | Target clustering coefficient |
-| `--clustering-tolerance` | float | profile | Clustering tolerance |
+| `--candidate-mode` | string | `all` | Candidate selection: `all`, `blocked`, `sampled` |
+| `--candidate-pool-multiplier` | float | 4.0 | Multiplier for candidate pool size |
+| `--block-attr` | string | | Attribute for block-based candidate selection |
+| `--similarity-workers` | int | auto | Parallel workers for similarity computation |
+| `--similarity-chunk-size` | int | 100 | Chunk size for similarity batches |
 
----
+#### Checkpointing
 
-## extropy persona
-
-Generate persona rendering configuration for a population.
-
-```bash
-extropy persona austin/population.yaml --study-db austin/study.db -y
-```
-
-### Arguments
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `spec_file` | path | yes | Population spec YAML |
-
-### Options
-
-| Flag | Short | Type | Default | Description |
-|------|-------|------|---------|-------------|
-| `--study-db` | | path | | Study DB to load agents from (preferred) |
-| `--population-id` | | string | `default` | Population ID when using --study-db |
-| `--agents` | `-a` | path | | Legacy: sampled agents JSON file |
-| `--output` | `-o` | path | `{spec}.persona.yaml` | Output persona config path |
-| `--preview/--no-preview` | | flag | true | Show sample persona before saving |
-| `--agent` | | int | 0 | Agent index for preview |
-| `--yes` | `-y` | flag | false | Skip confirmation prompts |
-| `--show` | `-s` | flag | false | Preview existing config without regenerating |
-
----
-
-## extropy scenario
-
-Compile a scenario specification from population and network.
-
-```bash
-extropy scenario -p austin/population.yaml --study-db austin/study.db -o austin/scenario.yaml -y
-```
-
-### Options
-
-| Flag | Short | Type | Default | Description |
-|------|-------|------|---------|-------------|
-| `--population` | `-p` | path | required | Population spec YAML |
-| `--study-db` | | path | required | Canonical study database path |
-| `--population-id` | | string | `default` | Population ID in study DB |
-| `--network-id` | | string | `default` | Network ID in study DB |
-| `--description` | `-d` | string | from spec | Scenario description |
-| `--output` | `-o` | path | `{pop}.scenario.yaml` | Output scenario spec path |
-| `--timeline` | | path | | Timeline events YAML for evolving scenarios |
-| `--yes` | `-y` | flag | false | Skip confirmation prompts |
+| Flag | Type | Default | Description |
+|------|------|---------|-------------|
+| `--checkpoint` | path | | Path to study.db for checkpointing |
+| `--checkpoint-every` | int | 5 | Checkpoint frequency (iterations) |
 
 ---
 
@@ -184,26 +170,20 @@ extropy scenario -p austin/population.yaml --study-db austin/study.db -o austin/
 Run the simulation engine.
 
 ```bash
-extropy simulate austin/scenario.yaml --study-db austin/study.db -o austin/results --seed 42
+extropy simulate -s congestion-tax --seed 42
 ```
-
-### Arguments
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `scenario_file` | path | yes | Scenario spec YAML |
 
 ### Options
 
 | Flag | Short | Type | Default | Description |
 |------|-------|------|---------|-------------|
-| `--output` | `-o` | path | required | Output results directory |
-| `--study-db` | | path | required | Canonical study database path |
+| `--scenario` | `-s` | string | auto | Scenario name (auto-selects if only one exists) |
+| `--output` | `-o` | path | `results/{scenario}/` | Output results directory |
 | `--seed` | | int | random | Random seed for reproducibility |
 | `--fidelity` | `-f` | string | `medium` | Fidelity tier: `low`, `medium`, `high` |
 | `--merged-pass` | | flag | false | Single-pass reasoning (cheaper, less accurate) |
 | `--threshold` | `-t` | int | 3 | Multi-touch threshold for re-reasoning |
-| `--chunk-size` | | int | 50 | Agents per reasoning chunk (checkpoint granularity) |
+| `--chunk-size` | | int | 50 | Agents per reasoning chunk |
 | `--resume` | | flag | false | Resume from checkpoint |
 | `--run-id` | | string | auto | Simulation run ID |
 
@@ -214,7 +194,7 @@ extropy simulate austin/scenario.yaml --study-db austin/study.db -o austin/resul
 | `--strong` | `-m` | string | config | Strong model for Pass 1 (`provider/model`) |
 | `--fast` | | string | config | Fast model for Pass 2 (`provider/model`) |
 
-#### Rate Limiting Options
+#### Rate Limiting
 
 | Flag | Type | Default | Description |
 |------|------|---------|-------------|
@@ -233,52 +213,46 @@ extropy simulate austin/scenario.yaml --study-db austin/study.db -o austin/resul
 
 ---
 
+## extropy results
+
+Display simulation results.
+
+```bash
+extropy results
+extropy results --segment income
+extropy results --timeline
+extropy results --agent agent_042
+```
+
+### Options
+
+| Flag | Short | Type | Default | Description |
+|------|-------|------|---------|-------------|
+| `--scenario` | `-s` | string | | Filter by scenario |
+| `--run-id` | | string | latest | Simulation run ID |
+| `--segment` | | string | | Attribute to segment results by |
+| `--timeline` | `-t` | flag | false | Show timeline view |
+| `--agent` | `-a` | string | | Show single agent details |
+
+---
+
 ## extropy estimate
 
 Predict simulation cost without making API calls.
 
 ```bash
-extropy estimate austin/scenario.yaml --study-db austin/study.db
+extropy estimate -s congestion-tax
 ```
-
-### Arguments
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `scenario_file` | path | yes | Scenario spec YAML |
 
 ### Options
 
 | Flag | Short | Type | Default | Description |
 |------|-------|------|---------|-------------|
-| `--study-db` | | path | required | Canonical study database path |
-| `--strong` | `-m` | string | config | Strong model for Pass 1 (`provider/model`) |
-| `--fast` | | string | config | Fast model for Pass 2 (`provider/model`) |
+| `--scenario` | `-s` | string | auto | Scenario name |
+| `--strong` | `-m` | string | config | Strong model for Pass 1 |
+| `--fast` | | string | config | Fast model for Pass 2 |
 | `--threshold` | `-t` | int | 3 | Multi-touch threshold |
 | `--verbose` | `-v` | flag | false | Show per-timestep breakdown |
-
----
-
-## extropy results
-
-Display simulation results from the study database.
-
-```bash
-extropy results --study-db austin/study.db
-extropy results --study-db austin/study.db --segment income
-extropy results --study-db austin/study.db --timeline
-extropy results --study-db austin/study.db --agent agent_042
-```
-
-### Options
-
-| Flag | Short | Type | Default | Description |
-|------|-------|------|---------|-------------|
-| `--study-db` | | path | required | Canonical study database path |
-| `--run-id` | | string | latest | Simulation run ID |
-| `--segment` | `-s` | string | | Attribute to segment results by |
-| `--timeline` | `-t` | flag | false | Show timeline view |
-| `--agent` | `-a` | string | | Show single agent details |
 
 ---
 
@@ -287,9 +261,9 @@ extropy results --study-db austin/study.db --agent agent_042
 Validate a population or scenario spec.
 
 ```bash
-extropy validate austin/population.yaml
-extropy validate austin/scenario.yaml
-extropy validate austin/population.yaml --strict
+extropy validate population.v1.yaml
+extropy validate scenario/congestion-tax/scenario.v1.yaml
+extropy validate population.v1.yaml --strict
 ```
 
 ### Arguments
@@ -352,36 +326,36 @@ Export data from the study database.
 ### extropy export agents
 
 ```bash
-extropy export agents --study-db austin/study.db --to agents.jsonl
+extropy export agents --to agents.jsonl
 ```
 
 | Flag | Type | Default | Description |
 |------|------|---------|-------------|
-| `--study-db` | path | required | Study database path |
-| `--population-id` | string | `default` | Population ID |
+| `--study-db` | path | `./study.db` | Study database path |
+| `--scenario` | string | | Filter by scenario ID |
 | `--to` | path | required | Output file path |
 
 ### extropy export edges
 
 ```bash
-extropy export edges --study-db austin/study.db --to edges.jsonl
+extropy export edges --to edges.jsonl
 ```
 
 | Flag | Type | Default | Description |
 |------|------|---------|-------------|
-| `--study-db` | path | required | Study database path |
-| `--network-id` | string | `default` | Network ID |
+| `--study-db` | path | `./study.db` | Study database path |
+| `--scenario` | string | | Filter by scenario ID |
 | `--to` | path | required | Output file path |
 
 ### extropy export states
 
 ```bash
-extropy export states --study-db austin/study.db --to states.jsonl
+extropy export states --to states.jsonl
 ```
 
 | Flag | Type | Default | Description |
 |------|------|---------|-------------|
-| `--study-db` | path | required | Study database path |
+| `--study-db` | path | `./study.db` | Study database path |
 | `--run-id` | string | latest | Simulation run ID |
 | `--to` | path | required | Output file path |
 
@@ -394,49 +368,48 @@ Inspect study database entities.
 ### extropy inspect summary
 
 ```bash
-extropy inspect summary --study-db austin/study.db
+extropy inspect summary
 ```
 
 | Flag | Type | Default | Description |
 |------|------|---------|-------------|
-| `--study-db` | path | required | Study database path |
-| `--population-id` | string | `default` | Population ID |
-| `--network-id` | string | `default` | Network ID |
+| `--study-db` | path | `./study.db` | Study database path |
+| `--scenario` | string | | Filter by scenario |
 | `--run-id` | string | latest | Simulation run ID |
 
 ### extropy inspect agent
 
 ```bash
-extropy inspect agent --study-db austin/study.db --agent-id agent_042
+extropy inspect agent --agent-id agent_042
 ```
 
 | Flag | Type | Default | Description |
 |------|------|---------|-------------|
-| `--study-db` | path | required | Study database path |
+| `--study-db` | path | `./study.db` | Study database path |
 | `--agent-id` | string | required | Agent ID |
 | `--run-id` | string | latest | Simulation run ID |
 
 ### extropy inspect network
 
 ```bash
-extropy inspect network --study-db austin/study.db
+extropy inspect network
 ```
 
 | Flag | Type | Default | Description |
 |------|------|---------|-------------|
-| `--study-db` | path | required | Study database path |
-| `--network-id` | string | `default` | Network ID |
+| `--study-db` | path | `./study.db` | Study database path |
+| `--scenario` | string | | Filter by scenario |
 | `--top` | int | 10 | Number of top-degree nodes to show |
 
 ### extropy inspect network-status
 
 ```bash
-extropy inspect network-status --study-db austin/study.db --network-run-id <id>
+extropy inspect network-status --network-run-id <id>
 ```
 
 | Flag | Type | Default | Description |
 |------|------|---------|-------------|
-| `--study-db` | path | required | Study database path |
+| `--study-db` | path | `./study.db` | Study database path |
 | `--network-run-id` | string | required | Network generation run ID |
 
 ---
@@ -446,14 +419,14 @@ extropy inspect network-status --study-db austin/study.db --network-run-id <id>
 Run read-only SQL queries against the study database.
 
 ```bash
-extropy query sql --study-db austin/study.db --sql "SELECT * FROM agents LIMIT 10"
+extropy query sql --sql "SELECT * FROM agents LIMIT 10"
 ```
 
 ### extropy query sql
 
 | Flag | Type | Default | Description |
 |------|------|---------|-------------|
-| `--study-db` | path | required | Study database path |
+| `--study-db` | path | `./study.db` | Study database path |
 | `--sql` | string | required | Read-only SQL statement |
 | `--limit` | int | 1000 | Max rows to return |
 | `--format` | string | `table` | Output format: `table`, `json`, `jsonl` |
@@ -469,25 +442,25 @@ Generate JSON reports from simulation data.
 ### extropy report run
 
 ```bash
-extropy report run --study-db austin/study.db -o report.json
+extropy report run -o report.json
 ```
 
 | Flag | Short | Type | Default | Description |
 |------|-------|------|---------|-------------|
-| `--study-db` | | path | required | Study database path |
+| `--study-db` | | path | `./study.db` | Study database path |
 | `--run-id` | | string | latest | Simulation run ID |
 | `--output` | `-o` | path | required | Output JSON file |
 
 ### extropy report network
 
 ```bash
-extropy report network --study-db austin/study.db -o network-report.json
+extropy report network -o network-report.json
 ```
 
 | Flag | Short | Type | Default | Description |
 |------|-------|------|---------|-------------|
-| `--study-db` | | path | required | Study database path |
-| `--network-id` | | string | `default` | Network ID |
+| `--study-db` | | path | `./study.db` | Study database path |
+| `--scenario` | | string | | Filter by scenario |
 | `--output` | `-o` | path | required | Output JSON file |
 
 ---
@@ -499,12 +472,12 @@ Interactive chat with simulated agents.
 ### Interactive REPL
 
 ```bash
-extropy chat --study-db austin/study.db --run-id <id> --agent-id agent_042
+extropy chat --run-id <id> --agent-id agent_042
 ```
 
 | Flag | Type | Default | Description |
 |------|------|---------|-------------|
-| `--study-db` | path | required | Study database path |
+| `--study-db` | path | `./study.db` | Study database path |
 | `--run-id` | string | required | Simulation run ID |
 | `--agent-id` | string | required | Agent ID |
 | `--session-id` | string | auto | Chat session ID |
@@ -516,54 +489,18 @@ REPL commands: `/context`, `/timeline <n>`, `/history`, `/exit`
 Non-interactive API for automation.
 
 ```bash
-extropy chat ask --study-db austin/study.db --run-id <id> --agent-id agent_042 \
+extropy chat ask --run-id <id> --agent-id agent_042 \
   --prompt "What changed your mind?" --json
 ```
 
 | Flag | Type | Default | Description |
 |------|------|---------|-------------|
-| `--study-db` | path | required | Study database path |
+| `--study-db` | path | `./study.db` | Study database path |
 | `--run-id` | string | required | Simulation run ID |
 | `--agent-id` | string | required | Agent ID |
 | `--prompt` | string | required | Question to ask |
 | `--session-id` | string | auto | Chat session ID |
 | `--json` | flag | false | Output JSON response |
-
----
-
-## extropy migrate
-
-Migrate legacy artifacts to the study database.
-
-### extropy migrate legacy
-
-```bash
-extropy migrate legacy --study-db austin/study.db \
-  --agents-file agents.json --network-file network.json
-```
-
-| Flag | Type | Default | Description |
-|------|------|---------|-------------|
-| `--study-db` | path | required | Target study database |
-| `--agents-file` | path | | Legacy agents JSON |
-| `--network-file` | path | | Legacy network JSON |
-| `--population-spec` | path | | Population spec for provenance |
-| `--population-id` | string | `default` | Population ID |
-| `--network-id` | string | `default` | Network ID |
-
-### extropy migrate scenario
-
-```bash
-extropy migrate scenario --input old-scenario.yaml --study-db austin/study.db -o new-scenario.yaml
-```
-
-| Flag | Short | Type | Default | Description |
-|------|-------|------|---------|-------------|
-| `--input` | | path | required | Legacy scenario YAML |
-| `--study-db` | | path | required | Study database path |
-| `--population-id` | | string | `default` | Population ID |
-| `--network-id` | | string | `default` | Network ID |
-| `--output` | `-o` | path | `{input}.db-first.yaml` | Output scenario path |
 
 ---
 
@@ -593,32 +530,29 @@ extropy migrate scenario --input old-scenario.yaml --study-db austin/study.db -o
 
 ```bash
 # Full pipeline
-STUDY=runs/my-study
-DB=$STUDY/study.db
-mkdir -p $STUDY
+cd my-study  # study folder
 
-extropy spec "500 Austin TX commuters" -o $STUDY/base.yaml -y
-extropy extend $STUDY/base.yaml -s "Response to $15/day congestion tax" -o $STUDY/population.yaml -y
-extropy sample $STUDY/population.yaml --study-db $DB --seed 42
-extropy network --study-db $DB -p $STUDY/population.yaml --seed 42
-extropy persona $STUDY/population.yaml --study-db $DB -y
-extropy scenario -p $STUDY/population.yaml --study-db $DB -o $STUDY/scenario.yaml -y
+extropy spec "Austin TX commuters" -o population.v1.yaml -y
+extropy scenario -s "Response to $15/day congestion tax" -o scenario/congestion-tax -y
+extropy persona -s congestion-tax -y
+extropy sample -s congestion-tax -n 500 --seed 42
+extropy network -s congestion-tax --seed 42
 
 # Estimate cost
-extropy estimate $STUDY/scenario.yaml --study-db $DB
+extropy estimate -s congestion-tax
 
 # Run simulation
-extropy simulate $STUDY/scenario.yaml --study-db $DB -o $STUDY/results --seed 42
+extropy simulate -s congestion-tax --seed 42
 
 # View results
-extropy results --study-db $DB
-extropy results --study-db $DB --segment income
-extropy results --study-db $DB --timeline
-extropy results --study-db $DB --agent agent_042
+extropy results
+extropy results --segment income
+extropy results --timeline
+extropy results --agent agent_042
 
 # Validate
-extropy validate $STUDY/population.yaml
-extropy validate $STUDY/scenario.yaml
+extropy validate population.v1.yaml
+extropy validate scenario/congestion-tax/scenario.v1.yaml
 
 # Config
 extropy config show

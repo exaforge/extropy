@@ -38,21 +38,23 @@ Requires Python 3.11+. [uv](https://github.com/astral-sh/uv) recommended.
 ## Quick Start
 
 ```bash
-STUDY=runs/congestion-tax && DB=$STUDY/study.db && mkdir -p $STUDY
+cd runs/congestion-tax  # study folder with study.db
 
-# Build population + network
-extropy spec "500 Austin TX commuters" -o $STUDY/base.yaml -y
-extropy extend $STUDY/base.yaml -s "Response to $15/day congestion tax" -o $STUDY/population.yaml -y
-extropy sample $STUDY/population.yaml --study-db $DB --seed 42
-extropy network --study-db $DB -p $STUDY/population.yaml --seed 42
+# Build population + scenario
+extropy spec "Austin TX commuters" -o population.v1.yaml -y
+extropy scenario -s "Response to $15/day congestion tax" -o scenario/congestion-tax -y
+extropy persona -s congestion-tax -y
+
+# Sample + network
+extropy sample -s congestion-tax -n 500 --seed 42
+extropy network -s congestion-tax --seed 42
 
 # Run simulation
-extropy scenario -p $STUDY/population.yaml --study-db $DB -o $STUDY/scenario.yaml -y
-extropy simulate $STUDY/scenario.yaml --study-db $DB -o $STUDY/results --seed 42
+extropy simulate -s congestion-tax --seed 42
 
 # Results
-extropy results --study-db $DB
-extropy results --study-db $DB --segment income
+extropy results
+extropy results --segment income
 ```
 
 ## How It Works

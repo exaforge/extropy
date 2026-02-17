@@ -2,6 +2,14 @@
 
 Extropy has three phases, each mapping to a package under `extropy/`.
 
+## CLI Pipeline
+
+```
+extropy spec → extropy scenario → extropy persona → extropy sample → extropy network → extropy simulate → extropy results
+```
+
+All commands operate within a **study folder** — a directory containing `study.db` and scenario subdirectories. Data is keyed by `scenario_id` rather than `population_id`.
+
 ---
 
 ## Phase 1: Population Creation (`extropy/population/`)
@@ -242,22 +250,44 @@ All Pydantic v2:
 
 ## Storage (`extropy/storage/`)
 
-Canonical store: `study.db` (SQLite)
+Canonical store: `study.db` (SQLite) in the study folder root.
+
+### Study Folder Structure
+
+```
+my-study/
+├── study.db                    # Canonical data store
+├── population.v1.yaml          # Base population spec
+├── scenario/
+│   └── my-scenario/
+│       ├── scenario.v1.yaml    # Scenario spec (references base_population)
+│       ├── persona.v1.yaml     # Persona rendering config
+│       └── network-config.yaml # Optional custom network config
+└── results/
+    └── my-scenario/            # Simulation outputs
+```
 
 ### Tables
 
-| Table | Contents |
-|-------|----------|
-| `agents` | Sampled agent attributes (JSON) |
-| `network_edges` | Social graph edges with weights and types |
-| `agent_states` | Current simulation state per agent |
-| `exposures` | Exposure records with source and channel |
-| `memory_traces` | Agent memory entries |
-| `timeline` | Simulation events (JSONL-style) |
-| `timestep_summaries` | Per-timestep aggregates |
-| `simulation_runs` | Run metadata and status |
-| `simulation_metadata` | Checkpoint state |
-| `chat_sessions` | Post-sim agent chat sessions |
+| Table | Contents | Key |
+|-------|----------|-----|
+| `agents` | Sampled agent attributes (JSON) | `scenario_id` |
+| `network_edges` | Social graph edges with weights and types | `scenario_id` |
+| `agent_states` | Current simulation state per agent | `run_id` |
+| `exposures` | Exposure records with source and channel | `run_id` |
+| `memory_traces` | Agent memory entries | `run_id` |
+| `timeline` | Simulation events (JSONL-style) | `run_id` |
+| `timestep_summaries` | Per-timestep aggregates | `run_id` |
+| `simulation_runs` | Run metadata and status | `run_id` |
+| `simulation_metadata` | Checkpoint state | `run_id` |
+| `chat_sessions` | Post-sim agent chat sessions | `session_id` |
+
+### Scenario-Centric Keying
+
+Agents and network edges are keyed by `scenario_id`, not `population_id`. This allows:
+- Multiple scenarios to share a base population spec
+- Each scenario to have its own extended attributes merged at sample time
+- Clear association between agents/network and their scenario context
 
 ---
 
