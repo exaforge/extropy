@@ -163,14 +163,14 @@ def hydrate_attributes(
     population = description
 
     def report(step: str, status: str, count: int | None = None):
-        """Report progress via callback or print."""
+        """Report progress via callback or logger."""
         if on_progress:
             on_progress(step, status, count)
         else:
             if count is not None:
-                print(f"  {step}: {status} ({count})")
+                logger.info("  %s: %s (%s)", step, status, count)
             else:
-                print(f"  {step}: {status}")
+                logger.info("  %s: %s", step, status)
 
     def make_retry_callback(step: str) -> RetryCallback:
         """Create a retry callback for a specific step."""

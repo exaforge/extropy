@@ -1226,7 +1226,9 @@ def reason_agent(
         f"[REASON] Agent {context.agent_id} - prompt length: {len(pass1_prompt)} chars"
     )
     logger.debug(
-        f"[REASON] Agent {context.agent_id} - PROMPT:\n{pass1_prompt[:500]}..."
+        "[REASON] Agent %s - prompt redacted (length=%s chars)",
+        context.agent_id,
+        len(pass1_prompt),
     )
 
     # === Pass 1: Role-play ===
