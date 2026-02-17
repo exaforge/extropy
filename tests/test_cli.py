@@ -124,23 +124,39 @@ meta:
   agent_focus: test agents
 
 grounding:
-  summary: Test grounding
+  overall: low
+  sources_count: 0
+  strong_count: 0
+  medium_count: 0
+  low_count: 2
 
 attributes:
   - name: role
     type: categorical
-    distribution:
-      type: categorical
-      probabilities:
-        x: 0.5
-        y: 0.5
+    category: population_specific
+    description: Role in organization
+    sampling:
+      strategy: independent
+      distribution:
+        type: categorical
+        options: [x, y]
+        weights: [0.5, 0.5]
+    grounding:
+      level: low
+      method: estimated
   - name: team
     type: categorical
-    distribution:
-      type: categorical
-      probabilities:
-        alpha: 0.5
-        beta: 0.5
+    category: population_specific
+    description: Team membership
+    sampling:
+      strategy: independent
+      distribution:
+        type: categorical
+        options: [alpha, beta]
+        weights: [0.5, 0.5]
+    grounding:
+      level: low
+      method: estimated
 
 sampling_order:
   - role
