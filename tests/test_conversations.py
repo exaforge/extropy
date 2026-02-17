@@ -1,17 +1,104 @@
 """Unit tests for Phase D conversation system."""
 
+import asyncio
+from datetime import datetime
+from unittest.mock import patch
+
 from extropy.simulation.conversation import (
     ConversationRequest,
     ConversationMessage,
     ConversationResult,
     ConversationStateChange,
     collect_conversation_requests,
+    execute_conversation_async,
     prioritize_and_resolve_conflicts,
 )
 from extropy.core.models import (
+    ExposureRecord,
+    ReasoningContext,
     ReasoningResponse,
     SimulationRunConfig,
 )
+from extropy.core.models.scenario import (
+    Event,
+    EventType,
+    ExposureChannel,
+    ExposureRule,
+    InteractionConfig,
+    InteractionType,
+    OutcomeConfig,
+    ScenarioMeta,
+    ScenarioSpec,
+    SeedExposure,
+    SimulationConfig,
+    SpreadConfig,
+    TimestepUnit,
+)
+
+
+def _make_scenario() -> ScenarioSpec:
+    return ScenarioSpec(
+        meta=ScenarioMeta(
+            name="conv_test",
+            description="Conversation test scenario",
+            population_spec="test.yaml",
+            study_db="study.db",
+            population_id="default",
+            network_id="default",
+            created_at=datetime(2024, 1, 1),
+        ),
+        event=Event(
+            type=EventType.NEWS,
+            content="The city council announced a major policy change.",
+            source="City Council",
+            credibility=0.8,
+            ambiguity=0.2,
+            emotional_valence=0.0,
+        ),
+        seed_exposure=SeedExposure(
+            channels=[
+                ExposureChannel(
+                    name="broadcast",
+                    description="Broadcast",
+                    reach="broadcast",
+                    credibility_modifier=1.0,
+                )
+            ],
+            rules=[
+                ExposureRule(
+                    channel="broadcast",
+                    timestep=0,
+                    when="true",
+                    probability=1.0,
+                )
+            ],
+        ),
+        interaction=InteractionConfig(
+            primary_model=InteractionType.DIRECT_CONVERSATION,
+            description="Direct conversations",
+        ),
+        spread=SpreadConfig(share_probability=0.4),
+        outcomes=OutcomeConfig(suggested_outcomes=[]),
+        simulation=SimulationConfig(max_timesteps=3, timestep_unit=TimestepUnit.DAY),
+    )
+
+
+def _make_context(agent_id: str, name: str) -> ReasoningContext:
+    return ReasoningContext(
+        agent_id=agent_id,
+        persona=f"I am {name}.",
+        event_content="Policy update",
+        exposure_history=[
+            ExposureRecord(
+                timestep=0,
+                channel="broadcast",
+                content="Policy update",
+                credibility=0.8,
+                source_agent_id=None,
+            )
+        ],
+        agent_name=name,
+    )
 
 
 class TestCollectConversationRequests:
@@ -409,3 +496,116 @@ class TestReasoningResponseActions:
             conviction=0.3,
         )
         assert response.actions == []
+
+
+class TestConversationExecution:
+    def test_medium_fidelity_executes_4_messages(self):
+        request = ConversationRequest(
+            initiator_id="a1",
+            target_id="a2",
+            target_name="Blake",
+            relationship="friend",
+            topic="what to do next",
+        )
+        initiator_ctx = _make_context("a1", "Alex")
+        target_ctx = _make_context("a2", "Blake")
+        scenario = _make_scenario()
+        config = SimulationRunConfig(
+            scenario_path="test.yaml",
+            output_dir="test/",
+            fidelity="medium",
+        )
+
+        call_counter = {"count": 0}
+
+        async def _mock_simple_call_async(*args, **kwargs):
+            call_counter["count"] += 1
+            return (
+                {
+                    "response": f"message-{call_counter['count']}",
+                    "internal_reaction": "thinking",
+                    "updated_sentiment": 0.1,
+                    "updated_conviction": 60,
+                },
+                None,
+            )
+
+        with patch(
+            "extropy.simulation.conversation.simple_call_async",
+            new=_mock_simple_call_async,
+        ):
+            result = asyncio.run(
+                execute_conversation_async(
+                    request=request,
+                    initiator_context=initiator_ctx,
+                    target_context=target_ctx,
+                    target_npc_profile=None,
+                    scenario=scenario,
+                    config=config,
+                )
+            )
+
+        assert call_counter["count"] == 4
+        assert len(result.messages) == 4
+        assert [m.speaker_id for m in result.messages] == ["a1", "a2", "a1", "a2"]
+        assert sum(1 for m in result.messages if m.is_final) == 1
+        assert result.messages[-1].is_final is True
+
+    def test_high_fidelity_executes_6_messages(self):
+        request = ConversationRequest(
+            initiator_id="a1",
+            target_id="a2",
+            target_name="Blake",
+            relationship="friend",
+            topic="what to do next",
+        )
+        initiator_ctx = _make_context("a1", "Alex")
+        target_ctx = _make_context("a2", "Blake")
+        scenario = _make_scenario()
+        config = SimulationRunConfig(
+            scenario_path="test.yaml",
+            output_dir="test/",
+            fidelity="high",
+        )
+
+        call_counter = {"count": 0}
+
+        async def _mock_simple_call_async(*args, **kwargs):
+            call_counter["count"] += 1
+            return (
+                {
+                    "response": f"message-{call_counter['count']}",
+                    "internal_reaction": "thinking",
+                    "updated_sentiment": 0.1,
+                    "updated_conviction": 60,
+                },
+                None,
+            )
+
+        with patch(
+            "extropy.simulation.conversation.simple_call_async",
+            new=_mock_simple_call_async,
+        ):
+            result = asyncio.run(
+                execute_conversation_async(
+                    request=request,
+                    initiator_context=initiator_ctx,
+                    target_context=target_ctx,
+                    target_npc_profile=None,
+                    scenario=scenario,
+                    config=config,
+                )
+            )
+
+        assert call_counter["count"] == 6
+        assert len(result.messages) == 6
+        assert [m.speaker_id for m in result.messages] == [
+            "a1",
+            "a2",
+            "a1",
+            "a2",
+            "a1",
+            "a2",
+        ]
+        assert sum(1 for m in result.messages if m.is_final) == 1
+        assert result.messages[-1].is_final is True
