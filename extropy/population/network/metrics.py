@@ -5,10 +5,13 @@ Computes validation metrics and per-agent derived metrics including:
 - Node metrics: PageRank, betweenness, cluster ID, echo chamber score
 """
 
+import logging
 from collections import defaultdict
 from typing import Any
 
 from ...core.models import NetworkMetrics, NodeMetrics
+
+logger = logging.getLogger(__name__)
 
 try:
     import networkx as nx
@@ -203,7 +206,7 @@ def validate_network(
     Args:
         edges: List of edge dictionaries
         agent_ids: List of agent IDs
-        verbose: If True, print detailed metrics
+        verbose: If True, log detailed metrics
 
     Returns:
         Tuple of (is_valid, metrics, warnings)
@@ -212,25 +215,25 @@ def validate_network(
     is_valid, warnings = metrics.is_valid()
 
     if verbose:
-        print("Network Validation Report:")
-        print(f"  Nodes: {metrics.node_count}")
-        print(f"  Edges: {metrics.edge_count}")
-        print(f"  Avg Degree: {metrics.avg_degree:.2f}")
-        print(f"  Clustering: {metrics.clustering_coefficient:.3f}")
-        print(
+        logger.info("Network Validation Report:")
+        logger.info("  Nodes: %s", metrics.node_count)
+        logger.info("  Edges: %s", metrics.edge_count)
+        logger.info("  Avg Degree: %.2f", metrics.avg_degree)
+        logger.info("  Clustering: %.3f", metrics.clustering_coefficient)
+        logger.info(
             f"  Avg Path Length: {metrics.avg_path_length:.2f}"
             if metrics.avg_path_length
             else "  Avg Path Length: N/A (disconnected)"
         )
-        print(f"  Modularity: {metrics.modularity:.3f}")
-        print(f"  Largest Component: {metrics.largest_component_ratio:.1%}")
-        print(f"  Degree Assortativity: {metrics.degree_assortativity:.3f}")
+        logger.info("  Modularity: %.3f", metrics.modularity)
+        logger.info("  Largest Component: %.1f%%", metrics.largest_component_ratio * 100)
+        logger.info("  Degree Assortativity: %.3f", metrics.degree_assortativity)
 
         if warnings:
-            print("\nWarnings:")
+            logger.info("Warnings:")
             for w in warnings:
-                print(f"  - {w}")
+                logger.info("  - %s", w)
         else:
-            print("\nAll metrics within expected ranges.")
+            logger.info("All metrics within expected ranges.")
 
     return is_valid, metrics, warnings
