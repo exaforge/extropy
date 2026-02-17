@@ -14,8 +14,9 @@ import asyncio
 import logging
 import time
 from collections.abc import Callable
-from dataclasses import dataclass
 from typing import Any
+
+from pydantic import BaseModel
 
 from ..core.llm import simple_call, simple_call_async, TokenUsage
 from ..core.models import (
@@ -35,8 +36,7 @@ from ..core.models import (
 logger = logging.getLogger(__name__)
 
 
-@dataclass
-class BatchTokenUsage:
+class BatchTokenUsage(BaseModel):
     """Accumulated token usage from a batch of two-pass reasoning calls."""
 
     pivotal_input_tokens: int = 0

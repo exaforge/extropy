@@ -24,15 +24,16 @@ Usage:
 import asyncio
 import logging
 import time
-from dataclasses import dataclass, field
+from typing import Any
+
+from pydantic import BaseModel, PrivateAttr
 
 from .rate_limits import get_limits
 
 logger = logging.getLogger(__name__)
 
 
-@dataclass
-class TokenBucket:
+class TokenBucket(BaseModel):
     """Token bucket for rate limiting.
 
     Tokens refill continuously at `refill_rate` per second,
@@ -41,19 +42,20 @@ class TokenBucket:
 
     capacity: float
     refill_rate: float  # tokens per second
-    tokens: float = field(init=False)
-    last_refill: float = field(init=False)
 
-    def __post_init__(self):
-        self.tokens = self.capacity
-        self.last_refill = time.monotonic()
+    _tokens: float = PrivateAttr()
+    _last_refill: float = PrivateAttr()
+
+    def model_post_init(self, __context: Any) -> None:
+        self._tokens = self.capacity
+        self._last_refill = time.monotonic()
 
     def _refill(self) -> None:
         """Refill tokens based on elapsed time."""
         now = time.monotonic()
-        elapsed = now - self.last_refill
-        self.tokens = min(self.capacity, self.tokens + elapsed * self.refill_rate)
-        self.last_refill = now
+        elapsed = now - self._last_refill
+        self._tokens = min(self.capacity, self._tokens + elapsed * self.refill_rate)
+        self._last_refill = now
 
     def try_acquire(self, amount: float = 1.0) -> float:
         """Try to acquire tokens. Returns wait time in seconds if insufficient.
@@ -62,11 +64,11 @@ class TokenBucket:
             0.0 if acquired, or positive float = seconds to wait
         """
         self._refill()
-        if self.tokens >= amount:
-            self.tokens -= amount
+        if self._tokens >= amount:
+            self._tokens -= amount
             return 0.0
         # Calculate wait time
-        deficit = amount - self.tokens
+        deficit = amount - self._tokens
         return deficit / self.refill_rate if self.refill_rate > 0 else 60.0
 
     def update_capacity(self, new_capacity: float) -> None:
@@ -74,7 +76,7 @@ class TokenBucket:
         self._refill()
         self.capacity = new_capacity
         self.refill_rate = new_capacity / 60.0  # per-minute limits
-        self.tokens = min(self.tokens, new_capacity)
+        self._tokens = min(self._tokens, new_capacity)
 
 
 class RateLimiter:

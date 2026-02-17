@@ -6,11 +6,15 @@ import os
 import platform
 import resource
 import subprocess
-from dataclasses import dataclass
+
+from pydantic import BaseModel, ConfigDict
 
 
-@dataclass(frozen=True)
-class ResourceSnapshot:
+class ResourceSnapshot(BaseModel):
+    """Immutable snapshot of system resources."""
+
+    model_config = ConfigDict(frozen=True)
+
     cpu_count: int
     total_memory_gb: float
     memory_budget_gb: float

@@ -18,9 +18,9 @@ Example:
 from __future__ import annotations
 
 import json
-from dataclasses import dataclass, field
 from typing import Any
 
+from pydantic import BaseModel, PrivateAttr, ConfigDict
 from rich.console import Console
 from rich.table import Table
 
@@ -51,33 +51,29 @@ class ExitCode:
     USER_CANCELLED = 10
 
 
-@dataclass
-class Output:
+class Output(BaseModel):
     """Dual-mode output handler for CLI commands.
 
     In human mode: Uses Rich for pretty terminal output with colors and formatting.
     In JSON mode: Collects structured data and outputs JSON at the end.
 
     Usage:
-        out = Output(console, json_mode=False)
+        out = Output(console=console, json_mode=False)
         out.success("Loaded spec", count=500)
         out.warning("Some warning")
         out.table("Stats", ["Attr", "Mean"], [["age", "43.2"]])
         exit_code = out.finish()
     """
 
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
     console: Console
     json_mode: bool = False
-    _data: dict = field(
-        default_factory=lambda: {
-            "status": "success",
-            "warnings": [],
-            "errors": [],
-        }
-    )
-    _exit_code: int = ExitCode.SUCCESS
 
-    def __post_init__(self):
+    _data: dict[str, Any] = PrivateAttr()
+    _exit_code: int = PrivateAttr(default=ExitCode.SUCCESS)
+
+    def model_post_init(self, __context: Any) -> None:
         # Ensure _data is a fresh dict for each instance
         self._data = {
             "status": "success",

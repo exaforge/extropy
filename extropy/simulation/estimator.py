@@ -5,16 +5,16 @@ Loads the same data as the simulation engine, runs a simplified propagation
 model, and returns estimated LLM calls, tokens, and USD cost.
 """
 
-from dataclasses import dataclass, field
 from typing import Any
+
+from pydantic import BaseModel, Field
 
 from ..core.models import ScenarioSpec, PopulationSpec
 from ..core.cost.pricing import ModelPricing, get_pricing
 from ..utils.eval_safe import eval_condition, ConditionError
 
 
-@dataclass
-class CostEstimate:
+class CostEstimate(BaseModel):
     """Result of a cost estimation run."""
 
     # Population info
@@ -45,7 +45,7 @@ class CostEstimate:
     total_cost: float | None
 
     # Per-timestep breakdown (timestep -> reasoning_calls)
-    per_timestep: list[dict[str, Any]] = field(default_factory=list)
+    per_timestep: list[dict[str, Any]] = Field(default_factory=list)
 
 
 def _compute_avg_degree(network: dict[str, Any]) -> float:

@@ -12,13 +12,13 @@ class TestTokenBucket:
 
     def test_initial_capacity(self):
         bucket = TokenBucket(capacity=100.0, refill_rate=10.0)
-        assert bucket.tokens == 100.0
+        assert bucket._tokens == 100.0
 
     def test_acquire_within_capacity(self):
         bucket = TokenBucket(capacity=100.0, refill_rate=10.0)
         wait = bucket.try_acquire(50.0)
         assert wait == 0.0
-        assert bucket.tokens == pytest.approx(50.0, abs=1.0)
+        assert bucket._tokens == pytest.approx(50.0, abs=1.0)
 
     def test_acquire_exceeds_capacity(self):
         bucket = TokenBucket(capacity=100.0, refill_rate=10.0)
@@ -50,7 +50,7 @@ class TestTokenBucket:
         # Advance a long time
         with patch("time.monotonic", return_value=start + 1000.0):
             bucket._refill()
-            assert bucket.tokens == 100.0
+            assert bucket._tokens == 100.0
 
     def test_update_capacity(self):
         start = 1000.0

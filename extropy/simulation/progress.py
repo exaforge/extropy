@@ -5,11 +5,12 @@ per-agent, and the CLI display thread reads via snapshot().
 """
 
 import threading
-from dataclasses import dataclass, field
+from typing import Any
+
+from pydantic import BaseModel, Field, PrivateAttr, ConfigDict
 
 
-@dataclass
-class SimulationProgress:
+class SimulationProgress(BaseModel):
     """Thread-safe progress state shared between simulation and display threads.
 
     The simulation thread calls record_agent_done() per agent.
@@ -17,17 +18,20 @@ class SimulationProgress:
     Position counts are cumulative across all timesteps (shows overall distribution).
     """
 
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
     timestep: int = 0
     max_timesteps: int = 0
     agents_total: int = 0
     agents_done: int = 0
     exposure_rate: float = 0.0
-    position_counts: dict[str, int] = field(default_factory=dict)
-    _sentiment_sum: float = 0.0
-    _sentiment_count: int = 0
-    _conviction_sum: float = 0.0
-    _conviction_count: int = 0
-    _lock: threading.Lock = field(default_factory=threading.Lock)
+    position_counts: dict[str, int] = Field(default_factory=dict)
+
+    _sentiment_sum: float = PrivateAttr(default=0.0)
+    _sentiment_count: int = PrivateAttr(default=0)
+    _conviction_sum: float = PrivateAttr(default=0.0)
+    _conviction_count: int = PrivateAttr(default=0)
+    _lock: threading.Lock = PrivateAttr(default_factory=threading.Lock)
 
     def begin_timestep(
         self,
@@ -77,7 +81,7 @@ class SimulationProgress:
                 self._conviction_sum += conviction
                 self._conviction_count += 1
 
-    def snapshot(self) -> dict:
+    def snapshot(self) -> dict[str, Any]:
         """Return a thread-safe copy of all display-relevant fields.
 
         Returns:
