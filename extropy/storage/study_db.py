@@ -73,6 +73,7 @@ class StudyDB:
                 agent_id TEXT NOT NULL,
                 attrs_json TEXT NOT NULL,
                 sample_run_id TEXT NOT NULL,
+                scenario_id TEXT,
                 PRIMARY KEY (population_id, agent_id)
             );
 
@@ -97,6 +98,7 @@ class StudyDB:
                 edge_type TEXT NOT NULL,
                 influence_st REAL,
                 influence_ts REAL,
+                scenario_id TEXT,
                 PRIMARY KEY (network_id, source_id, target_id)
             );
 
@@ -371,6 +373,8 @@ class StudyDB:
 
             CREATE INDEX IF NOT EXISTS idx_households_population ON households(population_id);
             CREATE INDEX IF NOT EXISTS idx_agents_population ON agents(population_id);
+            CREATE INDEX IF NOT EXISTS idx_agents_scenario ON agents(scenario_id);
+            CREATE INDEX IF NOT EXISTS idx_network_edges_scenario ON network_edges(scenario_id);
             CREATE INDEX IF NOT EXISTS idx_network_edges_src ON network_edges(network_id, source_id);
             CREATE INDEX IF NOT EXISTS idx_network_edges_tgt ON network_edges(network_id, target_id);
             CREATE INDEX IF NOT EXISTS idx_net_sim_chunks_status ON network_similarity_chunks(job_id, status);
@@ -433,6 +437,7 @@ class StudyDB:
         meta: dict[str, Any],
         seed: int | None = None,
         sample_run_id: str | None = None,
+        scenario_id: str | None = None,
     ) -> str:
         run_id = sample_run_id or str(uuid.uuid4())
         cursor = self.conn.cursor()
@@ -446,7 +451,15 @@ class StudyDB:
             (run_id, population_id, seed, len(agents), _now_iso(), _dumps(meta)),
         )
 
-        cursor.execute("DELETE FROM agents WHERE population_id = ?", (population_id,))
+        # Delete existing agents - by scenario_id if provided, otherwise by population_id
+        if scenario_id:
+            cursor.execute(
+                "DELETE FROM agents WHERE scenario_id = ?", (scenario_id,)
+            )
+        else:
+            cursor.execute(
+                "DELETE FROM agents WHERE population_id = ?", (population_id,)
+            )
 
         rows = []
         for i, agent in enumerate(agents):
@@ -465,13 +478,14 @@ class StudyDB:
                     rec.agent_id,
                     _dumps(rec.attrs_json),
                     rec.sample_run_id,
+                    scenario_id,
                 )
             )
 
         cursor.executemany(
             """
-            INSERT INTO agents (population_id, agent_id, attrs_json, sample_run_id)
-            VALUES (?, ?, ?, ?)
+            INSERT INTO agents (population_id, agent_id, attrs_json, sample_run_id, scenario_id)
+            VALUES (?, ?, ?, ?, ?)
             """,
             rows,
         )
@@ -564,6 +578,50 @@ class StudyDB:
         row = cursor.fetchone()
         return int(row["cnt"]) if row else 0
 
+    def get_agents_by_scenario(self, scenario_id: str) -> list[dict[str, Any]]:
+        """Get all agents for a scenario.
+
+        Args:
+            scenario_id: Scenario identifier
+
+        Returns:
+            List of agent attribute dictionaries
+        """
+        cursor = self.conn.cursor()
+        cursor.execute(
+            """
+            SELECT attrs_json
+            FROM agents
+            WHERE scenario_id = ?
+            ORDER BY agent_id
+            """,
+            (scenario_id,),
+        )
+        agents = []
+        for row in cursor.fetchall():
+            try:
+                agents.append(json.loads(row["attrs_json"]))
+            except json.JSONDecodeError:
+                continue
+        return agents
+
+    def get_agent_count_by_scenario(self, scenario_id: str) -> int:
+        """Get count of agents for a scenario.
+
+        Args:
+            scenario_id: Scenario identifier
+
+        Returns:
+            Number of agents
+        """
+        cursor = self.conn.cursor()
+        cursor.execute(
+            "SELECT COUNT(*) AS cnt FROM agents WHERE scenario_id = ?",
+            (scenario_id,),
+        )
+        row = cursor.fetchone()
+        return int(row["cnt"]) if row else 0
+
     def save_network_result(
         self,
         population_id: str,
@@ -575,6 +633,7 @@ class StudyDB:
         candidate_mode: str,
         network_metrics: dict[str, Any] | None = None,
         network_run_id: str | None = None,
+        scenario_id: str | None = None,
     ) -> str:
         run_id = network_run_id or str(uuid.uuid4())
         cursor = self.conn.cursor()
@@ -601,7 +660,15 @@ class StudyDB:
             ),
         )
 
-        cursor.execute("DELETE FROM network_edges WHERE network_id = ?", (network_id,))
+        # Delete existing edges - by scenario_id if provided, otherwise by network_id
+        if scenario_id:
+            cursor.execute(
+                "DELETE FROM network_edges WHERE scenario_id = ?", (scenario_id,)
+            )
+        else:
+            cursor.execute(
+                "DELETE FROM network_edges WHERE network_id = ?", (network_id,)
+            )
 
         rows = []
         for edge in edges:
@@ -618,6 +685,7 @@ class StudyDB:
                 influence_ts=float(
                     infl.get("target_to_source", edge.get("weight", 0.0))
                 ),
+                scenario_id=scenario_id,
             )
             rows.append(
                 (
@@ -628,14 +696,15 @@ class StudyDB:
                     rec.edge_type,
                     rec.influence_st,
                     rec.influence_ts,
+                    rec.scenario_id,
                 )
             )
 
         cursor.executemany(
             """
             INSERT INTO network_edges
-            (network_id, source_id, target_id, weight, edge_type, influence_st, influence_ts)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
+            (network_id, source_id, target_id, weight, edge_type, influence_st, influence_ts, scenario_id)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             """,
             rows,
         )
@@ -699,6 +768,60 @@ class StudyDB:
         cursor.execute(
             "SELECT COUNT(*) AS cnt FROM network_edges WHERE network_id = ?",
             (network_id,),
+        )
+        row = cursor.fetchone()
+        return int(row["cnt"]) if row else 0
+
+    def get_network_edges_by_scenario(self, scenario_id: str) -> list[dict[str, Any]]:
+        """Get all network edges for a scenario.
+
+        Args:
+            scenario_id: Scenario identifier
+
+        Returns:
+            List of edge dictionaries
+        """
+        cursor = self.conn.cursor()
+        cursor.execute(
+            """
+            SELECT source_id, target_id, weight, edge_type, influence_st, influence_ts, network_id
+            FROM network_edges
+            WHERE scenario_id = ?
+            ORDER BY source_id, target_id
+            """,
+            (scenario_id,),
+        )
+        edges = []
+        for row in cursor.fetchall():
+            edges.append(
+                {
+                    "source": row["source_id"],
+                    "target": row["target_id"],
+                    "weight": row["weight"],
+                    "type": row["edge_type"],
+                    "bidirectional": True,
+                    "influence_weight": {
+                        "source_to_target": row["influence_st"],
+                        "target_to_source": row["influence_ts"],
+                    },
+                    "network_id": row["network_id"],
+                }
+            )
+        return edges
+
+    def get_network_edge_count_by_scenario(self, scenario_id: str) -> int:
+        """Get count of network edges for a scenario.
+
+        Args:
+            scenario_id: Scenario identifier
+
+        Returns:
+            Number of edges
+        """
+        cursor = self.conn.cursor()
+        cursor.execute(
+            "SELECT COUNT(*) AS cnt FROM network_edges WHERE scenario_id = ?",
+            (scenario_id,),
         )
         row = cursor.fetchone()
         return int(row["cnt"]) if row else 0

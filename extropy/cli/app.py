@@ -1,6 +1,7 @@
 """Core CLI app definition and global state."""
 
 import atexit
+from pathlib import Path
 from typing import Annotated
 
 import typer
@@ -17,11 +18,31 @@ console = Console()
 # Global state for JSON mode (set by callback)
 _json_mode = False
 _show_cost = False
+_study_path: Path | None = None
 
 
 def get_json_mode() -> bool:
     """Get current JSON mode state."""
     return _json_mode
+
+
+def get_study_path() -> Path | None:
+    """Get explicitly set study path, or None to auto-detect."""
+    return _study_path
+
+
+def get_study_context():
+    """Get study context from --study flag or auto-detection.
+
+    Returns:
+        StudyContext for the current study
+
+    Raises:
+        FileNotFoundError: If no study folder found
+    """
+    from .study import get_study_context as _get_study_context
+
+    return _get_study_context(_study_path)
 
 
 def is_agent_mode() -> bool:
@@ -94,14 +115,24 @@ def main_callback(
             is_eager=True,
         ),
     ] = False,
+    study: Annotated[
+        Path | None,
+        typer.Option(
+            "--study",
+            help="Study folder path (auto-detected from cwd if not specified)",
+            is_eager=True,
+        ),
+    ] = None,
 ):
     """Extropy: Population simulation engine for agent-based modeling.
 
     Use --json for machine-readable output suitable for scripting and AI tools.
     Use --cost to show token usage and cost summary after each command.
+    Use --study to specify a study folder (otherwise auto-detected from cwd).
     """
-    global _json_mode, _show_cost
+    global _json_mode, _show_cost, _study_path
     _json_mode = json_output
+    _study_path = study
 
     # Determine if cost footer should be shown: --cost flag or config setting
     show = cost

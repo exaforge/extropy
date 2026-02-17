@@ -14,6 +14,7 @@ class AgentDBRecord(BaseModel):
     agent_id: str
     attrs_json: dict[str, Any]
     sample_run_id: str
+    scenario_id: str | None = None
 
 
 class NetworkEdgeDBRecord(BaseModel):
@@ -26,6 +27,7 @@ class NetworkEdgeDBRecord(BaseModel):
     edge_type: str
     influence_st: float | None = None
     influence_ts: float | None = None
+    scenario_id: str | None = None
 
 
 class ChatMessagePayload(BaseModel):
