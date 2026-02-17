@@ -758,8 +758,6 @@ def _resolve_scenario(
     return name, version
 
 
-
-
 def _save_network(
     study_db: Path,
     scenario_name: str,

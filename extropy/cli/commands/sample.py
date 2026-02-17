@@ -334,8 +334,6 @@ def _resolve_scenario(
     return name, version
 
 
-
-
 def _save_to_db(
     db_path: Path,
     scenario_name: str,

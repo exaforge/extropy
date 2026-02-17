@@ -96,7 +96,12 @@ TIMELINE_SCHEMA: dict[str, Any] = {
             ),
         },
     },
-    "required": ["scenario_type", "timestep_unit", "max_timesteps", "background_context"],
+    "required": [
+        "scenario_type",
+        "timestep_unit",
+        "max_timesteps",
+        "background_context",
+    ],
 }
 
 
@@ -236,7 +241,11 @@ def generate_timeline(
     llm_unit = response.get("timestep_unit")
     llm_max = response.get("max_timesteps")
     if llm_unit:
-        unit_map = {"minute": TimestepUnit.MINUTE, "hour": TimestepUnit.HOUR, "day": TimestepUnit.DAY}
+        unit_map = {
+            "minute": TimestepUnit.MINUTE,
+            "hour": TimestepUnit.HOUR,
+            "day": TimestepUnit.DAY,
+        }
         resolved_unit = unit_map.get(llm_unit, simulation_config.timestep_unit)
         simulation_config = SimulationConfig(
             max_timesteps=llm_max if llm_max else simulation_config.max_timesteps,

@@ -277,9 +277,7 @@ def spec_command(
     focus_str = f", focus: {agent_focus}" if agent_focus else ""
 
     if not agent_mode:
-        console.print(
-            f"[green]✓[/green] Context sufficient{geo_str}{focus_str}"
-        )
+        console.print(f"[green]✓[/green] Context sufficient{geo_str}{focus_str}")
 
     # Step 1: Attribute Selection
     console.print()

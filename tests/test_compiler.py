@@ -175,7 +175,11 @@ class TestCreateScenario:
             ],
         )
 
-        mock_timeline.return_value = ([], None, _determine_simulation_config())  # No timeline events, no background
+        mock_timeline.return_value = (
+            [],
+            None,
+            _determine_simulation_config(),
+        )  # No timeline events, no background
 
         spec, validation_result = create_scenario(
             description="Test product launch scenario",
@@ -257,7 +261,11 @@ class TestCreateScenario:
             ],
         )
 
-        mock_timeline.return_value = ([], None, _determine_simulation_config())  # No timeline events, no background
+        mock_timeline.return_value = (
+            [],
+            None,
+            _determine_simulation_config(),
+        )  # No timeline events, no background
 
         progress_calls = []
 

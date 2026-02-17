@@ -1,0 +1,14 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit",
+        "command": "uv run ruff check --fix \"$CLAUDE_FILE_PATH\" 2>/dev/null; uv run ruff format \"$CLAUDE_FILE_PATH\" 2>/dev/null; true"
+      },
+      {
+        "matcher": "Write",
+        "command": "[[ \"$CLAUDE_FILE_PATH\" == *.py ]] && { uv run ruff check --fix \"$CLAUDE_FILE_PATH\" 2>/dev/null; uv run ruff format \"$CLAUDE_FILE_PATH\" 2>/dev/null; } ; true"
+      }
+    ]
+  }
+}
