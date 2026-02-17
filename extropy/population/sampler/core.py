@@ -446,11 +446,11 @@ def _sample_population_households(
         )
 
         if has_kids and focus_mode == "all":
-            # Kids become full agents
+            # Kids old enough become full agents; younger ones stay as NPCs
             dep_dicts = []
             for dep in dependents:
-                if agent_index >= target_n:
-                    # Remaining dependents stay as NPC data
+                if agent_index >= target_n or dep.age < config.min_agent_age:
+                    # Too young or at target — stays as NPC data
                     dep_dicts.append(dep.model_dump())
                     continue
                 kid_agent = _sample_dependent_as_agent(

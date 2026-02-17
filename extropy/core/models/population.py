@@ -118,6 +118,7 @@ class HouseholdConfig(BaseModel):
     partner_age_gap_mean: float = -2.0
     partner_age_gap_std: float = 3.0
     min_adult_age: int = 18
+    min_agent_age: int = 13  # Dependents below this age are always NPCs
 
     # Dependent generation
     child_min_parent_offset: int = 20

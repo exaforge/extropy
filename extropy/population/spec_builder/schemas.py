@@ -322,6 +322,7 @@ def build_household_config_schema() -> dict:
             "partner_age_gap_mean": {"type": "number"},
             "partner_age_gap_std": {"type": "number"},
             "min_adult_age": {"type": "integer"},
+            "min_agent_age": {"type": "integer"},
             "child_min_parent_offset": {"type": "integer"},
             "child_max_parent_offset": {"type": "integer"},
             "max_dependent_child_age": {"type": "integer"},

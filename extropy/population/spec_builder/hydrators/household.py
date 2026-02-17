@@ -177,6 +177,7 @@ def _parse_household_config(data: dict) -> HouseholdConfig:
 
     for field in (
         "min_adult_age",
+        "min_agent_age",
         "child_min_parent_offset",
         "child_max_parent_offset",
         "max_dependent_child_age",
