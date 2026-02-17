@@ -19,7 +19,9 @@ def test_simple_call_async_uses_cached_simulation_provider_default_model(monkeyp
     monkeypatch.setattr(
         llm,
         "get_provider",
-        Mock(side_effect=AssertionError("simple_call_async should use simulation cache")),
+        Mock(
+            side_effect=AssertionError("simple_call_async should use simulation cache")
+        ),
     )
 
     result, usage = asyncio.run(
@@ -38,7 +40,9 @@ def test_simple_call_async_uses_cached_simulation_provider_default_model(monkeyp
     assert provider.simple_call_async.await_args.kwargs["model"] == "gpt-5"
 
 
-def test_simple_call_async_uses_cached_simulation_provider_for_explicit_model(monkeypatch):
+def test_simple_call_async_uses_cached_simulation_provider_for_explicit_model(
+    monkeypatch,
+):
     provider = MagicMock()
     provider.simple_call_async = AsyncMock(return_value=({"ok": True}, TokenUsage()))
     config = SimpleNamespace(resolve_sim_strong=lambda: "openai/gpt-5", providers={})
@@ -49,7 +53,11 @@ def test_simple_call_async_uses_cached_simulation_provider_for_explicit_model(mo
     monkeypatch.setattr(
         llm,
         "get_provider",
-        Mock(side_effect=AssertionError("explicit async model should still use simulation cache")),
+        Mock(
+            side_effect=AssertionError(
+                "explicit async model should still use simulation cache"
+            )
+        ),
     )
 
     asyncio.run(
@@ -63,16 +71,15 @@ def test_simple_call_async_uses_cached_simulation_provider_for_explicit_model(mo
 
     get_sim_provider.assert_called_once_with("anthropic/claude-sonnet-4-5")
     provider.simple_call_async.assert_awaited_once()
-    assert (
-        provider.simple_call_async.await_args.kwargs["model"]
-        == "claude-sonnet-4-5"
-    )
+    assert provider.simple_call_async.await_args.kwargs["model"] == "claude-sonnet-4-5"
 
 
 def test_simple_call_sync_path_still_uses_regular_provider_factory(monkeypatch):
     provider = MagicMock()
     provider.simple_call.return_value = {"ok": True}
-    config = SimpleNamespace(resolve_pipeline_fast=lambda: "openai/gpt-5-mini", providers={})
+    config = SimpleNamespace(
+        resolve_pipeline_fast=lambda: "openai/gpt-5-mini", providers={}
+    )
     get_provider = Mock(return_value=provider)
 
     monkeypatch.setattr(llm, "get_config", lambda: config)
@@ -80,7 +87,11 @@ def test_simple_call_sync_path_still_uses_regular_provider_factory(monkeypatch):
     monkeypatch.setattr(
         llm,
         "get_simulation_provider",
-        Mock(side_effect=AssertionError("sync calls should not use simulation provider cache")),
+        Mock(
+            side_effect=AssertionError(
+                "sync calls should not use simulation provider cache"
+            )
+        ),
     )
 
     result = llm.simple_call(
