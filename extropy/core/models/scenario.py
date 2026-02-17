@@ -17,10 +17,13 @@ This module contains:
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Literal
+from typing import TYPE_CHECKING, Any, Literal
 
 import yaml
 from pydantic import BaseModel, Field
+
+if TYPE_CHECKING:
+    from .population import AttributeSpec
 
 
 # =============================================================================
@@ -349,6 +352,11 @@ class ScenarioSpec(BaseModel):
     relationship_weights: dict[str, float] | None = Field(
         default=None,
         description="Scenario-specific edge weights for conversation priority and peer ordering",
+    )
+    # Extended attributes from scenario (new CLI flow)
+    extended_attributes: list[Any] | None = Field(
+        default=None,
+        description="Scenario-specific attributes that extend the base population",
     )
 
     def to_yaml(self, path: Path | str) -> None:

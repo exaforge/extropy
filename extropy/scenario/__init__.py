@@ -61,7 +61,7 @@ from .exposure import generate_seed_exposure
 from .interaction import determine_interaction_model
 from .outcomes import define_outcomes
 from .timeline import generate_timeline
-from .compiler import create_scenario, compile_scenario_from_files
+from .compiler import create_scenario, create_scenario_spec, compile_scenario_from_files
 from .validator import validate_scenario, load_and_validate_scenario
 
 
@@ -101,6 +101,7 @@ __all__ = [
     "define_outcomes",
     "generate_timeline",
     "create_scenario",
+    "create_scenario_spec",
     "compile_scenario_from_files",
     "validate_scenario",
     "load_and_validate_scenario",

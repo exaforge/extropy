@@ -278,8 +278,7 @@ def scenario_command(
     # - Reference to base population
     # - Scenario configuration (event, exposure, outcomes) will be generated on demand
 
-    from ...scenario import create_scenario
-    from ...core.models.scenario import ScenarioSpec
+    from ...scenario import create_scenario_spec
 
     if not agent_mode:
         console.print()
@@ -301,7 +300,7 @@ def scenario_command(
             timeline_mode = None if timeline == "auto" else timeline
             # We need to create a merged spec first to pass to scenario creation
             # For now, create scenario without agents (they'll be sampled later)
-            result_spec, validation_result = create_scenario(
+            result_spec, validation_result = create_scenario_spec(
                 description=description,
                 population_spec=pop_spec,
                 extended_attributes=bound_attrs,
