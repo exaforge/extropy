@@ -211,7 +211,7 @@ def create_scenario(
     # Generate simulation config
     simulation_config = _determine_simulation_config()
 
-    timeline_events, background_context = generate_timeline(
+    timeline_events, background_context, simulation_config = generate_timeline(
         scenario_description=description,
         base_event=event,
         simulation_config=simulation_config,
@@ -342,7 +342,7 @@ def create_scenario_spec(
 
     simulation_config = _determine_simulation_config()
 
-    timeline_events, background_context = generate_timeline(
+    timeline_events, background_context, simulation_config = generate_timeline(
         scenario_description=description,
         base_event=event,
         simulation_config=simulation_config,

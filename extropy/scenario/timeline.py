@@ -8,7 +8,7 @@ import logging
 from typing import Any
 
 from ..core.llm import reasoning_call
-from ..core.models import Event, SimulationConfig, TimelineEvent
+from ..core.models import Event, SimulationConfig, TimelineEvent, TimestepUnit
 
 logger = logging.getLogger(__name__)
 
@@ -21,6 +21,23 @@ TIMELINE_SCHEMA: dict[str, Any] = {
             "description": (
                 "static = single event (product change, policy announcement), "
                 "evolving = developments over time (crisis, campaign, adoption)"
+            ),
+        },
+        "timestep_unit": {
+            "type": "string",
+            "enum": ["minute", "hour", "day"],
+            "description": (
+                "The natural time unit for this scenario. Choose based on how "
+                "the scenario description frames duration: '7 days' → day, "
+                "'48 hours' → hour, '30 minutes' → minute."
+            ),
+        },
+        "max_timesteps": {
+            "type": "integer",
+            "minimum": 1,
+            "description": (
+                "Total number of timesteps for the simulation. Should match "
+                "the scenario duration in the chosen unit (e.g. 7 days → 7)."
             ),
         },
         "background_context": {
@@ -79,7 +96,7 @@ TIMELINE_SCHEMA: dict[str, Any] = {
             ),
         },
     },
-    "required": ["scenario_type", "background_context"],
+    "required": ["scenario_type", "timestep_unit", "max_timesteps", "background_context"],
 }
 
 
@@ -107,7 +124,10 @@ def _build_timeline_prompt(
         "",
         "## Simulation Parameters",
         "",
-        f"Duration: {simulation_config.max_timesteps} {simulation_config.timestep_unit.value}s",
+        "Determine the appropriate timestep_unit (minute, hour, or day) and max_timesteps "
+        "based on the scenario description. If the description mentions a specific duration "
+        "(e.g. '7 days', '48 hours'), use the matching unit and count. "
+        "Timeline event timesteps must use the same unit.",
         "",
         "## Your Task",
         "",
@@ -174,7 +194,7 @@ def generate_timeline(
     base_event: Event,
     simulation_config: SimulationConfig,
     timeline_mode: str | None = None,
-) -> tuple[list[TimelineEvent], str | None]:
+) -> tuple[list[TimelineEvent], str | None, SimulationConfig]:
     """Generate timeline events and background context.
 
     Args:
@@ -186,7 +206,7 @@ def generate_timeline(
             - "evolving": Multi-event timeline (ASI-style)
 
     Returns:
-        Tuple of (timeline_events, background_context)
+        Tuple of (timeline_events, background_context, updated_simulation_config)
         timeline_events will be empty for static scenarios
     """
     prompt = _build_timeline_prompt(
@@ -206,11 +226,31 @@ def generate_timeline(
 
     if not response:
         logger.warning("[TIMELINE] LLM returned empty response, using defaults")
-        return [], None
+        return [], None, simulation_config
 
     scenario_type = response.get("scenario_type", "static")
     background_context = response.get("background_context")
     raw_events = response.get("timeline_events", [])
+
+    # Update simulation config with LLM's chosen unit and duration
+    llm_unit = response.get("timestep_unit")
+    llm_max = response.get("max_timesteps")
+    if llm_unit:
+        unit_map = {"minute": TimestepUnit.MINUTE, "hour": TimestepUnit.HOUR, "day": TimestepUnit.DAY}
+        resolved_unit = unit_map.get(llm_unit, simulation_config.timestep_unit)
+        simulation_config = SimulationConfig(
+            max_timesteps=llm_max if llm_max else simulation_config.max_timesteps,
+            timestep_unit=resolved_unit,
+            stop_conditions=simulation_config.stop_conditions,
+            seed=simulation_config.seed,
+        )
+    elif llm_max:
+        simulation_config = SimulationConfig(
+            max_timesteps=llm_max,
+            timestep_unit=simulation_config.timestep_unit,
+            stop_conditions=simulation_config.stop_conditions,
+            seed=simulation_config.seed,
+        )
 
     # Honor explicit mode override
     if timeline_mode == "static":
@@ -255,4 +295,4 @@ def generate_timeline(
         # Sort by timestep
         timeline_events.sort(key=lambda te: te.timestep)
 
-    return timeline_events, background_context
+    return timeline_events, background_context, simulation_config
