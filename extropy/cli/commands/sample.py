@@ -93,7 +93,7 @@ def sample_command(
     except FileNotFoundError:
         out.error(
             f"No persona config found for scenario: {scenario_name}. "
-            "Run 'extropy persona -s {scenario_name}' first.",
+            f"Run 'extropy persona -s {scenario_name}' first.",
             exit_code=ExitCode.FILE_NOT_FOUND,
         )
         raise typer.Exit(out.finish())
@@ -103,11 +103,11 @@ def sample_command(
         scenario_path = study_ctx.get_scenario_path(scenario_name, scenario_version)
         scenario_spec = ScenarioSpec.from_yaml(scenario_path)
     except FileNotFoundError:
-        out.error(f"Scenario not found: {scenario_name}")
-        raise typer.Exit(1)
+        out.error(f"Scenario not found: {scenario_name}", exit_code=ExitCode.FILE_NOT_FOUND)
+        raise typer.Exit(out.finish())
     except Exception as e:
         out.error(f"Failed to load scenario: {e}")
-        raise typer.Exit(1)
+        raise typer.Exit(out.finish())
 
     # Load base population spec
     try:

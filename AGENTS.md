@@ -75,8 +75,13 @@ extropy persona -s ai-adoption -y
 |------|---------|
 | 0 | Success |
 | 1 | General error / validation failure |
-| 2 | Clarification needed (agent mode) / file not found |
-| 3 | Sampling error |
+| 2 | Clarification needed (agent mode) |
+| 3 | File not found |
+| 4 | Sampling error |
+| 5 | Network error |
+| 6 | Simulation error |
+| 7 | Scenario error |
+| 10 | User cancelled |
 
 ## Querying Data
 

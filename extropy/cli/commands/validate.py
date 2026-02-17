@@ -7,8 +7,13 @@ import typer
 
 from ...core.models import PopulationSpec
 from ...population.validator import validate_spec
-from ..app import app, console, get_json_mode
+from ..app import app, console, get_json_mode, is_agent_mode
 from ..utils import Output, ExitCode, format_validation_for_json
+
+
+def _is_json_output() -> bool:
+    """Check if JSON output is enabled (via --json flag or agent mode config)."""
+    return get_json_mode() or is_agent_mode()
 
 
 def _is_scenario_file(path: Path) -> bool:
@@ -28,7 +33,7 @@ def _is_scenario_file(path: Path) -> bool:
 def _validate_population_spec(spec_file: Path, strict: bool, out: Output) -> int:
     """Validate a population spec."""
     # Load spec
-    if not get_json_mode():
+    if not _is_json_output():
         with console.status("[cyan]Loading spec...[/cyan]"):
             try:
                 spec = PopulationSpec.from_yaml(spec_file)
@@ -53,7 +58,7 @@ def _validate_population_spec(spec_file: Path, strict: bool, out: Output) -> int
     out.blank()
 
     # Validate spec
-    if not get_json_mode():
+    if not _is_json_output():
         with console.status("[cyan]Validating spec...[/cyan]"):
             result = validate_spec(spec)
     else:
@@ -69,7 +74,7 @@ def _validate_population_spec(spec_file: Path, strict: bool, out: Output) -> int
             exit_code=ExitCode.VALIDATION_ERROR,
         )
 
-        if not get_json_mode():
+        if not _is_json_output():
             error_rows = []
             for err in result.errors[:15]:
                 loc = err.location
@@ -106,7 +111,7 @@ def _validate_population_spec(spec_file: Path, strict: bool, out: Output) -> int
                 exit_code=ExitCode.VALIDATION_ERROR,
             )
 
-            if not get_json_mode():
+            if not _is_json_output():
                 warning_rows = []
                 for warn in result.warnings[:10]:
                     loc = warn.location
@@ -125,7 +130,7 @@ def _validate_population_spec(spec_file: Path, strict: bool, out: Output) -> int
         else:
             out.success(f"Spec validated with {len(result.warnings)} warning(s)")
 
-            if not get_json_mode():
+            if not _is_json_output():
                 for warn in result.warnings[:3]:
                     loc = warn.location
                     if warn.modifier_index is not None:
@@ -152,7 +157,7 @@ def _validate_scenario_spec(spec_file: Path, out: Output) -> int:
     from ...scenario import load_and_validate_scenario
 
     # Load and validate
-    if not get_json_mode():
+    if not _is_json_output():
         with console.status("[cyan]Loading scenario spec...[/cyan]"):
             try:
                 spec, result = load_and_validate_scenario(spec_file)
@@ -178,7 +183,7 @@ def _validate_scenario_spec(spec_file: Path, out: Output) -> int:
     out.blank()
 
     # Show file references (human mode only)
-    if not get_json_mode():
+    if not _is_json_output():
         out.text("[bold]Scenario Details:[/bold]")
 
         # New flow: base_population
@@ -221,7 +226,7 @@ def _validate_scenario_spec(spec_file: Path, out: Output) -> int:
             exit_code=ExitCode.VALIDATION_ERROR,
         )
 
-        if not get_json_mode():
+        if not _is_json_output():
             for err in result.errors[:10]:
                 out.text(
                     f"  [red]✗[/red] [{err.category}] {err.location}: {err.message}"
@@ -238,7 +243,7 @@ def _validate_scenario_spec(spec_file: Path, out: Output) -> int:
     if result.warnings:
         out.success(f"Scenario validated with {len(result.warnings)} warning(s)")
 
-        if not get_json_mode():
+        if not _is_json_output():
             for warn in result.warnings[:5]:
                 out.warning(f"[{warn.category}] {warn.location}: {warn.message}")
 
@@ -281,7 +286,7 @@ def validate_command(
         extropy validate surgeons.scenario.yaml     # Scenario spec
         extropy validate surgeons.yaml --strict     # Treat warnings as errors
     """
-    out = Output(console, json_mode=get_json_mode())
+    out = Output(console, json_mode=_is_json_output())
     out.blank()
 
     # Check file exists

@@ -52,7 +52,7 @@ def network_command(
         None, "--seed", help="Random seed for reproducibility"
     ),
     validate: bool = typer.Option(
-        False, "--validate", "-v", help="Print validation metrics"
+        False, "--validate", help="Print validation metrics"
     ),
     no_metrics: bool = typer.Option(
         False, "--no-metrics", help="Skip computing node metrics (faster)"
@@ -242,7 +242,7 @@ def network_command(
     if agent_count == 0:
         out.error(
             f"No agents found for scenario: {scenario_name}. "
-            "Run 'extropy sample -s {scenario_name} -n COUNT' first.",
+            f"Run 'extropy sample -s {scenario_name} -n COUNT' first.",
             exit_code=ExitCode.FILE_NOT_FOUND,
         )
         raise typer.Exit(out.finish())
@@ -252,11 +252,11 @@ def network_command(
         scenario_path = study_ctx.get_scenario_path(scenario_name, scenario_version)
         scenario_spec = ScenarioSpec.from_yaml(scenario_path)
     except FileNotFoundError:
-        out.error(f"Scenario not found: {scenario_name}")
-        raise typer.Exit(1)
+        out.error(f"Scenario not found: {scenario_name}", exit_code=ExitCode.FILE_NOT_FOUND)
+        raise typer.Exit(out.finish())
     except Exception as e:
         out.error(f"Failed to load scenario: {e}")
-        raise typer.Exit(1)
+        raise typer.Exit(out.finish())
 
     # Load base population spec (needed for config generation)
     merged_spec = None
