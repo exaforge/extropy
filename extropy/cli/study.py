@@ -397,3 +397,26 @@ def resolve_scenario(
         raise ValueError(f"Scenario not found: {name}")
 
     return name, version
+
+
+def get_study_db(study_path: Path | None = None) -> Path:
+    """Resolve study DB path via auto-detection or explicit path.
+
+    Args:
+        study_path: Explicit study folder path, or None to auto-detect
+
+    Returns:
+        Path to study.db
+
+    Raises:
+        FileNotFoundError: If no study folder found or DB doesn't exist
+    """
+    detected = detect_study_folder(study_path)
+    if detected is None:
+        raise FileNotFoundError(
+            "Not in a study folder. Use --study to specify or run from a study folder."
+        )
+    study_ctx = StudyContext(detected)
+    if not study_ctx.db_path.exists():
+        raise FileNotFoundError(f"Study DB not found: {study_ctx.db_path}")
+    return study_ctx.db_path

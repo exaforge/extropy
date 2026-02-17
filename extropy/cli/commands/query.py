@@ -10,7 +10,7 @@ import typer
 
 from ...storage import open_study_db, ReadOnlySQLRequest
 from ..app import app, console, is_agent_mode, get_study_path
-from ..study import detect_study_folder, StudyContext
+from ..study import get_study_db
 from ..utils import Output
 
 query_app = typer.Typer(help="Query study data")
@@ -34,19 +34,11 @@ _DENYLIST_TOKENS = (
 
 def _get_study_db() -> Path:
     """Resolve study DB path via auto-detection or --study flag."""
-    study_path = get_study_path()
-    detected = detect_study_folder(study_path)
-    if detected is None:
-        console.print(
-            "[red]✗[/red] Not in a study folder. "
-            "Use --study to specify or run from a study folder."
-        )
+    try:
+        return get_study_db(get_study_path())
+    except FileNotFoundError as e:
+        console.print(f"[red]✗[/red] {e}")
         raise typer.Exit(1)
-    study_ctx = StudyContext(detected)
-    if not study_ctx.db_path.exists():
-        console.print(f"[red]✗[/red] Study DB not found: {study_ctx.db_path}")
-        raise typer.Exit(1)
-    return study_ctx.db_path
 
 
 def _resolve_run(conn: sqlite3.Connection, run_id: str | None) -> sqlite3.Row | None:

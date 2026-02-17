@@ -6,6 +6,7 @@ Generated once per population via LLM, then applied to all agents via templates.
 
 from datetime import datetime
 from enum import Enum
+from pathlib import Path
 
 import yaml
 from pydantic import BaseModel, Field
@@ -209,26 +210,26 @@ class PersonaConfig(BaseModel):
                 return g
         return None
 
-    def to_yaml(self) -> str:
-        """Serialize to YAML."""
+    def to_yaml_str(self) -> str:
+        """Serialize to YAML string."""
         data = self.model_dump(mode="json")
         return yaml.dump(
             data, default_flow_style=False, sort_keys=False, allow_unicode=True
         )
 
     @classmethod
-    def from_yaml(cls, yaml_str: str) -> "PersonaConfig":
+    def from_yaml_str(cls, yaml_str: str) -> "PersonaConfig":
         """Load from YAML string."""
         data = yaml.safe_load(yaml_str)
         return cls.model_validate(data)
 
     @classmethod
-    def from_file(cls, path: str) -> "PersonaConfig":
+    def from_yaml(cls, path: str | Path) -> "PersonaConfig":
         """Load from YAML file."""
         with open(path, "r") as f:
-            return cls.from_yaml(f.read())
+            return cls.from_yaml_str(f.read())
 
-    def to_file(self, path: str) -> None:
+    def to_yaml(self, path: str | Path) -> None:
         """Save to YAML file."""
         with open(path, "w") as f:
-            f.write(self.to_yaml())
+            f.write(self.to_yaml_str())

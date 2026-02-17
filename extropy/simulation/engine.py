@@ -2334,12 +2334,12 @@ def run_simulation(
         if not persona_config_path.is_absolute():
             persona_config_path = scenario_path.parent / persona_config_path
         if persona_config_path.exists():
-            persona_config = PersonaConfig.from_file(str(persona_config_path))
+            persona_config = PersonaConfig.from_yaml(persona_config_path)
     else:
         # Try to find persona config automatically
         auto_config_path = pop_path.with_suffix(".persona.yaml")
         if auto_config_path.exists():
-            persona_config = PersonaConfig.from_file(str(auto_config_path))
+            persona_config = PersonaConfig.from_yaml(auto_config_path)
 
     # Create config
     # Resolve effective model strings for rate limiting

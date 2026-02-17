@@ -15,7 +15,7 @@ import typer
 from ...config import get_config
 from ...core.llm import simple_call
 from ..app import app, console, get_study_path, is_agent_mode
-from ..study import StudyContext, detect_study_folder
+from ..study import get_study_db
 from ..utils import Output
 
 chat_app = typer.Typer(help="Chat with simulated agents using DB-backed history")
@@ -24,19 +24,11 @@ app.add_typer(chat_app, name="chat")
 
 def _get_study_db() -> Path:
     """Resolve study DB path via auto-detection or --study flag."""
-    study_path = get_study_path()
-    detected = detect_study_folder(study_path)
-    if detected is None:
-        console.print(
-            "[red]✗[/red] Not in a study folder. "
-            "Use --study to specify or run from a study folder."
-        )
+    try:
+        return get_study_db(get_study_path())
+    except FileNotFoundError as e:
+        console.print(f"[red]✗[/red] {e}")
         raise typer.Exit(1)
-    study_ctx = StudyContext(detected)
-    if not study_ctx.db_path.exists():
-        console.print(f"[red]✗[/red] Study DB not found: {study_ctx.db_path}")
-        raise typer.Exit(1)
-    return study_ctx.db_path
 
 
 def _now_iso() -> str:

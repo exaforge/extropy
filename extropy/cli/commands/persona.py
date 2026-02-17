@@ -244,7 +244,7 @@ def persona_command(
 
     # Save
     try:
-        config.to_file(str(persona_path))
+        config.to_yaml(persona_path)
     except Exception as e:
         out.error(f"Failed to save: {e}")
         raise typer.Exit(1)
@@ -293,7 +293,7 @@ def _handle_show_mode(
             raise typer.Exit(2)
 
     try:
-        config = PersonaConfig.from_file(str(config_path))
+        config = PersonaConfig.from_yaml(config_path)
     except Exception as e:
         out.error(f"Failed to load persona config: {e}")
         raise typer.Exit(1)
