@@ -754,6 +754,107 @@ def _sentiment_to_tone(sentiment: float) -> str:
         return "strongly opposed"
 
 
+async def _classify_text_async(
+    text: str,
+    scenario: ScenarioSpec,
+    pass2_schema: dict[str, Any],
+    classify_model: str | None,
+    config: SimulationRunConfig,
+    context: ReasoningContext,
+    rate_limiter: Any = None,
+) -> tuple[dict[str, Any], TokenUsage]:
+    """Classify free text into structured outcomes using Pass 2 schema."""
+    if not text.strip():
+        return {}, TokenUsage()
+
+    pass2_prompt = build_pass2_prompt(text, scenario)
+    usage = TokenUsage()
+
+    for attempt in range(config.max_retries):
+        try:
+            if rate_limiter:
+                estimated_input = len(pass2_prompt) // 4
+                estimated_output = 80
+                await rate_limiter.routine.acquire(
+                    estimated_input_tokens=estimated_input,
+                    estimated_output_tokens=estimated_output,
+                )
+
+            call_start = time.time()
+            pass2_response, usage = await asyncio.wait_for(
+                simple_call_async(
+                    prompt=pass2_prompt,
+                    response_schema=pass2_schema,
+                    schema_name="classification",
+                    model=classify_model,
+                ),
+                timeout=20.0,
+            )
+            call_elapsed = time.time() - call_start
+            logger.info(f"[PASS2] Agent {context.agent_id} - {call_elapsed:.2f}s")
+
+            if pass2_response:
+                return dict(pass2_response), usage
+        except asyncio.TimeoutError:
+            logger.warning(
+                f"[PASS2] Agent {context.agent_id} - attempt {attempt + 1} timed out after 20s"
+            )
+            if attempt == config.max_retries - 1:
+                logger.warning(
+                    f"[PASS2] Agent {context.agent_id} - all retries exhausted, proceeding without classification"
+                )
+        except Exception as e:
+            logger.warning(
+                f"[PASS2] Agent {context.agent_id} - attempt {attempt + 1} failed: {e}"
+            )
+            if attempt == config.max_retries - 1:
+                logger.warning(
+                    f"[PASS2] Agent {context.agent_id} - all retries exhausted, proceeding without classification"
+                )
+
+    return {}, usage
+
+
+def _classify_text_sync(
+    text: str,
+    scenario: ScenarioSpec,
+    pass2_schema: dict[str, Any],
+    classify_model: str | None,
+    config: SimulationRunConfig,
+    context: ReasoningContext,
+) -> dict[str, Any]:
+    """Synchronous counterpart for classifying text into outcomes."""
+    if not text.strip():
+        return {}
+
+    pass2_prompt = build_pass2_prompt(text, scenario)
+    for attempt in range(config.max_retries):
+        try:
+            call_start = time.time()
+            pass2_response = simple_call(
+                prompt=pass2_prompt,
+                response_schema=pass2_schema,
+                schema_name="classification",
+                model=classify_model,
+                log=True,
+            )
+            call_elapsed = time.time() - call_start
+            logger.info(f"[PASS2] Agent {context.agent_id} - API call took {call_elapsed:.2f}s")
+
+            if pass2_response:
+                return dict(pass2_response)
+        except Exception as e:
+            logger.warning(
+                f"[PASS2] Agent {context.agent_id} - attempt {attempt + 1} failed: {e}"
+            )
+            if attempt == config.max_retries - 1:
+                logger.warning(
+                    f"[PASS2] Agent {context.agent_id} - classification failed, continuing without"
+                )
+
+    return {}
+
+
 # =============================================================================
 # Two-pass reasoning (async)
 # =============================================================================
@@ -836,6 +937,7 @@ async def _reason_agent_two_pass_async(
 
     # Extract Pass 1 fields
     reasoning = pass1_response.get("reasoning", "")
+    private_thought = pass1_response.get("private_thought", "")
     public_statement = pass1_response.get("public_statement", "")
     reasoning_summary = pass1_response.get("reasoning_summary", "")
     sentiment = pass1_response.get("sentiment")
@@ -851,60 +953,40 @@ async def _reason_agent_two_pass_async(
     # === Pass 2: Classification (if needed) ===
     pass2_schema = build_pass2_schema(scenario.outcomes)
     position = None
+    public_position = None
     outcomes = {}
-    pass2_usage = TokenUsage()
+    pass2_usage_private = TokenUsage()
+    pass2_usage_public = TokenUsage()
 
     if pass2_schema:
-        pass2_prompt = build_pass2_prompt(reasoning, scenario)
+        private_text = private_thought or reasoning
+        outcomes, pass2_usage_private = await _classify_text_async(
+            text=private_text,
+            scenario=scenario,
+            pass2_schema=pass2_schema,
+            classify_model=classify_model,
+            config=config,
+            context=context,
+            rate_limiter=rate_limiter,
+        )
+        if position_outcome and position_outcome in outcomes:
+            position = outcomes[position_outcome]
 
-        for attempt in range(config.max_retries):
-            try:
-                if rate_limiter:
-                    # Dynamic token estimate from prompt length
-                    estimated_input = len(pass2_prompt) // 4
-                    estimated_output = 80  # classification is small
-                    await rate_limiter.routine.acquire(
-                        estimated_input_tokens=estimated_input,
-                        estimated_output_tokens=estimated_output,
-                    )
+        if config.fidelity == "high":
+            public_outcomes, pass2_usage_public = await _classify_text_async(
+                text=public_statement,
+                scenario=scenario,
+                pass2_schema=pass2_schema,
+                classify_model=classify_model,
+                config=config,
+                context=context,
+                rate_limiter=rate_limiter,
+            )
+            if position_outcome and position_outcome in public_outcomes:
+                public_position = public_outcomes[position_outcome]
 
-                call_start = time.time()
-                pass2_response, pass2_usage = await asyncio.wait_for(
-                    simple_call_async(
-                        prompt=pass2_prompt,
-                        response_schema=pass2_schema,
-                        schema_name="classification",
-                        model=classify_model,
-                    ),
-                    timeout=20.0,
-                )
-                call_elapsed = time.time() - call_start
-
-                logger.info(f"[PASS2] Agent {context.agent_id} - {call_elapsed:.2f}s")
-
-                if pass2_response:
-                    outcomes = dict(pass2_response)
-                    # Extract primary position from outcomes
-                    if position_outcome and position_outcome in pass2_response:
-                        position = pass2_response[position_outcome]
-                    break
-            except asyncio.TimeoutError:
-                logger.warning(
-                    f"[PASS2] Agent {context.agent_id} - attempt {attempt + 1} timed out after 20s"
-                )
-                if attempt == config.max_retries - 1:
-                    logger.warning(
-                        f"[PASS2] Agent {context.agent_id} - all retries exhausted, proceeding without classification"
-                    )
-            except Exception as e:
-                logger.warning(
-                    f"[PASS2] Agent {context.agent_id} - attempt {attempt + 1} failed: {e}"
-                )
-                if attempt == config.max_retries - 1:
-                    # Pass 2 failure is non-fatal — we still have Pass 1 data
-                    logger.warning(
-                        f"[PASS2] Agent {context.agent_id} - all retries exhausted, proceeding without classification"
-                    )
+    if public_position is None:
+        public_position = position
 
     # Merge sentiment into outcomes for backwards compat
     if sentiment is not None:
@@ -912,6 +994,7 @@ async def _reason_agent_two_pass_async(
 
     return ReasoningResponse(
         position=position,
+        public_position=public_position,
         sentiment=sentiment,
         conviction=conviction_float,
         public_statement=public_statement,
@@ -923,8 +1006,12 @@ async def _reason_agent_two_pass_async(
         actions=actions,
         pass1_input_tokens=pass1_usage.input_tokens,
         pass1_output_tokens=pass1_usage.output_tokens,
-        pass2_input_tokens=pass2_usage.input_tokens,
-        pass2_output_tokens=pass2_usage.output_tokens,
+        pass2_input_tokens=(
+            pass2_usage_private.input_tokens + pass2_usage_public.input_tokens
+        ),
+        pass2_output_tokens=(
+            pass2_usage_private.output_tokens + pass2_usage_public.output_tokens
+        ),
     )
 
 
@@ -1019,8 +1106,10 @@ async def _reason_agent_merged_async(
 
     # Extract position from outcomes
     position = None
+    public_position = None
     if position_outcome and position_outcome in response:
         position = response[position_outcome]
+        public_position = position
 
     # Build outcomes dict (everything except the Pass 1 fields)
     pass1_fields = {
@@ -1038,8 +1127,27 @@ async def _reason_agent_merged_async(
     if sentiment is not None:
         outcomes["sentiment"] = sentiment
 
+    pass2_usage_public = TokenUsage()
+    pass2_schema = build_pass2_schema(scenario.outcomes)
+    if config.fidelity == "high" and pass2_schema:
+        public_outcomes, pass2_usage_public = await _classify_text_async(
+            text=public_statement,
+            scenario=scenario,
+            pass2_schema=pass2_schema,
+            classify_model=config.fast or None,
+            config=config,
+            context=context,
+            rate_limiter=rate_limiter,
+        )
+        if position_outcome and position_outcome in public_outcomes:
+            public_position = public_outcomes[position_outcome]
+
+    if public_position is None:
+        public_position = position
+
     return ReasoningResponse(
         position=position,
+        public_position=public_position,
         sentiment=sentiment,
         conviction=conviction_float,
         public_statement=public_statement,
@@ -1051,8 +1159,8 @@ async def _reason_agent_merged_async(
         actions=actions,
         pass1_input_tokens=usage.input_tokens,
         pass1_output_tokens=usage.output_tokens,
-        pass2_input_tokens=0,
-        pass2_output_tokens=0,
+        pass2_input_tokens=pass2_usage_public.input_tokens,
+        pass2_output_tokens=pass2_usage_public.output_tokens,
     )
 
 
@@ -1133,6 +1241,7 @@ def reason_agent(
 
     # Extract Pass 1 fields
     reasoning = pass1_response.get("reasoning", "")
+    private_thought = pass1_response.get("private_thought", "")
     public_statement = pass1_response.get("public_statement", "")
     reasoning_summary = pass1_response.get("reasoning_summary", "")
     sentiment = pass1_response.get("sentiment")
@@ -1143,41 +1252,37 @@ def reason_agent(
     # === Pass 2: Classification ===
     pass2_schema = build_pass2_schema(scenario.outcomes)
     position = None
+    public_position = None
     outcomes = {}
 
     if pass2_schema:
-        pass2_prompt = build_pass2_prompt(reasoning, scenario)
+        private_text = private_thought or reasoning
         classify_model = config.fast or None
+        outcomes = _classify_text_sync(
+            text=private_text,
+            scenario=scenario,
+            pass2_schema=pass2_schema,
+            classify_model=classify_model,
+            config=config,
+            context=context,
+        )
+        if position_outcome and position_outcome in outcomes:
+            position = outcomes[position_outcome]
 
-        for attempt in range(config.max_retries):
-            try:
-                call_start = time.time()
-                pass2_response = simple_call(
-                    prompt=pass2_prompt,
-                    response_schema=pass2_schema,
-                    schema_name="classification",
-                    model=classify_model,
-                    log=True,
-                )
-                call_elapsed = time.time() - call_start
+        if config.fidelity == "high":
+            public_outcomes = _classify_text_sync(
+                text=public_statement,
+                scenario=scenario,
+                pass2_schema=pass2_schema,
+                classify_model=classify_model,
+                config=config,
+                context=context,
+            )
+            if position_outcome and position_outcome in public_outcomes:
+                public_position = public_outcomes[position_outcome]
 
-                logger.info(
-                    f"[PASS2] Agent {context.agent_id} - API call took {call_elapsed:.2f}s"
-                )
-
-                if pass2_response:
-                    outcomes = dict(pass2_response)
-                    if position_outcome and position_outcome in pass2_response:
-                        position = pass2_response[position_outcome]
-                    break
-            except Exception as e:
-                logger.warning(
-                    f"[PASS2] Agent {context.agent_id} - attempt {attempt + 1} failed: {e}"
-                )
-                if attempt == config.max_retries - 1:
-                    logger.warning(
-                        f"[PASS2] Agent {context.agent_id} - classification failed, continuing without"
-                    )
+    if public_position is None:
+        public_position = position
 
     if sentiment is not None:
         outcomes["sentiment"] = sentiment
@@ -1189,6 +1294,7 @@ def reason_agent(
 
     return ReasoningResponse(
         position=position,
+        public_position=public_position,
         sentiment=sentiment,
         conviction=conviction_float,
         public_statement=public_statement,

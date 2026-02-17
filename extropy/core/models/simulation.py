@@ -357,6 +357,10 @@ class ReasoningResponse(BaseModel):
     position: str | None = Field(
         default=None, description="Classified position (filled by Pass 2)"
     )
+    public_position: str | None = Field(
+        default=None,
+        description="Public-facing position when THINK/SAY diverges (high fidelity)",
+    )
     sentiment: float | None = Field(
         default=None, description="Sentiment value (-1 to 1)"
     )
