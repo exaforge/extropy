@@ -152,6 +152,7 @@ Return JSON array with formula for each attribute."""
                 strategy="derived",
                 scope=original.scope,
                 semantic_type=original.semantic_type,
+                identity_type=original.identity_type,
                 depends_on=original.depends_on,
                 sampling=sampling,
                 grounding=grounding,

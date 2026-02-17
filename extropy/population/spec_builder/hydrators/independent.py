@@ -188,6 +188,7 @@ Return JSON with distribution, constraints, and grounding for each attribute."""
                 strategy="independent",
                 scope=original.scope,
                 semantic_type=original.semantic_type,
+                identity_type=original.identity_type,
                 depends_on=[],
                 sampling=sampling,
                 grounding=grounding,

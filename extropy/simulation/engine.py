@@ -1484,50 +1484,31 @@ class SimulationEngine:
         """Render identity threat framing from scenario's identity_dimensions.
 
         Uses the identity_dimensions field from ScenarioSpec (set by LLM during
-        scenario creation) to determine which aspects of the agent's identity
-        might feel threatened.
+        scenario creation) and matches to agent attributes via their identity_type
+        field (set by LLM during spec creation).
         """
         if not self.scenario.identity_dimensions:
             return None
 
-        # Map dimension names to agent attribute keys
-        dimension_attr_keys = {
-            "political_orientation": (
-                "political_orientation",
-                "political_ideology",
-                "party_affiliation",
-            ),
-            "religious_affiliation": (
-                "religious_affiliation",
-                "religion",
-                "faith_tradition",
-            ),
-            "race_ethnicity": ("race_ethnicity", "race", "ethnicity"),
-            "gender_identity": ("gender_identity", "gender"),
-            "sexual_orientation": ("sexual_orientation",),
-            "parental_status": ("parental_status", "household_role", "has_children"),
-            "citizenship": ("citizenship_status", "nationality", "country_of_origin"),
-            "socioeconomic_class": (
-                "socioeconomic_class",
-                "income_bracket",
-                "social_class",
-            ),
-            "professional_identity": ("occupation", "profession", "job_title"),
-            "generational_identity": ("generation", "age_group"),
-        }
+        # Build mapping from identity_type → attribute name using population spec
+        # This uses the LLM-classified identity_type, not hardcoded name patterns
+        identity_attr_map: dict[str, str] = {}
+        for attr in self.population_spec.attributes:
+            if attr.identity_type:
+                identity_attr_map[attr.identity_type] = attr.name
 
         relevant_dimensions = []
         for dim in self.scenario.identity_dimensions:
-            # Check if agent has a value for this dimension
-            attr_keys = dimension_attr_keys.get(dim.dimension, ())
+            # Look up attribute by identity_type (LLM-classified)
+            attr_name = identity_attr_map.get(dim.dimension)
             agent_value = None
-            for key in attr_keys:
-                val = agent.get(key)
+
+            if attr_name:
+                val = agent.get(attr_name)
                 if val and str(val).lower() not in ("unknown", "none", "n/a", ""):
                     agent_value = val
-                    break
 
-            # Special handling for parental_status - check dependents
+            # Special handling for parental_status - check dependents as fallback
             if dim.dimension == "parental_status" and not agent_value:
                 if agent.get("dependents") or agent.get("has_children"):
                     agent_value = "parent"
