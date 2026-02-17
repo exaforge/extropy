@@ -69,11 +69,99 @@ class TestVersionFlag:
 class TestNetworkCommand:
     """Smoke tests for the network command options."""
 
-    def test_network_command_supports_fast_mode_and_checkpoint(self, tmp_path):
-        study_db = tmp_path / "study.db"
-        config_path = tmp_path / "network-config.yaml"
-        output_path = tmp_path / "network.json"
+    def _setup_study_with_scenario(self, tmp_path):
+        """Helper to create a study folder with a scenario and sampled agents."""
+        import os
 
+        # Create study folder structure
+        study_dir = tmp_path
+        study_db = study_dir / "study.db"
+        scenario_dir = study_dir / "scenario" / "test"
+        scenario_dir.mkdir(parents=True)
+
+        # Create minimal scenario file
+        scenario_yaml = scenario_dir / "scenario.v1.yaml"
+        scenario_yaml.write_text("""
+meta:
+  name: test
+  description: Test scenario
+  base_population: population.v1
+  created_at: 2024-01-01T00:00:00
+
+event:
+  type: announcement
+  content: Test announcement
+  source: test_source
+  credibility: 0.8
+  ambiguity: 0.2
+  emotional_valence: 0.0
+
+seed_exposure:
+  channels: []
+  rules: []
+
+interaction:
+  primary_model: passive_observation
+  description: Test interaction
+
+spread:
+  share_probability: 0.3
+
+outcomes:
+  suggested_outcomes: []
+  capture_full_reasoning: true
+
+simulation:
+  max_timesteps: 10
+  timestep_unit: day
+""")
+
+        # Create minimal population file
+        pop_yaml = study_dir / "population.v1.yaml"
+        pop_yaml.write_text("""
+meta:
+  description: Test population
+  geography: USA
+  agent_focus: test agents
+
+grounding:
+  summary: Test grounding
+
+attributes:
+  - name: role
+    type: categorical
+    distribution:
+      type: categorical
+      probabilities:
+        x: 0.5
+        y: 0.5
+  - name: team
+    type: categorical
+    distribution:
+      type: categorical
+      probabilities:
+        alpha: 0.5
+        beta: 0.5
+
+sampling_order:
+  - role
+  - team
+""")
+
+        # Create persona config
+        persona_yaml = scenario_dir / "persona.v1.yaml"
+        persona_yaml.write_text("""
+intro_template: "You are {role} on team {team}."
+treatments: []
+groups: []
+phrasings:
+  boolean: []
+  categorical: []
+  relative: []
+  concrete: []
+""")
+
+        # Create agents in DB with scenario_id
         agents = [
             {"_id": "a0", "role": "x", "team": "alpha"},
             {"_id": "a1", "role": "x", "team": "alpha"},
@@ -82,95 +170,158 @@ class TestNetworkCommand:
         ]
         with open_study_db(study_db) as db:
             db.save_sample_result(
-                population_id="default", agents=agents, meta={"source": "test"}
+                population_id="test",
+                agents=agents,
+                meta={"source": "test"},
+                scenario_id="test",
             )
+
+        return study_dir
+
+    def test_network_command_supports_fast_mode_and_checkpoint(self, tmp_path):
+        import os
+
+        study_dir = self._setup_study_with_scenario(tmp_path)
+        study_db = study_dir / "study.db"
+        config_path = tmp_path / "network-config.yaml"
+        output_path = tmp_path / "network.json"
 
         NetworkConfig(seed=42, avg_degree=2.0).to_yaml(config_path)
 
-        result = runner.invoke(
-            app,
-            [
-                "network",
-                "--study-db",
-                str(study_db),
-                "-o",
-                str(output_path),
-                "-c",
-                str(config_path),
-                "--no-metrics",
-                "--candidate-mode",
-                "blocked",
-                "--candidate-pool-multiplier",
-                "4.0",
-                "--block-attr",
-                "role",
-                "--similarity-workers",
-                "1",
-                "--similarity-chunk-size",
-                "8",
-                "--checkpoint",
-                str(study_db),
-                "--checkpoint-every",
-                "1",
-            ],
-        )
+        old_cwd = os.getcwd()
+        try:
+            os.chdir(study_dir)
+            result = runner.invoke(
+                app,
+                [
+                    "network",
+                    "-s",
+                    "test",
+                    "-o",
+                    str(output_path),
+                    "-c",
+                    str(config_path),
+                    "--no-metrics",
+                    "--candidate-mode",
+                    "blocked",
+                    "--candidate-pool-multiplier",
+                    "4.0",
+                    "--block-attr",
+                    "role",
+                    "--similarity-workers",
+                    "1",
+                    "--similarity-chunk-size",
+                    "8",
+                    "--checkpoint",
+                    str(study_db),
+                    "--checkpoint-every",
+                    "1",
+                ],
+            )
+        finally:
+            os.chdir(old_cwd)
 
-        assert result.exit_code == 0
+        assert result.exit_code == 0, f"Output: {result.output}"
         assert output_path.exists()
         with open_study_db(study_db) as db:
             rows = db.run_select("SELECT COUNT(*) AS cnt FROM network_similarity_jobs")
             assert rows and int(rows[0]["cnt"]) >= 1
 
-    def test_network_resume_requires_checkpoint(self):
-        result = runner.invoke(
-            app,
-            [
-                "network",
-                "--study-db",
-                "study.db",
-                "-o",
-                "network.json",
-                "--resume-checkpoint",
-            ],
-        )
-        assert result.exit_code == 1
-        assert "Study DB not found" in result.output
+    def test_network_requires_study_folder(self, tmp_path):
+        """Network command requires being in a study folder."""
+        import os
 
-    def test_network_supports_quality_profile_flag(self):
-        result = runner.invoke(
-            app,
-            [
-                "network",
-                "--study-db",
-                "study.db",
-                "--quality-profile",
-                "strict",
-            ],
-        )
-        assert result.exit_code == 1
-        assert "Study DB not found" in result.output
+        old_cwd = os.getcwd()
+        try:
+            os.chdir(tmp_path)
+            result = runner.invoke(app, ["network", "-s", "test"])
+            # Should fail with "Not in a study folder" error
+            assert result.exit_code != 0
+            assert "study folder" in result.output.lower()
+        finally:
+            os.chdir(old_cwd)
+
+    def test_network_requires_agents(self, tmp_path):
+        """Network command requires sampled agents for the scenario."""
+        import os
+
+        # Create study folder with scenario but no agents
+        study_dir = tmp_path
+        study_db = study_dir / "study.db"
+        scenario_dir = study_dir / "scenario" / "test"
+        scenario_dir.mkdir(parents=True)
+
+        # Create minimal scenario file
+        scenario_yaml = scenario_dir / "scenario.v1.yaml"
+        scenario_yaml.write_text("""
+meta:
+  name: test
+  description: Test scenario
+  base_population: population.v1
+  created_at: 2024-01-01T00:00:00
+event:
+  type: announcement
+  content: Test
+  source: test
+  credibility: 0.8
+  ambiguity: 0.2
+  emotional_valence: 0.0
+seed_exposure:
+  channels: []
+  rules: []
+interaction:
+  primary_model: passive_observation
+  description: Test
+spread:
+  share_probability: 0.3
+outcomes:
+  suggested_outcomes: []
+  capture_full_reasoning: true
+simulation:
+  max_timesteps: 10
+  timestep_unit: day
+""")
+
+        # Just create an empty DB
+        with open_study_db(study_db) as db:
+            pass
+
+        old_cwd = os.getcwd()
+        try:
+            os.chdir(study_dir)
+            result = runner.invoke(app, ["network", "-s", "test"])
+            # Should fail because no agents exist
+            assert result.exit_code != 0
+            assert "no agents" in result.output.lower() or "sample" in result.output.lower()
+        finally:
+            os.chdir(old_cwd)
 
     def test_network_checkpoint_must_match_study_db(self, tmp_path):
-        study_db = tmp_path / "study.db"
-        other_db = tmp_path / "other.db"
-        with open_study_db(study_db) as db:
-            db.save_sample_result(
-                population_id="default", agents=[{"_id": "a0"}], meta={}
-            )
+        import os
 
-        result = runner.invoke(
-            app,
-            [
-                "network",
-                "--study-db",
-                str(study_db),
-                "--checkpoint",
-                str(other_db),
-            ],
-        )
+        study_dir = self._setup_study_with_scenario(tmp_path)
+        study_db = study_dir / "study.db"
+        other_db = tmp_path / "other.db"
+
+        old_cwd = os.getcwd()
+        try:
+            os.chdir(study_dir)
+            result = runner.invoke(
+                app,
+                [
+                    "network",
+                    "-s",
+                    "test",
+                    "--checkpoint",
+                    str(other_db),
+                ],
+            )
+        finally:
+            os.chdir(old_cwd)
+
         assert result.exit_code == 1
         assert (
-            "--checkpoint must point to the same canonical file as --study-db"
+            "--checkpoint must point to the same canonical file as study.db"
             in result.output
         )
 
