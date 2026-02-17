@@ -310,6 +310,11 @@ def _sample_dependent_as_agent(
     agent["household_id"] = household_id
     agent["household_role"] = f"dependent_{dependent.relationship}"
     agent["relationship_to_primary"] = dependent.relationship
+    dep_name = str(getattr(dependent, "name", "")).strip()
+    if dep_name:
+        agent["first_name"] = dep_name
+    if parent.get("last_name"):
+        agent["last_name"] = parent["last_name"]
 
     # Copy household-scoped attributes from parent
     for attr in spec.attributes:
