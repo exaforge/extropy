@@ -383,14 +383,21 @@ def _seed_run_scoped_state(study_db: Path) -> None:
 
 class TestRunScopedCliReads:
     def test_results_defaults_to_latest_run(self, tmp_path):
+        import os
+
         study_db = tmp_path / "study.db"
         _seed_run_scoped_state(study_db)
 
-        result = runner.invoke(app, ["results", "--study-db", str(study_db)])
-        assert result.exit_code == 0
-        assert "run_id=run_new" in result.output
-        assert "new_pos" in result.output
-        assert "old_pos" not in result.output
+        old_cwd = os.getcwd()
+        try:
+            os.chdir(tmp_path)
+            result = runner.invoke(app, ["results"])
+            assert result.exit_code == 0
+            assert "run_id=run_new" in result.output
+            assert "new_pos" in result.output
+            assert "old_pos" not in result.output
+        finally:
+            os.chdir(old_cwd)
 
 
 class TestInspectNetworkStatus:

@@ -173,25 +173,36 @@ def _validate_scenario_spec(spec_file: Path, out: Output) -> int:
 
     # Show file references (human mode only)
     if not get_json_mode():
-        from ...utils import resolve_relative_to
+        out.text("[bold]Scenario Details:[/bold]")
 
-        out.text("[bold]File References:[/bold]")
+        # New flow: base_population
+        if spec.meta.base_population:
+            out.text(f"  [cyan]•[/cyan] base_population: {spec.meta.base_population}")
+            if spec.extended_attributes:
+                out.text(f"  [cyan]•[/cyan] extended_attributes: {len(spec.extended_attributes)}")
 
-        pop_path = resolve_relative_to(spec.meta.population_spec, spec_file)
-        if pop_path.exists():
-            out.text(f"  [green]✓[/green] Population: {spec.meta.population_spec}")
-        else:
-            out.text(
-                f"  [red]✗[/red] Population: {spec.meta.population_spec} (not found)"
-            )
+        # Legacy flow: population_spec + study_db
+        if spec.meta.population_spec:
+            from ...utils import resolve_relative_to
 
-        study_db_path = resolve_relative_to(spec.meta.study_db, spec_file)
-        if study_db_path.exists():
-            out.text(f"  [green]✓[/green] Study DB: {spec.meta.study_db}")
-        else:
-            out.text(f"  [red]✗[/red] Study DB: {spec.meta.study_db} (not found)")
-        out.text(f"  [cyan]•[/cyan] population_id: {spec.meta.population_id}")
-        out.text(f"  [cyan]•[/cyan] network_id: {spec.meta.network_id}")
+            pop_path = resolve_relative_to(spec.meta.population_spec, spec_file)
+            if pop_path.exists():
+                out.text(f"  [green]✓[/green] Population: {spec.meta.population_spec}")
+            else:
+                out.text(
+                    f"  [red]✗[/red] Population: {spec.meta.population_spec} (not found)"
+                )
+
+        if spec.meta.study_db:
+            from ...utils import resolve_relative_to
+
+            study_db_path = resolve_relative_to(spec.meta.study_db, spec_file)
+            if study_db_path.exists():
+                out.text(f"  [green]✓[/green] Study DB: {spec.meta.study_db}")
+            else:
+                out.text(f"  [red]✗[/red] Study DB: {spec.meta.study_db} (not found)")
+            out.text(f"  [cyan]•[/cyan] population_id: {spec.meta.population_id}")
+            out.text(f"  [cyan]•[/cyan] network_id: {spec.meta.network_id}")
 
         out.blank()
 
