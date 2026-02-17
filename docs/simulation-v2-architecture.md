@@ -464,7 +464,7 @@ class ScenarioSpec(BaseModel):
     interaction: InteractionConfig
     spread: SpreadConfig
     outcomes: OutcomeConfig
-    simulation: SimulationConfig
+    simulation: ScenarioSimConfig
     # day_phases — OMITTED
     channel_experience: dict[str, ChannelExperience] | None = None  # NEW
     relationship_weights: dict[str, float] | None = None  # NEW

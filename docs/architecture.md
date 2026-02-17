@@ -242,7 +242,7 @@ All LLM calls go through this file. Two-zone routing:
 All Pydantic v2:
 
 - `population.py`: `PopulationSpec`, `AttributeSpec`, `SamplingConfig`, distributions, modifiers
-- `scenario.py`: `ScenarioSpec`, `Event`, `SeedExposure`, `OutcomeConfig`, `SimulationConfig`
+- `scenario.py`: `ScenarioSpec`, `Event`, `SeedExposure`, `OutcomeConfig`, `ScenarioSimConfig`
 - `simulation.py`: `AgentState` (public/private position/sentiment/conviction), `ReasoningContext`, `ReasoningResponse`
 - `network.py`: `Edge`, `NetworkConfig`, `NetworkMetrics`
 

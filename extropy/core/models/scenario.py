@@ -9,7 +9,7 @@ This module contains:
 - Exposure: ExposureChannel, ExposureRule, SeedExposure
 - Interaction: InteractionType, InteractionConfig, SpreadModifier, SpreadConfig
 - Outcomes: OutcomeType, OutcomeDefinition, OutcomeConfig
-- Config: TimestepUnit, SimulationConfig
+- Config: TimestepUnit, ScenarioSimConfig
 - Spec: ScenarioMeta, ScenarioSpec with YAML I/O
 - Validation: ValidationError, ValidationWarning, ValidationResult
 """
