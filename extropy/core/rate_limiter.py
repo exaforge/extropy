@@ -236,18 +236,18 @@ class RateLimiter:
 
                 # Release what was acquired (capped to capacity)
                 if rpm_wait == 0.0:
-                    self.rpm_bucket.tokens = min(
-                        self.rpm_bucket.capacity, self.rpm_bucket.tokens + 1.0
+                    self.rpm_bucket._tokens = min(
+                        self.rpm_bucket.capacity, self.rpm_bucket._tokens + 1.0
                     )
                 if itpm_wait == 0.0:
-                    self.itpm_bucket.tokens = min(
+                    self.itpm_bucket._tokens = min(
                         self.itpm_bucket.capacity,
-                        self.itpm_bucket.tokens + float(estimated_input_tokens),
+                        self.itpm_bucket._tokens + float(estimated_input_tokens),
                     )
                 if otpm_wait == 0.0:
-                    self.otpm_bucket.tokens = min(
+                    self.otpm_bucket._tokens = min(
                         self.otpm_bucket.capacity,
-                        self.otpm_bucket.tokens + float(estimated_output_tokens),
+                        self.otpm_bucket._tokens + float(estimated_output_tokens),
                     )
 
                 wait_time = max(rpm_wait, itpm_wait, otpm_wait)
@@ -262,13 +262,13 @@ class RateLimiter:
 
                 # Release what was acquired (capped to capacity)
                 if rpm_wait == 0.0:
-                    self.rpm_bucket.tokens = min(
-                        self.rpm_bucket.capacity, self.rpm_bucket.tokens + 1.0
+                    self.rpm_bucket._tokens = min(
+                        self.rpm_bucket.capacity, self.rpm_bucket._tokens + 1.0
                     )
                 if tpm_wait == 0.0:
-                    self.tpm_bucket.tokens = min(
+                    self.tpm_bucket._tokens = min(
                         self.tpm_bucket.capacity,
-                        self.tpm_bucket.tokens + float(estimated_total),
+                        self.tpm_bucket._tokens + float(estimated_total),
                     )
 
                 wait_time = max(rpm_wait, tpm_wait)
@@ -338,18 +338,18 @@ class RateLimiter:
 
                 # Release what was acquired (capped to capacity)
                 if rpm_wait == 0.0:
-                    self.rpm_bucket.tokens = min(
-                        self.rpm_bucket.capacity, self.rpm_bucket.tokens + 1.0
+                    self.rpm_bucket._tokens = min(
+                        self.rpm_bucket.capacity, self.rpm_bucket._tokens + 1.0
                     )
                 if itpm_wait == 0.0:
-                    self.itpm_bucket.tokens = min(
+                    self.itpm_bucket._tokens = min(
                         self.itpm_bucket.capacity,
-                        self.itpm_bucket.tokens + float(estimated_input_tokens),
+                        self.itpm_bucket._tokens + float(estimated_input_tokens),
                     )
                 if otpm_wait == 0.0:
-                    self.otpm_bucket.tokens = min(
+                    self.otpm_bucket._tokens = min(
                         self.otpm_bucket.capacity,
-                        self.otpm_bucket.tokens + float(estimated_output_tokens),
+                        self.otpm_bucket._tokens + float(estimated_output_tokens),
                     )
 
                 wait_time = max(rpm_wait, itpm_wait, otpm_wait)
@@ -364,13 +364,13 @@ class RateLimiter:
 
                 # Release what was acquired (capped to capacity)
                 if rpm_wait == 0.0:
-                    self.rpm_bucket.tokens = min(
-                        self.rpm_bucket.capacity, self.rpm_bucket.tokens + 1.0
+                    self.rpm_bucket._tokens = min(
+                        self.rpm_bucket.capacity, self.rpm_bucket._tokens + 1.0
                     )
                 if tpm_wait == 0.0:
-                    self.tpm_bucket.tokens = min(
+                    self.tpm_bucket._tokens = min(
                         self.tpm_bucket.capacity,
-                        self.tpm_bucket.tokens + float(estimated_total),
+                        self.tpm_bucket._tokens + float(estimated_total),
                     )
 
                 wait_time = max(rpm_wait, tpm_wait)
@@ -418,13 +418,13 @@ class RateLimiter:
                 wait = float(retry_after)
                 logger.warning(f"[RATE_LIMIT] Server requested retry-after={wait}s")
                 # Drain all buckets to force waiting
-                self.rpm_bucket.tokens = 0
+                self.rpm_bucket._tokens = 0
                 if self.tpm_bucket:
-                    self.tpm_bucket.tokens = 0
+                    self.tpm_bucket._tokens = 0
                 if self.itpm_bucket:
-                    self.itpm_bucket.tokens = 0
+                    self.itpm_bucket._tokens = 0
                 if self.otpm_bucket:
-                    self.otpm_bucket.tokens = 0
+                    self.otpm_bucket._tokens = 0
             except ValueError:
                 pass
 
