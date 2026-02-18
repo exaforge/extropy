@@ -279,7 +279,7 @@ def validate_command(
     EXIT CODES:
         0 = Success (valid spec)
         1 = Validation error (invalid spec)
-        2 = File not found
+        3 = File not found
 
     EXAMPLES:
         extropy validate surgeons.yaml              # Population spec

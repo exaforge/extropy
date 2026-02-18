@@ -110,7 +110,6 @@ Non-interactive chat for automation:
 
 ```bash
 extropy chat ask \
-  --study-db study.db \
   --agent-id agent_042 \
   --prompt "What changed your mind?" \
   --json
@@ -119,7 +118,7 @@ extropy chat ask \
 List available agents:
 
 ```bash
-extropy chat list --study-db study.db --json
+extropy chat list --json
 ```
 
 **Note:** The interactive REPL (`extropy chat`) requires a TTY and is not suitable for automation. Use `extropy chat ask` instead.
