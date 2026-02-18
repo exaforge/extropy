@@ -697,7 +697,7 @@ For each attribute, provide:
 - format_spec: How to format the number. Use one of these:
   - ".0f" for whole numbers (age, counts, years)
   - ".1f" for 1 decimal place (distances, durations)
-  - ".2f" for 2 decimal places (money - combine with "$" prefix)
+  - ",.0f" for money/income (whole dollars with thousands separator, e.g., 75000 → "75,000" - combine with "$" prefix)
   - "time12" for decimal hours converted to 12-hour time (e.g., 8.5 → "8:30 AM")
   - "time24" for decimal hours converted to 24-hour time (e.g., 14.5 → "14:30")
 - prefix: Text before the number (e.g., "$" for money), empty string if none
@@ -705,14 +705,14 @@ For each attribute, provide:
 
 Examples:
 - commute_distance_miles: template="I drive {{value}} to downtown", format_spec=".1f", prefix="", suffix=" miles"
-- parking_cost_daily_usd: template="I pay {{value}} a day for parking", format_spec=".2f", prefix="$", suffix=""
+- parking_cost_daily_usd: template="I pay {{value}} a day for parking", format_spec=",.0f", prefix="$", suffix=""
 - age: template="I'm {{value}} years old", format_spec=".0f", prefix="", suffix=""
 - work_start_time: template="I usually start work around {{value}}", format_spec="time12", prefix="", suffix=""
 - household_size: template="There are {{value}} people in my household", format_spec=".0f", prefix="", suffix=""
 
 Choose the appropriate format_spec based on what makes sense for each attribute:
 - Times (work_start_time, departure_time, etc.): use "time12"
-- Money (income, costs, prices): use ".2f" with "$" prefix
+- Money (income, costs, prices): use ",.0f" with "$" prefix
 - Whole-number counts (household_size, vehicle_count, years): use ".0f"
 - Measurements with decimals (miles, minutes, hours): use ".1f"
 

@@ -432,10 +432,10 @@ class ScenarioSpec(BaseModel):
         default=None,
         description="Scenario-specific attributes that extend the base population",
     )
-    # Household configuration for this scenario (overrides base population if set)
+    # Household configuration for sampling
     household_config: HouseholdConfig | None = Field(
         default=None,
-        description="Household sampling config for this scenario. If None, uses base population's config.",
+        description="Household sampling config. Generated during scenario compilation.",
     )
     # Identity dimensions activated by this scenario (for identity-threat framing)
     identity_dimensions: list[IdentityDimension] | None = Field(
