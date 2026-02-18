@@ -93,6 +93,12 @@ def _extract_usage(response) -> TokenUsage:
     )
 
 
+def _stream_to_message(client, **kwargs):
+    """Use streaming to avoid 10-minute timeout, collect final message."""
+    with client.messages.stream(**kwargs) as stream:
+        return stream.get_final_message()
+
+
 class AnthropicProvider(LLMProvider):
     """Anthropic (Claude) LLM provider.
 
@@ -266,8 +272,10 @@ class AnthropicProvider(LLMProvider):
             # Acquire rate limit capacity before each API call
             self._acquire_rate_limit(ep, model, max_output=65536)
 
+            # Use streaming to bypass 10-minute timeout for long operations
             response = self._with_retry(
-                lambda: client.messages.create(
+                lambda: _stream_to_message(
+                    client,
                     model=model,
                     max_tokens=65536,  # Max allowed for Claude (64K)
                     tools=[tool],
@@ -339,8 +347,10 @@ class AnthropicProvider(LLMProvider):
 
             logger.info(f"[Claude] agentic_research - model={model}")
 
+            # Use streaming to bypass 10-minute timeout for long operations
             response = self._with_retry(
-                lambda: client.messages.create(
+                lambda: _stream_to_message(
+                    client,
                     model=model,
                     max_tokens=65536,  # Max allowed for Claude Sonnet (64K)
                     tools=[
