@@ -70,9 +70,32 @@ Remaining degree filled with `acquaintance` or `online_contact` based on attribu
 
 ---
 
-## Phase 2: Scenario Compilation (`extropy/scenario/`)
+## Phase 2: Scenario Creation (`extropy/scenario/` + `extropy/cli/commands/scenario.py`)
 
-**Compiler** (`compiler.py`) orchestrates 5 steps: parse event -> generate exposure rules -> determine interaction model -> define outcomes -> assemble spec.
+The scenario command is a **mini spec builder** — it discovers and researches scenario-specific attributes that extend the base population, then configures simulation parameters.
+
+### Scenario Pipeline
+
+1. **Attribute Selection** — LLM discovers attributes relevant to this scenario but not in base population (e.g., `vaccine_hesitancy` for a vaccine scenario, `job_automation_exposure` for an AI scenario)
+2. **Distribution Research** — Hydrates new attributes with distributions (same hydrators as spec command)
+3. **Household Config** — Determines if/how household dynamics matter for this scenario
+4. **Event Configuration** — Defines the triggering event (type, content, source, credibility)
+5. **Exposure Rules** — Configures how agents encounter the event (channels, targeting, timing)
+6. **Outcome Definition** — What to measure (categorical, boolean, open-ended)
+7. **Simulation Parameters** — Timesteps, timeline mode, stopping conditions
+
+### Scenario Spec Contents
+
+- **`extended_attributes`** — Scenario-specific attributes with full distribution specs
+- **`event`** — Event definition
+- **`timeline`** — For evolving scenarios: subsequent events at different timesteps
+- **`seed_exposure`** — Channels and rules for initial exposure
+- **`interaction`** — How agents interact about the event
+- **`spread`** — Network propagation config
+- **`outcomes`** — What to measure
+- **`simulation`** — Timestep config and stopping conditions
+
+**Compiler** (`compiler.py`) orchestrates event parsing, exposure rules, interaction model, outcomes, and spec assembly.
 
 ### Event Types
 

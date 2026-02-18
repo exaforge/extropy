@@ -80,7 +80,9 @@ extropy spec "farmers" -o my-spec.yaml
 
 ## extropy scenario
 
-Create a scenario with extended attributes and event configuration.
+Create a scenario with scenario-specific attributes and simulation configuration.
+
+The scenario command is essentially a **mini spec builder** — it discovers and researches attributes that are specific to this scenario but not in the base population spec. For example, a "vaccine adoption" scenario might add `vaccine_hesitancy` and `prior_flu_shot` attributes that wouldn't exist in a general population spec.
 
 ```bash
 # Create new scenario
@@ -92,6 +94,16 @@ extropy scenario "vaccine mandate" -o vaccine @pop:v1
 # Rebase existing scenario to new population
 extropy scenario ai-adoption --rebase @pop:v2
 ```
+
+### What the Scenario Command Does
+
+1. **Discovers scenario-specific attributes** — Uses LLM to identify attributes relevant to this scenario that don't exist in the base population (e.g., `technology_anxiety`, `job_automation_exposure` for an AI scenario)
+2. **Researches distributions** — Hydrates new attributes with realistic distributions, just like the spec command
+3. **Generates household config** — Determines if/how household dynamics matter for this scenario
+4. **Creates event definition** — The triggering event (type, content, source, credibility)
+5. **Configures exposure rules** — How agents initially encounter the event (channels, targeting, timing)
+6. **Defines outcomes** — What to measure (categorical, boolean, open-ended responses)
+7. **Sets simulation parameters** — Timesteps, timeline mode (static vs evolving), stopping conditions
 
 ### Arguments
 
@@ -109,13 +121,18 @@ extropy scenario ai-adoption --rebase @pop:v2
 | `--timeline` | | string | `auto` | Timeline mode: `auto` (LLM decides), `static` (single event), `evolving` (multi-event) |
 | `--yes` | `-y` | flag | false | Skip confirmation prompts |
 
-The scenario spec includes:
-- Extended attributes specific to the scenario
-- Event definition (type, content, source)
-- Seed exposure rules
-- Interaction model
-- Outcome configuration
-- Simulation settings
+### Scenario Spec Contents
+
+The generated `scenario.v1.yaml` includes:
+
+- **`extended_attributes`** — Scenario-specific attributes with full distribution specs (same format as population attributes)
+- **`event`** — Event definition (type, content, source, credibility, ambiguity, emotional valence)
+- **`timeline`** — For evolving scenarios: subsequent events at different timesteps
+- **`seed_exposure`** — Channels and rules for initial exposure
+- **`interaction`** — How agents interact about the event
+- **`spread`** — How information propagates through the network
+- **`outcomes`** — What to measure from each agent
+- **`simulation`** — Timestep config, stopping conditions, convergence settings
 
 ---
 

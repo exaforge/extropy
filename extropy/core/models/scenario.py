@@ -23,7 +23,7 @@ from typing import TYPE_CHECKING, Literal
 import yaml
 from pydantic import BaseModel, Field
 
-from .population import AttributeSpec
+from .population import AttributeSpec, HouseholdConfig
 
 if TYPE_CHECKING:
     pass
@@ -421,6 +421,11 @@ class ScenarioSpec(BaseModel):
     extended_attributes: list[AttributeSpec] | None = Field(
         default=None,
         description="Scenario-specific attributes that extend the base population",
+    )
+    # Household configuration for this scenario (overrides base population if set)
+    household_config: HouseholdConfig | None = Field(
+        default=None,
+        description="Household sampling config for this scenario. If None, uses base population's config.",
     )
     # Identity dimensions activated by this scenario (for identity-threat framing)
     identity_dimensions: list[IdentityDimension] | None = Field(

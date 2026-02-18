@@ -142,8 +142,13 @@ def sample_command(
             merged_sampling_order.append(attr.name)
 
     # Create merged spec for sampling
+    # Use scenario's household_config if provided, otherwise fall back to base population's
+    merged_meta = pop_spec.meta.model_copy()
+    if scenario_spec.household_config is not None:
+        merged_meta.household_config = scenario_spec.household_config
+
     merged_spec = PopulationSpec(
-        meta=pop_spec.meta,
+        meta=merged_meta,
         grounding=pop_spec.grounding,
         attributes=merged_attributes,
         sampling_order=merged_sampling_order,

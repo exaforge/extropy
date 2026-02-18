@@ -344,6 +344,7 @@ def scenario_command(
     result_spec.meta.name = scenario_name
     result_spec.meta.base_population = f"population.v{pop_version}"
     result_spec.extended_attributes = bound_attrs
+    result_spec.household_config = household_config
 
     # Display Summary
     if not agent_mode:
