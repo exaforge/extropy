@@ -118,11 +118,23 @@ Per-timestep loop with 5 phases:
 
 #### 1. Apply Exposures (`_apply_exposures`)
 
-Apply seed exposures from scenario rules, then propagate through network via conviction-gated sharing.
+Apply seed exposures, then timeline exposures (if a timeline event fires), then network propagation via conviction-gated sharing.
+
+Timeline exposures stamp provenance metadata on each exposure:
+- `info_epoch` (the originating timeline timestep)
+- `force_rereason` (whether committed agents should re-reason for that epoch)
+
+Network exposures inherit epoch provenance from the source agent, so downstream re-reasoning can be driven by provenance rather than content keyword matching.
 
 #### 2. Agent Reasoning (`_reason_agents`)
 
-Select agents to reason (first exposure OR multi-touch threshold exceeded), split into chunks, run two-pass async LLM reasoning:
+Select agents to reason, split into chunks, run two-pass async LLM reasoning.
+
+Selection gates:
+- First-time aware agents always reason.
+- Non-committed agents reason on multi-touch threshold.
+- Committed agents can re-reason when exposed to a newer forced `info_epoch`.
+- A de-dup guard ensures at most one re-reason per agent per epoch.
 
 **Pass 1** (strong model): Agent role-plays in first person with no categorical enums. Produces:
 - `reasoning` — internal monologue
@@ -146,7 +158,10 @@ Non-reasoning agents experience gradual conviction decay, preventing stale state
 
 #### 5. Stopping Check
 
-Compound conditions: exposure saturation, opinion convergence, max timesteps.
+Compound conditions: explicit stop conditions, timeline-aware convergence/quiescence, max timesteps.
+
+- `max_timesteps` and explicit `stop_conditions` are always evaluated.
+- Auto `converged` and auto `simulation_quiescent` are suppressed when future timeline events exist (unless overridden by `simulation.allow_early_convergence` or CLI `--early-convergence`).
 
 ### Fidelity Tiers
 
@@ -243,7 +258,7 @@ All Pydantic v2:
 
 - `population.py`: `PopulationSpec`, `AttributeSpec`, `SamplingConfig`, distributions, modifiers
 - `scenario.py`: `ScenarioSpec`, `Event`, `SeedExposure`, `OutcomeConfig`, `ScenarioSimConfig`
-- `simulation.py`: `AgentState` (public/private position/sentiment/conviction), `ReasoningContext`, `ReasoningResponse`
+- `simulation.py`: `AgentState` (public/private position/sentiment/conviction + info epochs), `ExposureRecord` (channel/source + provenance), `ReasoningContext`, `ReasoningResponse`
 - `network.py`: `Edge`, `NetworkConfig`, `NetworkMetrics`
 
 ---
@@ -274,7 +289,7 @@ my-study/
 | `agents` | Sampled agent attributes (JSON) | `scenario_id` |
 | `network_edges` | Social graph edges with weights and types | `scenario_id` |
 | `agent_states` | Current simulation state per agent | `run_id` |
-| `exposures` | Exposure records with source and channel | `run_id` |
+| `exposures` | Exposure records with source/channel plus epoch provenance (`info_epoch`, `force_rereason`) | `run_id` |
 | `memory_traces` | Agent memory entries | `run_id` |
 | `timeline` | Simulation events (JSONL-style) | `run_id` |
 | `timestep_summaries` | Per-timestep aggregates | `run_id` |

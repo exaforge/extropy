@@ -27,6 +27,7 @@ from typing import Any
 from ..core.models import (
     PopulationSpec,
     ScenarioSpec,
+    ScenarioSimConfig,
     AgentState,
     ConvictionLevel,
     CONVICTION_MAP,
@@ -312,6 +313,7 @@ class SimulationEngine:
 
         # Timeline state (active event for current timestep, if any)
         self._active_timeline_event: Any = None
+        self._timeline_intensity_by_epoch: dict[int, str] = {}
 
         # Token usage tracking
         self.pivotal_input_tokens = 0
@@ -486,11 +488,16 @@ class SimulationEngine:
                     self.recent_summaries.pop(0)
 
                 # Check stopping conditions
+                has_future_timeline_events = bool(
+                    self.scenario.timeline
+                    and any(te.timestep > timestep for te in self.scenario.timeline)
+                )
                 should_stop, reason = evaluate_stopping_conditions(
                     timestep,
                     self.scenario.simulation,
                     self.state_manager,
                     self.recent_summaries,
+                    has_future_timeline_events=has_future_timeline_events,
                 )
 
                 if should_stop:
@@ -543,12 +550,12 @@ class SimulationEngine:
         """
         # 1. Exposures (seed + network) — own transaction
         with self.state_manager.transaction():
-            total_new_exposures = self._apply_exposures(timestep)
+            total_new_exposures, forced_reason_ids = self._apply_exposures(timestep)
         self.total_exposures += total_new_exposures
 
         # 2. Chunked reasoning — each chunk has its own transaction
         agents_reasoned, state_changes, shares_occurred, reasoning_results = (
-            self._reason_agents(timestep)
+            self._reason_agents(timestep, forced_reason_ids=forced_reason_ids)
         )
 
         # 2c. Execute conversations (if fidelity > low)
@@ -609,11 +616,11 @@ class SimulationEngine:
 
         return summary
 
-    def _apply_exposures(self, timestep: int) -> int:
+    def _apply_exposures(self, timestep: int) -> tuple[int, set[str]]:
         """Apply seed, timeline, and network exposures for this timestep.
 
         Returns:
-            Total new exposures this timestep.
+            Tuple of (total new exposures this timestep, forced-reason agent IDs).
         """
         new_seed = apply_seed_exposures(
             timestep,
@@ -625,18 +632,32 @@ class SimulationEngine:
         logger.info(f"[TIMESTEP {timestep}] Seed exposures: {new_seed}")
 
         # Apply timeline event exposures (if any timeline event fires this timestep)
-        new_timeline, active_event = apply_timeline_exposures(
+        timeline_result = apply_timeline_exposures(
             timestep,
             self.scenario,
             self.agents,
             self.state_manager,
             self.rng,
         )
-        if new_timeline > 0:
-            logger.info(f"[TIMESTEP {timestep}] Timeline exposures: {new_timeline}")
+        if timeline_result.new_exposure_count > 0:
+            logger.info(
+                f"[TIMESTEP {timestep}] Timeline exposures: {timeline_result.new_exposure_count}"
+            )
 
         # Store active timeline event for prompt rendering
-        self._active_timeline_event = active_event
+        self._active_timeline_event = timeline_result.active_event
+
+        if timeline_result.info_epoch is not None:
+            self._timeline_intensity_by_epoch[timeline_result.info_epoch] = (
+                timeline_result.re_reasoning_intensity or "normal"
+            )
+
+        forced_reason_ids = set(timeline_result.direct_exposed_agent_ids)
+        if (
+            timeline_result.re_reasoning_intensity == "extreme"
+            and timeline_result.info_epoch is not None
+        ):
+            forced_reason_ids.update(self.state_manager.get_aware_agents())
 
         new_network = propagate_through_network(
             timestep,
@@ -647,13 +668,17 @@ class SimulationEngine:
             self.rng,
             adjacency=self.adjacency,
             agent_map=self.agent_map,
+            timeline_intensity_by_epoch=self._timeline_intensity_by_epoch,
         )
         logger.info(f"[TIMESTEP {timestep}] Network exposures: {new_network}")
 
-        return new_seed + new_timeline + new_network
+        return (
+            new_seed + timeline_result.new_exposure_count + new_network,
+            forced_reason_ids,
+        )
 
     def _reason_agents(
-        self, timestep: int
+        self, timestep: int, forced_reason_ids: set[str] | None = None
     ) -> tuple[int, int, int, list[tuple[str, ReasoningResponse | None]]]:
         """Identify agents needing reasoning, run in chunks, commit per-chunk.
 
@@ -666,6 +691,7 @@ class SimulationEngine:
         agents_to_reason = self.state_manager.get_agents_to_reason(
             timestep,
             self.config.multi_touch_threshold,
+            forced_agent_ids=forced_reason_ids,
         )
 
         # Filter out agents already processed this timestep (resume support)
@@ -2183,6 +2209,7 @@ def run_simulation(
     resource_governor: ResourceGovernor | None = None,
     merged_pass: bool = False,
     fidelity: str = "medium",
+    early_convergence: str = "auto",
 ) -> SimulationSummary:
     """Run a simulation from a scenario file.
 
@@ -2211,6 +2238,7 @@ def run_simulation(
         resource_governor: Optional governor for runtime downshift guardrails
         merged_pass: Use single merged reasoning pass instead of two-pass (experimental)
         fidelity: Conversation fidelity level (low, medium, high)
+        early_convergence: Early convergence override: auto|on|off
 
     Returns:
         SimulationSummary with results
@@ -2219,6 +2247,10 @@ def run_simulation(
     output_dir = Path(output_dir)
     if resume and not run_id:
         raise ValueError("--resume requires --run-id")
+    if early_convergence not in {"auto", "on", "off"}:
+        raise ValueError(
+            f"Invalid early_convergence '{early_convergence}', must be auto/on/off"
+        )
 
     def _reset_runtime_tables(path: Path, run_key: str) -> None:
         conn = sqlite3.connect(str(path))
@@ -2249,6 +2281,18 @@ def run_simulation(
 
     # Load scenario
     scenario = ScenarioSpec.from_yaml(scenario_path)
+    if early_convergence != "auto":
+        scenario = scenario.model_copy(
+            update={
+                "simulation": ScenarioSimConfig(
+                    max_timesteps=scenario.simulation.max_timesteps,
+                    timestep_unit=scenario.simulation.timestep_unit,
+                    stop_conditions=scenario.simulation.stop_conditions,
+                    allow_early_convergence=(early_convergence == "on"),
+                    seed=scenario.simulation.seed,
+                )
+            }
+        )
 
     # Load population spec (resolve from base_population or legacy population_spec)
     pop_name, pop_version = scenario.meta.get_population_ref()
@@ -2317,6 +2361,7 @@ def run_simulation(
                 "writer_queue_size": writer_queue_size,
                 "db_write_batch_size": db_write_batch_size,
                 "resume": resume,
+                "early_convergence": early_convergence,
             },
             seed=random_seed,
             status="running",

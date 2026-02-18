@@ -84,6 +84,9 @@ class TestParseComparison:
     def test_integer_value(self):
         assert parse_comparison("state_changes > 5") == ("state_changes", ">", 5.0)
 
+    def test_trailing_tokens_rejected(self):
+        assert parse_comparison("exposure_rate > 0.95 and convergence") is None
+
 
 class TestEvaluateNoStateChanges:
     """Test no_state_changes_for condition evaluation."""
@@ -220,6 +223,44 @@ class TestEvaluateStoppingConditions:
         assert should_stop is True
         assert "exposure_rate" in reason
 
+    def test_boolean_and_condition(self, tmp_path):
+        """Boolean AND condition should evaluate both clauses."""
+        agents = [{"_id": f"a{i}"} for i in range(10)]
+        sm = self._make_state_manager(
+            tmp_path, agents, aware_ids=[f"a{i}" for i in range(10)]
+        )
+        config = ScenarioSimConfig(
+            max_timesteps=100,
+            stop_conditions=["exposure_rate > 0.95 and no_state_changes_for > 3"],
+        )
+        summaries = [_make_summary(i, state_changes=0) for i in range(5)]
+
+        should_stop, reason = evaluate_stopping_conditions(10, config, sm, summaries)
+        assert should_stop is True
+        assert reason == "exposure_rate > 0.95 and no_state_changes_for > 3"
+
+    def test_boolean_or_parentheses_condition(self, tmp_path):
+        """Parser should support OR + parentheses in stop conditions."""
+        agents = [{"_id": f"a{i}"} for i in range(10)]
+        sm = self._make_state_manager(
+            tmp_path, agents, aware_ids=[f"a{i}" for i in range(5)]
+        )
+        config = ScenarioSimConfig(
+            max_timesteps=100,
+            stop_conditions=[
+                "(exposure_rate > 0.95 and no_state_changes_for > 10) or convergence"
+            ],
+        )
+        dist = {"upskill": 60, "wait": 40}
+        summaries = [_make_summary(i, position_distribution=dist) for i in range(5)]
+
+        should_stop, reason = evaluate_stopping_conditions(10, config, sm, summaries)
+        assert should_stop is True
+        assert (
+            reason
+            == "(exposure_rate > 0.95 and no_state_changes_for > 10) or convergence"
+        )
+
     def test_exposure_rate_condition_not_met(self, tmp_path):
         """Doesn't stop when exposure rate is below threshold."""
         agents = [{"_id": f"a{i}"} for i in range(10)]
@@ -316,3 +357,57 @@ class TestEvaluateStoppingConditions:
 
         should_stop, reason = evaluate_stopping_conditions(1, config, sm, summaries)
         assert should_stop is False
+
+    def test_auto_stops_suppressed_with_future_timeline(self, tmp_path):
+        """Convergence/quiescence should be suppressed when future timeline exists in auto mode."""
+        agents = [{"_id": "a0"}]
+        sm = self._make_state_manager(tmp_path, agents)
+        config = ScenarioSimConfig(max_timesteps=100, allow_early_convergence=None)
+        dist = {"adopt": 70, "reject": 30}
+        summaries = [_make_summary(i, position_distribution=dist) for i in range(4)]
+
+        should_stop, reason = evaluate_stopping_conditions(
+            3,
+            config,
+            sm,
+            summaries,
+            has_future_timeline_events=True,
+        )
+        assert should_stop is False
+        assert reason is None
+
+    def test_auto_stops_enabled_with_override_true(self, tmp_path):
+        """allow_early_convergence=true should force convergence/quiescence auto-stops."""
+        agents = [{"_id": "a0"}]
+        sm = self._make_state_manager(tmp_path, agents)
+        config = ScenarioSimConfig(max_timesteps=100, allow_early_convergence=True)
+        dist = {"adopt": 70, "reject": 30}
+        summaries = [_make_summary(i, position_distribution=dist) for i in range(4)]
+
+        should_stop, reason = evaluate_stopping_conditions(
+            3,
+            config,
+            sm,
+            summaries,
+            has_future_timeline_events=True,
+        )
+        assert should_stop is True
+        assert reason == "converged"
+
+    def test_auto_stops_disabled_with_override_false(self, tmp_path):
+        """allow_early_convergence=false should suppress convergence/quiescence."""
+        agents = [{"_id": "a0"}]
+        sm = self._make_state_manager(tmp_path, agents)
+        config = ScenarioSimConfig(max_timesteps=100, allow_early_convergence=False)
+        dist = {"adopt": 70, "reject": 30}
+        summaries = [_make_summary(i, position_distribution=dist) for i in range(4)]
+
+        should_stop, reason = evaluate_stopping_conditions(
+            3,
+            config,
+            sm,
+            summaries,
+            has_future_timeline_events=False,
+        )
+        assert should_stop is False
+        assert reason is None

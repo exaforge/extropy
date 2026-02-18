@@ -8,6 +8,7 @@ Handles how agents become exposed to the event through:
 import logging
 import math
 import random
+from dataclasses import dataclass
 from typing import Any
 
 from ..core.models import (
@@ -26,6 +27,17 @@ from .state import StateManager
 logger = logging.getLogger(__name__)
 
 _SOFT_SATURATION_MAX = 0.97
+
+
+@dataclass(frozen=True)
+class TimelineExposureResult:
+    """Outcome of applying timeline exposures for a timestep."""
+
+    new_exposure_count: int
+    active_event: Event | None
+    direct_exposed_agent_ids: set[str]
+    info_epoch: int | None
+    re_reasoning_intensity: str | None
 
 
 def _soft_saturate_probability(raw_probability: float) -> float:
@@ -157,7 +169,7 @@ def apply_timeline_exposures(
     agents: list[dict[str, Any]],
     state_manager: StateManager,
     rng: random.Random,
-) -> tuple[int, Event | None]:
+) -> TimelineExposureResult:
     """Apply timeline event exposures for this timestep.
 
     Timeline events represent scenario developments (new information, escalations,
@@ -172,10 +184,17 @@ def apply_timeline_exposures(
         rng: Random number generator
 
     Returns:
-        Tuple of (new_exposure_count, active_timeline_event_or_none)
+        TimelineExposureResult with counts, active event, direct exposure IDs,
+        and provenance metadata for this timeline epoch.
     """
     if not scenario.timeline:
-        return 0, None
+        return TimelineExposureResult(
+            new_exposure_count=0,
+            active_event=None,
+            direct_exposed_agent_ids=set(),
+            info_epoch=None,
+            re_reasoning_intensity=None,
+        )
 
     # Find timeline event for this timestep
     active_event: TimelineEvent | None = None
@@ -185,7 +204,13 @@ def apply_timeline_exposures(
             break
 
     if active_event is None:
-        return 0, None
+        return TimelineExposureResult(
+            new_exposure_count=0,
+            active_event=None,
+            direct_exposed_agent_ids=set(),
+            info_epoch=None,
+            re_reasoning_intensity=None,
+        )
 
     logger.info(
         f"[TIMELINE] Timestep {timestep}: Applying timeline event - "
@@ -202,6 +227,9 @@ def apply_timeline_exposures(
     new_exposures = 0
     event_content = active_event.event.content
     event_credibility = active_event.event.credibility
+    info_epoch = active_event.timestep
+    intensity = active_event.re_reasoning_intensity or "normal"
+    direct_exposed_agent_ids: set[str] = set()
 
     for rule in rules:
         # For timeline events, ignore the rule's timestep field — we're applying now
@@ -233,6 +261,8 @@ def apply_timeline_exposures(
                 source_agent_id=None,
                 content=event_content,
                 credibility=min(1.0, event_credibility * channel_credibility),
+                info_epoch=info_epoch,
+                force_rereason=True,
             )
 
             state_manager.record_exposure(agent_id, exposure)
@@ -249,10 +279,17 @@ def apply_timeline_exposures(
                 )
             )
             new_exposures += 1
+            direct_exposed_agent_ids.add(agent_id)
 
     logger.info(f"[TIMELINE] Timestep {timestep}: {new_exposures} new exposures")
 
-    return new_exposures, active_event.event
+    return TimelineExposureResult(
+        new_exposure_count=new_exposures,
+        active_event=active_event.event,
+        direct_exposed_agent_ids=direct_exposed_agent_ids,
+        info_epoch=info_epoch,
+        re_reasoning_intensity=intensity,
+    )
 
 
 def get_neighbors(
@@ -339,6 +376,7 @@ def propagate_through_network(
     rng: random.Random,
     adjacency: dict[str, list[tuple[str, dict]]] | None = None,
     agent_map: dict[str, dict[str, Any]] | None = None,
+    timeline_intensity_by_epoch: dict[int, str] | None = None,
 ) -> int:
     """Propagate information through network from sharing agents.
 
@@ -353,6 +391,7 @@ def propagate_through_network(
         rng: Random number generator
         adjacency: Pre-built adjacency list (optional, avoids O(E) scan per agent)
         agent_map: Pre-built agent lookup dict (optional, avoids rebuild)
+        timeline_intensity_by_epoch: Optional map of info epoch -> intensity policy
 
     Returns:
         Count of new exposures via network
@@ -431,6 +470,23 @@ def propagate_through_network(
                 source_agent_id=sharer_id,
                 content=scenario.event.content,
                 credibility=max(0.05, min(1.0, 0.85 * decay_factor)),
+                info_epoch=(
+                    sharer_state.latest_info_epoch
+                    if sharer_state.latest_info_epoch >= 0
+                    else None
+                ),
+                force_rereason=(
+                    (
+                        timeline_intensity_by_epoch.get(sharer_state.latest_info_epoch)
+                        in {"high", "extreme"}
+                    )
+                    if (
+                        timeline_intensity_by_epoch
+                        and sharer_state.latest_info_epoch is not None
+                        and sharer_state.latest_info_epoch >= 0
+                    )
+                    else False
+                ),
             )
 
             state_manager.record_exposure(neighbor_id, exposure)

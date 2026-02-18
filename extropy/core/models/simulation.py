@@ -132,6 +132,14 @@ class ExposureRecord(BaseModel):
     credibility: float = Field(
         ge=0, le=1, description="Perceived credibility of this exposure"
     )
+    info_epoch: int | None = Field(
+        default=None,
+        description="Optional provenance epoch for newly introduced timeline information",
+    )
+    force_rereason: bool = Field(
+        default=False,
+        description="Whether this exposure should force re-reasoning for committed agents",
+    )
 
 
 # =============================================================================
@@ -222,6 +230,14 @@ class AgentState(BaseModel):
         default_factory=dict, description="All extracted outcomes (from Pass 2)"
     )
     raw_reasoning: str | None = Field(default=None, description="Full reasoning text")
+    latest_info_epoch: int = Field(
+        default=-1,
+        description="Most recent provenance epoch seen via exposures",
+    )
+    last_reasoned_info_epoch: int = Field(
+        default=-1,
+        description="Most recent provenance epoch already reasoned on",
+    )
     updated_at: int = Field(default=0, description="Last state change timestep")
 
 

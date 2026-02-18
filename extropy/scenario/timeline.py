@@ -80,6 +80,15 @@ TIMELINE_SCHEMA: dict[str, Any] = {
                         "maximum": 1,
                         "description": "Emotional framing (-1 to 1)",
                     },
+                    "re_reasoning_intensity": {
+                        "type": "string",
+                        "enum": ["normal", "high", "extreme"],
+                        "description": (
+                            "How broadly this event should trigger committed-agent "
+                            "re-reasoning: normal=direct only, high=direct+network, "
+                            "extreme=high+all aware."
+                        ),
+                    },
                 },
                 "required": [
                     "timestep",
@@ -156,6 +165,8 @@ def _build_timeline_prompt(
                 "- Each event should escalate, complicate, or resolve the situation",
                 "- Include reactions, developments, or new information",
                 "- Vary sources (officials, media, social, leaked info)",
+                "- Set re_reasoning_intensity per event: normal for routine updates, "
+                "high for major updates likely to spread rapidly, extreme for systemic shocks",
             ]
         )
     else:
@@ -178,6 +189,7 @@ def _build_timeline_prompt(
                 "- Space events at meaningful intervals",
                 "- Each event should escalate, complicate, or resolve",
                 "- Vary sources appropriately",
+                "- Set re_reasoning_intensity per event: normal/high/extreme",
             ]
         )
 
@@ -251,6 +263,7 @@ def generate_timeline(
             max_timesteps=llm_max if llm_max else simulation_config.max_timesteps,
             timestep_unit=resolved_unit,
             stop_conditions=simulation_config.stop_conditions,
+            allow_early_convergence=simulation_config.allow_early_convergence,
             seed=simulation_config.seed,
         )
     elif llm_max:
@@ -258,6 +271,7 @@ def generate_timeline(
             max_timesteps=llm_max,
             timestep_unit=simulation_config.timestep_unit,
             stop_conditions=simulation_config.stop_conditions,
+            allow_early_convergence=simulation_config.allow_early_convergence,
             seed=simulation_config.seed,
         )
 
@@ -298,6 +312,7 @@ def generate_timeline(
                 event=event,
                 exposure_rules=None,  # Reuse seed exposure rules
                 description=raw.get("description"),
+                re_reasoning_intensity=raw.get("re_reasoning_intensity", "normal"),
             )
             timeline_events.append(timeline_event)
 

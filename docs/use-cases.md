@@ -187,6 +187,8 @@ LLM reasoning is semantic and probabilistic, not mathematically precise or real-
 
 **Not supported:** "Predict millisecond price fluctuations after a rate hike."
 
-### Multi-Event Cascades (Current Limitation)
+### Reactive Game-Master Loops (Current Limitation)
 
-The current system supports single-event scenarios. Sequential, reactive event chains ("Netflix raises price, then CEO tweets, then competitor announces promo") require a game-master loop not yet implemented. You can simulate events individually or bundle them into one description.
+Extropy supports pre-authored multi-event timelines (events scheduled across timesteps), including evolving scenarios where new information changes agent reasoning over time.
+
+What remains limited is fully reactive event generation during the run ("if adoption drops below 30%, inject a rescue policy"), which requires a game-master/controller loop not yet built into the core CLI flow.

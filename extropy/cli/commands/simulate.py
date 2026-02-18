@@ -197,6 +197,11 @@ def simulate_command(
         "-f",
         help="Fidelity level: low (no conversations), medium (2 turns), high (3 turns)",
     ),
+    early_convergence: str = typer.Option(
+        "auto",
+        "--early-convergence",
+        help="Early convergence override: auto (scenario/default), on, off",
+    ),
     quiet: bool = typer.Option(False, "--quiet", "-q", help="Suppress progress output"),
     verbose: bool = typer.Option(False, "--verbose", "-v", help="Show detailed logs"),
     debug: bool = typer.Option(
@@ -316,6 +321,9 @@ def simulate_command(
     if resource_mode not in {"auto", "manual"}:
         out.error("--resource-mode must be 'auto' or 'manual'")
         raise typer.Exit(1)
+    if early_convergence not in {"auto", "on", "off"}:
+        out.error("--early-convergence must be one of: auto, on, off")
+        raise typer.Exit(1)
 
     from ...config import get_config
 
@@ -352,6 +360,7 @@ def simulate_command(
             console.print(f"Rate overrides: {' | '.join(parts)}")
         if seed:
             console.print(f"Seed: {seed}")
+        console.print(f"Early convergence: {early_convergence}")
 
     governor = ResourceGovernor(
         resource_mode=resource_mode,
@@ -419,6 +428,7 @@ def simulate_command(
                 resource_governor=governor,
                 merged_pass=merged_pass,
                 fidelity=fidelity,
+                early_convergence=early_convergence,
             )
         except Exception as e:
             simulation_error = e
@@ -449,6 +459,7 @@ def simulate_command(
                 resource_governor=governor,
                 merged_pass=merged_pass,
                 fidelity=fidelity,
+                early_convergence=early_convergence,
             )
         except Exception as e:
             simulation_error = e
@@ -483,6 +494,7 @@ def simulate_command(
                     resource_governor=governor,
                     merged_pass=merged_pass,
                     fidelity=fidelity,
+                    early_convergence=early_convergence,
                 )
             except Exception as e:
                 simulation_error = e
@@ -517,6 +529,7 @@ def simulate_command(
     out.set_data("scenario_id", scenario_name)
     out.set_data("study_db", str(study_db))
     out.set_data("output_dir", str(output))
+    out.set_data("early_convergence", early_convergence)
     out.set_data("total_time_seconds", elapsed)
     out.set_data("total_timesteps", result.total_timesteps)
     out.set_data("total_reasoning_calls", result.total_reasoning_calls)

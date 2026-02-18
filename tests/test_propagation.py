@@ -27,10 +27,12 @@ from extropy.core.models.scenario import (
     SeedExposure,
     SpreadConfig,
     SpreadModifier,
+    TimelineEvent,
     TimestepUnit,
 )
 from extropy.simulation.propagation import (
     apply_seed_exposures,
+    apply_timeline_exposures,
     calculate_share_probability,
     evaluate_exposure_rule,
     get_channel_credibility,
@@ -46,6 +48,7 @@ def _make_scenario(
     event_credibility=0.9,
     share_probability=0.3,
     share_modifiers=None,
+    timeline=None,
 ):
     """Create a scenario with configurable exposure rules and spread config."""
     if channels is None:
@@ -106,6 +109,7 @@ def _make_scenario(
             ],
         ),
         simulation=ScenarioSimConfig(max_timesteps=5, timestep_unit=TimestepUnit.HOUR),
+        timeline=timeline,
     )
 
 
@@ -299,6 +303,46 @@ class TestApplySeedExposures:
         state2 = sm.get_agent_state("a0")
         assert state2.exposure_count == 2
         assert state2.aware is True
+
+
+class TestApplyTimelineExposures:
+    """Test apply_timeline_exposures(...)."""
+
+    def test_timeline_exposures_return_epoch_intensity_and_direct_ids(
+        self, tmp_path, ten_agents
+    ):
+        event = Event(
+            type=EventType.NEWS,
+            content="Month 3 layoffs announced",
+            source="Major Outlet",
+            credibility=0.92,
+            ambiguity=0.2,
+            emotional_valence=-0.8,
+        )
+        timeline = [
+            TimelineEvent(
+                timestep=2,
+                event=event,
+                description="Layoff shock",
+                re_reasoning_intensity="high",
+            )
+        ]
+        scenario = _make_scenario(timeline=timeline)
+        sm = StateManager(tmp_path / "test.db", agents=ten_agents)
+        rng = random.Random(42)
+
+        result = apply_timeline_exposures(2, scenario, ten_agents, sm, rng)
+
+        assert result.new_exposure_count == 10
+        assert result.info_epoch == 2
+        assert result.re_reasoning_intensity == "high"
+        assert len(result.direct_exposed_agent_ids) == 10
+        assert result.active_event is not None
+
+        state = sm.get_agent_state("a0")
+        # At least one timeline exposure should carry provenance.
+        assert state.exposures[-1].info_epoch == 2
+        assert state.exposures[-1].force_rereason is True
 
 
 # ============================================================================
@@ -624,3 +668,93 @@ class TestPropagateNetwork:
         )
         assert second == 0
         assert sm.get_agent_state("a2").aware is False
+
+    def test_network_exposure_inherits_epoch_and_force_for_high_intensity(
+        self, tmp_path, ten_agents, linear_network
+    ):
+        scenario = _make_scenario(share_probability=1.0)
+        sm = StateManager(tmp_path / "test.db", agents=ten_agents)
+        rng = random.Random(42)
+
+        sm.record_exposure(
+            "a0",
+            ExposureRecord(
+                timestep=0,
+                channel="broadcast",
+                content="epoch update",
+                credibility=0.9,
+                info_epoch=7,
+                force_rereason=True,
+            ),
+        )
+        sm.update_agent_state(
+            "a0",
+            AgentState(
+                agent_id="a0",
+                aware=True,
+                will_share=True,
+                position="adopt",
+                sentiment=0.5,
+                conviction=0.8,
+            ),
+            timestep=0,
+        )
+
+        count = propagate_through_network(
+            1,
+            scenario,
+            ten_agents,
+            linear_network,
+            sm,
+            rng,
+            timeline_intensity_by_epoch={7: "high"},
+        )
+        assert count == 1
+        exposure = sm.get_agent_state("a1").exposures[-1]
+        assert exposure.info_epoch == 7
+        assert exposure.force_rereason is True
+
+    def test_network_exposure_inherits_epoch_without_force_for_normal_intensity(
+        self, tmp_path, ten_agents, linear_network
+    ):
+        scenario = _make_scenario(share_probability=1.0)
+        sm = StateManager(tmp_path / "test.db", agents=ten_agents)
+        rng = random.Random(42)
+
+        sm.record_exposure(
+            "a0",
+            ExposureRecord(
+                timestep=0,
+                channel="broadcast",
+                content="epoch update",
+                credibility=0.9,
+                info_epoch=4,
+                force_rereason=True,
+            ),
+        )
+        sm.update_agent_state(
+            "a0",
+            AgentState(
+                agent_id="a0",
+                aware=True,
+                will_share=True,
+                position="adopt",
+                sentiment=0.5,
+                conviction=0.8,
+            ),
+            timestep=0,
+        )
+
+        count = propagate_through_network(
+            1,
+            scenario,
+            ten_agents,
+            linear_network,
+            sm,
+            rng,
+            timeline_intensity_by_epoch={4: "normal"},
+        )
+        assert count == 1
+        exposure = sm.get_agent_state("a1").exposures[-1]
+        assert exposure.info_epoch == 4
+        assert exposure.force_rereason is False

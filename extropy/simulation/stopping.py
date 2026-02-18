@@ -4,6 +4,7 @@ Determines when a simulation should stop based on various conditions
 like max timesteps, exposure rate thresholds, or convergence.
 """
 
+import ast
 import logging
 import re
 
@@ -26,7 +27,7 @@ def parse_comparison(condition: str) -> tuple[str, str, float] | None:
     """
     # Match patterns like "variable > 0.95" or "variable >= 0.95"
     pattern = r"(\w+)\s*(>=|<=|>|<|==|!=)\s*([\d.]+)"
-    match = re.match(pattern, condition.strip())
+    match = re.fullmatch(pattern, condition.strip())
 
     if not match:
         return None
@@ -169,6 +170,132 @@ def evaluate_convergence(
     return True
 
 
+def _trailing_no_state_changes(recent_summaries: list[TimestepSummary]) -> int:
+    """Count trailing timesteps with zero state changes."""
+    count = 0
+    for summary in reversed(recent_summaries):
+        if summary.state_changes == 0:
+            count += 1
+        else:
+            break
+    return count
+
+
+def _get_condition_variable_value(
+    name: str,
+    state_manager: StateManager,
+    recent_summaries: list[TimestepSummary],
+) -> float | bool | None:
+    """Resolve supported variable names for stop-condition expression evaluation."""
+    if name == "exposure_rate":
+        return state_manager.get_exposure_rate()
+    if name == "average_sentiment":
+        return state_manager.get_average_sentiment()
+    if name == "state_changes":
+        return recent_summaries[-1].state_changes if recent_summaries else 0
+    if name == "no_state_changes_for":
+        # Legacy semantics historically treated `> N` as "at least N stable steps".
+        # Returning count+1 preserves that behavior for existing scenario defaults.
+        return _trailing_no_state_changes(recent_summaries) + 1
+    if name == "convergence":
+        return evaluate_convergence(recent_summaries)
+    if name == "true":
+        return True
+    if name == "false":
+        return False
+    logger.warning(f"Unknown stopping condition variable: {name}")
+    return None
+
+
+def _evaluate_ast_node(
+    node: ast.AST,
+    state_manager: StateManager,
+    recent_summaries: list[TimestepSummary],
+) -> float | bool | None:
+    """Evaluate a restricted AST node for stop conditions.
+
+    Supported grammar:
+    - booleans: `a and b`, `a or b`, `not a`
+    - comparisons: `metric > 0.95`, `state_changes == 0`
+    - names/constants: `convergence`, `true`, `false`, numbers
+    """
+    if isinstance(node, ast.Expression):
+        return _evaluate_ast_node(node.body, state_manager, recent_summaries)
+
+    if isinstance(node, ast.Constant):
+        if isinstance(node.value, (int, float, bool)):
+            return node.value
+        return None
+
+    if isinstance(node, ast.Name):
+        return _get_condition_variable_value(
+            node.id.lower(), state_manager, recent_summaries
+        )
+
+    if isinstance(node, ast.UnaryOp) and isinstance(node.op, ast.Not):
+        value = _evaluate_ast_node(node.operand, state_manager, recent_summaries)
+        return not bool(value)
+
+    if isinstance(node, ast.BoolOp):
+        if isinstance(node.op, ast.And):
+            for value_node in node.values:
+                value = _evaluate_ast_node(value_node, state_manager, recent_summaries)
+                if not bool(value):
+                    return False
+            return True
+        if isinstance(node.op, ast.Or):
+            for value_node in node.values:
+                value = _evaluate_ast_node(value_node, state_manager, recent_summaries)
+                if bool(value):
+                    return True
+            return False
+        raise ValueError("Unsupported boolean operator")
+
+    if isinstance(node, ast.Compare):
+        left = _evaluate_ast_node(node.left, state_manager, recent_summaries)
+        if left is None:
+            return False
+
+        current = left
+        for op, comparator in zip(node.ops, node.comparators):
+            right = _evaluate_ast_node(comparator, state_manager, recent_summaries)
+            if right is None:
+                return False
+
+            if isinstance(op, ast.Gt):
+                ok = bool(current > right)
+            elif isinstance(op, ast.Lt):
+                ok = bool(current < right)
+            elif isinstance(op, ast.GtE):
+                ok = bool(current >= right)
+            elif isinstance(op, ast.LtE):
+                ok = bool(current <= right)
+            elif isinstance(op, ast.Eq):
+                if isinstance(current, (int, float)) and isinstance(
+                    right, (int, float)
+                ):
+                    ok = abs(float(current) - float(right)) < 0.001
+                else:
+                    ok = current == right
+            elif isinstance(op, ast.NotEq):
+                if isinstance(current, (int, float)) and isinstance(
+                    right, (int, float)
+                ):
+                    ok = abs(float(current) - float(right)) >= 0.001
+                else:
+                    ok = current != right
+            else:
+                raise ValueError("Unsupported comparison operator")
+
+            if not ok:
+                return False
+            current = right
+
+        return True
+
+    raise ValueError(f"Unsupported expression node: {type(node).__name__}")
+
+
 def evaluate_condition(
     condition: str,
     timestep: int,
@@ -192,26 +319,17 @@ def evaluate_condition(
     Returns:
         True if condition is met
     """
-    condition = condition.strip().lower()
+    condition = condition.strip()
+    if not condition:
+        return False
 
-    # Check for no_state_changes_for pattern
-    if "no_state_changes_for" in condition:
-        return evaluate_no_state_changes(condition, recent_summaries)
-
-    # Check for convergence
-    if condition == "convergence":
-        return evaluate_convergence(recent_summaries)
-
-    # Try to parse as simple comparison
-    parsed = parse_comparison(condition)
-    if parsed:
-        variable, operator, threshold = parsed
-        return evaluate_comparison(
-            variable, operator, threshold, state_manager, recent_summaries
-        )
-
-    logger.warning(f"Could not parse stopping condition: {condition}")
-    return False
+    try:
+        tree = ast.parse(condition.lower(), mode="eval")
+        result = _evaluate_ast_node(tree, state_manager, recent_summaries)
+        return bool(result)
+    except Exception as exc:
+        logger.warning(f"Could not parse stopping condition '{condition}': {exc}")
+        return False
 
 
 def evaluate_stopping_conditions(
@@ -219,6 +337,7 @@ def evaluate_stopping_conditions(
     config: ScenarioSimConfig,
     state_manager: StateManager,
     recent_summaries: list[TimestepSummary],
+    has_future_timeline_events: bool = False,
 ) -> tuple[bool, str | None]:
     """Evaluate all stopping conditions.
 
@@ -242,15 +361,20 @@ def evaluate_stopping_conditions(
             if evaluate_condition(condition, timestep, state_manager, recent_summaries):
                 return True, condition
 
-    # Convergence auto-stop: position distribution stable for 3 timesteps
-    if evaluate_convergence(recent_summaries, window=3, tolerance=0.005):
-        return True, "converged"
+    allow_early = config.allow_early_convergence
+    if allow_early is None:
+        allow_early = not has_future_timeline_events
 
-    # Quiescence auto-stop: no agents reasoned for last 3 timesteps
-    if len(recent_summaries) >= 3:
-        last_3 = recent_summaries[-3:]
-        if all(s.agents_reasoned == 0 for s in last_3):
-            return True, "simulation_quiescent"
+    if allow_early:
+        # Convergence auto-stop: position distribution stable for 3 timesteps
+        if evaluate_convergence(recent_summaries, window=3, tolerance=0.005):
+            return True, "converged"
+
+        # Quiescence auto-stop: no agents reasoned for last 3 timesteps
+        if len(recent_summaries) >= 3:
+            last_3 = recent_summaries[-3:]
+            if all(s.agents_reasoned == 0 for s in last_3):
+                return True, "simulation_quiescent"
 
     return False, None
 

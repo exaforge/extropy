@@ -623,6 +623,130 @@ class TestStateManagerEdgeCases:
             # a0 should NOT be selected (committed)
             assert "a0" not in to_reason
 
+    def test_committed_agent_selected_on_forced_epoch(self, temp_db):
+        """Committed agents should re-reason when a newer forced info epoch arrives."""
+        agents = [{"_id": "a0"}]
+        with StateManager(temp_db, agents=agents) as manager:
+            manager.record_exposure(
+                "a0",
+                ExposureRecord(
+                    timestep=0,
+                    channel="email",
+                    content="initial",
+                    credibility=0.9,
+                ),
+            )
+            manager.update_agent_state(
+                "a0",
+                AgentState(
+                    agent_id="a0",
+                    aware=True,
+                    position="adopt",
+                    conviction=0.8,
+                    committed=True,
+                ),
+                timestep=0,
+            )
+
+            manager.record_exposure(
+                "a0",
+                ExposureRecord(
+                    timestep=1,
+                    channel="broadcast",
+                    content="new timeline info",
+                    credibility=0.95,
+                    info_epoch=1,
+                    force_rereason=True,
+                ),
+            )
+
+            to_reason = manager.get_agents_to_reason(timestep=1, threshold=3)
+            assert "a0" in to_reason
+
+    def test_forced_epoch_rereasons_once_then_waits_for_new_epoch(self, temp_db):
+        """Agent should re-reason once per epoch despite repeated forced exposures."""
+        agents = [{"_id": "a0"}]
+        with StateManager(temp_db, agents=agents) as manager:
+            manager.record_exposure(
+                "a0",
+                ExposureRecord(
+                    timestep=0,
+                    channel="email",
+                    content="initial",
+                    credibility=0.9,
+                ),
+            )
+            manager.update_agent_state(
+                "a0",
+                AgentState(
+                    agent_id="a0",
+                    aware=True,
+                    position="adopt",
+                    conviction=0.8,
+                    committed=True,
+                ),
+                timestep=0,
+            )
+
+            # First forced epoch should trigger.
+            manager.record_exposure(
+                "a0",
+                ExposureRecord(
+                    timestep=1,
+                    channel="network",
+                    source_agent_id="src_1",
+                    content="epoch 5 update",
+                    credibility=0.85,
+                    info_epoch=5,
+                    force_rereason=True,
+                ),
+            )
+            assert "a0" in manager.get_agents_to_reason(timestep=1, threshold=3)
+
+            # Simulate reasoning at t=1, which should mark epoch as reasoned.
+            manager.update_agent_state(
+                "a0",
+                AgentState(
+                    agent_id="a0",
+                    aware=True,
+                    position="adopt",
+                    conviction=0.8,
+                    committed=True,
+                ),
+                timestep=1,
+            )
+
+            # Repeated exposures from same epoch should NOT retrigger.
+            for t in [2, 3]:
+                manager.record_exposure(
+                    "a0",
+                    ExposureRecord(
+                        timestep=t,
+                        channel="network",
+                        source_agent_id=f"src_repeat_{t}",
+                        content="same epoch",
+                        credibility=0.85,
+                        info_epoch=5,
+                        force_rereason=True,
+                    ),
+                )
+            assert "a0" not in manager.get_agents_to_reason(timestep=3, threshold=3)
+
+            # A newer epoch should retrigger.
+            manager.record_exposure(
+                "a0",
+                ExposureRecord(
+                    timestep=4,
+                    channel="network",
+                    source_agent_id="src_new",
+                    content="new epoch",
+                    credibility=0.85,
+                    info_epoch=6,
+                    force_rereason=True,
+                ),
+            )
+            assert "a0" in manager.get_agents_to_reason(timestep=4, threshold=3)
+
     def test_unique_source_multi_touch(self, temp_db):
         """3 exposures from SAME source should not trigger re-reasoning;
         3 from DIFFERENT sources should."""

@@ -138,6 +138,13 @@ class TimelineEvent(BaseModel):
         default=None,
         description="Human-readable context for this development",
     )
+    re_reasoning_intensity: Literal["normal", "high", "extreme"] | None = Field(
+        default=None,
+        description=(
+            "How broadly this event should trigger committed-agent re-reasoning. "
+            "normal=direct only, high=direct+traced network, extreme=high+all aware."
+        ),
+    )
 
 
 # =============================================================================
@@ -281,6 +288,14 @@ class ScenarioSimConfig(BaseModel):
     stop_conditions: list[str] | None = Field(
         default=None,
         description="Conditions that trigger early stop (e.g., 'exposure_rate > 0.95')",
+    )
+    allow_early_convergence: bool | None = Field(
+        default=None,
+        description=(
+            "Override auto convergence/quiescence stopping behavior: "
+            "None=auto (disable when future timeline events exist), "
+            "True=allow, False=disable."
+        ),
     )
     seed: int | None = Field(
         default=None, description="Random seed for reproducibility"

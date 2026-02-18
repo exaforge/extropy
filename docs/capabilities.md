@@ -108,6 +108,13 @@ Agents experience the crisis as it unfolds. Early timesteps have high uncertaint
 
 **Automatic detection**: If you define a single event with no timeline, Extropy treats it as static. If you provide multiple events or explicit timeline entries, it switches to evolving mode. You can override with `timeline_mode: static` or `timeline_mode: evolving`.
 
+**Timeline-safe stopping**: In evolving scenarios, convergence/quiescence auto-stop is suppressed while future timeline events remain (unless explicitly overridden). This prevents runs from ending before later events fire.
+
+**Per-event re-reasoning intensity**: Timeline events can carry `re_reasoning_intensity`:
+- `normal`: direct timeline recipients force re-reasoning.
+- `high`: direct plus traced network propagation from that epoch can force re-reasoning.
+- `extreme`: high behavior plus one-time force for all aware agents when the event lands.
+
 **Background context**: Scenarios can include ambient framing that appears in every agent's prompt. "The US economy is in a mild recession. Unemployment was at 4.5% before the AI announcement. It's early spring." This shapes reasoning without being the focal event.
 
 **Timestep units are configurable**: Days, weeks, months - whatever fits your scenario. A crisis might unfold over days. A policy change might play out over months. A generational shift might span years.

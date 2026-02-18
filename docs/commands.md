@@ -241,6 +241,7 @@ Run a simulation from a scenario spec.
 extropy simulate -s ai-adoption
 extropy simulate -s ai-adoption --seed 42 --strong openai/gpt-5
 extropy simulate -s ai-adoption --fidelity high
+extropy simulate -s asi-announcement --early-convergence off
 ```
 
 ### Options
@@ -253,7 +254,22 @@ extropy simulate -s ai-adoption --fidelity high
 | `--fidelity` | `-f` | string | `medium` | Fidelity level: `low`, `medium`, `high` |
 | `--merged-pass` | | flag | false | Use single merged reasoning pass instead of two-pass (experimental) |
 | `--threshold` | `-t` | int | 3 | Multi-touch threshold for re-reasoning |
+| `--early-convergence` | | string | `auto` | Override convergence auto-stop policy: `auto`, `on`, `off` |
 | `--chunk-size` | | int | 50 | Agents per reasoning chunk for checkpointing |
+
+#### Early Convergence Override
+
+`--early-convergence` controls whether convergence/quiescence auto-stops can end a run early.
+
+- `auto` (default): use scenario YAML value (`simulation.allow_early_convergence`), else engine auto-rule.
+- `on`: force-enable early convergence auto-stops for this run.
+- `off`: force-disable early convergence auto-stops for this run.
+
+Precedence:
+1. CLI flag (`on`/`off`) wins.
+2. Scenario YAML (`simulation.allow_early_convergence`) is used when CLI is `auto`.
+3. If both are unset (`auto` + YAML `null`), engine auto-rule applies:
+   `convergence/quiescence auto-stop only when no future timeline events remain`.
 
 #### Model Options
 

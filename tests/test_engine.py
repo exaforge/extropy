@@ -37,9 +37,14 @@ from extropy.core.models.scenario import (
     ScenarioSpec,
     SeedExposure,
     SpreadConfig,
+    TimelineEvent,
     TimestepUnit,
 )
-from extropy.simulation.engine import SimulationEngine
+from extropy.simulation.engine import (
+    SimulationEngine,
+    SimulationSummary,
+    run_simulation,
+)
 from extropy.simulation.reasoning import BatchTokenUsage
 
 
@@ -402,14 +407,296 @@ class TestSeedExposure:
         )
 
         with engine.state_manager.transaction():
-            new_exposures = engine._apply_exposures(0)
+            new_exposures, forced_reason_ids = engine._apply_exposures(0)
 
         # All 3 agents should be exposed (probability=1.0, when="true")
         assert new_exposures == 3
+        assert forced_reason_ids == set()
 
         for aid in ["a0", "a1", "a2"]:
             state = engine.state_manager.get_agent_state(aid)
             assert state.aware is True
+
+    def test_extreme_timeline_forces_all_aware_agents(
+        self,
+        minimal_scenario,
+        simple_agents,
+        simple_network,
+        minimal_pop_spec,
+        tmp_path,
+    ):
+        """Extreme intensity should force all aware agents, not just direct timeline recipients."""
+        timeline_event = TimelineEvent(
+            timestep=1,
+            event=Event(
+                type=EventType.NEWS,
+                content="Systemic disruption announced",
+                source="Global Desk",
+                credibility=0.95,
+                ambiguity=0.2,
+                emotional_valence=-0.8,
+            ),
+            exposure_rules=[
+                ExposureRule(
+                    channel="broadcast",
+                    timestep=1,
+                    when="age < 35",  # only a0 gets direct timeline exposure
+                    probability=1.0,
+                )
+            ],
+            re_reasoning_intensity="extreme",
+        )
+        scenario = minimal_scenario.model_copy(update={"timeline": [timeline_event]})
+        config = SimulationRunConfig(
+            scenario_path="test.yaml",
+            output_dir=str(tmp_path / "output"),
+        )
+        engine = SimulationEngine(
+            scenario=scenario,
+            population_spec=minimal_pop_spec,
+            agents=simple_agents,
+            network=simple_network,
+            config=config,
+        )
+
+        # Pre-mark a1 as aware/committed before the timeline shock.
+        engine.state_manager.record_exposure(
+            "a1",
+            ExposureRecord(
+                timestep=0,
+                channel="broadcast",
+                content="prior awareness",
+                credibility=0.9,
+            ),
+        )
+        engine.state_manager.update_agent_state(
+            "a1",
+            AgentState(
+                agent_id="a1",
+                aware=True,
+                position="wait",
+                conviction=0.8,
+                committed=True,
+            ),
+            timestep=0,
+        )
+
+        with engine.state_manager.transaction():
+            new_exposures, forced_reason_ids = engine._apply_exposures(1)
+
+        assert new_exposures == 1
+        assert "a0" in forced_reason_ids  # direct timeline recipient
+        assert "a1" in forced_reason_ids  # previously-aware forced by extreme mode
+        assert "a2" not in forced_reason_ids
+
+
+class TestRunSimulationEarlyConvergenceOverride:
+    """Test run_simulation(..., early_convergence=...) override behavior."""
+
+    @pytest.mark.parametrize(
+        ("yaml_value", "override", "expected"),
+        [
+            (None, "on", True),
+            (None, "off", False),
+            (True, "auto", True),
+            (None, "auto", None),
+        ],
+    )
+    def test_override_precedence(
+        self,
+        minimal_scenario,
+        minimal_pop_spec,
+        tmp_path,
+        monkeypatch,
+        yaml_value,
+        override,
+        expected,
+    ):
+        study_db_path = tmp_path / "study.db"
+        study_db_path.touch()
+
+        scenario = minimal_scenario.model_copy(deep=True)
+        scenario.simulation = scenario.simulation.model_copy(
+            update={"allow_early_convergence": yaml_value}
+        )
+        scenario.meta = scenario.meta.model_copy(
+            update={"name": "override-test", "study_db": str(study_db_path)}
+        )
+
+        class FakeDB:
+            def __init__(self):
+                self.last_run_config = None
+
+            def __enter__(self):
+                return self
+
+            def __exit__(self, exc_type, exc, tb):
+                return False
+
+            def close(self):
+                return None
+
+            def get_agents_by_scenario(self, _scenario_name):
+                return [{"_id": "a0"}]
+
+            def get_agents(self, _population_id):
+                return [{"_id": "a0"}]
+
+            def get_network(self, _network_id):
+                return {
+                    "meta": {"node_count": 1},
+                    "nodes": [{"id": "a0"}],
+                    "edges": [{"source": "a0", "target": "a0", "type": "self"}],
+                }
+
+            def create_simulation_run(self, **kwargs):
+                self.last_run_config = kwargs.get("config", {})
+
+            def set_run_metadata(self, _run_id, _key, _value):
+                return None
+
+            def update_simulation_run(self, **_kwargs):
+                return None
+
+        fake_db = FakeDB()
+        captured: dict[str, object] = {}
+
+        class FakeEngine:
+            def __init__(self, *args, **kwargs):
+                engine_scenario = kwargs["scenario"]
+                captured["allow_early_convergence"] = (
+                    engine_scenario.simulation.allow_early_convergence
+                )
+                self._run_id = kwargs.get("run_id")
+
+            def set_progress_callback(self, _callback):
+                return None
+
+            def set_progress_state(self, _progress):
+                return None
+
+            def run(self):
+                return SimulationSummary(
+                    scenario_name="override-test",
+                    run_id=self._run_id,
+                    population_size=1,
+                    total_timesteps=1,
+                    stopped_reason=None,
+                    total_reasoning_calls=0,
+                    total_exposures=0,
+                    final_exposure_rate=0.0,
+                    outcome_distributions={},
+                    runtime_seconds=0.0,
+                    model_used="test-model",
+                    completed_at=datetime.now(),
+                )
+
+        monkeypatch.setattr(
+            "extropy.simulation.engine.ScenarioSpec.from_yaml",
+            lambda _path: scenario,
+        )
+        monkeypatch.setattr(
+            "extropy.simulation.engine.PopulationSpec.from_yaml",
+            lambda _path: minimal_pop_spec,
+        )
+        monkeypatch.setattr(
+            "extropy.simulation.engine.open_study_db", lambda _p: fake_db
+        )
+        monkeypatch.setattr("extropy.simulation.engine.SimulationEngine", FakeEngine)
+        monkeypatch.setattr(
+            "extropy.simulation.engine.DualRateLimiter.create",
+            lambda **_kwargs: None,
+        )
+
+        summary = run_simulation(
+            scenario_path=tmp_path / "scenario.v1.yaml",
+            output_dir=tmp_path / "out",
+            study_db_path=study_db_path,
+            early_convergence=override,
+        )
+
+        assert summary.run_id is not None
+        assert captured["allow_early_convergence"] == expected
+        assert fake_db.last_run_config["early_convergence"] == override
+
+
+class TestEngineStoppingTimelineIntegration:
+    """Test engine-level wiring for timeline-aware stopping inputs."""
+
+    def test_run_passes_future_timeline_flag_to_stopping(
+        self,
+        minimal_scenario,
+        simple_agents,
+        simple_network,
+        minimal_pop_spec,
+        tmp_path,
+        monkeypatch,
+    ):
+        timeline_event = TimelineEvent(
+            timestep=2,
+            event=Event(
+                type=EventType.NEWS,
+                content="Future escalation",
+                source="Wire",
+                credibility=0.9,
+                ambiguity=0.3,
+                emotional_valence=-0.4,
+            ),
+            re_reasoning_intensity="normal",
+        )
+        scenario = minimal_scenario.model_copy(update={"timeline": [timeline_event]})
+        config = SimulationRunConfig(
+            scenario_path="test.yaml",
+            output_dir=str(tmp_path / "output"),
+        )
+        engine = SimulationEngine(
+            scenario=scenario,
+            population_spec=minimal_pop_spec,
+            agents=simple_agents,
+            network=simple_network,
+            config=config,
+        )
+
+        # Keep run lightweight: bypass full exposure/reasoning internals.
+        monkeypatch.setattr(
+            engine,
+            "_execute_timestep",
+            lambda t: TimestepSummary(
+                timestep=t,
+                new_exposures=0,
+                agents_reasoned=0,
+                shares_occurred=0,
+                state_changes=0,
+                exposure_rate=0.0,
+                position_distribution={},
+            ),
+        )
+        monkeypatch.setattr(engine, "_export_results", lambda: None)
+
+        observed_flags: list[tuple[int, bool]] = []
+
+        def fake_evaluate_stopping(
+            timestep,
+            sim_config,
+            state_manager,
+            recent_summaries,
+            has_future_timeline_events=False,
+        ):
+            observed_flags.append((timestep, has_future_timeline_events))
+            if timestep >= 1:
+                return True, "test_stop"
+            return False, None
+
+        monkeypatch.setattr(
+            "extropy.simulation.engine.evaluate_stopping_conditions",
+            fake_evaluate_stopping,
+        )
+
+        engine.run()
+
+        assert observed_flags
+        assert observed_flags[0] == (0, True)
+        assert observed_flags[1] == (1, True)
 
 
 class TestStateManagerTransaction:

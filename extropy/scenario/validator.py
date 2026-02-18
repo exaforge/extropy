@@ -404,6 +404,52 @@ def validate_scenario(
         )
 
     # =========================================================================
+    # Validate Timeline
+    # =========================================================================
+
+    if spec.timeline:
+        seen_timesteps: set[int] = set()
+        valid_intensity = {"normal", "high", "extreme"}
+        for i, te in enumerate(spec.timeline):
+            if te.timestep in seen_timesteps:
+                errors.append(
+                    ValidationError(
+                        category="timeline",
+                        location=f"timeline[{i}].timestep",
+                        message=f"Duplicate timeline timestep: {te.timestep}",
+                        suggestion="Use unique timesteps for timeline events",
+                    )
+                )
+            seen_timesteps.add(te.timestep)
+
+            if te.timestep >= spec.simulation.max_timesteps:
+                warnings.append(
+                    ValidationWarning(
+                        category="timeline",
+                        location=f"timeline[{i}].timestep",
+                        message=(
+                            f"Timeline timestep {te.timestep} is outside max_timesteps "
+                            f"{spec.simulation.max_timesteps}"
+                        ),
+                        suggestion="Increase simulation.max_timesteps or move event earlier",
+                    )
+                )
+
+            if te.re_reasoning_intensity is not None and (
+                te.re_reasoning_intensity not in valid_intensity
+            ):
+                errors.append(
+                    ValidationError(
+                        category="timeline",
+                        location=f"timeline[{i}].re_reasoning_intensity",
+                        message=(
+                            "Invalid re_reasoning_intensity. Must be one of: "
+                            "normal, high, extreme"
+                        ),
+                    )
+                )
+
+    # =========================================================================
     # Validate Simulation Config
     # =========================================================================
 
@@ -414,6 +460,40 @@ def validate_scenario(
                 location="simulation.max_timesteps",
                 message="max_timesteps must be at least 1",
                 suggestion="Set max_timesteps to a positive integer",
+            )
+        )
+
+    if (
+        spec.simulation.allow_early_convergence is True
+        and spec.timeline
+        and any(te.timestep > 0 for te in spec.timeline)
+    ):
+        warnings.append(
+            ValidationWarning(
+                category="simulation",
+                location="simulation.allow_early_convergence",
+                message=(
+                    "allow_early_convergence=true with future timeline events may "
+                    "truncate evolving scenarios before all events fire"
+                ),
+                suggestion=(
+                    "Use null/auto or false unless early stop is intentionally desired"
+                ),
+            )
+        )
+
+    if spec.simulation.allow_early_convergence is False and not spec.timeline:
+        warnings.append(
+            ValidationWarning(
+                category="simulation",
+                location="simulation.allow_early_convergence",
+                message=(
+                    "allow_early_convergence=false without timeline events may run "
+                    "unnecessarily long after opinions stabilize"
+                ),
+                suggestion=(
+                    "Use null/auto unless full-length execution is intentionally desired"
+                ),
             )
         )
 

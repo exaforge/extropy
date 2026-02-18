@@ -81,6 +81,10 @@ class StateManager:
                 private_conviction REAL,
                 private_outcomes_json TEXT,
                 raw_reasoning TEXT,
+                committed INTEGER DEFAULT 0,
+                network_hop_depth INTEGER,
+                latest_info_epoch INTEGER DEFAULT -1,
+                last_reasoned_info_epoch INTEGER DEFAULT -1,
                 updated_at INTEGER DEFAULT 0,
                 PRIMARY KEY (run_id, agent_id)
             )
@@ -99,6 +103,8 @@ class StateManager:
                 source_agent_id TEXT,
                 content TEXT,
                 credibility REAL,
+                info_epoch INTEGER,
+                force_rereason INTEGER DEFAULT 0,
                 FOREIGN KEY (run_id, agent_id) REFERENCES agent_states(run_id, agent_id)
             )
         """
@@ -166,6 +172,12 @@ class StateManager:
             """
             CREATE INDEX IF NOT EXISTS idx_exposures_timestep
             ON exposures(run_id, timestep)
+        """
+        )
+        cursor.execute(
+            """
+            CREATE INDEX IF NOT EXISTS idx_exposures_force_epoch
+            ON exposures(run_id, agent_id, force_rereason, info_epoch)
         """
         )
         cursor.execute(
@@ -253,6 +265,10 @@ class StateManager:
             ("agent_states", "private_sentiment", "REAL"),
             ("agent_states", "private_conviction", "REAL"),
             ("agent_states", "private_outcomes_json", "TEXT"),
+            ("agent_states", "latest_info_epoch", "INTEGER DEFAULT -1"),
+            ("agent_states", "last_reasoned_info_epoch", "INTEGER DEFAULT -1"),
+            ("exposures", "info_epoch", "INTEGER"),
+            ("exposures", "force_rereason", "INTEGER DEFAULT 0"),
             ("memory_traces", "raw_reasoning", "TEXT"),
             ("memory_traces", "action_intent", "TEXT"),
         ]
@@ -284,6 +300,22 @@ class StateManager:
         )
         cursor.execute(
             "UPDATE simulation_metadata SET run_id = COALESCE(run_id, 'default') WHERE run_id IS NULL"
+        )
+        cursor.execute(
+            "UPDATE agent_states SET latest_info_epoch = COALESCE(latest_info_epoch, -1)"
+        )
+        cursor.execute(
+            "UPDATE agent_states SET last_reasoned_info_epoch = COALESCE(last_reasoned_info_epoch, -1)"
+        )
+        cursor.execute(
+            "UPDATE exposures SET force_rereason = COALESCE(force_rereason, 0)"
+        )
+
+        cursor.execute(
+            """
+            CREATE INDEX IF NOT EXISTS idx_exposures_force_epoch
+            ON exposures(run_id, agent_id, force_rereason, info_epoch)
+        """
         )
 
         self.conn.commit()
@@ -362,6 +394,8 @@ class StateManager:
                 source_agent_id=e["source_agent_id"],
                 content=e["content"],
                 credibility=e["credibility"],
+                info_epoch=e["info_epoch"],
+                force_rereason=bool(e["force_rereason"]),
             )
             for e in exposure_rows
         ]
@@ -431,6 +465,14 @@ class StateManager:
             committed=committed,
             outcomes=private_outcomes,
             raw_reasoning=row["raw_reasoning"],
+            latest_info_epoch=(
+                row["latest_info_epoch"] if row["latest_info_epoch"] is not None else -1
+            ),
+            last_reasoned_info_epoch=(
+                row["last_reasoned_info_epoch"]
+                if row["last_reasoned_info_epoch"] is not None
+                else -1
+            ),
             updated_at=row["updated_at"],
         )
 
@@ -482,17 +524,24 @@ class StateManager:
         value = row["network_hop_depth"]
         return int(value) if value is not None else None
 
-    def get_agents_to_reason(self, timestep: int, threshold: int) -> list[str]:
+    def get_agents_to_reason(
+        self,
+        timestep: int,
+        threshold: int,
+        forced_agent_ids: set[str] | None = None,
+    ) -> list[str]:
         """Get agents who should reason this timestep.
 
         Agents reason if:
         1. They're aware AND haven't reasoned yet, OR
         2. They have >= threshold unique source agents exposing them since
-           last reasoning AND they are not committed (conviction >= firm)
+           last reasoning AND they are not committed (conviction >= firm), OR
+        3. They received forced re-reason exposures from a newer info epoch.
 
         Args:
             timestep: Current timestep
             threshold: Multi-touch threshold
+            forced_agent_ids: Optional explicit agent IDs to include this timestep
 
         Returns:
             List of agent IDs that should reason
@@ -504,10 +553,47 @@ class StateManager:
             """
             SELECT agent_id FROM agent_states
             WHERE run_id = ? AND aware = 1 AND last_reasoning_timestep < 0
+            ORDER BY agent_id
         """,
             (self.run_id,),
         )
         never_reasoned = [row["agent_id"] for row in cursor.fetchall()]
+
+        # Forced re-reason: agents with new forced exposures since their last reasoned epoch.
+        cursor.execute(
+            """
+            SELECT DISTINCT s.agent_id
+            FROM agent_states s
+            JOIN exposures e
+              ON e.run_id = s.run_id
+              AND e.agent_id = s.agent_id
+              AND e.timestep > s.last_reasoning_timestep
+              AND e.force_rereason = 1
+              AND e.info_epoch IS NOT NULL
+            WHERE s.run_id = ?
+              AND s.aware = 1
+              AND e.info_epoch > COALESCE(s.last_reasoned_info_epoch, -1)
+            ORDER BY s.agent_id
+        """,
+            (self.run_id,),
+        )
+        forced_by_exposure = [row["agent_id"] for row in cursor.fetchall()]
+
+        explicit_forced: list[str] = []
+        if forced_agent_ids:
+            placeholders = ",".join("?" for _ in forced_agent_ids)
+            cursor.execute(
+                f"""
+                SELECT agent_id
+                FROM agent_states
+                WHERE run_id = ?
+                  AND aware = 1
+                  AND agent_id IN ({placeholders})
+                ORDER BY agent_id
+            """,
+                [self.run_id, *sorted(forced_agent_ids)],
+            )
+            explicit_forced = [row["agent_id"] for row in cursor.fetchall()]
 
         # Multi-touch: count UNIQUE source agents since last reasoning,
         # excluding committed agents
@@ -526,6 +612,7 @@ class StateManager:
               AND s.last_reasoning_timestep >= 0
               AND s.committed = 0
             GROUP BY s.agent_id
+            ORDER BY s.agent_id
         """,
             (self.run_id,),
         )
@@ -535,7 +622,15 @@ class StateManager:
             if row["unique_sources"] >= threshold:
                 multi_touch.append(row["agent_id"])
 
-        return never_reasoned + multi_touch
+        ordered = never_reasoned + forced_by_exposure + explicit_forced + multi_touch
+        deduped: list[str] = []
+        seen: set[str] = set()
+        for agent_id in ordered:
+            if agent_id in seen:
+                continue
+            seen.add(agent_id)
+            deduped.append(agent_id)
+        return deduped
 
     def record_share(
         self, source_id: str, target_id: str, timestep: int, position: str | None
@@ -723,9 +818,11 @@ class StateManager:
                 channel,
                 source_agent_id,
                 content,
-                credibility
+                credibility,
+                info_epoch,
+                force_rereason
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         """,
             (
                 self.run_id,
@@ -735,6 +832,8 @@ class StateManager:
                 exposure.source_agent_id,
                 exposure.content,
                 exposure.credibility,
+                exposure.info_epoch,
+                1 if exposure.force_rereason else 0,
             ),
         )
 
@@ -757,6 +856,11 @@ class StateManager:
                     WHEN ? IS NULL THEN network_hop_depth
                     ELSE MIN(network_hop_depth, ?)
                 END,
+                latest_info_epoch = CASE
+                    WHEN ? IS NULL THEN COALESCE(latest_info_epoch, -1)
+                    WHEN latest_info_epoch IS NULL THEN ?
+                    ELSE MAX(latest_info_epoch, ?)
+                END,
                 updated_at = ?
             WHERE run_id = ?
               AND agent_id = ?
@@ -765,6 +869,9 @@ class StateManager:
                 new_hop_depth,
                 new_hop_depth,
                 new_hop_depth,
+                exposure.info_epoch,
+                exposure.info_epoch,
+                exposure.info_epoch,
                 exposure.timestep,
                 self.run_id,
                 agent_id,
@@ -869,6 +976,10 @@ class StateManager:
                 private_outcomes_json = ?,
                 raw_reasoning = ?,
                 last_reasoning_timestep = ?,
+                last_reasoned_info_epoch = CASE
+                    WHEN latest_info_epoch IS NULL THEN COALESCE(last_reasoned_info_epoch, -1)
+                    ELSE latest_info_epoch
+                END,
                 updated_at = ?
             WHERE run_id = ?
               AND agent_id = ?
@@ -939,6 +1050,10 @@ class StateManager:
                     private_outcomes_json = ?,
                     raw_reasoning = ?,
                     last_reasoning_timestep = ?,
+                    last_reasoned_info_epoch = CASE
+                        WHEN latest_info_epoch IS NULL THEN COALESCE(last_reasoned_info_epoch, -1)
+                        ELSE latest_info_epoch
+                    END,
                     updated_at = ?
                 WHERE run_id = ?
                   AND agent_id = ?
