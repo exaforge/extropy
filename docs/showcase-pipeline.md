@@ -639,20 +639,23 @@ Every stage has a validation gate. If the gate fails, fix and re-run that stage 
 
 **If validation fails:** Edit the scenario file directly to fix issues. Re-run `extropy validate` if available.
 
-### Gate 3: After `extropy persona` — Are the persona templates diverse and realistic?
+### Gate 3: After `extropy persona` — Is the persona rendering config correct?
+
+**What `extropy persona` actually does:** It generates a single PersonaConfig YAML — a rendering rulebook that converts agent attributes into first-person narrative. It does NOT generate multiple diverse templates or archetypes. The 5-step LLM pipeline produces: attribute groupings, boolean phrasings ("I own my home" / "I rent"), categorical phrasings ("I voted for Trump in 2024"), relative phrasings (z-score buckets for personality traits), and concrete phrasings (templates for numeric values). One config is applied to all agents — diversity comes from agents having different attribute values, not from different persona templates.
 
 **What to do:**
-1. Read the generated persona templates file
-2. Have an LLM agent review the full set of templates
+1. Read the generated `persona.v1.yaml` file
+2. Render 5-10 sample agents through the config and review the output narratives
 
 **What to check:**
-- [ ] **Full behavioral range covered**: Templates should span the realistic range of responses to the scenario. For ASI: templates should include tech optimists AND luddites, young flexible workers AND older specialists, financially secure AND paycheck-to-paycheck, urban tech workers AND rural tradespeople. If every template is a variation of "concerned professional," the simulation will converge.
-- [ ] **No template dominates**: No single template should represent more than 15% of the population. If one template is too broad or generic, it will flatten diversity.
-- [ ] **Boring archetypes included**: Not every persona should be an edge case or interesting character. Include the disengaged middle — people who don't follow the news closely, don't have strong opinions, and whose primary concern is paying rent. These "boring" agents are the majority of the real population and their behavior (or inaction) matters.
-- [ ] **Internal consistency**: Each template's attributes should make sense together. A 22-year-old rural evangelical with a PhD in computer science and $500K in savings is not impossible but should be extremely rare, not a common template.
-- [ ] **Scenario-relevant differentiation**: Templates should differ on the attributes that MATTER for this specific scenario. For ASI, the key differentiators are employment sector, education level, financial margin, tech adoption, and meaning/identity sources. For Taiwan, they're employment sector (especially auto/manufacturing/defense), geography, political engagement, and financial margin. If templates differ only on demographics and not on these scenario-relevant dimensions, the simulation won't produce meaningful divergence.
+- [ ] **All attributes covered**: Every attribute in the population spec has a phrasing entry. Missing attributes mean agents won't mention those dimensions in their reasoning.
+- [ ] **Phrasings are first-person and natural**: Boolean phrasings should read like self-description ("I'm deeply religious" not "Agent has high religiosity"). Categorical phrasings should be conversational, not clinical.
+- [ ] **Relative attribute buckets are meaningful**: Psychological traits (openness, neuroticism, trust) should have 5 distinguishable z-score labels. "Much below average" through "much above average" should use scenario-relevant language, not generic labels.
+- [ ] **Scenario-relevant attributes get rich phrasings**: For ASI, attributes like `ai_literacy`, `automation_job_vulnerability`, `financial_resilience`, and `techno_optimism` should have detailed, nuanced phrasings — not one-word labels. These are the attributes that drive divergent reasoning.
+- [ ] **Extended attributes included**: Scenario-specific attributes added during scenario compilation (e.g., `ai_literacy`, `chronic_illness_household`) must have phrasings, not just the base population attributes.
+- [ ] **Sample renders look like real people**: Render a few agents and read the output. Does each narrative sound like a distinct person describing themselves? Or does the phrasing flatten differences?
 
-**If validation fails:** Re-run `extropy persona` with more specific guidance on missing archetypes or range gaps.
+**If validation fails:** Re-run `extropy persona` or manually edit the YAML to fix specific phrasings. The config is human-editable.
 
 ### Gate 4: After `extropy sample` — Is the sampled population realistic?
 
@@ -667,10 +670,13 @@ Every stage has a validation gate. If the gate fails, fix and re-run that stage 
 - [ ] **Demographic distribution matches target**: Age should roughly mirror US adult population (not all 25-35). Race/ethnicity should approximate Census. Income should have a realistic spread with appropriate median. Geography should span all regions with ~20% rural. If any distribution is wildly off, the sample is biased.
 - [ ] **No attribute has >80% concentration**: If 85% of agents are "moderate trust in institutions" or 90% are "private sector employment," the sample lacks diversity and the simulation will converge.
 - [ ] **Attribute correlations are realistic**: Pull cross-tabulations. Do rural agents actually skew toward lower digital literacy and higher religious engagement? Do high-income agents cluster in urban areas? Do federal employees cluster in DC metro and military towns? If correlations are flat (every attribute independently distributed), the population is unrealistic.
+- [ ] **Full behavioral range covered**: The sampled population should span the realistic range of responses to the scenario. For ASI: agents should include tech optimists AND luddites, young flexible workers AND older specialists, financially secure AND paycheck-to-paycheck, urban tech workers AND rural tradespeople. If agents cluster into a narrow band of "moderate professionals," the simulation will converge.
+- [ ] **Boring agents included**: Not every agent should be an edge case. The disengaged middle — people who don't follow the news closely, don't have strong opinions, and whose primary concern is paying rent — should be the majority. These "boring" agents' behavior (or inaction) matters most.
 - [ ] **30-agent spot check**: Pull 30 random complete agent profiles. Read each one. Does each agent feel like a real, internally consistent person? Or are there nonsensical combinations (e.g., a 19-year-old retiree, a rural Manhattan resident, a crypto day-trader with no investment literacy)? A few oddballs are fine. More than 2-3 out of 30 is a problem.
+- [ ] **Scenario-relevant differentiation**: Agents should differ on the attributes that MATTER for this specific scenario. For ASI, the key differentiators are employment sector, education level, financial margin, tech adoption, and meaning/identity sources. For Taiwan, they're employment sector (especially auto/manufacturing/defense), geography, political engagement, and financial margin.
 - [ ] **Electoral attributes realistic (for Study 4)**: 2024 vote distribution should roughly match actual election results. Congressional district mapping should include competitive districts. Midterm turnout propensity should have a healthy spread, not all "always votes."
 
-**If validation fails:** Re-run `extropy sample` with a different seed. If the problem persists, the issue is upstream in the spec or persona templates.
+**If validation fails:** Re-run `extropy sample` with a different seed. If the problem persists, the issue is upstream in the spec.
 
 ### Gate 5: After `extropy network` — Is the social network structure realistic?
 
