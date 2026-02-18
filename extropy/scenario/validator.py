@@ -422,7 +422,7 @@ def validate_scenario(
                 )
             seen_timesteps.add(te.timestep)
 
-            if te.timestep >= spec.simulation.max_timesteps:
+            if te.timestep > spec.simulation.max_timesteps:
                 warnings.append(
                     ValidationWarning(
                         category="timeline",
