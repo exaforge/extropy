@@ -1,0 +1,60 @@
+{
+  "timestamp": "2026-02-17T21:23:43.027760",
+  "function": "simple_call",
+  "provider": "claude",
+  "request": {
+    "model": "claude-sonnet-4-6",
+    "prompt_length": 3382
+  },
+  "response": {
+    "id": "msg_01Q3g55QEvccKCpYspsQsgzC",
+    "content": [
+      {
+        "id": "toolu_01XaYArSL6iWTNMZ5sVCjNKs",
+        "input": {
+          "decision": {
+            "name": "asi_announcement_response",
+            "description": "How US adults behaviorally respond to OpenAI's ASI announcement \u2014 what they actively do in the immediate aftermath in terms of information-sharing, advocacy, and civic engagement",
+            "options": [
+              "amplify_and_celebrate",
+              "demand_oversight_and_act",
+              "spread_skepticism_and_dispute",
+              "disengage_and_avoid"
+            ],
+            "option_friction": {
+              "amplify_and_celebrate": 0.45,
+              "demand_oversight_and_act": 0.75,
+              "spread_skepticism_and_dispute": 0.5,
+              "disengage_and_avoid": 0.2
+            }
+          },
+          "reasoning": "[REDACTED_TEXT length=930]"
+        },
+        "name": "outcome_definition",
+        "type": "tool_use",
+        "caller": {
+          "type": "direct"
+        }
+      }
+    ],
+    "model": "claude-sonnet-4-6",
+    "role": "assistant",
+    "stop_reason": "tool_use",
+    "stop_sequence": null,
+    "type": "message",
+    "usage": {
+      "cache_creation": {
+        "ephemeral_1h_input_tokens": "[REDACTED_SECRET]",
+        "ephemeral_5m_input_tokens": "[REDACTED_SECRET]"
+      },
+      "cache_creation_input_tokens": "[REDACTED_SECRET]",
+      "cache_read_input_tokens": "[REDACTED_SECRET]",
+      "input_tokens": 1711,
+      "output_tokens": 426,
+      "server_tool_use": null,
+      "service_tier": "standard",
+      "inference_geo": "global"
+    }
+  },
+  "sources_extracted": []
+}

@@ -1,0 +1,1514 @@
+{
+  "timestamp": "2026-02-17T21:14:07.854351",
+  "function": "agentic_research",
+  "provider": "claude",
+  "request": {
+    "model": "claude-sonnet-4-6",
+    "prompt_length": 14572
+  },
+  "response": {
+    "id": "msg_01Y7y9FbhJaVXvp5QxZax1ki",
+    "content": [
+      {
+        "id": "srvtoolu_01KpikhSviD4Y6QARz5MPrxa",
+        "input": {
+          "query": "public reaction ASI artificial superintelligence announcement survey 2024 2025"
+        },
+        "name": "web_search",
+        "type": "server_tool_use",
+        "caller": {
+          "type": "direct"
+        }
+      },
+      {
+        "id": "srvtoolu_01EGCvKeFKuMAzEkAT6fpsM6",
+        "input": {
+          "query": "American public AI familiarity demographics education age survey 2024"
+        },
+        "name": "web_search",
+        "type": "server_tool_use",
+        "caller": {
+          "type": "direct"
+        }
+      },
+      {
+        "content": [
+          {
+            "encrypted_content": "[REDACTED_TEXT length=1820]",
+            "page_age": null,
+            "title": "Public Opinion | The 2025 AI Index Report - Stanford HAI",
+            "type": "web_search_result",
+            "url": "https://hai.stanford.edu/ai-index/2025-ai-index-report/public-opinion"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=5680]",
+            "page_age": null,
+            "title": "Artificial Super Intelligence (ASI): The Ultimate Guide for 2025",
+            "type": "web_search_result",
+            "url": "https://botinfo.ai/articles/artificial-super-intelligence"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=5532]",
+            "page_age": "October 19, 2025",
+            "title": "The U.S. Public Wants Regulation (or Prohibition) of Expert\u2011Level and Superhuman AI - Future of Life Institute",
+            "type": "web_search_result",
+            "url": "https://futureoflife.org/recent-news/americans-want-regulation-or-prohibition-of-superhuman-ai/"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=5240]",
+            "page_age": null,
+            "title": "Sentience Institute | AI Policy Insights from the AIMS Survey",
+            "type": "web_search_result",
+            "url": "https://www.sentienceinstitute.org/blog/ai-policy-insights-from-the-aims-survey"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=5340]",
+            "page_age": "October 28, 2025",
+            "title": "Beyond AI: Preparing For (ASI) Artificial Super Intelligence - CTO Magazine",
+            "type": "web_search_result",
+            "url": "https://ctomagazine.com/preparing-for-artificial-super-intelligence-beyond-ai/"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=5348]",
+            "page_age": null,
+            "title": "Artificial Super Intelligence (ASI)",
+            "type": "web_search_result",
+            "url": "https://www.emergentmind.com/topics/artificial-super-intelligence-asi"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=3048]",
+            "page_age": null,
+            "title": "AI Safety Index Future of Life Institute Summer 2025",
+            "type": "web_search_result",
+            "url": "https://futureoflife.org/wp-content/uploads/2025/07/FLI-AI-Safety-Index-Report-Summer-2025.pdf"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=1608]",
+            "page_age": null,
+            "title": "ASI Roadmap 2025 | Artificial Superintelligence Alliance",
+            "type": "web_search_result",
+            "url": "https://docs.superintelligence.io/artificial-superintelligence-alliance/asi-roadmap-2025"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=1744]",
+            "page_age": "July 16, 2025",
+            "title": "Public Opinion on AI in 2025",
+            "type": "web_search_result",
+            "url": "https://aragonresearch.com/public-opinion-on-ai-in-2025/"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=560]",
+            "page_age": null,
+            "title": "Artificial Intelligence and Superintelligence",
+            "type": "web_search_result",
+            "url": "https://www.techrxiv.org/users/985276/articles/1365906/master/file/data/AI_Superintelligence_Study/AI_Superintelligence_Study.pdf"
+          }
+        ],
+        "tool_use_id": "srvtoolu_01KpikhSviD4Y6QARz5MPrxa",
+        "type": "web_search_tool_result"
+      },
+      {
+        "content": [
+          {
+            "encrypted_content": "[REDACTED_TEXT length=4332]",
+            "page_age": null,
+            "title": "SPOTLIGHT: Like Parent, Like Teen: AI Usage Patterns Reveal Striking Parallels Across Generations | NORC at the University of Chicago",
+            "type": "web_search_result",
+            "url": "https://www.norc.org/research/library/like-parent-like-teen-ai-usage-patterns-reveal-striking-parallels-across-generations.html"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=1696]",
+            "page_age": "September 17, 2025",
+            "title": "Americans\u2019 awareness of AI and views of use in daily life, control over it | Pew Research Center",
+            "type": "web_search_result",
+            "url": "https://www.pewresearch.org/science/2025/09/17/ai-in-americans-lives-awareness-experiences-and-attitudes/"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=5848]",
+            "page_age": "November 11, 2025",
+            "title": "How the US Public and AI Experts View Artificial Intelligence | Pew Research Center",
+            "type": "web_search_result",
+            "url": "https://www.pewresearch.org/internet/2025/04/03/how-the-us-public-and-ai-experts-view-artificial-intelligence/"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=5440]",
+            "page_age": "April 24, 2025",
+            "title": "Americans' views of artificial intelligence in 2023 | Pew Research Center",
+            "type": "web_search_result",
+            "url": "https://www.pewresearch.org/short-reads/2023/11/21/what-the-data-says-about-americans-views-of-artificial-intelligence/"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=5380]",
+            "page_age": "November 25, 2025",
+            "title": "How are Americans using AI? Evidence from a nationwide survey | Brookings",
+            "type": "web_search_result",
+            "url": "https://www.brookings.edu/articles/how-are-americans-using-ai-evidence-from-a-nationwide-survey/"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=5188]",
+            "page_age": null,
+            "title": "U.S. AI knowledge by age 2024 | Statista",
+            "type": "web_search_result",
+            "url": "https://www.statista.com/statistics/1466984/ai-awareness-us-by-age/"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=5208]",
+            "page_age": "January 9, 2026",
+            "title": "The Latest AI in Education Statistics (2026) - Programs.com",
+            "type": "web_search_result",
+            "url": "https://programs.com/resources/ai-education-statistics/"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=5464]",
+            "page_age": "June 10, 2025",
+            "title": "Generative AI in Higher Education: Demographic Differences in Student Perceived Readiness, Benefits, and Challenges | TechTrends | Springer Nature Link",
+            "type": "web_search_result",
+            "url": "https://link.springer.com/article/10.1007/s11528-025-01109-6"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=4444]",
+            "page_age": "October 15, 2025",
+            "title": "Majority of Americans See U.S. Leadership in AI as Crucial, Survey Finds | RAND",
+            "type": "web_search_result",
+            "url": "https://www.rand.org/pubs/research_reports/RRA4363-1.html"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=4284]",
+            "page_age": "January 11, 2024",
+            "title": "AI Statistics 2024 \u00b7 AIPRM",
+            "type": "web_search_result",
+            "url": "https://www.aiprm.com/ai-statistics/"
+          }
+        ],
+        "tool_use_id": "srvtoolu_01EGCvKeFKuMAzEkAT6fpsM6",
+        "type": "web_search_tool_result"
+      },
+      {
+        "id": "srvtoolu_016QtpeAtChkiZTiisqud7Uy",
+        "input": {
+          "query": "AI fear excitement skepticism demographics age political ideology trust OpenAI survey 2025"
+        },
+        "name": "web_search",
+        "type": "server_tool_use",
+        "caller": {
+          "type": "direct"
+        }
+      },
+      {
+        "id": "srvtoolu_01NhciPkqQ9Eybr9iJvAbBmd",
+        "input": {
+          "query": "AI job displacement concern occupation sector sci-fi consumption AI safety concern political ideology 2024 2025"
+        },
+        "name": "web_search",
+        "type": "server_tool_use",
+        "caller": {
+          "type": "direct"
+        }
+      },
+      {
+        "content": [
+          {
+            "encrypted_content": "[REDACTED_TEXT length=5432]",
+            "page_age": null,
+            "title": "The Age of AI: July 2025 | Verasight",
+            "type": "web_search_result",
+            "url": "https://www.verasight.io/reports/ai-report-july25"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=3000]",
+            "page_age": "September 17, 2025",
+            "title": "How Americans View AI and Its Impact on Human Abilities, Society | Pew Research Center",
+            "type": "web_search_result",
+            "url": "https://www.pewresearch.org/science/2025/09/17/how-americans-view-ai-and-its-impact-on-people-and-society/"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=5596]",
+            "page_age": "October 15, 2025",
+            "title": "Views of AI Around the World | Pew Research Center",
+            "type": "web_search_result",
+            "url": "https://www.pewresearch.org/global/2025/10/15/how-people-around-the-world-view-ai/"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=4136]",
+            "page_age": "November 11, 2025",
+            "title": "How the US Public and AI Experts View Artificial Intelligence | Pew Research Center",
+            "type": "web_search_result",
+            "url": "https://www.pewresearch.org/internet/2025/04/03/how-the-us-public-and-ai-experts-view-artificial-intelligence/"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=4236]",
+            "page_age": "November 12, 2025",
+            "title": "What Americans Really Think About AI Algorithms: Public Confidence and Transparency in Government - Cornell Brooks Public Policy",
+            "type": "web_search_result",
+            "url": "https://publicpolicy.cornell.edu/masters-blog/what-americans-really-think-about-ai-algorithms-public-confidence-and-transparency-in-government/"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=5452]",
+            "page_age": "November 11, 2025",
+            "title": "AI risks, opportunities, regulation: Views of US public and AI experts | Pew Research Center",
+            "type": "web_search_result",
+            "url": "https://www.pewresearch.org/internet/2025/04/03/views-of-risks-opportunities-and-regulation-of-ai/"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=396]",
+            "page_age": "October 15, 2025",
+            "title": "Concern and excitement about AI around the world | Pew Research Center",
+            "type": "web_search_result",
+            "url": "https://www.pewresearch.org/2025/10/15/concern-and-excitement-about-ai/"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=5424]",
+            "page_age": "3 weeks ago",
+            "title": "Who trusts AI? - Economics Observatory",
+            "type": "web_search_result",
+            "url": "https://www.economicsobservatory.com/who-trusts-ai"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=1752]",
+            "page_age": null,
+            "title": "Public Opinion | The 2025 AI Index Report - Stanford HAI",
+            "type": "web_search_result",
+            "url": "https://hai.stanford.edu/ai-index/2025-ai-index-report/public-opinion"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=5456]",
+            "page_age": null,
+            "title": "pi_2025.04.03_us-public-and-ai-experts_report.pdf",
+            "type": "web_search_result",
+            "url": "https://www.pewresearch.org/wp-content/uploads/sites/20/2025/04/pi_2025.04.03_us-public-and-ai-experts_report.pdf"
+          }
+        ],
+        "tool_use_id": "srvtoolu_016QtpeAtChkiZTiisqud7Uy",
+        "type": "web_search_tool_result"
+      },
+      {
+        "content": [
+          {
+            "encrypted_content": "[REDACTED_TEXT length=5452]",
+            "page_age": null,
+            "title": "Top 20 Predictions from Experts on AI Job Loss",
+            "type": "web_search_result",
+            "url": "https://research.aimultiple.com/ai-job-loss/"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=5512]",
+            "page_age": null,
+            "title": "AI-Driven Worker Displacement Is a Serious Threat",
+            "type": "web_search_result",
+            "url": "https://jacobin.com/2025/07/artificial-intelligence-worker-displacement-jobs"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=5340]",
+            "page_age": "5 days ago",
+            "title": "Measuring US workers\u2019 capacity to adapt to AI-driven job displacement | Brookings",
+            "type": "web_search_result",
+            "url": "https://www.brookings.edu/articles/measuring-us-workers-capacity-to-adapt-to-ai-driven-job-displacement/"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=1920]",
+            "page_age": null,
+            "title": "People Don\u2019t Worry About Losing Jobs to AI, Even When Told It Could Happen Soon | Newsroom",
+            "type": "web_search_result",
+            "url": "https://news.ucmerced.edu/news/2025/people-don%E2%80%99t-worry-about-losing-jobs-ai-even-when-told-it-could-happen-soon"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=4320]",
+            "page_age": "November 11, 2025",
+            "title": "AI risks, opportunities, regulation: Views of US public and AI experts | Pew Research Center",
+            "type": "web_search_result",
+            "url": "https://www.pewresearch.org/internet/2025/04/03/views-of-risks-opportunities-and-regulation-of-ai/"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=4996]",
+            "page_age": "August 14, 2025",
+            "title": "AI and Jobs: The Final Word (Until the Next One) - Economic Innovation Group",
+            "type": "web_search_result",
+            "url": "https://eig.org/ai-and-jobs-the-final-word/"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=5416]",
+            "page_age": "May 30, 2025",
+            "title": "59 AI Job Statistics: Future of U.S. Jobs | National University",
+            "type": "web_search_result",
+            "url": "https://www.nu.edu/blog/ai-job-statistics/"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=2976]",
+            "page_age": null,
+            "title": "The overlooked global risk of the AI precariat | World Economic Forum",
+            "type": "web_search_result",
+            "url": "https://www.weforum.org/stories/2025/08/the-overlooked-global-risk-of-the-ai-precariat/"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=6232]",
+            "page_age": null,
+            "title": "A.I. Is Going to Disrupt the Labor Market. It Doesn\u2019t Have to Destroy It. | Chicago Booth Review",
+            "type": "web_search_result",
+            "url": "https://www.chicagobooth.edu/review/ai-is-going-disrupt-labor-market-it-doesnt-have-destroy-it"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=5648]",
+            "page_age": "August 13, 2025",
+            "title": "How Will AI Affect the Global Workforce? | Goldman Sachs",
+            "type": "web_search_result",
+            "url": "https://www.goldmansachs.com/insights/articles/how-will-ai-affect-the-global-workforce"
+          }
+        ],
+        "tool_use_id": "srvtoolu_01NhciPkqQ9Eybr9iJvAbBmd",
+        "type": "web_search_tool_result"
+      },
+      {
+        "citations": null,
+        "text": "[REDACTED_TEXT length=274]",
+        "type": "text",
+        "parsed_output": null
+      },
+      {
+        "citations": [
+          {
+            "cited_text": "[REDACTED_TEXT length=153]",
+            "encrypted_index": "EpQBCioIDBgCIiRkZTk5OTNhMy00ZGJmLTQwYTgtOGVmYy1iZWJmMDZmNzY0YWQSDPdn2qVBru4Kbw5+HBoMGEbCN7VNLG0TAnsGIjANn13SdMPB0tlWYSK7TiS+areMpZLx0yhLtb8t2zqFJ2YmXEq7903RE1rrw2+WQJcqGISaOQImALXZUDxa/lHLtF0UQyyDHn1S...[truncated]",
+            "title": "Americans' views of artificial intelligence in 2023 | Pew Research Center",
+            "type": "web_search_result_location",
+            "url": "https://www.pewresearch.org/short-reads/2023/11/21/what-the-data-says-about-americans-views-of-artificial-intelligence/"
+          }
+        ],
+        "text": "[REDACTED_TEXT length=151]",
+        "type": "text",
+        "parsed_output": null
+      },
+      {
+        "citations": null,
+        "text": "[REDACTED_TEXT length=3]",
+        "type": "text",
+        "parsed_output": null
+      },
+      {
+        "citations": [
+          {
+            "cited_text": "[REDACTED_TEXT length=147]",
+            "encrypted_index": "EpQBCioIDBgCIiRkZTk5OTNhMy00ZGJmLTQwYTgtOGVmYy1iZWJmMDZmNzY0YWQSDKGI6PcDpHn4kx79uhoMpeBKxYYktOBm6twNIjAogku6SwZaBzrKral7sKxE7Eore3Er6yo8c7XgZBytYqnZ06HSIxA8Jn43+DthqcgqGFPmeHemzaJ5lWLhavwVAt60jgbr62K7...[truncated]",
+            "title": "SPOTLIGHT: Like Parent, Like Teen: AI Usage Patterns Reveal Striking Parallels Across Generations | NORC at the University of Chicago",
+            "type": "web_search_result_location",
+            "url": "https://www.norc.org/research/library/like-parent-like-teen-ai-usage-patterns-reveal-striking-parallels-across-generations.html"
+          }
+        ],
+        "text": "[REDACTED_TEXT length=81]",
+        "type": "text",
+        "parsed_output": null
+      },
+      {
+        "citations": null,
+        "text": "[REDACTED_TEXT length=3]",
+        "type": "text",
+        "parsed_output": null
+      },
+      {
+        "citations": [
+          {
+            "cited_text": "[REDACTED_TEXT length=153]",
+            "encrypted_index": "EpQBCioIDBgCIiRkZTk5OTNhMy00ZGJmLTQwYTgtOGVmYy1iZWJmMDZmNzY0YWQSDLV8VFlv53yV7oa9PxoMUDoatXLYvxFcQj91IjAwsNE3wOcXiJnc8jixXnwPqkrrdbmpD28pNdblyqIxraNFYUDKR8pBFJ8WkEGJfTgqGGEQoMrRWvrZZtIte1XLcpeLFFT7YLOv...[truncated]",
+            "title": "How the US Public and AI Experts View Artificial Intelligence | Pew Research Center",
+            "type": "web_search_result_location",
+            "url": "https://www.pewresearch.org/internet/2025/04/03/how-the-us-public-and-ai-experts-view-artificial-intelligence/"
+          }
+        ],
+        "text": "[REDACTED_TEXT length=158]",
+        "type": "text",
+        "parsed_output": null
+      },
+      {
+        "citations": null,
+        "text": "[REDACTED_TEXT length=3]",
+        "type": "text",
+        "parsed_output": null
+      },
+      {
+        "citations": [
+          {
+            "cited_text": "[REDACTED_TEXT length=153]",
+            "encrypted_index": "EpEBCioIDBgCIiRkZTk5OTNhMy00ZGJmLTQwYTgtOGVmYy1iZWJmMDZmNzY0YWQSDHf0Pj+cISBarvZskBoMR86dqL2PE5wmBqVbIjBisDDsD9b+FzhvvDyUYgD8YOA3cZRpXTOqQO0C6mNLd9+259L/doamrpW5ar2yXykqFbw8T96eXGRnadi0H7Ll6+sJLG5H7BgE",
+            "title": "How Americans View AI and Its Impact on Human Abilities, Society | Pew Research Center",
+            "type": "web_search_result_location",
+            "url": "https://www.pewresearch.org/science/2025/09/17/how-americans-view-ai-and-its-impact-on-people-and-society/"
+          }
+        ],
+        "text": "[REDACTED_TEXT length=108]",
+        "type": "text",
+        "parsed_output": null
+      },
+      {
+        "citations": null,
+        "text": "[REDACTED_TEXT length=3]",
+        "type": "text",
+        "parsed_output": null
+      },
+      {
+        "citations": [
+          {
+            "cited_text": "[REDACTED_TEXT length=153]",
+            "encrypted_index": "EpQBCioIDBgCIiRkZTk5OTNhMy00ZGJmLTQwYTgtOGVmYy1iZWJmMDZmNzY0YWQSDMuSTBElOahZM3702hoMKKMkFPl2gbJ7vrgsIjD7JLnee5DY3nmCaaR2OAQnFhk00Y1jQXZdcen6tnljXYiCjA4/qDo9FeTpMymmGRMqGHk/pqAuJQwIzrF5s4C9Qyf+OotQ3sm8...[truncated]",
+            "title": "AI risks, opportunities, regulation: Views of US public and AI experts | Pew Research Center",
+            "type": "web_search_result_location",
+            "url": "https://www.pewresearch.org/internet/2025/04/03/views-of-risks-opportunities-and-regulation-of-ai/"
+          }
+        ],
+        "text": "[REDACTED_TEXT length=174]",
+        "type": "text",
+        "parsed_output": null
+      },
+      {
+        "citations": null,
+        "text": "[REDACTED_TEXT length=3]",
+        "type": "text",
+        "parsed_output": null
+      },
+      {
+        "citations": [
+          {
+            "cited_text": "[REDACTED_TEXT length=153]",
+            "encrypted_index": "Eo8BCioIDBgCIiRkZTk5OTNhMy00ZGJmLTQwYTgtOGVmYy1iZWJmMDZmNzY0YWQSDHamBgodpr18iI0gfBoM2IvGyuwZ8QdiOHpiIjAmBm+3jW8Q9PsFG4LMxcisS5d5jx0tEBnIN/Bm6dCSgxUQwxq+03YaSavHVkxwpMIqE41jxqNQAWvz9KuZxElN2lrRhUQYBA==",
+            "title": "The U.S. Public Wants Regulation (or Prohibition) of Expert\u2011Level and Superhuman AI - Future of Life Institute",
+            "type": "web_search_result_location",
+            "url": "https://futureoflife.org/recent-news/americans-want-regulation-or-prohibition-of-superhuman-ai/"
+          }
+        ],
+        "text": "[REDACTED_TEXT length=133]",
+        "type": "text",
+        "parsed_output": null
+      },
+      {
+        "citations": null,
+        "text": "[REDACTED_TEXT length=3]",
+        "type": "text",
+        "parsed_output": null
+      },
+      {
+        "citations": [
+          {
+            "cited_text": "[REDACTED_TEXT length=153]",
+            "encrypted_index": "EpABCioIDBgCIiRkZTk5OTNhMy00ZGJmLTQwYTgtOGVmYy1iZWJmMDZmNzY0YWQSDHaoU9OH37Sw1EKGNhoMClPgaRmIAzyN/sVYIjD1Ie/O/hFlKtvlw8Y/YV1yRMBSOD67XN8eYGor0k+TF6IFwBPHUDVYk/s/JkL6quwqFIowSEIJNK/dawSwImrR24SYp+pTGAQ=",
+            "title": "Sentience Institute | AI Policy Insights from the AIMS Survey",
+            "type": "web_search_result_location",
+            "url": "https://www.sentienceinstitute.org/blog/ai-policy-insights-from-the-aims-survey"
+          }
+        ],
+        "text": "[REDACTED_TEXT length=109]",
+        "type": "text",
+        "parsed_output": null
+      },
+      {
+        "citations": null,
+        "text": "[REDACTED_TEXT length=3]",
+        "type": "text",
+        "parsed_output": null
+      },
+      {
+        "citations": [
+          {
+            "cited_text": "[REDACTED_TEXT length=153]",
+            "encrypted_index": "Eo8BCioIDBgCIiRkZTk5OTNhMy00ZGJmLTQwYTgtOGVmYy1iZWJmMDZmNzY0YWQSDCB8DIYoEeojXcc0URoMHOCYFObXYN7JGTMWIjAVK/GurzqStliZC1K2c+GMXGgbwNu3NkNAEcwr68FY7W8tDv0j9OmOHE1j1z7CljQqE0+QRFKQAIwxz0f7mWAW8YDIAN4YBA==",
+            "title": "The U.S. Public Wants Regulation (or Prohibition) of Expert\u2011Level and Superhuman AI - Future of Life Institute",
+            "type": "web_search_result_location",
+            "url": "https://futureoflife.org/recent-news/americans-want-regulation-or-prohibition-of-superhuman-ai/"
+          }
+        ],
+        "text": "[REDACTED_TEXT length=106]",
+        "type": "text",
+        "parsed_output": null
+      },
+      {
+        "citations": null,
+        "text": "[REDACTED_TEXT length=3]",
+        "type": "text",
+        "parsed_output": null
+      },
+      {
+        "citations": [
+          {
+            "cited_text": "[REDACTED_TEXT length=147]",
+            "encrypted_index": "EpABCioIDBgCIiRkZTk5OTNhMy00ZGJmLTQwYTgtOGVmYy1iZWJmMDZmNzY0YWQSDDOQ9sLVQT3ymArG3hoMrvJBRjGdWDkdbFuLIjDpytILy+3egmUY3r/JgH2OMTYaygwhjRVS552yIiwNuToE03ibWImbwc2K+8OgMlYqFFh6qCP/bCU5UVn7zz5PInjGO49YGAQ=",
+            "title": "AI risks, opportunities, regulation: Views of US public and AI experts | Pew Research Center",
+            "type": "web_search_result_location",
+            "url": "https://www.pewresearch.org/internet/2025/04/03/views-of-risks-opportunities-and-regulation-of-ai/"
+          }
+        ],
+        "text": "[REDACTED_TEXT length=137]",
+        "type": "text",
+        "parsed_output": null
+      },
+      {
+        "citations": null,
+        "text": "[REDACTED_TEXT length=3]",
+        "type": "text",
+        "parsed_output": null
+      },
+      {
+        "citations": [
+          {
+            "cited_text": "[REDACTED_TEXT length=101]",
+            "encrypted_index": "EpABCioIDBgCIiRkZTk5OTNhMy00ZGJmLTQwYTgtOGVmYy1iZWJmMDZmNzY0YWQSDOH3AjSke5o5WCqnORoMhvqe93P8jVsZUMvJIjCzttdb/YOKpJGGs1KrdkMZaVMs97f464YWYaQIoKydiX7YzgfabzFjM+jrFx2PzfIqFPjj3DplXg/8bSTB2E4d5zsUdOA9GAQ=",
+            "title": "59 AI Job Statistics: Future of U.S. Jobs | National University",
+            "type": "web_search_result_location",
+            "url": "https://www.nu.edu/blog/ai-job-statistics/"
+          }
+        ],
+        "text": "[REDACTED_TEXT length=100]",
+        "type": "text",
+        "parsed_output": null
+      },
+      {
+        "citations": null,
+        "text": "[REDACTED_TEXT length=3]",
+        "type": "text",
+        "parsed_output": null
+      },
+      {
+        "citations": [
+          {
+            "cited_text": "[REDACTED_TEXT length=153]",
+            "encrypted_index": "EpQBCioIDBgCIiRkZTk5OTNhMy00ZGJmLTQwYTgtOGVmYy1iZWJmMDZmNzY0YWQSDJMj/2/1SGbnEgzDtxoMZWIvbFEJ7W6/+AKEIjCTMUj4x8kzIEka5secdc3LxreHJtFhnv2QsI6d1snciXG51zANgwbLs1G1VCSQaFcqGAWWLMbWJ/J/X3O95qpx18HeSAsQb7/g...[truncated]",
+            "title": "AI risks, opportunities, regulation: Views of US public and AI experts | Pew Research Center",
+            "type": "web_search_result_location",
+            "url": "https://www.pewresearch.org/internet/2025/04/03/views-of-risks-opportunities-and-regulation-of-ai/"
+          }
+        ],
+        "text": "[REDACTED_TEXT length=204]",
+        "type": "text",
+        "parsed_output": null
+      },
+      {
+        "citations": null,
+        "text": "[REDACTED_TEXT length=3]",
+        "type": "text",
+        "parsed_output": null
+      },
+      {
+        "citations": [
+          {
+            "cited_text": "[REDACTED_TEXT length=153]",
+            "encrypted_index": "EpABCioIDBgCIiRkZTk5OTNhMy00ZGJmLTQwYTgtOGVmYy1iZWJmMDZmNzY0YWQSDAndF9Umpc7vLwlK4RoMgkiBzjDcDKfJnFsQIjD9/a17kgnSNc+aTYocabxGx8rYg5PqrvhUbxn/97QCpvOqIiwh8E9116vNJaSHDM8qFGj9yhzEjAAz7rYlFrpITkSyjT1zGAQ=",
+            "title": "The U.S. Public Wants Regulation (or Prohibition) of Expert\u2011Level and Superhuman AI - Future of Life Institute",
+            "type": "web_search_result_location",
+            "url": "https://futureoflife.org/recent-news/americans-want-regulation-or-prohibition-of-superhuman-ai/"
+          }
+        ],
+        "text": "[REDACTED_TEXT length=152]",
+        "type": "text",
+        "parsed_output": null
+      },
+      {
+        "citations": null,
+        "text": "[REDACTED_TEXT length=3]",
+        "type": "text",
+        "parsed_output": null
+      },
+      {
+        "citations": [
+          {
+            "cited_text": "[REDACTED_TEXT length=115]",
+            "encrypted_index": "EpABCioIDBgCIiRkZTk5OTNhMy00ZGJmLTQwYTgtOGVmYy1iZWJmMDZmNzY0YWQSDB4em6GlmtYob503uxoMh5lEWp4TQXDwQ0dxIjAEXIZtq0sA/tJbYdSqrsqFBF7Hs7DHlL6GP7ZEsJME2Po1wsP4QHhPZOqVWhKhOqsqFCxl5OeDvejAAAC9eWZiLJGpNZiyGAQ=",
+            "title": "The Age of AI: July 2025 | Verasight",
+            "type": "web_search_result_location",
+            "url": "https://www.verasight.io/reports/ai-report-july25"
+          }
+        ],
+        "text": "[REDACTED_TEXT length=90]",
+        "type": "text",
+        "parsed_output": null
+      },
+      {
+        "id": "toolu_018JgAT3s9B1kTn8ARbMWkdx",
+        "input": {
+          "attributes": [
+            {
+              "name": "ai_familiarity",
+              "modifiers": [
+                {
+                  "when": "education_level == 'Graduate Degree'",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": {
+                    "None": 0.03,
+                    "Basic": 0.12,
+                    "Intermediate": 0.3,
+                    "Advanced": 0.35,
+                    "Expert": 0.2
+                  },
+                  "probability_override": null
+                },
+                {
+                  "when": "education_level == \"Bachelor's\"",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": {
+                    "None": 0.05,
+                    "Basic": 0.2,
+                    "Intermediate": 0.38,
+                    "Advanced": 0.28,
+                    "Expert": 0.09
+                  },
+                  "probability_override": null
+                },
+                {
+                  "when": "education_level == \"Associate's\"",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": {
+                    "None": 0.1,
+                    "Basic": 0.32,
+                    "Intermediate": 0.35,
+                    "Advanced": 0.17,
+                    "Expert": 0.06
+                  },
+                  "probability_override": null
+                },
+                {
+                  "when": "education_level == 'Some College'",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": {
+                    "None": 0.14,
+                    "Basic": 0.38,
+                    "Intermediate": 0.3,
+                    "Advanced": 0.13,
+                    "Expert": 0.05
+                  },
+                  "probability_override": null
+                },
+                {
+                  "when": "education_level == 'HS Diploma'",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": {
+                    "None": 0.25,
+                    "Basic": 0.42,
+                    "Intermediate": 0.22,
+                    "Advanced": 0.08,
+                    "Expert": 0.03
+                  },
+                  "probability_override": null
+                },
+                {
+                  "when": "education_level == 'Less than HS'",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": {
+                    "None": 0.42,
+                    "Basic": 0.38,
+                    "Intermediate": 0.13,
+                    "Advanced": 0.05,
+                    "Expert": 0.02
+                  },
+                  "probability_override": null
+                },
+                {
+                  "when": "occupation == 'Management/Professional'",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": {
+                    "None": 0.04,
+                    "Basic": 0.15,
+                    "Intermediate": 0.32,
+                    "Advanced": 0.33,
+                    "Expert": 0.16
+                  },
+                  "probability_override": null
+                },
+                {
+                  "when": "occupation == 'Service'",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": {
+                    "None": 0.28,
+                    "Basic": 0.38,
+                    "Intermediate": 0.22,
+                    "Advanced": 0.09,
+                    "Expert": 0.03
+                  },
+                  "probability_override": null
+                },
+                {
+                  "when": "occupation == 'Sales/Office'",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": {
+                    "None": 0.12,
+                    "Basic": 0.32,
+                    "Intermediate": 0.33,
+                    "Advanced": 0.17,
+                    "Expert": 0.06
+                  },
+                  "probability_override": null
+                },
+                {
+                  "when": "occupation == 'Construction/Extraction'",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": {
+                    "None": 0.35,
+                    "Basic": 0.38,
+                    "Intermediate": 0.18,
+                    "Advanced": 0.07,
+                    "Expert": 0.02
+                  },
+                  "probability_override": null
+                },
+                {
+                  "when": "occupation == 'Production/Transport'",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": {
+                    "None": 0.32,
+                    "Basic": 0.4,
+                    "Intermediate": 0.19,
+                    "Advanced": 0.07,
+                    "Expert": 0.02
+                  },
+                  "probability_override": null
+                }
+              ]
+            },
+            {
+              "name": "works_in_tech",
+              "modifiers": [
+                {
+                  "when": "occupation == 'Management/Professional' and education_level == 'Graduate Degree'",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": null,
+                  "probability_override": 0.28
+                },
+                {
+                  "when": "occupation == 'Management/Professional' and education_level == \"Bachelor's\"",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": null,
+                  "probability_override": 0.2
+                },
+                {
+                  "when": "occupation == 'Management/Professional' and (education_level == 'Some College' or education_level == \"Associate's\")",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": null,
+                  "probability_override": 0.1
+                },
+                {
+                  "when": "occupation == 'Service'",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": null,
+                  "probability_override": 0.03
+                },
+                {
+                  "when": "occupation == 'Sales/Office' and education_level in ['Graduate Degree', \"Bachelor's\"]",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": null,
+                  "probability_override": 0.12
+                },
+                {
+                  "when": "occupation == 'Construction/Extraction'",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": null,
+                  "probability_override": 0.02
+                },
+                {
+                  "when": "occupation == 'Production/Transport'",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": null,
+                  "probability_override": 0.02
+                }
+              ]
+            },
+            {
+              "name": "prior_asi_belief",
+              "modifiers": [
+                {
+                  "when": "ai_familiarity == 'Expert'",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": {
+                    "Imminent (within 10 years)": 0.42,
+                    "Decades away": 0.38,
+                    "Never": 0.06,
+                    "No opinion": 0.14
+                  },
+                  "probability_override": null
+                },
+                {
+                  "when": "ai_familiarity == 'Advanced'",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": {
+                    "Imminent (within 10 years)": 0.38,
+                    "Decades away": 0.35,
+                    "Never": 0.07,
+                    "No opinion": 0.2
+                  },
+                  "probability_override": null
+                },
+                {
+                  "when": "ai_familiarity == 'Intermediate'",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": {
+                    "Imminent (within 10 years)": 0.3,
+                    "Decades away": 0.28,
+                    "Never": 0.1,
+                    "No opinion": 0.32
+                  },
+                  "probability_override": null
+                },
+                {
+                  "when": "ai_familiarity == 'Basic'",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": {
+                    "Imminent (within 10 years)": 0.22,
+                    "Decades away": 0.18,
+                    "Never": 0.12,
+                    "No opinion": 0.48
+                  },
+                  "probability_override": null
+                },
+                {
+                  "when": "ai_familiarity == 'None'",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": {
+                    "Imminent (within 10 years)": 0.15,
+                    "Decades away": 0.08,
+                    "Never": 0.12,
+                    "No opinion": 0.65
+                  },
+                  "probability_override": null
+                },
+                {
+                  "when": "openness > 0.7 and ai_familiarity in ['Intermediate', 'Advanced', 'Expert']",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": {
+                    "Imminent (within 10 years)": 0.42,
+                    "Decades away": 0.32,
+                    "Never": 0.05,
+                    "No opinion": 0.21
+                  },
+                  "probability_override": null
+                },
+                {
+                  "when": "openness < 0.3 and ai_familiarity in ['None', 'Basic']",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": {
+                    "Imminent (within 10 years)": 0.1,
+                    "Decades away": 0.1,
+                    "Never": 0.18,
+                    "No opinion": 0.62
+                  },
+                  "probability_override": null
+                }
+              ]
+            },
+            {
+              "name": "ai_safety_concern_level",
+              "modifiers": [
+                {
+                  "when": "ai_familiarity == 'Expert'",
+                  "multiply": 1.05,
+                  "add": 0.08,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "ai_familiarity == 'Advanced'",
+                  "multiply": 1.04,
+                  "add": 0.06,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "ai_familiarity == 'None'",
+                  "multiply": 0.85,
+                  "add": -0.05,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "neuroticism > 0.7",
+                  "multiply": 1.1,
+                  "add": 0.08,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "neuroticism < 0.3",
+                  "multiply": 0.9,
+                  "add": -0.06,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "trust_in_institutions < 0.3",
+                  "multiply": 1.08,
+                  "add": 0.07,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "trust_in_institutions > 0.7",
+                  "multiply": 0.92,
+                  "add": -0.05,
+                  "weight_overrides": null,
+                  "probability_override": null
+                }
+              ]
+            },
+            {
+              "name": "openai_trust",
+              "modifiers": [
+                {
+                  "when": "trust_in_institutions > 0.7 and ai_familiarity in ['None', 'Basic']",
+                  "multiply": 1.1,
+                  "add": 0.08,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "trust_in_institutions < 0.3",
+                  "multiply": 0.8,
+                  "add": -0.12,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "ai_familiarity in ['Advanced', 'Expert']",
+                  "multiply": 0.9,
+                  "add": -0.07,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "political_ideology == 'Very Conservative'",
+                  "multiply": 0.85,
+                  "add": -0.08,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "political_ideology == 'Very Liberal'",
+                  "multiply": 0.88,
+                  "add": -0.06,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "political_ideology == 'Moderate' and trust_in_institutions > 0.5",
+                  "multiply": 1.05,
+                  "add": 0.04,
+                  "weight_overrides": null,
+                  "probability_override": null
+                }
+              ]
+            },
+            {
+              "name": "tech_optimism",
+              "modifiers": [
+                {
+                  "when": "openness > 0.7 and political_ideology in ['Very Liberal', 'Liberal']",
+                  "multiply": 1.1,
+                  "add": 0.06,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "openness > 0.7 and political_ideology in ['Conservative', 'Very Conservative']",
+                  "multiply": 1.08,
+                  "add": 0.05,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "openness < 0.3",
+                  "multiply": 0.88,
+                  "add": -0.07,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "education_level == 'Graduate Degree'",
+                  "multiply": 1.05,
+                  "add": 0.04,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "education_level == 'Less than HS'",
+                  "multiply": 0.9,
+                  "add": -0.06,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "political_ideology == 'Very Conservative'",
+                  "multiply": 0.92,
+                  "add": -0.04,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "political_ideology == 'Very Liberal'",
+                  "multiply": 0.95,
+                  "add": -0.03,
+                  "weight_overrides": null,
+                  "probability_override": null
+                }
+              ]
+            },
+            {
+              "name": "job_displacement_concern",
+              "modifiers": [
+                {
+                  "when": "occupation == 'Sales/Office' and works_in_tech == False",
+                  "multiply": 1.12,
+                  "add": 0.09,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "occupation == 'Management/Professional' and works_in_tech == False",
+                  "multiply": 1.08,
+                  "add": 0.07,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "works_in_tech == True and ai_familiarity in ['Advanced', 'Expert']",
+                  "multiply": 0.88,
+                  "add": -0.06,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "works_in_tech == True and ai_familiarity in ['None', 'Basic', 'Intermediate']",
+                  "multiply": 1.1,
+                  "add": 0.08,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "occupation == 'Construction/Extraction'",
+                  "multiply": 0.82,
+                  "add": -0.08,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "occupation == 'Service'",
+                  "multiply": 0.9,
+                  "add": -0.04,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "ai_familiarity == 'None'",
+                  "multiply": 0.85,
+                  "add": -0.07,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "ai_familiarity in ['Advanced', 'Expert'] and works_in_tech == False",
+                  "multiply": 1.12,
+                  "add": 0.08,
+                  "weight_overrides": null,
+                  "probability_override": null
+                }
+              ]
+            },
+            {
+              "name": "initial_asi_reaction",
+              "modifiers": [
+                {
+                  "when": "tech_optimism > 0.7 and ai_safety_concern_level < 0.4 and openai_trust > 0.6",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": {
+                    "Excited": 0.45,
+                    "Fearful": 0.08,
+                    "Skeptical": 0.18,
+                    "Indifferent": 0.1,
+                    "Mixed": 0.19
+                  },
+                  "probability_override": null
+                },
+                {
+                  "when": "tech_optimism < 0.4 and ai_safety_concern_level > 0.6 and openai_trust < 0.4",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": {
+                    "Excited": 0.04,
+                    "Fearful": 0.45,
+                    "Skeptical": 0.28,
+                    "Indifferent": 0.07,
+                    "Mixed": 0.16
+                  },
+                  "probability_override": null
+                },
+                {
+                  "when": "tech_optimism > 0.6 and ai_safety_concern_level > 0.6",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": {
+                    "Excited": 0.15,
+                    "Fearful": 0.2,
+                    "Skeptical": 0.18,
+                    "Indifferent": 0.07,
+                    "Mixed": 0.4
+                  },
+                  "probability_override": null
+                },
+                {
+                  "when": "ai_safety_concern_level > 0.7 and openai_trust < 0.35",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": {
+                    "Excited": 0.04,
+                    "Fearful": 0.48,
+                    "Skeptical": 0.3,
+                    "Indifferent": 0.05,
+                    "Mixed": 0.13
+                  },
+                  "probability_override": null
+                },
+                {
+                  "when": "openai_trust > 0.65 and ai_safety_concern_level < 0.5 and tech_optimism > 0.55",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": {
+                    "Excited": 0.32,
+                    "Fearful": 0.1,
+                    "Skeptical": 0.22,
+                    "Indifferent": 0.12,
+                    "Mixed": 0.24
+                  },
+                  "probability_override": null
+                },
+                {
+                  "when": "tech_optimism < 0.35 and ai_safety_concern_level < 0.35",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": {
+                    "Excited": 0.05,
+                    "Fearful": 0.12,
+                    "Skeptical": 0.25,
+                    "Indifferent": 0.45,
+                    "Mixed": 0.13
+                  },
+                  "probability_override": null
+                }
+              ]
+            },
+            {
+              "name": "sci_fi_consumption",
+              "modifiers": [
+                {
+                  "when": "openness > 0.7 and age < 35",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": {
+                    "Never": 0.06,
+                    "Rarely": 0.12,
+                    "Sometimes": 0.28,
+                    "Often": 0.32,
+                    "Very Often": 0.22
+                  },
+                  "probability_override": null
+                },
+                {
+                  "when": "openness > 0.7 and age >= 35 and age < 55",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": {
+                    "Never": 0.08,
+                    "Rarely": 0.15,
+                    "Sometimes": 0.3,
+                    "Often": 0.3,
+                    "Very Often": 0.17
+                  },
+                  "probability_override": null
+                },
+                {
+                  "when": "openness > 0.7 and age >= 55",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": {
+                    "Never": 0.12,
+                    "Rarely": 0.2,
+                    "Sometimes": 0.32,
+                    "Often": 0.25,
+                    "Very Often": 0.11
+                  },
+                  "probability_override": null
+                },
+                {
+                  "when": "openness < 0.3 and age >= 55",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": {
+                    "Never": 0.45,
+                    "Rarely": 0.28,
+                    "Sometimes": 0.17,
+                    "Often": 0.07,
+                    "Very Often": 0.03
+                  },
+                  "probability_override": null
+                },
+                {
+                  "when": "openness < 0.3 and age < 35",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": {
+                    "Never": 0.28,
+                    "Rarely": 0.32,
+                    "Sometimes": 0.25,
+                    "Often": 0.1,
+                    "Very Often": 0.05
+                  },
+                  "probability_override": null
+                },
+                {
+                  "when": "openness >= 0.3 and openness <= 0.7 and age < 35",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": {
+                    "Never": 0.14,
+                    "Rarely": 0.22,
+                    "Sometimes": 0.32,
+                    "Often": 0.22,
+                    "Very Often": 0.1
+                  },
+                  "probability_override": null
+                },
+                {
+                  "when": "openness >= 0.3 and openness <= 0.7 and age >= 55",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": {
+                    "Never": 0.28,
+                    "Rarely": 0.28,
+                    "Sometimes": 0.26,
+                    "Often": 0.13,
+                    "Very Often": 0.05
+                  },
+                  "probability_override": null
+                }
+              ]
+            },
+            {
+              "name": "social_network_tech_density",
+              "modifiers": [
+                {
+                  "when": "works_in_tech == True and urban_rural == 'Urban'",
+                  "multiply": 1.25,
+                  "add": 0.18,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "works_in_tech == True and urban_rural == 'Suburban'",
+                  "multiply": 1.15,
+                  "add": 0.12,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "works_in_tech == True and urban_rural == 'Rural'",
+                  "multiply": 1.05,
+                  "add": 0.06,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "works_in_tech == False and urban_rural == 'Rural'",
+                  "multiply": 0.7,
+                  "add": -0.1,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "works_in_tech == False and urban_rural == 'Urban' and education_level in ['Graduate Degree', \"Bachelor's\"]",
+                  "multiply": 1.05,
+                  "add": 0.05,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "works_in_tech == False and urban_rural == 'Suburban' and education_level in ['Less than HS', 'HS Diploma']",
+                  "multiply": 0.78,
+                  "add": -0.08,
+                  "weight_overrides": null,
+                  "probability_override": null
+                }
+              ]
+            },
+            {
+              "name": "opinion_volatility",
+              "modifiers": [
+                {
+                  "when": "need_for_cognition > 0.7 and agreeableness < 0.4 and susceptibility_to_misinformation < 0.3",
+                  "multiply": 0.78,
+                  "add": -0.1,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "need_for_cognition < 0.3 and agreeableness > 0.7 and susceptibility_to_misinformation > 0.6",
+                  "multiply": 1.22,
+                  "add": 0.12,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "susceptibility_to_misinformation > 0.7",
+                  "multiply": 1.18,
+                  "add": 0.1,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "need_for_cognition > 0.7",
+                  "multiply": 0.85,
+                  "add": -0.08,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "agreeableness > 0.7 and need_for_cognition < 0.5",
+                  "multiply": 1.1,
+                  "add": 0.06,
+                  "weight_overrides": null,
+                  "probability_override": null
+                }
+              ]
+            },
+            {
+              "name": "doomism_tendency",
+              "modifiers": [
+                {
+                  "when": "neuroticism > 0.7 and ai_safety_concern_level > 0.7",
+                  "multiply": 1.2,
+                  "add": 0.12,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "neuroticism > 0.7 and ai_safety_concern_level > 0.7 and sci_fi_consumption in ['Often', 'Very Often']",
+                  "multiply": 1.3,
+                  "add": 0.15,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "neuroticism < 0.3 and ai_safety_concern_level < 0.3",
+                  "multiply": 0.7,
+                  "add": -0.12,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "sci_fi_consumption == 'Very Often' and ai_safety_concern_level > 0.5",
+                  "multiply": 1.15,
+                  "add": 0.08,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "sci_fi_consumption == 'Never' and neuroticism < 0.4",
+                  "multiply": 0.8,
+                  "add": -0.08,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "ai_safety_concern_level > 0.8 and neuroticism > 0.5",
+                  "multiply": 1.18,
+                  "add": 0.1,
+                  "weight_overrides": null,
+                  "probability_override": null
+                }
+              ]
+            }
+          ]
+        },
+        "name": "conditional_modifiers_hydration",
+        "type": "tool_use",
+        "caller": {
+          "type": "direct"
+        }
+      }
+    ],
+    "model": "claude-sonnet-4-6",
+    "role": "assistant",
+    "stop_reason": "tool_use",
+    "stop_sequence": null,
+    "type": "message",
+    "usage": {
+      "cache_creation": {
+        "ephemeral_1h_input_tokens": "[REDACTED_SECRET]",
+        "ephemeral_5m_input_tokens": "[REDACTED_SECRET]"
+      },
+      "cache_creation_input_tokens": "[REDACTED_SECRET]",
+      "cache_read_input_tokens": "[REDACTED_SECRET]",
+      "input_tokens": 90368,
+      "output_tokens": 8021,
+      "server_tool_use": {
+        "web_search_requests": 4,
+        "web_fetch_requests": 0
+      },
+      "service_tier": "standard",
+      "inference_geo": "global"
+    }
+  },
+  "sources_extracted": [
+    "https://www.pewresearch.org/short-reads/2023/11/21/what-the-data-says-about-americans-views-of-artificial-intelligence/",
+    "https://docs.superintelligence.io/artificial-superintelligence-alliance/asi-roadmap-2025",
+    "https://www.aiprm.com/ai-statistics/",
+    "https://futureoflife.org/wp-content/uploads/2025/07/FLI-AI-Safety-Index-Report-Summer-2025.pdf",
+    "https://www.rand.org/pubs/research_reports/RRA4363-1.html",
+    "https://hai.stanford.edu/ai-index/2025-ai-index-report/public-opinion",
+    "https://research.aimultiple.com/ai-job-loss/",
+    "https://futureoflife.org/recent-news/americans-want-regulation-or-prohibition-of-superhuman-ai/",
+    "https://www.sentienceinstitute.org/blog/ai-policy-insights-from-the-aims-survey",
+    "https://publicpolicy.cornell.edu/masters-blog/what-americans-really-think-about-ai-algorithms-public-confidence-and-transparency-in-government/",
+    "https://www.emergentmind.com/topics/artificial-super-intelligence-asi",
+    "https://www.techrxiv.org/users/985276/articles/1365906/master/file/data/AI_Superintelligence_Study/AI_Superintelligence_Study.pdf",
+    "https://botinfo.ai/articles/artificial-super-intelligence",
+    "https://www.pewresearch.org/internet/2025/04/03/views-of-risks-opportunities-and-regulation-of-ai/",
+    "https://www.pewresearch.org/science/2025/09/17/how-americans-view-ai-and-its-impact-on-people-and-society/",
+    "https://www.pewresearch.org/global/2025/10/15/how-people-around-the-world-view-ai/",
+    "https://www.verasight.io/reports/ai-report-july25",
+    "https://ctomagazine.com/preparing-for-artificial-super-intelligence-beyond-ai/",
+    "https://news.ucmerced.edu/news/2025/people-don%E2%80%99t-worry-about-losing-jobs-ai-even-when-told-it-could-happen-soon",
+    "https://www.goldmansachs.com/insights/articles/how-will-ai-affect-the-global-workforce",
+    "https://aragonresearch.com/public-opinion-on-ai-in-2025/",
+    "https://www.statista.com/statistics/1466984/ai-awareness-us-by-age/",
+    "https://www.nu.edu/blog/ai-job-statistics/",
+    "https://link.springer.com/article/10.1007/s11528-025-01109-6",
+    "https://www.weforum.org/stories/2025/08/the-overlooked-global-risk-of-the-ai-precariat/",
+    "https://jacobin.com/2025/07/artificial-intelligence-worker-displacement-jobs",
+    "https://programs.com/resources/ai-education-statistics/",
+    "https://www.economicsobservatory.com/who-trusts-ai",
+    "https://www.chicagobooth.edu/review/ai-is-going-disrupt-labor-market-it-doesnt-have-destroy-it",
+    "https://eig.org/ai-and-jobs-the-final-word/",
+    "https://www.norc.org/research/library/like-parent-like-teen-ai-usage-patterns-reveal-striking-parallels-across-generations.html",
+    "https://www.pewresearch.org/science/2025/09/17/ai-in-americans-lives-awareness-experiences-and-attitudes/",
+    "https://www.brookings.edu/articles/how-are-americans-using-ai-evidence-from-a-nationwide-survey/",
+    "https://www.pewresearch.org/2025/10/15/concern-and-excitement-about-ai/",
+    "https://www.pewresearch.org/internet/2025/04/03/how-the-us-public-and-ai-experts-view-artificial-intelligence/",
+    "https://www.brookings.edu/articles/measuring-us-workers-capacity-to-adapt-to-ai-driven-job-displacement/",
+    "https://www.pewresearch.org/wp-content/uploads/sites/20/2025/04/pi_2025.04.03_us-public-and-ai-experts_report.pdf"
+  ]
+}

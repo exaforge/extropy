@@ -1,0 +1,1513 @@
+{
+  "timestamp": "2026-02-17T22:12:08.685079",
+  "function": "agentic_research",
+  "provider": "claude",
+  "request": {
+    "model": "claude-sonnet-4-6",
+    "prompt_length": 19965
+  },
+  "response": {
+    "id": "msg_01BtpuDQs82ZUDqkHa2TaWii",
+    "content": [
+      {
+        "id": "srvtoolu_014xYQaG4WNkVARoyPy6c2jt",
+        "input": {
+          "query": "public opinion polls AI superintelligence existential risk 2024 2025"
+        },
+        "name": "web_search",
+        "type": "server_tool_use",
+        "caller": {
+          "type": "direct"
+        }
+      },
+      {
+        "id": "srvtoolu_01H2fEmww3bM3KyAjazM6oyu",
+        "input": {
+          "query": "AI literacy demographics age education occupation survey 2024"
+        },
+        "name": "web_search",
+        "type": "server_tool_use",
+        "caller": {
+          "type": "direct"
+        }
+      },
+      {
+        "content": [
+          {
+            "encrypted_content": "[REDACTED_TEXT length=1800]",
+            "page_age": null,
+            "title": "Public Opinion | The 2025 AI Index Report - Stanford HAI",
+            "type": "web_search_result",
+            "url": "https://hai.stanford.edu/ai-index/2025-ai-index-report/public-opinion"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=6816]",
+            "page_age": "1 week ago",
+            "title": "Existential risk from artificial intelligence - Wikipedia",
+            "type": "web_search_result",
+            "url": "https://en.wikipedia.org/wiki/Existential_risk_from_artificial_intelligence"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=5536]",
+            "page_age": "October 19, 2025",
+            "title": "The U.S. Public Wants Regulation (or Prohibition) of Expert\u2011Level and Superhuman AI - Future of Life Institute",
+            "type": "web_search_result",
+            "url": "https://futureoflife.org/recent-news/americans-want-regulation-or-prohibition-of-superhuman-ai/"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=5620]",
+            "page_age": "January 5, 2026",
+            "title": "Stopping the Clock on catastrophic AI risk - Bulletin of the Atomic Scientists",
+            "type": "web_search_result",
+            "url": "https://thebulletin.org/premium/2025-12/stopping-the-clock-on-catastrophic-ai-risk/"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=1824]",
+            "page_age": "November 18, 2025",
+            "title": "AI can impersonate humans in public opinion polls, study finds",
+            "type": "web_search_result",
+            "url": "https://www.euronews.com/next/2025/11/18/ai-poses-existential-threat-to-polling-mimicking-human-responses-almost-perfectly-study-fi"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=5552]",
+            "page_age": "November 19, 2025",
+            "title": "AI Bots 'Indistinguishable From Real People' Can Now Easily Manipulate Public Opinion Polls",
+            "type": "web_search_result",
+            "url": "https://studyfinds.org/the-ai-scam-that-could-threaten-public-opinion-research/"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=6236]",
+            "page_age": "July 17, 2025",
+            "title": "2025 AI Safety Index - Future of Life Institute",
+            "type": "web_search_result",
+            "url": "https://futureoflife.org/ai-safety-index-summer-2025/"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=468]",
+            "page_age": "3 days ago",
+            "title": "Does AI pose an existential risk? We asked 5 experts",
+            "type": "web_search_result",
+            "url": "https://theconversation.com/does-ai-pose-an-existential-risk-we-asked-5-experts-266345"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=5248]",
+            "page_age": "November 11, 2025",
+            "title": "How the US Public and AI Experts View Artificial Intelligence | Pew Research Center",
+            "type": "web_search_result",
+            "url": "https://www.pewresearch.org/internet/2025/04/03/how-the-us-public-and-ai-experts-view-artificial-intelligence/"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=4188]",
+            "page_age": "May 9, 2025",
+            "title": "Could AI Really Kill Off Humans? | RAND",
+            "type": "web_search_result",
+            "url": "https://www.rand.org/pubs/commentary/2025/05/could-ai-really-kill-off-humans.html"
+          }
+        ],
+        "tool_use_id": "srvtoolu_014xYQaG4WNkVARoyPy6c2jt",
+        "type": "web_search_tool_result"
+      },
+      {
+        "content": [
+          {
+            "encrypted_content": "[REDACTED_TEXT length=5580]",
+            "page_age": "March 30, 2025",
+            "title": "Gender and Age Gaps in Generative AI - AI Literacy Institute",
+            "type": "web_search_result",
+            "url": "https://ailiteracy.institute/gender-and-age-gaps-in-generative-ai/"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=4560]",
+            "page_age": "March 16, 2025",
+            "title": "Navigating the landscape of AI literacy education: insights from a decade of research (2014\u20132024) | Humanities and Social Sciences Communications",
+            "type": "web_search_result",
+            "url": "https://www.nature.com/articles/s41599-025-04583-8"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=5504]",
+            "page_age": "March 31, 2025",
+            "title": "AI Literacy Review \u2013 March 11, 2025 - AI Literacy Institute",
+            "type": "web_search_result",
+            "url": "https://ailiteracy.institute/ai-literacy-review-march-11-2025/"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=6560]",
+            "page_age": "September 27, 2024",
+            "title": "Frontiers | Artificial intelligence literacy among university students\u2014a comparative transnational survey",
+            "type": "web_search_result",
+            "url": "https://www.frontiersin.org/journals/communication/articles/10.3389/fcomm.2024.1478476/full"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=1396]",
+            "page_age": null,
+            "title": "Digital Education Council Global AI Student Survey 2024",
+            "type": "web_search_result",
+            "url": "https://www.digitaleducationcouncil.com/post/digital-education-council-global-ai-student-survey-2024"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=4860]",
+            "page_age": "November 11, 2025",
+            "title": "20 Statistics on AI in Education to Guide Your Learning Strategy in 2025",
+            "type": "web_search_result",
+            "url": "https://www.engageli.com/blog/ai-in-education-statistics"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=5660]",
+            "page_age": "December 11, 2024",
+            "title": "New EY survey reveals crucial AI literacy training needs among Gen Z workforce | EY - Global",
+            "type": "web_search_result",
+            "url": "https://www.ey.com/en_gl/newsroom/2024/12/new-ey-survey-reveals-crucial-ai-literacy-training-needs-among-gen-z-workforce"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=4648]",
+            "page_age": "February 26, 2025",
+            "title": "Children, young people and teachers\u2019 use of generative AI to support literacy in 2024 | National Literacy Trust",
+            "type": "web_search_result",
+            "url": "https://literacytrust.org.uk/research-services/research-reports/children-young-people-and-teachers-use-of-generative-ai-to-support-literacy-in-2024/"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=4152]",
+            "page_age": "January 9, 2026",
+            "title": "The Latest AI in Education Statistics (2026) - Programs.com",
+            "type": "web_search_result",
+            "url": "https://programs.com/resources/ai-education-statistics/"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=5600]",
+            "page_age": "June 10, 2025",
+            "title": "Generative AI in Higher Education: Demographic Differences in Student Perceived Readiness, Benefits, and Challenges | TechTrends | Springer Nature Link",
+            "type": "web_search_result",
+            "url": "https://link.springer.com/article/10.1007/s11528-025-01109-6"
+          }
+        ],
+        "tool_use_id": "srvtoolu_01H2fEmww3bM3KyAjazM6oyu",
+        "type": "web_search_tool_result"
+      },
+      {
+        "id": "srvtoolu_01SoshpLbd5RGJ4CYmZuNcio",
+        "input": {
+          "query": "AI job automation fear demographics political ideology survey 2024 2025"
+        },
+        "name": "web_search",
+        "type": "server_tool_use",
+        "caller": {
+          "type": "direct"
+        }
+      },
+      {
+        "id": "srvtoolu_01JiS1kNsNpDBgch1wAfPW5o",
+        "input": {
+          "query": "tech sector employment percentage US workforce 2024 knowledge workers share"
+        },
+        "name": "web_search",
+        "type": "server_tool_use",
+        "caller": {
+          "type": "direct"
+        }
+      },
+      {
+        "content": [
+          {
+            "encrypted_content": "[REDACTED_TEXT length=4364]",
+            "page_age": "April 17, 2025",
+            "title": "What the public thinks about AI and the implications for governance | Brookings",
+            "type": "web_search_result",
+            "url": "https://www.brookings.edu/articles/what-the-public-thinks-about-ai-and-the-implications-for-governance/"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=1800]",
+            "page_age": null,
+            "title": "Public Opinion | The 2025 AI Index Report - Stanford HAI",
+            "type": "web_search_result",
+            "url": "https://hai.stanford.edu/ai-index/2025-ai-index-report/public-opinion"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=6164]",
+            "page_age": "November 11, 2025",
+            "title": "How the US Public and AI Experts View Artificial Intelligence | Pew Research Center",
+            "type": "web_search_result",
+            "url": "https://www.pewresearch.org/internet/2025/04/03/how-the-us-public-and-ai-experts-view-artificial-intelligence/"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=3480]",
+            "page_age": "November 11, 2025",
+            "title": "AI risks, opportunities, regulation: Views of US public and AI experts | Pew Research Center",
+            "type": "web_search_result",
+            "url": "https://www.pewresearch.org/internet/2025/04/03/views-of-risks-opportunities-and-regulation-of-ai/"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=2840]",
+            "page_age": "July 18, 2025",
+            "title": "Americans are increasingly likely to say AI will negatively affect society | YouGov",
+            "type": "web_search_result",
+            "url": "https://today.yougov.com/politics/articles/52615-americans-increasingly-likely-say-ai-artificial-intelligence-negatively-affect-society-poll"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=540]",
+            "page_age": null,
+            "title": "4/16/25 - The Age Of Artificial Intelligence: Americans Wary Of Impact On Daily Life, See Harm To Education, Benefits To Medical Advances, Quinnipiac University National Poll Finds; Americans Expect A...[truncated]",
+            "type": "web_search_result",
+            "url": "https://poll.qu.edu/poll-release?releaseid=3923"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=4112]",
+            "page_age": null,
+            "title": "pi_2025.04.03_us-public-and-ai-experts_report.pdf",
+            "type": "web_search_result",
+            "url": "https://www.pewresearch.org/wp-content/uploads/sites/20/2025/04/pi_2025.04.03_us-public-and-ai-experts_report.pdf"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=4132]",
+            "page_age": "July 29, 2025",
+            "title": "Will AI Take My Job? Evolving Perceptions of Automation and Labor Risk in Latin America",
+            "type": "web_search_result",
+            "url": "https://arxiv.org/html/2505.08841"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=2796]",
+            "page_age": "December 4, 2025",
+            "title": "American Views on AI, National Security in 5 Charts",
+            "type": "web_search_result",
+            "url": "https://news.gallup.com/poll/695297/american-views-national-security-charts.aspx"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=4544]",
+            "page_age": "December 17, 2024",
+            "title": "Americans Divided on Whether AI Will Make Things Better or Worse, New Survey Finds \u2013 Center for Data Innovation",
+            "type": "web_search_result",
+            "url": "https://datainnovation.org/2024/05/americans-divided-on-whether-ai-will-make-things-better-or-worse-new-survey-finds/"
+          }
+        ],
+        "tool_use_id": "srvtoolu_01SoshpLbd5RGJ4CYmZuNcio",
+        "type": "web_search_tool_result"
+      },
+      {
+        "content": [
+          {
+            "encrypted_content": "[REDACTED_TEXT length=704]",
+            "page_age": null,
+            "title": "State of the Tech Workforce 2024 | CompTIA Report",
+            "type": "web_search_result",
+            "url": "https://www.comptia.org/en-us/resources/research/state-of-the-tech-workforce-2024/"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=1660]",
+            "page_age": null,
+            "title": "CompTIA State of the Tech Workforce 2025 | CompTIA News",
+            "type": "web_search_result",
+            "url": "https://www.comptia.org/en-us/about-us/news/press-releases/comptia-state-of-the-tech-workforce-2025-provides-comprehensive-review-of-key-metrics-for-nation-states-and-metropolitan-markets/"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=1836]",
+            "page_age": null,
+            "title": "State of the Tech Workforce 2025 | CompTIA Report",
+            "type": "web_search_result",
+            "url": "https://www.comptia.org/en-us/resources/research/state-of-the-tech-workforce-2025/"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=5320]",
+            "page_age": "June 11, 2025",
+            "title": "The tech workforce is expanding\u2014and changing\u2014as different sectors battle for talent",
+            "type": "web_search_result",
+            "url": "https://www.deloitte.com/us/en/insights/topics/economy/spotlight/tech-workforce-expanding.html"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=3392]",
+            "page_age": null,
+            "title": "Tech sector employment U.S. 2017-2024 | Statista",
+            "type": "web_search_result",
+            "url": "https://www.statista.com/statistics/1403635/united-states-net-sector-employment/"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=6172]",
+            "page_age": null,
+            "title": "Employment in the IT industry - Statistics & Facts | Statista",
+            "type": "web_search_result",
+            "url": "https://www.statista.com/topics/5275/employment-in-the-it-industry/"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=3984]",
+            "page_age": null,
+            "title": "2026 tech job market statistics and outlook",
+            "type": "web_search_result",
+            "url": "https://www.techtarget.com/whatis/feature/Tech-job-market-statistics-and-outlook"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=4856]",
+            "page_age": "April 3, 2024",
+            "title": "CompTIA releases State of the Tech Workforce 2024, detailing growth projections across the nation, states and metro areas",
+            "type": "web_search_result",
+            "url": "https://www.prnewswire.com/news-releases/comptia-releases-state-of-the-tech-workforce-2024-detailing-growth-projections-across-the-nation-states-and-metro-areas-302106642.html"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=3744]",
+            "page_age": null,
+            "title": "Tech Hiring Activity Outpaces Expectations | CompTIA News",
+            "type": "web_search_result",
+            "url": "https://www.comptia.org/en-us/about-us/news/press-releases/tech-hiring-activity-outpaces-expectations-comptia-tech-jobs-report-finds/"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=4396]",
+            "page_age": "July 1, 2025",
+            "title": "CompTIA State of the Tech Workforce 2025 provides comprehensive review of key metrics for nation, states and metropolitan markets",
+            "type": "web_search_result",
+            "url": "https://www.prnewswire.com/news-releases/comptia-state-of-the-tech-workforce-2025-provides-comprehensive-review-of-key-metrics-for-nation-states-and-metropolitan-markets-302495144.html"
+          }
+        ],
+        "tool_use_id": "srvtoolu_01JiS1kNsNpDBgch1wAfPW5o",
+        "type": "web_search_tool_result"
+      },
+      {
+        "citations": null,
+        "text": "[REDACTED_TEXT length=320]",
+        "type": "text",
+        "parsed_output": null
+      },
+      {
+        "citations": [
+          {
+            "cited_text": "[REDACTED_TEXT length=153]",
+            "encrypted_index": "EpABCioIDBgCIiRkZTk5OTNhMy00ZGJmLTQwYTgtOGVmYy1iZWJmMDZmNzY0YWQSDDZ+DrYLTT6ltQPl3BoM1BHpsK0Vrq07wa0DIjD7WeAzDqzHTIf+RKSIRtcQsF1W9+CWKZCe4Bi4oLt/N2B3to3ajQ3Ivv3QpuIrcz4qFITi2bwJG9xsShzSutjkYrplLEtEGAQ=",
+            "title": "The tech workforce is expanding\u2014and changing\u2014as different sectors battle for talent",
+            "type": "web_search_result_location",
+            "url": "https://www.deloitte.com/us/en/insights/topics/economy/spotlight/tech-workforce-expanding.html"
+          }
+        ],
+        "text": "[REDACTED_TEXT length=41]",
+        "type": "text",
+        "parsed_output": null
+      },
+      {
+        "citations": null,
+        "text": "[REDACTED_TEXT length=3]",
+        "type": "text",
+        "parsed_output": null
+      },
+      {
+        "citations": [
+          {
+            "cited_text": "[REDACTED_TEXT length=153]",
+            "encrypted_index": "EpMBCioIDBgCIiRkZTk5OTNhMy00ZGJmLTQwYTgtOGVmYy1iZWJmMDZmNzY0YWQSDOMFty8kUtPChGPe4BoM4T1C6GreQL9dYOJTIjDrY6s3KJBrM3IrrrV7+vrLOthz656DT62P6WtJQ3rUEpD0p5bygbZ/hV5EsVT25ocqF4CmiD0TiY+X7+ZqgxbSsvfKwbWfkM3K...[truncated]",
+            "title": "How the US Public and AI Experts View Artificial Intelligence | Pew Research Center",
+            "type": "web_search_result_location",
+            "url": "https://www.pewresearch.org/internet/2025/04/03/how-the-us-public-and-ai-experts-view-artificial-intelligence/"
+          }
+        ],
+        "text": "[REDACTED_TEXT length=76]",
+        "type": "text",
+        "parsed_output": null
+      },
+      {
+        "citations": null,
+        "text": "[REDACTED_TEXT length=3]",
+        "type": "text",
+        "parsed_output": null
+      },
+      {
+        "citations": [
+          {
+            "cited_text": "[REDACTED_TEXT length=153]",
+            "encrypted_index": "Eo8BCioIDBgCIiRkZTk5OTNhMy00ZGJmLTQwYTgtOGVmYy1iZWJmMDZmNzY0YWQSDEyGrfzq3QwFKZ+GjhoM7HEBlIfjkuvN5238IjA+ydGFcYjgtsdO4voxjA9Jcj/CmhjcWmAqx+TBCIP9iH1U4moOZ/0foGdXRQtQykkqE7w3FoqmitAJGV6uZPUIjb9YbVAYBA==",
+            "title": "The U.S. Public Wants Regulation (or Prohibition) of Expert\u2011Level and Superhuman AI - Future of Life Institute",
+            "type": "web_search_result_location",
+            "url": "https://futureoflife.org/recent-news/americans-want-regulation-or-prohibition-of-superhuman-ai/"
+          }
+        ],
+        "text": "[REDACTED_TEXT length=120]",
+        "type": "text",
+        "parsed_output": null
+      },
+      {
+        "citations": null,
+        "text": "[REDACTED_TEXT length=3]",
+        "type": "text",
+        "parsed_output": null
+      },
+      {
+        "citations": [
+          {
+            "cited_text": "[REDACTED_TEXT length=153]",
+            "encrypted_index": "EpABCioIDBgCIiRkZTk5OTNhMy00ZGJmLTQwYTgtOGVmYy1iZWJmMDZmNzY0YWQSDLHR3sdTATZIRYswFhoMZOKVKELimQgH+k79IjBS+NLoCYR2MelyEci/6M33oFkysUOOMN9dWTNunTk0UkMEtinooUV/79qfKASXzWAqFGxg++WEYCjG8Ebnq1CrzP5BFqcVGAQ=",
+            "title": "The U.S. Public Wants Regulation (or Prohibition) of Expert\u2011Level and Superhuman AI - Future of Life Institute",
+            "type": "web_search_result_location",
+            "url": "https://futureoflife.org/recent-news/americans-want-regulation-or-prohibition-of-superhuman-ai/"
+          }
+        ],
+        "text": "[REDACTED_TEXT length=79]",
+        "type": "text",
+        "parsed_output": null
+      },
+      {
+        "citations": null,
+        "text": "[REDACTED_TEXT length=3]",
+        "type": "text",
+        "parsed_output": null
+      },
+      {
+        "citations": [
+          {
+            "cited_text": "[REDACTED_TEXT length=75]",
+            "encrypted_index": "EpABCioIDBgCIiRkZTk5OTNhMy00ZGJmLTQwYTgtOGVmYy1iZWJmMDZmNzY0YWQSDAvY0A7o/GHKKeU3ohoM3llBc85HzfnS4lq9IjD40mSed/4pQIO3u0EK7swawXz5s3dwBGriEINoJ59P2R+NjRXZtY1L6V0HLtgRytwqFFMOwVN5TZyxD8uTylH541RWQKBsGAQ=",
+            "title": "AI risks, opportunities, regulation: Views of US public and AI experts | Pew Research Center",
+            "type": "web_search_result_location",
+            "url": "https://www.pewresearch.org/internet/2025/04/03/views-of-risks-opportunities-and-regulation-of-ai/"
+          }
+        ],
+        "text": "[REDACTED_TEXT length=75]",
+        "type": "text",
+        "parsed_output": null
+      },
+      {
+        "citations": null,
+        "text": "[REDACTED_TEXT length=3]",
+        "type": "text",
+        "parsed_output": null
+      },
+      {
+        "citations": [
+          {
+            "cited_text": "[REDACTED_TEXT length=147]",
+            "encrypted_index": "EpABCioIDBgCIiRkZTk5OTNhMy00ZGJmLTQwYTgtOGVmYy1iZWJmMDZmNzY0YWQSDDQ0UwbK7fsaALVelxoMV79nLJkbY57QXjfkIjCSsj5r6cu8Z9+Qom7ud6/TE2ViMK1Tbdcii9IjExsZsGS1uURhktgH31a0RHqGhKQqFIQViB60mJYPIrdk3xJMLi0yBahjGAQ=",
+            "title": "AI risks, opportunities, regulation: Views of US public and AI experts | Pew Research Center",
+            "type": "web_search_result_location",
+            "url": "https://www.pewresearch.org/internet/2025/04/03/views-of-risks-opportunities-and-regulation-of-ai/"
+          }
+        ],
+        "text": "[REDACTED_TEXT length=97]",
+        "type": "text",
+        "parsed_output": null
+      },
+      {
+        "citations": null,
+        "text": "[REDACTED_TEXT length=3]",
+        "type": "text",
+        "parsed_output": null
+      },
+      {
+        "citations": [
+          {
+            "cited_text": "[REDACTED_TEXT length=153]",
+            "encrypted_index": "EpABCioIDBgCIiRkZTk5OTNhMy00ZGJmLTQwYTgtOGVmYy1iZWJmMDZmNzY0YWQSDNdr8Uohehr5XmGL5hoMzbxw3eGXJOwdEB2yIjDV6f/WNNaKkBw1NFvOR6imOVn6CDZ0jE5EKbX1Z/l9r7ZDVskYC9FcAhvBHoKpbvUqFOQ/5Yz8p4FbjoALEuVserv4/lIrGAQ=",
+            "title": "What the public thinks about AI and the implications for governance | Brookings",
+            "type": "web_search_result_location",
+            "url": "https://www.brookings.edu/articles/what-the-public-thinks-about-ai-and-the-implications-for-governance/"
+          }
+        ],
+        "text": "[REDACTED_TEXT length=61]",
+        "type": "text",
+        "parsed_output": null
+      },
+      {
+        "citations": null,
+        "text": "[REDACTED_TEXT length=3]",
+        "type": "text",
+        "parsed_output": null
+      },
+      {
+        "citations": [
+          {
+            "cited_text": "[REDACTED_TEXT length=153]",
+            "encrypted_index": "EpABCioIDBgCIiRkZTk5OTNhMy00ZGJmLTQwYTgtOGVmYy1iZWJmMDZmNzY0YWQSDAFwdQ0OKzWW+wK+RhoMaqVMx08p1CHtS0rKIjAqD++HpQVX07hC7VNlMMgLsWc3omutUyXSUxFN7XpnRJMRVdSI3tZvj+gtc2/qj10qFNorzG9xknXSeiFxNh7tJGKKyMisGAQ=",
+            "title": "4/16/25 - The Age Of Artificial Intelligence: Americans Wary Of Impact On Daily Life, See Harm To Education, Benefits To Medical Advances, Quinnipiac University National Poll Finds; Americans Expect A...[truncated]",
+            "type": "web_search_result_location",
+            "url": "https://poll.qu.edu/poll-release?releaseid=3923"
+          }
+        ],
+        "text": "[REDACTED_TEXT length=85]",
+        "type": "text",
+        "parsed_output": null
+      },
+      {
+        "citations": null,
+        "text": "[REDACTED_TEXT length=3]",
+        "type": "text",
+        "parsed_output": null
+      },
+      {
+        "citations": [
+          {
+            "cited_text": "[REDACTED_TEXT length=153]",
+            "encrypted_index": "EpIBCioIDBgCIiRkZTk5OTNhMy00ZGJmLTQwYTgtOGVmYy1iZWJmMDZmNzY0YWQSDJzfB+e/69bWvp+nHhoMs7WWaRla7IoAxTa7IjAlFfCOiGN7ASWxvmj6p8NNggxJrVGPaeCgtYdJGeTlnWkIveQod1W4tJi0swLWM64qFoNOGl3yD5D/UNoBaH24Wv0yqneKo74Y...[truncated]",
+            "title": "Gender and Age Gaps in Generative AI - AI Literacy Institute",
+            "type": "web_search_result_location",
+            "url": "https://ailiteracy.institute/gender-and-age-gaps-in-generative-ai/"
+          }
+        ],
+        "text": "[REDACTED_TEXT length=78]",
+        "type": "text",
+        "parsed_output": null
+      },
+      {
+        "citations": null,
+        "text": "[REDACTED_TEXT length=3]",
+        "type": "text",
+        "parsed_output": null
+      },
+      {
+        "citations": [
+          {
+            "cited_text": "[REDACTED_TEXT length=114]",
+            "encrypted_index": "EpABCioIDBgCIiRkZTk5OTNhMy00ZGJmLTQwYTgtOGVmYy1iZWJmMDZmNzY0YWQSDNMifBhpIN11uMcj9hoM3jJhLqvfNuMD3hfOIjDT8GBRgMOBTlLwwXxiwzWA7PS9D7sArZ3q6chFuJcZCpn5LXt9U+Yv8+fd398bZe0qFDwaLYeufMDPEcrtndTs0DtD7tnmGAQ=",
+            "title": "The U.S. Public Wants Regulation (or Prohibition) of Expert\u2011Level and Superhuman AI - Future of Life Institute",
+            "type": "web_search_result_location",
+            "url": "https://futureoflife.org/recent-news/americans-want-regulation-or-prohibition-of-superhuman-ai/"
+          }
+        ],
+        "text": "[REDACTED_TEXT length=104]",
+        "type": "text",
+        "parsed_output": null
+      },
+      {
+        "citations": null,
+        "text": "[REDACTED_TEXT length=3]",
+        "type": "text",
+        "parsed_output": null
+      },
+      {
+        "citations": [
+          {
+            "cited_text": "[REDACTED_TEXT length=138]",
+            "encrypted_index": "EpEBCioIDBgCIiRkZTk5OTNhMy00ZGJmLTQwYTgtOGVmYy1iZWJmMDZmNzY0YWQSDOUTiJvS3pMK+mrxQBoMcr1NFVSmGwmKhmsYIjD7u69CPaFuYw6HGPXeY7bC075/hUeTk/VSNxmizNkbFJX/KoEIuKR9IHpKJRQ9TRcqFUWGfF5CJ4pywdN4LDBfDPw927F0hxgE",
+            "title": "Will AI Take My Job? Evolving Perceptions of Automation and Labor Risk in Latin America",
+            "type": "web_search_result_location",
+            "url": "https://arxiv.org/html/2505.08841"
+          }
+        ],
+        "text": "[REDACTED_TEXT length=68]",
+        "type": "text",
+        "parsed_output": null
+      },
+      {
+        "id": "toolu_015Noj8wAcgLbs3phUkUExez",
+        "input": {
+          "attributes": [
+            {
+              "name": "ai_literacy",
+              "modifiers": [
+                {
+                  "when": "education_level in ['Less than HS', 'HS Diploma']",
+                  "multiply": 0.55,
+                  "add": 0.0,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "education_level == 'Some College'",
+                  "multiply": 0.8,
+                  "add": 0.0,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "education_level == \"Associate's\"",
+                  "multiply": 0.88,
+                  "add": 0.0,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "education_level == \"Bachelor's\"",
+                  "multiply": 1.15,
+                  "add": 0.04,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "education_level == 'Graduate Degree'",
+                  "multiply": 1.3,
+                  "add": 0.08,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "occupation == 'Management/Professional' and education_level == 'Graduate Degree'",
+                  "multiply": 1.4,
+                  "add": 0.12,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "age < 35",
+                  "multiply": 1.18,
+                  "add": 0.05,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "age >= 35 and age < 55",
+                  "multiply": 1.05,
+                  "add": 0.0,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "age >= 55 and age < 70",
+                  "multiply": 0.85,
+                  "add": -0.03,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "age >= 70",
+                  "multiply": 0.65,
+                  "add": -0.06,
+                  "weight_overrides": null,
+                  "probability_override": null
+                }
+              ]
+            },
+            {
+              "name": "tech_sector_employment",
+              "modifiers": [
+                {
+                  "when": "occupation == 'Management/Professional' and employment_status == 'Full-time'",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": null,
+                  "probability_override": 0.18
+                },
+                {
+                  "when": "occupation == 'Management/Professional' and employment_status == 'Self-employed'",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": null,
+                  "probability_override": 0.14
+                },
+                {
+                  "when": "occupation == 'Sales/Office' and employment_status == 'Full-time'",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": null,
+                  "probability_override": 0.07
+                },
+                {
+                  "when": "occupation == 'Service' and employment_status == 'Full-time'",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": null,
+                  "probability_override": 0.02
+                },
+                {
+                  "when": "occupation == 'Construction/Extraction'",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": null,
+                  "probability_override": 0.01
+                },
+                {
+                  "when": "occupation == 'Production/Transport'",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": null,
+                  "probability_override": 0.02
+                },
+                {
+                  "when": "employment_status == 'Retired'",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": null,
+                  "probability_override": 0.01
+                },
+                {
+                  "when": "employment_status == 'Student'",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": null,
+                  "probability_override": 0.06
+                },
+                {
+                  "when": "employment_status == 'Unemployed'",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": null,
+                  "probability_override": 0.04
+                }
+              ]
+            },
+            {
+              "name": "knowledge_worker",
+              "modifiers": [
+                {
+                  "when": "occupation == 'Management/Professional' and education_level == 'Graduate Degree'",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": null,
+                  "probability_override": 0.85
+                },
+                {
+                  "when": "occupation == 'Management/Professional' and education_level == \"Bachelor's\"",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": null,
+                  "probability_override": 0.7
+                },
+                {
+                  "when": "occupation == 'Management/Professional' and education_level in ['Some College', \"Associate's\"]",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": null,
+                  "probability_override": 0.4
+                },
+                {
+                  "when": "occupation == 'Sales/Office' and education_level in [\"Bachelor's\", 'Graduate Degree']",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": null,
+                  "probability_override": 0.35
+                },
+                {
+                  "when": "occupation == 'Sales/Office' and education_level in ['Less than HS', 'HS Diploma', 'Some College', \"Associate's\"]",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": null,
+                  "probability_override": 0.12
+                },
+                {
+                  "when": "occupation == 'Service'",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": null,
+                  "probability_override": 0.06
+                },
+                {
+                  "when": "occupation == 'Construction/Extraction'",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": null,
+                  "probability_override": 0.03
+                },
+                {
+                  "when": "occupation == 'Production/Transport'",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": null,
+                  "probability_override": 0.04
+                },
+                {
+                  "when": "occupation == 'Other' and education_level in [\"Bachelor's\", 'Graduate Degree']",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": null,
+                  "probability_override": 0.3
+                }
+              ]
+            },
+            {
+              "name": "personal_health_vulnerability",
+              "modifiers": [
+                {
+                  "when": "age < 35",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": null,
+                  "probability_override": 0.07
+                },
+                {
+                  "when": "age >= 35 and age < 50",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": null,
+                  "probability_override": 0.15
+                },
+                {
+                  "when": "age >= 50 and age < 65",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": null,
+                  "probability_override": 0.32
+                },
+                {
+                  "when": "age >= 65",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": null,
+                  "probability_override": 0.52
+                },
+                {
+                  "when": "household_size >= 3 and age >= 40",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": null,
+                  "probability_override": 0.38
+                },
+                {
+                  "when": "household_size >= 4 and age >= 50",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": null,
+                  "probability_override": 0.55
+                }
+              ]
+            },
+            {
+              "name": "financial_market_exposure",
+              "modifiers": [
+                {
+                  "when": "household_income < 35000 and education_level in ['Less than HS', 'HS Diploma']",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": {
+                    "None": 0.6,
+                    "Low": 0.3,
+                    "Medium": 0.08,
+                    "High": 0.02
+                  },
+                  "probability_override": null
+                },
+                {
+                  "when": "household_income >= 35000 and household_income < 60000",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": {
+                    "None": 0.3,
+                    "Low": 0.45,
+                    "Medium": 0.2,
+                    "High": 0.05
+                  },
+                  "probability_override": null
+                },
+                {
+                  "when": "household_income >= 60000 and household_income < 100000",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": {
+                    "None": 0.12,
+                    "Low": 0.45,
+                    "Medium": 0.33,
+                    "High": 0.1
+                  },
+                  "probability_override": null
+                },
+                {
+                  "when": "household_income >= 100000 and household_income < 200000 and education_level in [\"Bachelor's\", 'Graduate Degree']",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": {
+                    "None": 0.05,
+                    "Low": 0.28,
+                    "Medium": 0.45,
+                    "High": 0.22
+                  },
+                  "probability_override": null
+                },
+                {
+                  "when": "household_income >= 200000 and education_level == 'Graduate Degree'",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": {
+                    "None": 0.03,
+                    "Low": 0.12,
+                    "Medium": 0.35,
+                    "High": 0.5
+                  },
+                  "probability_override": null
+                }
+              ]
+            },
+            {
+              "name": "asi_existential_risk_belief",
+              "modifiers": [
+                {
+                  "when": "ai_literacy < 0.4",
+                  "multiply": 1.05,
+                  "add": 0.08,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "ai_literacy >= 0.4 and ai_literacy < 0.7",
+                  "multiply": 1.1,
+                  "add": 0.1,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "ai_literacy >= 0.7",
+                  "multiply": 1.15,
+                  "add": 0.14,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "openness > 0.6",
+                  "multiply": 1.08,
+                  "add": 0.05,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "openness <= 0.4",
+                  "multiply": 0.95,
+                  "add": 0.04,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "trust_in_institutions < 0.3",
+                  "multiply": 1.12,
+                  "add": 0.1,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "trust_in_institutions >= 0.3 and trust_in_institutions < 0.6",
+                  "multiply": 1.06,
+                  "add": 0.06,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "trust_in_institutions >= 0.6",
+                  "multiply": 1.0,
+                  "add": 0.03,
+                  "weight_overrides": null,
+                  "probability_override": null
+                }
+              ]
+            },
+            {
+              "name": "asi_benefit_optimism",
+              "modifiers": [
+                {
+                  "when": "political_ideology == 'Very Liberal'",
+                  "multiply": 0.9,
+                  "add": -0.05,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "political_ideology == 'Liberal'",
+                  "multiply": 0.95,
+                  "add": -0.02,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "political_ideology == 'Moderate'",
+                  "multiply": 1.0,
+                  "add": 0.02,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "political_ideology == 'Conservative'",
+                  "multiply": 1.08,
+                  "add": 0.04,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "political_ideology == 'Very Conservative'",
+                  "multiply": 1.12,
+                  "add": 0.05,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "trust_in_institutions >= 0.6",
+                  "multiply": 1.1,
+                  "add": 0.06,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "trust_in_institutions < 0.3",
+                  "multiply": 0.85,
+                  "add": -0.08,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "ai_literacy >= 0.7",
+                  "multiply": 1.12,
+                  "add": 0.07,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "ai_literacy < 0.35",
+                  "multiply": 0.9,
+                  "add": -0.04,
+                  "weight_overrides": null,
+                  "probability_override": null
+                }
+              ]
+            },
+            {
+              "name": "job_automation_risk_perception",
+              "modifiers": [
+                {
+                  "when": "knowledge_worker == True and tech_sector_employment == False",
+                  "multiply": 1.25,
+                  "add": 0.15,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "knowledge_worker == True and tech_sector_employment == True",
+                  "multiply": 1.35,
+                  "add": 0.2,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "knowledge_worker == False and tech_sector_employment == False",
+                  "multiply": 1.1,
+                  "add": 0.1,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "knowledge_worker == False and tech_sector_employment == True",
+                  "multiply": 1.2,
+                  "add": 0.15,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "education_level in ['Less than HS', 'HS Diploma'] and knowledge_worker == False",
+                  "multiply": 1.08,
+                  "add": 0.08,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "education_level == 'Graduate Degree' and knowledge_worker == True",
+                  "multiply": 1.3,
+                  "add": 0.18,
+                  "weight_overrides": null,
+                  "probability_override": null
+                }
+              ]
+            },
+            {
+              "name": "asi_adoption_eagerness",
+              "modifiers": [
+                {
+                  "when": "ai_literacy >= 0.7 and openness > 0.6",
+                  "multiply": 1.3,
+                  "add": 0.14,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "ai_literacy >= 0.7 and openness <= 0.6",
+                  "multiply": 1.18,
+                  "add": 0.08,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "ai_literacy >= 0.4 and ai_literacy < 0.7 and openness > 0.5",
+                  "multiply": 1.1,
+                  "add": 0.06,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "ai_literacy < 0.4",
+                  "multiply": 0.8,
+                  "add": -0.05,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "age < 30",
+                  "multiply": 1.18,
+                  "add": 0.08,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "age >= 30 and age < 50",
+                  "multiply": 1.08,
+                  "add": 0.03,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "age >= 50 and age < 65",
+                  "multiply": 0.92,
+                  "add": -0.04,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "age >= 65",
+                  "multiply": 0.72,
+                  "add": -0.1,
+                  "weight_overrides": null,
+                  "probability_override": null
+                }
+              ]
+            },
+            {
+              "name": "regulatory_intervention_support",
+              "modifiers": [
+                {
+                  "when": "political_ideology == 'Very Liberal'",
+                  "multiply": 1.2,
+                  "add": 0.14,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "political_ideology == 'Liberal'",
+                  "multiply": 1.12,
+                  "add": 0.08,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "political_ideology == 'Moderate'",
+                  "multiply": 1.08,
+                  "add": 0.05,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "political_ideology == 'Conservative'",
+                  "multiply": 0.92,
+                  "add": -0.02,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "political_ideology == 'Very Conservative'",
+                  "multiply": 0.82,
+                  "add": -0.06,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "asi_existential_risk_belief > 0.6",
+                  "multiply": 1.18,
+                  "add": 0.12,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "asi_existential_risk_belief >= 0.3 and asi_existential_risk_belief <= 0.6",
+                  "multiply": 1.08,
+                  "add": 0.06,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "asi_existential_risk_belief < 0.3",
+                  "multiply": 0.9,
+                  "add": -0.03,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "trust_in_institutions >= 0.6",
+                  "multiply": 1.1,
+                  "add": 0.07,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "trust_in_institutions < 0.3",
+                  "multiply": 0.88,
+                  "add": -0.05,
+                  "weight_overrides": null,
+                  "probability_override": null
+                }
+              ]
+            },
+            {
+              "name": "information_network_centrality",
+              "modifiers": [
+                {
+                  "when": "extraversion > 0.7 and social_media_hours_per_day > 3.0",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": {
+                    "Isolated": 0.03,
+                    "Peripheral": 0.18,
+                    "Connected": 0.42,
+                    "Hub": 0.37
+                  },
+                  "probability_override": null
+                },
+                {
+                  "when": "extraversion > 0.7 and social_media_hours_per_day <= 3.0",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": {
+                    "Isolated": 0.05,
+                    "Peripheral": 0.28,
+                    "Connected": 0.45,
+                    "Hub": 0.22
+                  },
+                  "probability_override": null
+                },
+                {
+                  "when": "extraversion >= 0.4 and extraversion <= 0.7 and social_media_hours_per_day > 2.0",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": {
+                    "Isolated": 0.08,
+                    "Peripheral": 0.3,
+                    "Connected": 0.45,
+                    "Hub": 0.17
+                  },
+                  "probability_override": null
+                },
+                {
+                  "when": "extraversion >= 0.4 and extraversion <= 0.7 and social_media_hours_per_day <= 2.0",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": {
+                    "Isolated": 0.15,
+                    "Peripheral": 0.42,
+                    "Connected": 0.33,
+                    "Hub": 0.1
+                  },
+                  "probability_override": null
+                },
+                {
+                  "when": "extraversion < 0.4 and social_media_hours_per_day <= 1.5",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": {
+                    "Isolated": 0.4,
+                    "Peripheral": 0.42,
+                    "Connected": 0.15,
+                    "Hub": 0.03
+                  },
+                  "probability_override": null
+                },
+                {
+                  "when": "extraversion < 0.4 and social_media_hours_per_day > 1.5",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": {
+                    "Isolated": 0.22,
+                    "Peripheral": 0.45,
+                    "Connected": 0.28,
+                    "Hub": 0.05
+                  },
+                  "probability_override": null
+                },
+                {
+                  "when": "civic_engagement == 'Actively volunteers or campaigns'",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": {
+                    "Isolated": 0.03,
+                    "Peripheral": 0.18,
+                    "Connected": 0.42,
+                    "Hub": 0.37
+                  },
+                  "probability_override": null
+                },
+                {
+                  "when": "civic_engagement == 'Rarely/Never votes'",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": {
+                    "Isolated": 0.35,
+                    "Peripheral": 0.4,
+                    "Connected": 0.2,
+                    "Hub": 0.05
+                  },
+                  "probability_override": null
+                }
+              ]
+            },
+            {
+              "name": "economic_precarity",
+              "modifiers": [
+                {
+                  "when": "household_income < 30000 and homeownership == False",
+                  "multiply": 1.3,
+                  "add": 0.2,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "household_income >= 30000 and household_income < 55000 and homeownership == False",
+                  "multiply": 1.15,
+                  "add": 0.12,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "household_income >= 55000 and household_income < 90000 and homeownership == True",
+                  "multiply": 0.9,
+                  "add": -0.05,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "household_income >= 90000 and homeownership == True",
+                  "multiply": 0.65,
+                  "add": -0.15,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "employment_status == 'Unemployed'",
+                  "multiply": 1.25,
+                  "add": 0.18,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "employment_status == 'Part-time'",
+                  "multiply": 1.12,
+                  "add": 0.08,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "employment_status == 'Retired' and homeownership == True",
+                  "multiply": 0.75,
+                  "add": -0.12,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "employment_status == 'Full-time' and homeownership == True and household_income >= 75000",
+                  "multiply": 0.7,
+                  "add": -0.14,
+                  "weight_overrides": null,
+                  "probability_override": null
+                }
+              ]
+            },
+            {
+              "name": "institutional_change_tolerance",
+              "modifiers": [
+                {
+                  "when": "openness > 0.7 and political_ideology in ['Very Liberal', 'Liberal']",
+                  "multiply": 1.25,
+                  "add": 0.12,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "openness > 0.7 and political_ideology in ['Conservative', 'Very Conservative']",
+                  "multiply": 1.1,
+                  "add": 0.04,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "openness >= 0.4 and openness <= 0.7 and political_ideology == 'Moderate'",
+                  "multiply": 1.05,
+                  "add": 0.03,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "openness < 0.4 and political_ideology in ['Conservative', 'Very Conservative']",
+                  "multiply": 0.72,
+                  "add": -0.12,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "openness < 0.4 and political_ideology in ['Very Liberal', 'Liberal']",
+                  "multiply": 0.85,
+                  "add": -0.06,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "conscientiousness > 0.7 and openness < 0.5",
+                  "multiply": 0.82,
+                  "add": -0.09,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "conscientiousness <= 0.4 and openness > 0.6",
+                  "multiply": 1.15,
+                  "add": 0.07,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "conscientiousness > 0.6 and openness > 0.6 and political_ideology in ['Very Liberal', 'Liberal', 'Moderate']",
+                  "multiply": 1.12,
+                  "add": 0.06,
+                  "weight_overrides": null,
+                  "probability_override": null
+                }
+              ]
+            }
+          ]
+        },
+        "name": "conditional_modifiers_hydration",
+        "type": "tool_use",
+        "caller": {
+          "type": "direct"
+        }
+      }
+    ],
+    "model": "claude-sonnet-4-6",
+    "role": "assistant",
+    "stop_reason": "tool_use",
+    "stop_sequence": null,
+    "type": "message",
+    "usage": {
+      "cache_creation": {
+        "ephemeral_1h_input_tokens": "[REDACTED_SECRET]",
+        "ephemeral_5m_input_tokens": "[REDACTED_SECRET]"
+      },
+      "cache_creation_input_tokens": "[REDACTED_SECRET]",
+      "cache_read_input_tokens": "[REDACTED_SECRET]",
+      "input_tokens": 93146,
+      "output_tokens": 8215,
+      "server_tool_use": {
+        "web_search_requests": 4,
+        "web_fetch_requests": 0
+      },
+      "service_tier": "standard",
+      "inference_geo": "global"
+    }
+  },
+  "sources_extracted": [
+    "https://www.pewresearch.org/internet/2025/04/03/views-of-risks-opportunities-and-regulation-of-ai/",
+    "https://arxiv.org/html/2505.08841",
+    "https://futureoflife.org/recent-news/americans-want-regulation-or-prohibition-of-superhuman-ai/",
+    "https://www.ey.com/en_gl/newsroom/2024/12/new-ey-survey-reveals-crucial-ai-literacy-training-needs-among-gen-z-workforce",
+    "https://www.frontiersin.org/journals/communication/articles/10.3389/fcomm.2024.1478476/full",
+    "https://www.deloitte.com/us/en/insights/topics/economy/spotlight/tech-workforce-expanding.html",
+    "https://www.rand.org/pubs/commentary/2025/05/could-ai-really-kill-off-humans.html",
+    "https://www.nature.com/articles/s41599-025-04583-8",
+    "https://www.comptia.org/en-us/resources/research/state-of-the-tech-workforce-2024/",
+    "https://today.yougov.com/politics/articles/52615-americans-increasingly-likely-say-ai-artificial-intelligence-negatively-affect-society-poll",
+    "https://news.gallup.com/poll/695297/american-views-national-security-charts.aspx",
+    "https://thebulletin.org/premium/2025-12/stopping-the-clock-on-catastrophic-ai-risk/",
+    "https://theconversation.com/does-ai-pose-an-existential-risk-we-asked-5-experts-266345",
+    "https://www.brookings.edu/articles/what-the-public-thinks-about-ai-and-the-implications-for-governance/",
+    "https://www.pewresearch.org/internet/2025/04/03/how-the-us-public-and-ai-experts-view-artificial-intelligence/",
+    "https://www.euronews.com/next/2025/11/18/ai-poses-existential-threat-to-polling-mimicking-human-responses-almost-perfectly-study-fi",
+    "https://studyfinds.org/the-ai-scam-that-could-threaten-public-opinion-research/",
+    "https://programs.com/resources/ai-education-statistics/",
+    "https://www.comptia.org/en-us/resources/research/state-of-the-tech-workforce-2025/",
+    "https://www.comptia.org/en-us/about-us/news/press-releases/tech-hiring-activity-outpaces-expectations-comptia-tech-jobs-report-finds/",
+    "https://www.techtarget.com/whatis/feature/Tech-job-market-statistics-and-outlook",
+    "https://datainnovation.org/2024/05/americans-divided-on-whether-ai-will-make-things-better-or-worse-new-survey-finds/",
+    "https://literacytrust.org.uk/research-services/research-reports/children-young-people-and-teachers-use-of-generative-ai-to-support-literacy-in-2024/",
+    "https://hai.stanford.edu/ai-index/2025-ai-index-report/public-opinion",
+    "https://www.pewresearch.org/wp-content/uploads/sites/20/2025/04/pi_2025.04.03_us-public-and-ai-experts_report.pdf",
+    "https://www.comptia.org/en-us/about-us/news/press-releases/comptia-state-of-the-tech-workforce-2025-provides-comprehensive-review-of-key-metrics-for-nation-states-and-metropolitan-markets/",
+    "https://ailiteracy.institute/ai-literacy-review-march-11-2025/",
+    "https://www.statista.com/topics/5275/employment-in-the-it-industry/",
+    "https://www.digitaleducationcouncil.com/post/digital-education-council-global-ai-student-survey-2024",
+    "https://www.prnewswire.com/news-releases/comptia-state-of-the-tech-workforce-2025-provides-comprehensive-review-of-key-metrics-for-nation-states-and-metropolitan-markets-302495144.html",
+    "https://www.prnewswire.com/news-releases/comptia-releases-state-of-the-tech-workforce-2024-detailing-growth-projections-across-the-nation-states-and-metro-areas-302106642.html",
+    "https://en.wikipedia.org/wiki/Existential_risk_from_artificial_intelligence",
+    "https://www.statista.com/statistics/1403635/united-states-net-sector-employment/",
+    "https://futureoflife.org/ai-safety-index-summer-2025/",
+    "https://poll.qu.edu/poll-release?releaseid=3923",
+    "https://link.springer.com/article/10.1007/s11528-025-01109-6",
+    "https://www.engageli.com/blog/ai-in-education-statistics",
+    "https://ailiteracy.institute/gender-and-age-gaps-in-generative-ai/"
+  ]
+}

@@ -1,0 +1,1034 @@
+{
+  "timestamp": "2026-02-17T21:15:10.266403",
+  "function": "agentic_research",
+  "provider": "claude",
+  "request": {
+    "model": "claude-sonnet-4-6",
+    "prompt_length": 3723
+  },
+  "response": {
+    "id": "msg_014K2PAHmf6Jnvo8wRR54syF",
+    "content": [
+      {
+        "citations": null,
+        "text": "[REDACTED_TEXT length=113]",
+        "type": "text",
+        "parsed_output": null
+      },
+      {
+        "id": "srvtoolu_01MHprjntewrgjS29yFm9pbT",
+        "input": {
+          "query": "US household composition by age group Census 2023 statistics"
+        },
+        "name": "web_search",
+        "type": "server_tool_use",
+        "caller": {
+          "type": "direct"
+        }
+      },
+      {
+        "id": "srvtoolu_01AR248pVksbin4a48T6h6SX",
+        "input": {
+          "query": "US interracial marriage same-group partner rates by ethnicity 2023"
+        },
+        "name": "web_search",
+        "type": "server_tool_use",
+        "caller": {
+          "type": "direct"
+        }
+      },
+      {
+        "id": "srvtoolu_01XPRSDFbfCE5SLw8VhB51Ad",
+        "input": {
+          "query": "US assortative mating education religion income correlation statistics"
+        },
+        "name": "web_search",
+        "type": "server_tool_use",
+        "caller": {
+          "type": "direct"
+        }
+      },
+      {
+        "content": [
+          {
+            "encrypted_content": "[REDACTED_TEXT length=2192]",
+            "page_age": null,
+            "title": "Historical Households Tables",
+            "type": "web_search_result",
+            "url": "https://www.census.gov/data/tables/time-series/demo/families/households.html"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=1532]",
+            "page_age": null,
+            "title": "America\u2019s Families and Living Arrangements: 2023",
+            "type": "web_search_result",
+            "url": "https://www.census.gov/data/tables/2023/demo/families/cps-2023.html"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=2668]",
+            "page_age": null,
+            "title": "Age and Sex Composition in the United States: 2023",
+            "type": "web_search_result",
+            "url": "https://www.census.gov/data/tables/2023/demo/age-and-sex/2023-age-sex-composition.html"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=2968]",
+            "page_age": null,
+            "title": "Families and Households",
+            "type": "web_search_result",
+            "url": "https://www.census.gov/topics/families/families-and-households.html"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=5336]",
+            "page_age": null,
+            "title": "Population of the U.S. by sex and age 2023| Statista",
+            "type": "web_search_result",
+            "url": "https://www.statista.com/statistics/241488/population-of-the-us-by-sex-and-age/"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=5956]",
+            "page_age": null,
+            "title": "Current Population Survey Data Tables",
+            "type": "web_search_result",
+            "url": "https://www.census.gov/programs-surveys/cps/data/tables.2023.List_1020932829.html"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=5184]",
+            "page_age": null,
+            "title": "Families and Living Arrangements",
+            "type": "web_search_result",
+            "url": "https://www.census.gov/topics/families.html"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=3804]",
+            "page_age": null,
+            "title": "Median household income by age U.S. 2023 | Statista",
+            "type": "web_search_result",
+            "url": "https://www.statista.com/statistics/233184/median-household-income-in-the-united-states-by-age/"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=668]",
+            "page_age": null,
+            "title": "Age and Sex Tables",
+            "type": "web_search_result",
+            "url": "https://www.census.gov/topics/population/age-and-sex/data/tables.html"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=7168]",
+            "page_age": "1 week ago",
+            "title": "Demographics of the United States - Wikipedia",
+            "type": "web_search_result",
+            "url": "https://en.wikipedia.org/wiki/Demographics_of_the_United_States"
+          }
+        ],
+        "tool_use_id": "srvtoolu_01MHprjntewrgjS29yFm9pbT",
+        "type": "web_search_tool_result"
+      },
+      {
+        "content": [
+          {
+            "encrypted_content": "[REDACTED_TEXT length=7144]",
+            "page_age": "January 5, 2026",
+            "title": "Interracial marriage in the United States - Wikipedia",
+            "type": "web_search_result",
+            "url": "https://en.wikipedia.org/wiki/Interracial_marriage_in_the_United_States"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=5672]",
+            "page_age": "April 14, 2024",
+            "title": "Trends and patterns in intermarriage | Pew Research Center",
+            "type": "web_search_result",
+            "url": "https://www.pewresearch.org/social-trends/2017/05/18/1-trends-and-patterns-in-intermarriage/"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=2868]",
+            "page_age": "October 13, 2023",
+            "title": "growth in interracial marriage, 1980 vs 2021 - Working Immigrants",
+            "type": "web_search_result",
+            "url": "https://www.workingimmigrants.com/2023/10/growth-in-interracial-marriage-1980-vs-2021/"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=5032]",
+            "page_age": null,
+            "title": "Geographic Variations in Black-White Interracial Marital ...",
+            "type": "web_search_result",
+            "url": "https://www.census.gov/content/dam/Census/newsroom/press-kits/2023/paa/2023-paa-paper-geographic-variations-black-white-interracial-marital.pdf"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=6724]",
+            "page_age": null,
+            "title": "Marital Dissolution Among Interracial Couples - PMC",
+            "type": "web_search_result",
+            "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC4183451/"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=2768]",
+            "page_age": "June 12, 2025",
+            "title": "BLACK MARRIAGE - BlackDemographics.com",
+            "type": "web_search_result",
+            "url": "https://blackdemographics.com/households/marriage-in-black-america/"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=1956]",
+            "page_age": null,
+            "title": "Intermarriage - Research and data from Pew Research Center",
+            "type": "web_search_result",
+            "url": "https://www.pewresearch.org/topic/family-relationships/marriage-divorce/intermarriage/"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=5484]",
+            "page_age": null,
+            "title": "Interracial and Interethnic Marriage | Ethnic and Cultural Studies | Research Starters | EBSCO Research",
+            "type": "web_search_result",
+            "url": "https://www.ebsco.com/research-starters/ethnic-and-cultural-studies/interracial-and-interethnic-marriage"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=6184]",
+            "page_age": null,
+            "title": "Who Marries Whom? The Role of Segregation by Race and Class by",
+            "type": "web_search_result",
+            "url": "https://www2.census.gov/library/working-papers/2024/adrm/ces/CES-WP-24-30.pdf"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=5332]",
+            "page_age": "May 19, 2025",
+            "title": "13 Interracial Dating Statistics & Studies (2026)",
+            "type": "web_search_result",
+            "url": "https://www.datingadvice.com/studies/interracial-dating-statistics"
+          }
+        ],
+        "tool_use_id": "srvtoolu_01AR248pVksbin4a48T6h6SX",
+        "type": "web_search_tool_result"
+      },
+      {
+        "content": [
+          {
+            "encrypted_content": "[REDACTED_TEXT length=5604]",
+            "page_age": null,
+            "title": "Religion, Marriage Markets, and Assortative Mating in the United States - PMC",
+            "type": "web_search_result",
+            "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC5089166/"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=5460]",
+            "page_age": null,
+            "title": "Educational Assortative Mating and Household Income ...",
+            "type": "web_search_result",
+            "url": "https://www.newyorkfed.org/medialibrary/media/research/staff_reports/sr682.pdf"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=5240]",
+            "page_age": "February 10, 2015",
+            "title": "Income inequality and educational assortative mating: Evidence from the Luxembourg Income Study - ScienceDirect",
+            "type": "web_search_result",
+            "url": "https://www.sciencedirect.com/science/article/abs/pii/S0049089X15000514"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=4736]",
+            "page_age": null,
+            "title": "Assortative Mating and Income Inequality | NBER",
+            "type": "web_search_result",
+            "url": "https://www.nber.org/digest/may14/assortative-mating-and-income-inequality"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=4268]",
+            "page_age": null,
+            "title": "Educational Assortative Mating and Household Income Inequality | Journal of Political Economy: Vol 127, No 6",
+            "type": "web_search_result",
+            "url": "https://www.journals.uchicago.edu/doi/10.1086/702018"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=5092]",
+            "page_age": null,
+            "title": "Educational Assortative Mating and Household Income Inequality - Federal Reserve Bank of New York - FEDERAL RESERVE BANK of NEW YORK",
+            "type": "web_search_result",
+            "url": "https://www.newyorkfed.org/research/staff_reports/sr682.html"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=6276]",
+            "page_age": null,
+            "title": "Assortative Mating, Intergenerational Mobility, and Educational Inequality",
+            "type": "web_search_result",
+            "url": "https://ccpr.ucla.edu/wp-content/uploads/2024/04/Assortative-Mating_-Intergenerational-Mobility_-and-Educational-Inequality.pdf"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=3968]",
+            "page_age": "April 14, 2024",
+            "title": "New academic study links rising income inequality to \u2018assortative mating\u2019 | Pew Research Center",
+            "type": "web_search_result",
+            "url": "https://www.pewresearch.org/short-reads/2014/01/29/new-academic-study-links-rising-income-inequality-to-assortive-mating/"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=5704]",
+            "page_age": null,
+            "title": "Eight Decades of Educational Assortative Mating: A Research Note - PMC",
+            "type": "web_search_result",
+            "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC12176447/"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=5232]",
+            "page_age": "October 1, 2024",
+            "title": "Eight Decades of Educational Assortative Mating: A Research Note | Demography | Duke University Press",
+            "type": "web_search_result",
+            "url": "https://read.dukeupress.edu/demography/article/61/5/1293/390842/Eight-Decades-of-Educational-Assortative-Mating-A"
+          }
+        ],
+        "tool_use_id": "srvtoolu_01XPRSDFbfCE5SLw8VhB51Ad",
+        "type": "web_search_tool_result"
+      },
+      {
+        "citations": null,
+        "text": "[REDACTED_TEXT length=142]",
+        "type": "text",
+        "parsed_output": null
+      },
+      {
+        "id": "srvtoolu_01Le2z9voN9bTMjwVP1UydcB",
+        "input": {
+          "query": "US average household size 2023 Census average age first birth partner age gap marriage statistics"
+        },
+        "name": "web_search",
+        "type": "server_tool_use",
+        "caller": {
+          "type": "direct"
+        }
+      },
+      {
+        "content": [
+          {
+            "encrypted_content": "[REDACTED_TEXT length=1532]",
+            "page_age": null,
+            "title": "America\u2019s Families and Living Arrangements: 2023",
+            "type": "web_search_result",
+            "url": "https://www.census.gov/data/tables/2023/demo/families/cps-2023.html"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=1716]",
+            "page_age": null,
+            "title": "Fewer Than Half of U.S. Households Are Married-Couple Households",
+            "type": "web_search_result",
+            "url": "https://www.census.gov/newsroom/press-releases/2025/families-and-living-arrangements.html"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=3984]",
+            "page_age": null,
+            "title": "Age Composition of Same-sex & Different-sex Couples, 2023",
+            "type": "web_search_result",
+            "url": "https://www.bgsu.edu/ncfmr/resources/data/family-profiles/FP-25-16.html"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=1920]",
+            "page_age": null,
+            "title": "Families and Households",
+            "type": "web_search_result",
+            "url": "https://www.census.gov/topics/families/families-and-households.html"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=364]",
+            "page_age": null,
+            "title": "Figure MS-2 Median age at first marriage: 1890 to present 16 18 20 22 24 26 28",
+            "type": "web_search_result",
+            "url": "https://www.census.gov/content/dam/Census/library/visualizations/time-series/demo/families-and-households/ms-2.pdf"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=384]",
+            "page_age": null,
+            "title": "DATA FRQM THE NATIONAL VITAL STATISTICS SYSTEM Scrims 2a Numb.r 21 Marriages",
+            "type": "web_search_result",
+            "url": "https://www.cdc.gov/nchs/data/series/sr_21/sr21_021.pdf"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=3916]",
+            "page_age": null,
+            "title": "Married Couple Households Made Up Most of Family Households",
+            "type": "web_search_result",
+            "url": "https://www.census.gov/library/stories/2023/05/family-households-still-the-majority.html"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=4312]",
+            "page_age": null,
+            "title": "When and How Often People Marry Changes by Birth Cohort",
+            "type": "web_search_result",
+            "url": "https://www.census.gov/library/stories/2022/08/does-marrying-younger-mean-marrying-more-often.html"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=356]",
+            "page_age": null,
+            "title": "B12007H: Median Age at First - Census Data",
+            "type": "web_search_result",
+            "url": "https://data.census.gov/table/ACSDT1Y2023.B12007H?q=marriage+rates"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=1120]",
+            "page_age": null,
+            "title": "Age Differences Among Coresidential Partners",
+            "type": "web_search_result",
+            "url": "https://www.census.gov/library/working-papers/2023/demo/SEHSD-WP2023-10.html"
+          }
+        ],
+        "tool_use_id": "srvtoolu_01Le2z9voN9bTMjwVP1UydcB",
+        "type": "web_search_tool_result"
+      },
+      {
+        "id": "srvtoolu_01LqjLWkyeG71cYrQoHCAHu7",
+        "input": {
+          "query": "US average household size 2023 single parent households percentage multigenerational households Census"
+        },
+        "name": "web_search",
+        "type": "server_tool_use",
+        "caller": {
+          "type": "direct"
+        }
+      },
+      {
+        "content": [
+          {
+            "encrypted_content": "[REDACTED_TEXT length=2804]",
+            "page_age": null,
+            "title": "America\u2019s Families and Living Arrangements: 2023",
+            "type": "web_search_result",
+            "url": "https://www.census.gov/data/tables/2023/demo/families/cps-2023.html"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=5240]",
+            "page_age": null,
+            "title": "U.S. Household Composition Shifts as the Population Grows Older; More Young Adults Live With Parents | PRB",
+            "type": "web_search_result",
+            "url": "https://www.prb.org/resources/u-s-household-composition-shifts-as-the-population-grows-older-more-young-adults-live-with-parents/"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=3852]",
+            "page_age": null,
+            "title": "Families and Households",
+            "type": "web_search_result",
+            "url": "https://www.census.gov/topics/families/families-and-households.html"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=4376]",
+            "page_age": null,
+            "title": "In 2020, 7.2% of U.S. Family Households Were Multigenerational",
+            "type": "web_search_result",
+            "url": "https://www.census.gov/library/stories/2023/06/several-generations-under-one-roof.html"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=4328]",
+            "page_age": null,
+            "title": "America\u2019s Families and Living Arrangements: 2022",
+            "type": "web_search_result",
+            "url": "https://www2.census.gov/library/publications/2024/demo/p20-587.pdf"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=4264]",
+            "page_age": null,
+            "title": "Average size of households in the U.S. 2023 | Statista",
+            "type": "web_search_result",
+            "url": "https://www.statista.com/statistics/183648/average-size-of-households-in-the-us/"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=3020]",
+            "page_age": "December 5, 2023",
+            "title": "How common are multigenerational households in the US? | USAFacts",
+            "type": "web_search_result",
+            "url": "https://usafacts.org/articles/how-common-are-multigenerational-households/"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=4772]",
+            "page_age": null,
+            "title": "Families and Living Arrangements",
+            "type": "web_search_result",
+            "url": "https://www.census.gov/topics/families.html"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=2204]",
+            "page_age": null,
+            "title": "America?s Families and Living Arrangements: 2020",
+            "type": "web_search_result",
+            "url": "https://www.census.gov/data/tables/2020/demo/families/cps-2020.html"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=5080]",
+            "page_age": null,
+            "title": "Distribution of U.S. households by size 1970-2024 | Statista",
+            "type": "web_search_result",
+            "url": "https://www.statista.com/statistics/242189/disitribution-of-households-in-the-us-by-household-size/"
+          }
+        ],
+        "tool_use_id": "srvtoolu_01LqjLWkyeG71cYrQoHCAHu7",
+        "type": "web_search_tool_result"
+      },
+      {
+        "citations": null,
+        "text": "[REDACTED_TEXT length=288]",
+        "type": "text",
+        "parsed_output": null
+      },
+      {
+        "citations": [
+          {
+            "cited_text": "[REDACTED_TEXT length=65]",
+            "encrypted_index": "EpABCioIDBgCIiRkZTk5OTNhMy00ZGJmLTQwYTgtOGVmYy1iZWJmMDZmNzY0YWQSDPTOUhdJdIkOQf9LARoMWbE1ck+v28gJdTm2IjCunsY13pxvCvVDGBmOW5d7rpi8RxZ+IWt5rqt6FSkfou13y31JuXAh60Cz0HQp0TAqFKYGI/yS9u/ubOdYWK+npeXDAhwVGAQ=",
+            "title": "Average size of households in the U.S. 2023 | Statista",
+            "type": "web_search_result_location",
+            "url": "https://www.statista.com/statistics/183648/average-size-of-households-in-the-us/"
+          }
+        ],
+        "text": "[REDACTED_TEXT length=68]",
+        "type": "text",
+        "parsed_output": null
+      },
+      {
+        "citations": null,
+        "text": "[REDACTED_TEXT length=3]",
+        "type": "text",
+        "parsed_output": null
+      },
+      {
+        "citations": [
+          {
+            "cited_text": "[REDACTED_TEXT length=140]",
+            "encrypted_index": "EpABCioIDBgCIiRkZTk5OTNhMy00ZGJmLTQwYTgtOGVmYy1iZWJmMDZmNzY0YWQSDIoN5hKQubo9I0L58RoMUQZ3dWQDtAqhhE54IjBLGrgYp9/AU7qAG4c5nSXl+pZLk1it+R9wf9PR5MU+PsPujk73MsSI+mMK8xXQSKIqFPvjeXxzllU8KkdHcyGc5FuftFASGAQ=",
+            "title": "Fewer Than Half of U.S. Households Are Married-Couple Households",
+            "type": "web_search_result_location",
+            "url": "https://www.census.gov/newsroom/press-releases/2025/families-and-living-arrangements.html"
+          }
+        ],
+        "text": "[REDACTED_TEXT length=132]",
+        "type": "text",
+        "parsed_output": null
+      },
+      {
+        "citations": null,
+        "text": "[REDACTED_TEXT length=3]",
+        "type": "text",
+        "parsed_output": null
+      },
+      {
+        "citations": [
+          {
+            "cited_text": "[REDACTED_TEXT length=153]",
+            "encrypted_index": "EpEBCioIDBgCIiRkZTk5OTNhMy00ZGJmLTQwYTgtOGVmYy1iZWJmMDZmNzY0YWQSDJVcmMdZWwzFYRDnnBoMoQgtVx9swcMJdMXYIjBBQW/Elhru3w07M2+be0y227Y1l1VTWfyhDQeSls6qz06aUNg0mbdZWbwlKLq8jcgqFbZxDaK4z9I6gUC/wjnfZkedYDTQUBgE",
+            "title": "Age Composition of Same-sex & Different-sex Couples, 2023",
+            "type": "web_search_result_location",
+            "url": "https://www.bgsu.edu/ncfmr/resources/data/family-profiles/FP-25-16.html"
+          }
+        ],
+        "text": "[REDACTED_TEXT length=145]",
+        "type": "text",
+        "parsed_output": null
+      },
+      {
+        "citations": null,
+        "text": "[REDACTED_TEXT length=3]",
+        "type": "text",
+        "parsed_output": null
+      },
+      {
+        "citations": [
+          {
+            "cited_text": "[REDACTED_TEXT length=89]",
+            "encrypted_index": "EpEBCioIDBgCIiRkZTk5OTNhMy00ZGJmLTQwYTgtOGVmYy1iZWJmMDZmNzY0YWQSDOtqNngJZpuVDDhvGxoMfhw5oypDF+6TBnZpIjDG6OVfOYkmDXm9+PiLxo3yrHXGU3INliD7BuOxVxyhPdg8eS32uGl7A9/og8dxP7AqFdywIPW7g8G97jZYRfdzzEcnAt/VgRgE",
+            "title": "Married Couple Households Made Up Most of Family Households",
+            "type": "web_search_result_location",
+            "url": "https://www.census.gov/library/stories/2023/05/family-households-still-the-majority.html"
+          }
+        ],
+        "text": "[REDACTED_TEXT length=105]",
+        "type": "text",
+        "parsed_output": null
+      },
+      {
+        "citations": null,
+        "text": "[REDACTED_TEXT length=3]",
+        "type": "text",
+        "parsed_output": null
+      },
+      {
+        "citations": [
+          {
+            "cited_text": "[REDACTED_TEXT length=153]",
+            "encrypted_index": "EpABCioIDBgCIiRkZTk5OTNhMy00ZGJmLTQwYTgtOGVmYy1iZWJmMDZmNzY0YWQSDHti7YkQn8j1VRoYohoMCS7DmbTpADUC8n1ZIjAlOTH2ewaCvnjp2VhDJwwUCWYIC9PHsRoHwlm9YSOmUGSKbBhO2kSAxUx858EaSX4qFLFn8q4KKFjpkpkyo7yT79dn5PxXGAQ=",
+            "title": "In 2020, 7.2% of U.S. Family Households Were Multigenerational",
+            "type": "web_search_result_location",
+            "url": "https://www.census.gov/library/stories/2023/06/several-generations-under-one-roof.html"
+          }
+        ],
+        "text": "[REDACTED_TEXT length=183]",
+        "type": "text",
+        "parsed_output": null
+      },
+      {
+        "citations": null,
+        "text": "[REDACTED_TEXT length=3]",
+        "type": "text",
+        "parsed_output": null
+      },
+      {
+        "citations": [
+          {
+            "cited_text": "[REDACTED_TEXT length=153]",
+            "encrypted_index": "EpABCioIDBgCIiRkZTk5OTNhMy00ZGJmLTQwYTgtOGVmYy1iZWJmMDZmNzY0YWQSDE5+4oHbq2urvx4gORoMVYTYyKy9UkRq0tpWIjBFM/Csa0hYVX9ix6m8nAVlknOovT1LvD/gaIuZNtmaiiSAB65/TjnliupjGi2a7F8qFEdFNoNe7km2mW1fLUXuDyQ/+txdGAQ=",
+            "title": "U.S. Household Composition Shifts as the Population Grows Older; More Young Adults Live With Parents | PRB",
+            "type": "web_search_result_location",
+            "url": "https://www.prb.org/resources/u-s-household-composition-shifts-as-the-population-grows-older-more-young-adults-live-with-parents/"
+          }
+        ],
+        "text": "[REDACTED_TEXT length=104]",
+        "type": "text",
+        "parsed_output": null
+      },
+      {
+        "citations": null,
+        "text": "[REDACTED_TEXT length=3]",
+        "type": "text",
+        "parsed_output": null
+      },
+      {
+        "citations": [
+          {
+            "cited_text": "[REDACTED_TEXT length=125]",
+            "encrypted_index": "EpABCioIDBgCIiRkZTk5OTNhMy00ZGJmLTQwYTgtOGVmYy1iZWJmMDZmNzY0YWQSDFBqKYVbSCSgy08qCRoMTSHpqkW7eyHFYtazIjC+72b6bSULa2vlgWJ3S9w1HePkY6/y6fIiluKl3XLFT6XRqfcvbhxUp6q3rMkUPAUqFKpGj9PWsV4/461vExOytMhwde6oGAQ=",
+            "title": "Fewer Than Half of U.S. Households Are Married-Couple Households",
+            "type": "web_search_result_location",
+            "url": "https://www.census.gov/newsroom/press-releases/2025/families-and-living-arrangements.html"
+          }
+        ],
+        "text": "[REDACTED_TEXT length=128]",
+        "type": "text",
+        "parsed_output": null
+      },
+      {
+        "citations": null,
+        "text": "[REDACTED_TEXT length=3]",
+        "type": "text",
+        "parsed_output": null
+      },
+      {
+        "citations": [
+          {
+            "cited_text": "[REDACTED_TEXT length=153]",
+            "encrypted_index": "EpEBCioIDBgCIiRkZTk5OTNhMy00ZGJmLTQwYTgtOGVmYy1iZWJmMDZmNzY0YWQSDJW2miqRkexFCZJG3BoMtsSvdJAgp+xyFYH1IjAquEubh9xX55ZOes0etF3zqrC/1ZwU64FF5uNVjZ1Qdh5f6rVfV1o/BtWfZqYn8tgqFaiK0R1vh97LXRvv4GXj4B/VdzSbKhgE",
+            "title": "Trends and patterns in intermarriage | Pew Research Center",
+            "type": "web_search_result_location",
+            "url": "https://www.pewresearch.org/social-trends/2017/05/18/1-trends-and-patterns-in-intermarriage/"
+          }
+        ],
+        "text": "[REDACTED_TEXT length=136]",
+        "type": "text",
+        "parsed_output": null
+      },
+      {
+        "citations": null,
+        "text": "[REDACTED_TEXT length=3]",
+        "type": "text",
+        "parsed_output": null
+      },
+      {
+        "citations": [
+          {
+            "cited_text": "[REDACTED_TEXT length=153]",
+            "encrypted_index": "EpEBCioIDBgCIiRkZTk5OTNhMy00ZGJmLTQwYTgtOGVmYy1iZWJmMDZmNzY0YWQSDEqGtiYBTcBMw8KtDxoMZHojGidptWYhowGrIjBtj2de9CULfPl1PTFTPuq8YObVP0l/vx9eDYj3VMAn06rd/pMATUKYR8dcWhiNw5EqFSNtfAxU7dIHydZm8d3hHUqRvFre6RgE",
+            "title": "Trends and patterns in intermarriage | Pew Research Center",
+            "type": "web_search_result_location",
+            "url": "https://www.pewresearch.org/social-trends/2017/05/18/1-trends-and-patterns-in-intermarriage/"
+          }
+        ],
+        "text": "[REDACTED_TEXT length=115]",
+        "type": "text",
+        "parsed_output": null
+      },
+      {
+        "citations": null,
+        "text": "[REDACTED_TEXT length=3]",
+        "type": "text",
+        "parsed_output": null
+      },
+      {
+        "citations": [
+          {
+            "cited_text": "[REDACTED_TEXT length=82]",
+            "encrypted_index": "EpABCioIDBgCIiRkZTk5OTNhMy00ZGJmLTQwYTgtOGVmYy1iZWJmMDZmNzY0YWQSDHyCxOUUOBohA+N4fRoMBFnx/zv2dB5ETInAIjAZ6b2hkO6OGAfEmdMBblQ1gl5/e+RGqqWmPxa7S28A9yZ1ArmuljU5fV2DiZnfg3wqFGyZy3aJok3XUzVShL99x1nkoy9dGAQ=",
+            "title": "Interracial marriage in the United States - Wikipedia",
+            "type": "web_search_result_location",
+            "url": "https://en.wikipedia.org/wiki/Interracial_marriage_in_the_United_States"
+          }
+        ],
+        "text": "[REDACTED_TEXT length=142]",
+        "type": "text",
+        "parsed_output": null
+      },
+      {
+        "citations": null,
+        "text": "[REDACTED_TEXT length=3]",
+        "type": "text",
+        "parsed_output": null
+      },
+      {
+        "citations": [
+          {
+            "cited_text": "[REDACTED_TEXT length=138]",
+            "encrypted_index": "EpABCioIDBgCIiRkZTk5OTNhMy00ZGJmLTQwYTgtOGVmYy1iZWJmMDZmNzY0YWQSDJUjhTKaUH2AzCoefhoMIRMRNwvpl1WwYJlxIjCEqw5qyVFrGTlhJRssF1YmYWTjiawgC7Q4QrtCQFQPCVjKdjfZaAuVJGmr5qI/MAgqFEbjTtAmd0nDNcDWsR8knW6kvIiwGAQ=",
+            "title": "Religion, Marriage Markets, and Assortative Mating in the United States - PMC",
+            "type": "web_search_result_location",
+            "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC5089166/"
+          }
+        ],
+        "text": "[REDACTED_TEXT length=103]",
+        "type": "text",
+        "parsed_output": null
+      },
+      {
+        "citations": null,
+        "text": "[REDACTED_TEXT length=3]",
+        "type": "text",
+        "parsed_output": null
+      },
+      {
+        "citations": [
+          {
+            "cited_text": "[REDACTED_TEXT length=153]",
+            "encrypted_index": "EpIBCioIDBgCIiRkZTk5OTNhMy00ZGJmLTQwYTgtOGVmYy1iZWJmMDZmNzY0YWQSDNgy4GDuyMZdIoBiuRoMOEWib4PrtBH9epFpIjA3pW3jf1KzFm6qnnKay54jbcqBVaLc/U9uZLrSOnwTvnpQzASWan9c0XAls/pCrgUqFtCIaNU1L/O2DC5+4HIKEupnelJe38IY...[truncated]",
+            "title": "Assortative Mating and Income Inequality | NBER",
+            "type": "web_search_result_location",
+            "url": "https://www.nber.org/digest/may14/assortative-mating-and-income-inequality"
+          }
+        ],
+        "text": "[REDACTED_TEXT length=239]",
+        "type": "text",
+        "parsed_output": null
+      },
+      {
+        "citations": null,
+        "text": "[REDACTED_TEXT length=3]",
+        "type": "text",
+        "parsed_output": null
+      },
+      {
+        "citations": [
+          {
+            "cited_text": "[REDACTED_TEXT length=117]",
+            "encrypted_index": "EpEBCioIDBgCIiRkZTk5OTNhMy00ZGJmLTQwYTgtOGVmYy1iZWJmMDZmNzY0YWQSDEFeuF6u/BtF2OEyQxoMW8gbYxK3U6LGIkJhIjDrV+FeKoe7Sdlv3bO7raSYOWZz++/u0PGs/g7pnkDtLGql6PqYM9iCm/9koCRwuTQqFUzqofkUqE+ZvLcUxbqNRYFfYczO2hgE",
+            "title": "In 2020, 7.2% of U.S. Family Households Were Multigenerational",
+            "type": "web_search_result_location",
+            "url": "https://www.census.gov/library/stories/2023/06/several-generations-under-one-roof.html"
+          }
+        ],
+        "text": "[REDACTED_TEXT length=132]",
+        "type": "text",
+        "parsed_output": null
+      },
+      {
+        "id": "toolu_013t3XSG7Lg8S6wPiWsNbe7y",
+        "input": {
+          "age_brackets": [
+            {
+              "upper_bound": 30,
+              "label": "18-29"
+            },
+            {
+              "upper_bound": 45,
+              "label": "30-44"
+            },
+            {
+              "upper_bound": 65,
+              "label": "45-64"
+            },
+            {
+              "upper_bound": 999,
+              "label": "65+"
+            }
+          ],
+          "household_type_weights": [
+            {
+              "bracket": "18-29",
+              "types": [
+                {
+                  "type": "single",
+                  "weight": 0.45
+                },
+                {
+                  "type": "couple",
+                  "weight": 0.25
+                },
+                {
+                  "type": "single_parent",
+                  "weight": 0.08
+                },
+                {
+                  "type": "couple_with_kids",
+                  "weight": 0.12
+                },
+                {
+                  "type": "multi_generational",
+                  "weight": 0.1
+                }
+              ]
+            },
+            {
+              "bracket": "30-44",
+              "types": [
+                {
+                  "type": "single",
+                  "weight": 0.2
+                },
+                {
+                  "type": "couple",
+                  "weight": 0.22
+                },
+                {
+                  "type": "single_parent",
+                  "weight": 0.13
+                },
+                {
+                  "type": "couple_with_kids",
+                  "weight": 0.38
+                },
+                {
+                  "type": "multi_generational",
+                  "weight": 0.07
+                }
+              ]
+            },
+            {
+              "bracket": "45-64",
+              "types": [
+                {
+                  "type": "single",
+                  "weight": 0.25
+                },
+                {
+                  "type": "couple",
+                  "weight": 0.42
+                },
+                {
+                  "type": "single_parent",
+                  "weight": 0.09
+                },
+                {
+                  "type": "couple_with_kids",
+                  "weight": 0.17
+                },
+                {
+                  "type": "multi_generational",
+                  "weight": 0.07
+                }
+              ]
+            },
+            {
+              "bracket": "65+",
+              "types": [
+                {
+                  "type": "single",
+                  "weight": 0.38
+                },
+                {
+                  "type": "couple",
+                  "weight": 0.52
+                },
+                {
+                  "type": "single_parent",
+                  "weight": 0.02
+                },
+                {
+                  "type": "couple_with_kids",
+                  "weight": 0.01
+                },
+                {
+                  "type": "multi_generational",
+                  "weight": 0.07
+                }
+              ]
+            }
+          ],
+          "same_group_rates": [
+            {
+              "group": "white",
+              "rate": 0.91
+            },
+            {
+              "group": "black",
+              "rate": 0.82
+            },
+            {
+              "group": "hispanic",
+              "rate": 0.74
+            },
+            {
+              "group": "asian",
+              "rate": 0.72
+            },
+            {
+              "group": "native_american",
+              "rate": 0.58
+            },
+            {
+              "group": "multiracial",
+              "rate": 0.38
+            }
+          ],
+          "default_same_group_rate": 0.7,
+          "assortative_mating": [
+            {
+              "attribute": "education_level",
+              "correlation": 0.65
+            },
+            {
+              "attribute": "religious_affiliation",
+              "correlation": 0.6
+            },
+            {
+              "attribute": "income_bracket",
+              "correlation": 0.58
+            },
+            {
+              "attribute": "political_affiliation",
+              "correlation": 0.65
+            },
+            {
+              "attribute": "race_ethnicity",
+              "correlation": 0.85
+            },
+            {
+              "attribute": "age",
+              "correlation": 0.8
+            },
+            {
+              "attribute": "media_consumption_type",
+              "correlation": 0.55
+            },
+            {
+              "attribute": "personality_openness",
+              "correlation": 0.45
+            },
+            {
+              "attribute": "ai_attitude",
+              "correlation": 0.5
+            }
+          ],
+          "partner_age_gap_mean": -2.3,
+          "partner_age_gap_std": 4.5,
+          "min_adult_age": 18,
+          "child_min_parent_offset": 18,
+          "child_max_parent_offset": 45,
+          "max_dependent_child_age": 17,
+          "elderly_min_offset": 20,
+          "elderly_max_offset": 45,
+          "life_stages": [
+            {
+              "max_age": 5,
+              "label": "preschool"
+            },
+            {
+              "max_age": 11,
+              "label": "elementary"
+            },
+            {
+              "max_age": 14,
+              "label": "middle_school"
+            },
+            {
+              "max_age": 18,
+              "label": "high_school"
+            }
+          ],
+          "adult_stage_label": "adult",
+          "avg_household_size": 2.51,
+          "sources": [
+            "U.S. Census Bureau, America's Families and Living Arrangements: 2023 \u2014 https://www.census.gov/data/tables/2023/demo/families/cps-2023.html",
+            "U.S. Census Bureau, Historical Households Tables (HH-1 through HH-7): 1960\u20132023 \u2014 https://www.census.gov/data/tables/time-series/demo/families/households.html",
+            "U.S. Census Bureau, Age and Sex Composition in the United States: 2023 \u2014 https://www.census.gov/data/tables/2023/demo/age-and-sex/2023-age-sex-composition.html",
+            "U.S. Census Bureau, Families and Living Arrangements Press Release 2025 (Median Age at First Marriage) \u2014 https://www.census.gov/newsroom/press-releases/2025/families-and-living-arrangements.html",
+            "U.S. Census Bureau, In 2020, 7.2% of U.S. Family Households Were Multigenerational \u2014 https://www.census.gov/library/stories/2023/06/several-generations-under-one-roof.html",
+            "U.S. Census Bureau, Married Couple Households Made Up Most of Family Households \u2014 https://www.census.gov/library/stories/2023/05/family-households-still-the-majority.html",
+            "Statista / U.S. Census Bureau, Average size of households in the U.S. 2023 \u2014 https://www.statista.com/statistics/183648/average-size-of-households-in-the-us/",
+            "Pew Research Center, Trends and Patterns in Intermarriage (2017) \u2014 https://www.pewresearch.org/social-trends/2017/05/18/1-trends-and-patterns-in-intermarriage/",
+            "BlackDemographics.com, Black Marriage in America (citing Census 2023 ACS) \u2014 https://blackdemographics.com/households/marriage-in-black-america/",
+            "Wikipedia, Interracial Marriage in the United States (citing Census/Pew data) \u2014 https://en.wikipedia.org/wiki/Interracial_marriage_in_the_United_States",
+            "USAFacts, How Common Are Multigenerational Households in the US? (2023) \u2014 https://usafacts.org/articles/how-common-are-multigenerational-households/",
+            "Population Reference Bureau, U.S. Household Composition Shifts \u2014 https://www.prb.org/resources/u-s-household-composition-shifts-as-the-population-grows-older-more-young-adults-live-with-parents/",
+            "BGSU NCFMR, Age Composition of Same-sex & Different-sex Couples, 2023 \u2014 https://www.bgsu.edu/ncfmr/resources/data/family-profiles/FP-25-16.html",
+            "PMC / NIH, Religion, Marriage Markets, and Assortative Mating in the United States \u2014 https://pmc.ncbi.nlm.nih.gov/articles/PMC5089166/",
+            "NBER Digest, Assortative Mating and Income Inequality (Greenwood et al.) \u2014 https://www.nber.org/digest/may14/assortative-mating-and-income-inequality",
+            "Federal Reserve Bank of New York, Educational Assortative Mating and Household Income Inequality \u2014 https://www.newyorkfed.org/research/staff_reports/sr682.html",
+            "Duke University Press / Demography, Eight Decades of Educational Assortative Mating (2024) \u2014 https://read.dukeupress.edu/demography/article/61/5/1293/390842/",
+            "U.S. Census Bureau, America's Families and Living Arrangements: 2022 (P20-587) \u2014 https://www2.census.gov/library/publications/2024/demo/p20-587.pdf",
+            "U.S. Census Bureau, Age Differences Among Coresidential Partners (2021 ACS Working Paper) \u2014 https://www.census.gov/library/working-papers/2023/demo/SEHSD-WP2023-10.html",
+            "U.S. Census Bureau, Geographic Variations in Black-White Interracial Marital Patterns (PAA 2023) \u2014 https://www.census.gov/content/dam/Census/newsroom/press-kits/2023/paa/2023-paa-paper-geographic-vari...[truncated]"
+          ]
+        },
+        "name": "household_config",
+        "type": "tool_use",
+        "caller": {
+          "type": "direct"
+        }
+      }
+    ],
+    "model": "claude-sonnet-4-6",
+    "role": "assistant",
+    "stop_reason": "tool_use",
+    "stop_sequence": null,
+    "type": "message",
+    "usage": {
+      "cache_creation": {
+        "ephemeral_1h_input_tokens": "[REDACTED_SECRET]",
+        "ephemeral_5m_input_tokens": "[REDACTED_SECRET]"
+      },
+      "cache_creation_input_tokens": "[REDACTED_SECRET]",
+      "cache_read_input_tokens": "[REDACTED_SECRET]",
+      "input_tokens": 158842,
+      "output_tokens": 3539,
+      "server_tool_use": {
+        "web_search_requests": 5,
+        "web_fetch_requests": 0
+      },
+      "service_tier": "standard",
+      "inference_geo": "global"
+    }
+  },
+  "sources_extracted": [
+    "https://www.census.gov/data/tables/2023/demo/families/cps-2023.html",
+    "https://read.dukeupress.edu/demography/article/61/5/1293/390842/Eight-Decades-of-Educational-Assortative-Mating-A",
+    "https://www.census.gov/library/stories/2023/06/several-generations-under-one-roof.html",
+    "https://www.census.gov/topics/population/age-and-sex/data/tables.html",
+    "https://www.census.gov/data/tables/2023/demo/age-and-sex/2023-age-sex-composition.html",
+    "https://www.statista.com/statistics/233184/median-household-income-in-the-united-states-by-age/",
+    "https://pmc.ncbi.nlm.nih.gov/articles/PMC5089166/",
+    "https://www.census.gov/newsroom/press-releases/2025/families-and-living-arrangements.html",
+    "https://www.workingimmigrants.com/2023/10/growth-in-interracial-marriage-1980-vs-2021/",
+    "https://www.sciencedirect.com/science/article/abs/pii/S0049089X15000514",
+    "https://www.datingadvice.com/studies/interracial-dating-statistics",
+    "https://data.census.gov/table/ACSDT1Y2023.B12007H?q=marriage+rates",
+    "https://www.pewresearch.org/topic/family-relationships/marriage-divorce/intermarriage/",
+    "https://pmc.ncbi.nlm.nih.gov/articles/PMC4183451/",
+    "https://www.statista.com/statistics/183648/average-size-of-households-in-the-us/",
+    "https://www.pewresearch.org/short-reads/2014/01/29/new-academic-study-links-rising-income-inequality-to-assortive-mating/",
+    "https://www.pewresearch.org/social-trends/2017/05/18/1-trends-and-patterns-in-intermarriage/",
+    "https://www.cdc.gov/nchs/data/series/sr_21/sr21_021.pdf",
+    "https://www.statista.com/statistics/242189/disitribution-of-households-in-the-us-by-household-size/",
+    "https://www2.census.gov/library/publications/2024/demo/p20-587.pdf",
+    "https://pmc.ncbi.nlm.nih.gov/articles/PMC12176447/",
+    "https://www.statista.com/statistics/241488/population-of-the-us-by-sex-and-age/",
+    "https://www2.census.gov/library/working-papers/2024/adrm/ces/CES-WP-24-30.pdf",
+    "https://usafacts.org/articles/how-common-are-multigenerational-households/",
+    "https://en.wikipedia.org/wiki/Interracial_marriage_in_the_United_States",
+    "https://www.census.gov/content/dam/Census/newsroom/press-kits/2023/paa/2023-paa-paper-geographic-variations-black-white-interracial-marital.pdf",
+    "https://www.census.gov/topics/families/families-and-households.html",
+    "https://www.bgsu.edu/ncfmr/resources/data/family-profiles/FP-25-16.html",
+    "https://www.newyorkfed.org/research/staff_reports/sr682.html",
+    "https://www.census.gov/topics/families.html",
+    "https://www.census.gov/library/working-papers/2023/demo/SEHSD-WP2023-10.html",
+    "https://www.prb.org/resources/u-s-household-composition-shifts-as-the-population-grows-older-more-young-adults-live-with-parents/",
+    "https://www.nber.org/digest/may14/assortative-mating-and-income-inequality",
+    "https://www.census.gov/data/tables/2020/demo/families/cps-2020.html",
+    "https://www.census.gov/library/stories/2023/05/family-households-still-the-majority.html",
+    "https://www.census.gov/data/tables/time-series/demo/families/households.html",
+    "https://ccpr.ucla.edu/wp-content/uploads/2024/04/Assortative-Mating_-Intergenerational-Mobility_-and-Educational-Inequality.pdf",
+    "https://en.wikipedia.org/wiki/Demographics_of_the_United_States",
+    "https://www.newyorkfed.org/medialibrary/media/research/staff_reports/sr682.pdf",
+    "https://www.census.gov/programs-surveys/cps/data/tables.2023.List_1020932829.html",
+    "https://www.journals.uchicago.edu/doi/10.1086/702018",
+    "https://www.ebsco.com/research-starters/ethnic-and-cultural-studies/interracial-and-interethnic-marriage",
+    "https://blackdemographics.com/households/marriage-in-black-america/",
+    "https://www.census.gov/library/stories/2022/08/does-marrying-younger-mean-marrying-more-often.html",
+    "https://www.census.gov/content/dam/Census/library/visualizations/time-series/demo/families-and-households/ms-2.pdf"
+  ]
+}

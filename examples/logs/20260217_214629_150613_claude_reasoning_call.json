@@ -1,0 +1,50 @@
+{
+  "timestamp": "2026-02-17T21:46:29.150697",
+  "function": "reasoning_call",
+  "provider": "claude",
+  "request": {
+    "model": "claude-sonnet-4-6",
+    "prompt_length": 8907
+  },
+  "response": {
+    "id": "msg_01MeXX6nbXhxUhaKdSBBJJZY",
+    "content": [
+      {
+        "id": "toolu_01V1NKmUFyKiiMn8FTrMATWi",
+        "input": {
+          "event_type": "announcement",
+          "content": "[REDACTED_TEXT length=4797]",
+          "source": "OpenAI (confirmed independently by Anthropic, DeepMind, xAI, and China's Ministry of Science and Technology)",
+          "credibility": 0.92,
+          "ambiguity": 0.35,
+          "emotional_valence": 0.75,
+          "reasoning": "[REDACTED_TEXT length=2362]"
+        },
+        "name": "event_parsing",
+        "type": "tool_use",
+        "caller": {
+          "type": "direct"
+        }
+      }
+    ],
+    "model": "claude-sonnet-4-6",
+    "role": "assistant",
+    "stop_reason": "tool_use",
+    "stop_sequence": null,
+    "type": "message",
+    "usage": {
+      "cache_creation": {
+        "ephemeral_1h_input_tokens": "[REDACTED_SECRET]",
+        "ephemeral_5m_input_tokens": "[REDACTED_SECRET]"
+      },
+      "cache_creation_input_tokens": "[REDACTED_SECRET]",
+      "cache_read_input_tokens": "[REDACTED_SECRET]",
+      "input_tokens": 3002,
+      "output_tokens": 1667,
+      "server_tool_use": null,
+      "service_tier": "standard",
+      "inference_geo": "global"
+    }
+  },
+  "sources_extracted": []
+}

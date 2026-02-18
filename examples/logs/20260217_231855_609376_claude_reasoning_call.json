@@ -1,0 +1,189 @@
+{
+  "timestamp": "2026-02-17T23:18:55.609424",
+  "function": "reasoning_call",
+  "provider": "claude",
+  "request": {
+    "model": "claude-sonnet-4-6",
+    "prompt_length": 3951
+  },
+  "response": {
+    "id": "msg_01F3RNsWuGMTZJFKY7mfgJBz",
+    "content": [
+      {
+        "id": "toolu_01FLWgyAbxrUGf7N4uTF9bkV",
+        "input": {
+          "phrasings": [
+            {
+              "attribute": "financial_resilience",
+              "much_below": "I am far less financially cushioned against economic shocks than most people",
+              "below": "I have somewhat less financial stability and savings to fall back on than most people",
+              "average": "My financial resilience in the face of economic disruption is about average",
+              "above": "I am better positioned financially to weather economic shocks than most people",
+              "much_above": "I have far greater financial resources and stability to absorb economic disruption than most people"
+            },
+            {
+              "attribute": "economic_anxiety",
+              "much_below": "I worry far less about my financial future and job security than most people",
+              "below": "I am somewhat less anxious about my economic situation than most people",
+              "average": "My level of worry about my financial future and job security is about average",
+              "above": "I feel more anxious about my financial future and job security than most people",
+              "much_above": "I am far more consumed by worry about my economic security and financial future than most people"
+            },
+            {
+              "attribute": "trust_in_institutions",
+              "much_below": "I trust institutions far less than most people",
+              "below": "I am more skeptical of institutions than most people",
+              "average": "I am about as trusting of institutions as the average person",
+              "above": "I generally trust institutions more than most people",
+              "much_above": "I have far more faith in government, media, and public institutions than most people"
+            },
+            {
+              "attribute": "institutional_change_support",
+              "much_below": "I am far more opposed to rapid, large-scale restructuring of government and economic institutions than most people",
+              "below": "I am somewhat more cautious about sweeping institutional change than most people",
+              "average": "My support for large-scale institutional restructuring in response to new technology is about average",
+              "above": "I am more supportive of bold, rapid institutional reform than most people",
+              "much_above": "I am far more enthusiastic about sweeping, transformative restructuring of institutions than most people"
+            },
+            {
+              "attribute": "social_cohesion_orientation",
+              "much_below": "I place far less priority on collective stability and community solidarity than most people",
+              "below": "I am somewhat less focused on community solidarity over individual benefit than most people",
+              "average": "My balance between collective stability and individual benefit is about average",
+              "above": "I place more importance on community solidarity and collective well-being than most people",
+              "much_above": "I prioritize collective stability and community solidarity far more strongly than most people"
+            },
+            {
+              "attribute": "openness",
+              "much_below": "I am far less open to new ideas and novel experiences than most people",
+              "below": "I am somewhat less curious and open to new ideas than most people",
+              "average": "My openness to new experiences and ideas is about average",
+              "above": "I am more curious, creative, and open to new ideas than most people",
+              "much_above": "I am far more open to novel ideas and unconventional thinking than most people"
+            },
+            {
+              "attribute": "conscientiousness",
+              "much_below": "I am far less organized, disciplined, and dependable than most people",
+              "below": "I am somewhat less conscientious and self-disciplined than most people",
+              "average": "My level of organization and dependability is about average",
+              "above": "I am more organized, disciplined, and reliable than most people",
+              "much_above": "I am far more conscientious, methodical, and dependable than most people"
+            },
+            {
+              "attribute": "extraversion",
+              "much_below": "I am far more introverted and reserved than most people",
+              "below": "I am somewhat less outgoing and sociable than most people",
+              "average": "My level of sociability and outgoingness is about average",
+              "above": "I am more sociable, assertive, and outgoing than most people",
+              "much_above": "I am far more extraverted and socially energized than most people"
+            },
+            {
+              "attribute": "agreeableness",
+              "much_below": "I am far less cooperative, empathetic, and trusting of others than most people",
+              "below": "I am somewhat less agreeable and empathetic toward others than most people",
+              "average": "My level of cooperativeness and empathy toward others is about average",
+              "above": "I am more cooperative, empathetic, and trusting toward others than most people",
+              "much_above": "I am far more agreeable, compassionate, and trusting of others than most people"
+            },
+            {
+              "attribute": "neuroticism",
+              "much_below": "I am far more emotionally stable and less prone to anxiety than most people",
+              "below": "I am somewhat more emotionally stable and less anxious than most people",
+              "average": "My level of emotional stability and tendency toward anxiety is about average",
+              "above": "I experience more emotional instability and anxiety than most people",
+              "much_above": "I am far more prone to anxiety, stress, and emotional instability than most people"
+            },
+            {
+              "attribute": "need_for_cognition",
+              "much_below": "I engage in analytical thinking and complex problem-solving far less than most people",
+              "below": "I am somewhat less inclined to seek out effortful analytical thinking than most people",
+              "average": "My tendency to engage in deep, analytical thinking is about average",
+              "above": "I enjoy effortful analytical thinking more than most people",
+              "much_above": "I engage in and seek out complex analytical thinking far more than most people"
+            },
+            {
+              "attribute": "susceptibility_to_misinformation",
+              "much_below": "I am far less likely to accept or share unverified information than most people",
+              "below": "I am somewhat less susceptible to misinformation than most people",
+              "average": "My susceptibility to misinformation is about average",
+              "above": "I am somewhat more likely to accept and share unverified information than most people",
+              "much_above": "I am far more likely to accept and spread unverified or false information than most people"
+            },
+            {
+              "attribute": "information_verification_habit",
+              "much_below": "I cross-check claims against reliable sources far less often than most people",
+              "below": "I verify information against multiple sources somewhat less than most people",
+              "average": "My habit of verifying information before accepting it is about average",
+              "above": "I am more diligent about cross-checking claims against authoritative sources than most people",
+              "much_above": "I am far more rigorous about verifying information against multiple authoritative sources than most people"
+            },
+            {
+              "attribute": "ai_literacy",
+              "much_below": "I understand AI concepts and capabilities far less than most people",
+              "below": "My understanding of AI and machine learning is somewhat lower than most people",
+              "average": "My understanding of AI concepts and capabilities is about average",
+              "above": "I understand AI concepts, capabilities, and limitations better than most people",
+              "much_above": "I have a far deeper understanding of AI and machine learning than most people"
+            },
+            {
+              "attribute": "ai_risk_perception",
+              "much_below": "I perceive far less personal or societal danger from advanced AI than most people",
+              "below": "I am somewhat less concerned about the risks posed by advanced AI than most people",
+              "average": "My level of concern about the dangers of advanced AI is about average",
+              "above": "I see more personal and societal risk in advanced AI than most people",
+              "much_above": "I am far more alarmed by the potential dangers of advanced AI than most people"
+            },
+            {
+              "attribute": "automation_job_vulnerability",
+              "much_below": "My job is far less exposed to automation and AI displacement than most people's",
+              "below": "My occupation is somewhat less vulnerable to automation displacement than most people's",
+              "average": "My job's exposure to automation and AI displacement is about average",
+              "above": "My job is more at risk of being displaced by automation and AI than most people's",
+              "much_above": "My occupation is far more vulnerable to displacement by AI-enabled automation than most people's"
+            },
+            {
+              "attribute": "asi_adoption_willingness",
+              "much_below": "I am far less willing to use ASI-powered tools in my daily life and work than most people",
+              "below": "I am somewhat less willing to adopt ASI-powered tools than most people",
+              "average": "My willingness to use ASI-powered tools in my life and work is about average",
+              "above": "I am more willing to actively adopt ASI-powered tools than most people",
+              "much_above": "I am far more eager to integrate ASI-powered tools into my daily life and work than most people"
+            },
+            {
+              "attribute": "techno_optimism",
+              "much_below": "I am far more skeptical that technological progress benefits humanity than most people",
+              "below": "I am somewhat less optimistic about the net benefits of technological progress than most people",
+              "average": "My belief that technology produces net positive outcomes for humanity is about average",
+              "above": "I believe more strongly than most people that technological progress is good for humanity",
+              "much_above": "I am far more confident than most people that technological progress will produce overwhelmingly positive outcomes for humanity"
+            }
+          ]
+        },
+        "name": "relative_phrasings",
+        "type": "tool_use",
+        "caller": {
+          "type": "direct"
+        }
+      }
+    ],
+    "model": "claude-sonnet-4-6",
+    "role": "assistant",
+    "stop_reason": "tool_use",
+    "stop_sequence": null,
+    "type": "message",
+    "usage": {
+      "cache_creation": {
+        "ephemeral_1h_input_tokens": "[REDACTED_SECRET]",
+        "ephemeral_5m_input_tokens": "[REDACTED_SECRET]"
+      },
+      "cache_creation_input_tokens": "[REDACTED_SECRET]",
+      "cache_read_input_tokens": "[REDACTED_SECRET]",
+      "input_tokens": 1766,
+      "output_tokens": 2354,
+      "server_tool_use": null,
+      "service_tier": "standard",
+      "inference_geo": "global"
+    }
+  },
+  "sources_extracted": []
+}

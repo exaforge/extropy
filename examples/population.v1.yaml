@@ -1,0 +1,2968 @@
+meta:
+  description: 10,000 US adults aged 18+ representative of the national population
+    by state, age, gender, race/ethnicity, education, and income. Include political
+    affiliation, media consumption habits, social media usage, religious affiliation,
+    and personality traits. Focus on attributes relevant to opinion formation on national
+    policy issues.
+  geography: US
+  agent_focus: US adults representative of the national population, focused on opinion
+    formation on national policy issues
+  created_at: '2026-02-17T21:08:30.550477'
+  version: '1.0'
+  persona_template: null
+  scenario_description: null
+  name_config: null
+grounding:
+  overall: strong
+  sources_count: 195
+  strong_count: 24
+  medium_count: 11
+  low_count: 0
+  sources:
+  - https://www.visualcapitalist.com/u-s-population-racial-breakdown-1990-2023/
+  - https://nces.ed.gov/programs/coe/indicator/cba
+  - https://www.pewresearch.org/politics/2024/04/09/age-generational-cohorts-and-party-identification/
+  - https://www.pewresearch.org/topic/family-relationships/marriage-divorce/intermarriage/
+  - https://blackdemographics.com/households/marriage-in-black-america/
+  - https://www.census.gov/data/tables/time-series/demo/educational-attainment/cps-historical-time-series.html
+  - https://news.gallup.com/poll/15370/party-affiliation.aspx
+  - https://pmc.ncbi.nlm.nih.gov/articles/PMC8821110/
+  - https://www.pewresearch.org/politics/fact-sheet/party-affiliation-fact-sheet-npors/
+  - https://www.bls.gov/opub/reports/race-and-ethnicity/2023/
+  - https://www.statista.com/statistics/203183/percentage-distribution-of-household-income-in-the-us/
+  - https://www.statista.com/statistics/183648/average-size-of-households-in-the-us/
+  - https://www.census.gov/topics/families/families-and-households.html
+  - 'U.S. Census Bureau – America''s Families and Living Arrangements: 2023, https://www.census.gov/data/tables/2023/demo/families/cps-2023.html'
+  - https://news.gallup.com/poll/611864/lgbtq-identification.aspx
+  - https://www.census.gov/newsroom/press-releases/2023/population-estimates-age-sex.html
+  - https://www.census.gov/quickfacts/fact/table/US/HCN010222
+  - https://news.gallup.com/poll/700499/new-high-identify-political-independents.aspx
+  - https://www.census.gov/acs/www/about/why-we-ask-each-question/marital/
+  - https://www.census.gov/newsroom/press-kits/2023/national-state-population-estimates.html
+  - https://en.wikipedia.org/wiki/Urbanization_in_the_United_States
+  - https://www.statista.com/statistics/184260/educational-attainment-in-the-us/
+  - UCLA CCPR – Assortative Mating, Intergenerational Mobility, and Educational Inequality,
+    https://ccpr.ucla.edu/wp-content/uploads/2024/04/Assortative-Mating_-Intergenerational-Mobility_-and-Educational-Inequality.pdf
+  - https://www.census.gov/newsroom/press-releases/2023/population-estimates-characteristics.html
+  - https://pmc.ncbi.nlm.nih.gov/articles/PMC2728392/
+  - https://www.ers.usda.gov/data-products/rural-urban-continuum-codes
+  - https://www.educationnext.org/which-party-really-has-the-edge-on-education/
+  - https://kb.gcsu.edu/researchday/2024/all/41/
+  - https://www.census.gov/data/tables/2022/demo/educational-attainment/cps-detailed-tables.html
+  - https://www.census.gov/newsroom/press-releases/2022/urban-rural-populations.html
+  - https://datacenter.aecf.org/data/tables/6294-educational-attainment-of-population-ages-25-to-34
+  - https://stephenslighthouse.com/2025/09/10/us-census-bureau-releases-new-educational-attainment-data/
+  - https://www.census.gov/topics/education/educational-attainment.html
+  - https://www.bgsu.edu/ncfmr/resources/data/family-profiles/FP-25-09.html
+  - https://populationeducation.org/how-to-understand-the-urban-rural-population-split-in-the-u-s/
+  - https://news.gallup.com/poll/655157/gop-holds-edge-party-affiliation-third-straight-year.aspx
+  - https://www.visualcapitalist.com/mapped-how-much-of-each-u-s-states-population-lives-in-cities/
+  - PMC / NCBI – Religion, Marriage Markets, and Assortative Mating in the United
+    States, https://pmc.ncbi.nlm.nih.gov/articles/PMC5089166/
+  - https://www.catholicworldreport.com/2025/09/03/new-report-shows-1-percent-of-us-population-identifies-as-transgender/
+  - Pew Research Center – Trends and Patterns in Intermarriage (2017), https://www.pewresearch.org/social-trends/2017/05/18/1-trends-and-patterns-in-intermarriage/
+  - BlackDemographics.com – Black Marriage in America (2023 ACS), https://blackdemographics.com/households/marriage-in-black-america/
+  - https://worldpopulationreview.com/states
+  - https://www.statista.com/statistics/183657/average-size-of-a-family-in-the-us/
+  - U.S. Census Bureau – Geographic Variations in Black-White Interracial Marital
+    Relationships (PAA 2023 paper), https://www.census.gov/content/dam/Census/newsroom/press-kits/2023/paa/2023-paa-paper-geographic-variations-black-white-interracial-marital.pdf
+  - https://dqydj.com/income-by-education/
+  - https://www.census.gov/library/stories/2023/11/same-sex-couple-diversity.html
+  - https://www.pewresearch.org/social-trends/2018/05/22/demographic-and-economic-trends-in-urban-suburban-and-rural-communities/
+  - https://www.census.gov/library/stories/2024/11/family-households.html
+  - https://www.census.gov/library/visualizations/2023/comm/median-household-income.html
+  - https://www.census.gov/programs-surveys/geography/guidance/geo-areas/urban-rural/2020-ua-facts.html
+  - https://en.wikipedia.org/wiki/Interracial_marriage_in_the_United_States
+  - Wikipedia – Interracial Marriage in the United States, https://en.wikipedia.org/wiki/Interracial_marriage_in_the_United_States
+  - https://read.dukeupress.edu/demography/article/61/5/1293/390842/Eight-Decades-of-Educational-Assortative-Mating-A
+  - https://www.journals.uchicago.edu/doi/10.1086/702018
+  - https://www.statista.com/chart/7031/americans-are-tying-the-knot-older-than-ever/
+  - https://www.statista.com/statistics/183489/population-of-the-us-by-ethnicity-since-2000/
+  - https://worldpopulationreview.com/state-rankings/average-household-size-by-state
+  - https://www.statista.com/statistics/1078383/political-party-identification-in-the-us/
+  - https://tradingeconomics.com/united-states/rural-population-percent-of-total-population-wb-data.html
+  - https://pmc.ncbi.nlm.nih.gov/articles/PMC9616076/
+  - https://www.pewresearch.org/topic/gender-lgbtq/lgbtq-attitudes-experiences/gender-identity/
+  - https://www.census.gov/newsroom/press-releases/2023/population-trends-return-to-pre-pandemic-norms.html
+  - U.S. Census Bureau QuickFacts / Demographics of the United States (Wikipedia),
+    https://en.wikipedia.org/wiki/Demographics_of_the_United_States
+  - https://www.census.gov/topics/population.html
+  - https://www.pgpf.org/blog/2023/11/income-and-wealth-in-the-united-states-an-overview-of-recent-data
+  - https://proximityone.com/statepop2025.htm
+  - https://www.census.gov/data/tables/2023/demo/popproj/2023-summary-tables.html
+  - https://www.simplypsychology.org/big-five-personality.html
+  - https://www.statista.com/statistics/233301/median-household-income-in-the-united-states-by-education/
+  - https://www.census.gov/data/tables/time-series/demo/families/households.html
+  - https://www.cnn.com/2024/10/14/politics/the-biggest-predictor-of-how-someone-will-vote
+  - https://www.prb.org/resources/most-americans-marry-within-their-race/
+  - https://research.collegeboard.org/media/pdf/education-pays-2023.pdf
+  - New York Fed Staff Report 682 – Educational Assortative Mating and Household Income
+    Inequality, https://www.newyorkfed.org/medialibrary/media/research/staff_reports/sr682.pdf
+  - https://www.census.gov/content/dam/Census/library/visualizations/time-series/demo/families-and-households/ms-2.pdf
+  - https://www.census.gov/newsroom/stories/unmarried-single-americans-week.html
+  - https://williamsinstitute.law.ucla.edu/wp-content/uploads/Trans-Pop-Update-Aug-2025.pdf
+  - https://www.census.gov/programs-surveys/geography/guidance/geo-areas/urban-rural.html
+  - 'U.S. Census Bureau – Historical Households Tables (HH-2 through HH-7): 1960–2023,
+    https://www.census.gov/data/tables/time-series/demo/families/households.html'
+  - https://www.pbs.org/newshour/show/how-a-college-degree-is-one-of-the-best-predictors-of-which-candidate-voters-support
+  - https://www.newyorkfed.org/medialibrary/media/research/staff_reports/sr682.pdf
+  - U.S. Census Bureau – Historical Marital Status Tables (MS-2), https://www.census.gov/data/tables/time-series/demo/families/marital.html
+  - https://www.census.gov/library/visualizations/interactive/marital-status-in-united-states.html
+  - https://www.bgsu.edu/ncfmr/resources/data/family-profiles/decade-of-change-median-age-first-marriage-2012-2022-fp-24-07.html
+  - https://statisticalatlas.com/United-States/Marital-Status
+  - https://www.advisorperspectives.com/dshort/updates/2025/09/19/household-incomes-2024-the-value-of-higher-education
+  - https://en.wikipedia.org/wiki/Race_and_ethnicity_in_the_United_States
+  - https://en.wikipedia.org/wiki/List_of_U.S._states_and_territories_by_population
+  - https://www.kff.org/other-health/trans-people-in-the-u-s-identities-demographics-and-wellbeing/
+  - https://www.census.gov/topics/population/age-and-sex/data/tables.html
+  - https://www.census.gov/topics/education.html
+  - https://collectiver.com/blog/education-vote-correlation/
+  - https://www.census.gov/programs-surveys/popproj/data/tables.html
+  - https://www.shvs.org/wp-content/uploads/2024/03/SHVS_Collection-of-Sexual-Orientation-and-Gender-Identity-Data_FINAL.pdf
+  - https://www.census.gov/newsroom/press-releases/2023/educational-attainment-data.html
+  - https://www.thomas.co/resources/type/hr-guides/what-are-big-5-personality-traits
+  - https://www.census.gov/library/publications/2023/demo/p60-279.html
+  - https://en.wikipedia.org/wiki/Educational_attainment_in_the_United_States
+  - https://www.cdc.gov/nchs/fastats/marriage-divorce.htm
+  - https://datausa.io/profile/geo/united-states
+  - https://www.bls.gov/emp/chart-unemployment-earnings-education.htm
+  - https://aspe.hhs.gov/sites/default/files/documents/6056484066506a8d4ba3dcd8d9322490/rural-health-rr-30-Oct-24.pdf
+  - https://www.census.gov/data/tables/2020/demo/families/cps-2020.html
+  - https://www.lassennews.com/do-smarter-states-vote-blue-study-finds-the-most-educated-states-lean-democratic
+  - https://www.census.gov/data/tables/2023/demo/age-and-sex/2023-age-sex-composition.html
+  - https://www.tandfonline.com/doi/abs/10.1080/15140326.2024.2327909
+  - PMC / NCBI – The Rising Midlife First Marriage Rate in the U.S., https://pmc.ncbi.nlm.nih.gov/articles/PMC9616076/
+  - https://www.census.gov/library/stories/2024/08/redefining-rural.html
+  - https://nces.ed.gov/programs/edge/Geographic/LocaleBoundaries
+  - https://www.nber.org/digest/may14/assortative-mating-and-income-inequality
+  - https://www.workingimmigrants.com/2023/10/growth-in-interracial-marriage-1980-vs-2021/
+  - https://www.highereddatastories.com/2025/02/educational-attainment-and-presidential.html
+  - https://www.census.gov/library/visualizations/2023/comm/percent-change-state-population.html
+  - https://www.census.gov/data/tables/2024/demo/educational-attainment/cps-detailed-tables.html
+  - https://www2.census.gov/library/publications/2024/demo/p60-282.pdf
+  - https://www2.census.gov/library/publications/2024/demo/p20-587.pdf
+  - PMC / NCBI – Marital Dissolution Among Interracial Couples, https://pmc.ncbi.nlm.nih.gov/articles/PMC4183451/
+  - https://data.census.gov/table/ACSST5Y2023.S1201?q=82073
+  - https://www.prb.org/resources/fact-sheet-aging-in-the-united-states/
+  - https://williamsinstitute.law.ucla.edu/publications/trans-adults-united-states/
+  - https://williamsinstitute.law.ucla.edu/press/trans-pop-estimates-press-release/
+  - https://pmc.ncbi.nlm.nih.gov/articles/PMC5089166/
+  - https://pmc.ncbi.nlm.nih.gov/articles/PMC6048969/
+  - https://www.bgsu.edu/ncfmr/resources/data/family-profiles/median-age-first-marriage-geographic-variation-2022-fp-24-08.html
+  - https://www.statista.com/statistics/985183/size-urban-rural-population-us/
+  - https://www.census.gov/data/tables/time-series/demo/families/marital.html
+  - https://www.pewresearch.org/politics/2024/04/09/partisanship-by-race-ethnicity-and-education/
+  - https://www.census.gov/data/tables/2023/demo/families/cps-2023.html
+  - https://www.statista.com/statistics/1078361/political-party-identification-us-major-parties/
+  - https://www.census.gov/library/stories/2018/07/interracial-marriages.html
+  - 'U.S. Census Bureau – Age and Sex Composition in the United States: 2023, https://www.census.gov/data/tables/2023/demo/age-and-sex/2023-age-sex-composition.html'
+  - https://www.census.gov/newsroom/press-releases/2025/educational-attainment-data.html
+  - https://www.truity.com/test/big-five-personality-test
+  - 'BGSU NCFMR – Median Age at First Marriage: Geographic Variation, 2023 (FP-25-09),
+    https://www.bgsu.edu/ncfmr/resources/data/family-profiles/FP-25-09.html'
+  - https://www.census.gov/library/publications/2024/demo/p60-282.html
+  - https://www.statista.com/statistics/233184/median-household-income-in-the-united-states-by-age/
+  - https://www.generationtechblog.com/p/transgender-identity-how-much-has
+  - https://nces.ed.gov/programs/digest/2023menu_tables.asp
+  - https://www.census.gov/programs-surveys/cps/data/tables.2023.List_1020932829.html
+  - https://www.hcmmlaw.com/blog/2024/07/13/majority-americans-now-single-statistics-insights/
+  - U.S. Census Bureau – Family Households Story (2024), https://www.census.gov/library/stories/2024/11/family-households.html
+  - https://ccpr.ucla.edu/wp-content/uploads/2024/04/Assortative-Mating_-Intergenerational-Mobility_-and-Educational-Inequality.pdf
+  - NBER Digest – Assortative Mating and Income Inequality (Greenwood et al.), https://www.nber.org/digest/may14/assortative-mating-and-income-inequality
+  - https://www.census.gov/topics/education/educational-attainment/data/tables.html
+  - https://fred.stlouisfed.org/series/MEHOINUSA672N
+  - https://www.census.gov/topics/families.html
+  - https://www.census.gov/programs-surveys/popproj.html
+  - https://www.healthline.com/health/big-five-personality-traits
+  - https://censusreporter.org/topics/marital-status/
+  - https://www.census.gov/data/tables/time-series/demo/popest/2020s-national-detail.html
+  - https://datacenter.aecf.org/data/tables/6538-adult-population-by-age-group
+  - https://data.census.gov/table/ACSST1Y2023.S1501
+  - https://www.pewresearch.org/race-and-ethnicity/2025/11/03/counting-race-how-the-census-measures-identity-and-what-americans-think-about-it/
+  - https://en.wikipedia.org/wiki/Household_income_in_the_United_States
+  - https://news.gallup.com/poll/548459/independent-party-tied-high-democratic-new-low.aspx
+  - https://pmc.ncbi.nlm.nih.gov/articles/PMC4183451/
+  - https://apps.quanticfoundry.com/profiles/bigfive/edf522c042d345e587a6fe1c809912f5/
+  - https://www.census.gov/library/publications/2025/demo/p60-286.html
+  - https://www.pewresearch.org/social-trends/2017/05/18/1-trends-and-patterns-in-intermarriage/
+  - https://goodhealthpsych.com/blog/exploring-the-big-five-personality-test/
+  - https://usafacts.org/data/topics/people-society/population-and-demographics/population-data/average-family-size/
+  - https://www.axios.com/2024/11/07/college-degree-voters-split-harris-trump
+  - https://www.prb.org/usdata/indicator/marriage-age-women/snapshot/
+  - https://medium.com/@kathrynstaublin/the-most-educated-states-voted-blue-f60f304531f7
+  - https://www.census.gov/library/stories/2025/09/education-and-income.html
+  - https://nchstats.com/average-marriage-age-in-the-us/
+  - https://www.census.gov/newsroom/blogs/random-samplings/2023/09/exploring-diversity.html
+  - https://www.census.gov/content/dam/Census/library/publications/2023/demo/p60-279.pdf
+  - https://pmc.ncbi.nlm.nih.gov/articles/PMC12176447/
+  - https://www.tandfonline.com/doi/full/10.1080/15140326.2024.2327909
+  - https://nces.ed.gov/fastfacts/display.asp?id=27
+  - Duke University Press / Demography – Eight Decades of Educational Assortative
+    Mating (2024), https://read.dukeupress.edu/demography/article/61/5/1293/390842/
+  - Statista / U.S. Census Bureau – Average household size in the U.S. 2023 (2.51
+    persons), https://www.statista.com/statistics/183648/average-size-of-households-in-the-us/
+  - https://www.icip.iastate.edu/tables/population/urban-pct-states
+  - https://www.census.gov/newsroom/press-releases/2024/population-estimates-age-sex.html
+  - https://www.census.gov/data/tables/time-series/demo/popest/2020s-state-total.html
+  - https://www.pewresearch.org/politics/2024/04/09/the-partisanship-and-ideology-of-american-voters/
+  - https://www.statista.com/statistics/241488/population-of-the-us-by-sex-and-age/
+  - https://www.theknot.com/content/average-age-of-marriage
+  - https://www.prb.org/resources/u-s-household-composition-shifts-as-the-population-grows-older-more-young-adults-live-with-parents/
+  - https://usafacts.org/data/topics/people-society/population-and-demographics/our-changing-population/
+  - https://en.wikipedia.org/wiki/Big_Five_personality_traits
+  - https://www2.census.gov/library/publications/2024/demo/acsbr-023.pdf
+  - https://educationdata.org/education-attainment-statistics
+  - https://www.statista.com/statistics/1331358/sexual-orientation-gender-identity-us/
+  - Population Reference Bureau – U.S. Household Composition Shifts as the Population
+    Grows Older, https://www.prb.org/resources/u-s-household-composition-shifts-as-the-population-grows-older-more-young-adults-live-with-parents/
+  - https://fred.stlouisfed.org/series/TTLHH
+  - https://www.statista.com/statistics/184259/mean-earnings-by-educational-attainment-and-ethnic-group/
+  - https://www.arcgis.com/home/item.html?id=458e2c20ebb2479086bc32b7d09ffe27
+  - https://wisevoter.com/state-rankings/average-household-size-by-state/
+  - https://en.wikipedia.org/wiki/Demographics_of_the_United_States
+  - https://www.cdc.gov/nchs/data-analysis-tools/urban-rural.html
+  - https://www.neilsberg.com/insights/united-states-population-by-race/
+  - https://www.census.gov/content/dam/Census/newsroom/press-kits/2023/paa/2023-paa-paper-geographic-variations-black-white-interracial-marital.pdf
+  - https://www.psychologytoday.com/us/basics/big-5-personality-traits
+attributes:
+- name: age
+  type: int
+  category: universal
+  description: Person's age in years, ranging from 18 to 90+, representative of the
+    US adult population.
+  scope: partner_correlated
+  correlation_rate: null
+  semantic_type: age
+  identity_type: generational_identity
+  display_format: null
+  sampling:
+    strategy: independent
+    distribution:
+      type: normal
+      mean: 46.7
+      std: 17.5
+      min: 18.0
+      max: 99.0
+      mean_formula: null
+      std_formula: null
+      min_formula: null
+      max_formula: null
+    formula: null
+    depends_on: []
+    modifiers: []
+  grounding:
+    level: strong
+    method: researched
+    source: https://www.census.gov/newsroom/press-releases/2023/population-estimates-characteristics.html
+    note: US median age is 38.9 overall (2022 Census); for adults 18+ the mean shifts
+      to ~46.7 with std ~17.5. Normal distribution is a reasonable approximation of
+      the adult age distribution, though the true shape is somewhat right-skewed at
+      older ages due to mortality. The baby boom cohort (born 1946-1964, aged ~59-77
+      in 2023) creates a modest bulge.
+  constraints:
+  - type: hard_min
+    value: 18.0
+    expression: null
+    reason: Minimum adult age for US adult population sampling
+  - type: hard_max
+    value: 99.0
+    expression: null
+    reason: Practical upper bound; centenarians exist but are extremely rare (<0.1%)
+- name: gender
+  type: categorical
+  category: universal
+  description: Gender identity of the person (Male, Female, Non-binary/Other).
+  scope: individual
+  correlation_rate: null
+  semantic_type: null
+  identity_type: gender_identity
+  display_format: null
+  sampling:
+    strategy: independent
+    distribution:
+      type: categorical
+      options:
+      - Male
+      - Female
+      - Non-binary/Other
+      weights:
+      - 0.489
+      - 0.497
+      - 0.014
+    formula: null
+    depends_on: []
+    modifiers: []
+  grounding:
+    level: strong
+    method: researched
+    source: https://news.gallup.com/poll/611864/lgbtq-identification.aspx; https://www.census.gov
+    note: '2020 Census: females 50.9%, males 49.1% of total population. Among adults
+      18+, the sex ratio slightly favors females due to higher male mortality. Non-binary/Other
+      set to ~1.4%: Gallup (2024) reports ~1% of US adults identify as nonbinary,
+      Williams Institute estimates 0.8% identify as transgender with roughly 1/3 nonbinary.
+      Combining overlapping categories and rounding gives ~1.4% for Non-binary/Other.
+      Male and Female weights adjusted proportionally to sum to 1.'
+  constraints:
+  - type: spec_expression
+    value: null
+    expression: abs(sum(weights) - 1.0) < 0.001
+    reason: Categorical weights must sum to 1.0
+- name: state
+  type: categorical
+  category: universal
+  description: US state of residence (all 50 states + DC), sampled proportionally
+    to population.
+  scope: household
+  correlation_rate: null
+  semantic_type: null
+  identity_type: null
+  display_format: null
+  sampling:
+    strategy: independent
+    distribution:
+      type: categorical
+      options:
+      - CA
+      - TX
+      - FL
+      - NY
+      - PA
+      - IL
+      - OH
+      - GA
+      - NC
+      - MI
+      - NJ
+      - VA
+      - WA
+      - AZ
+      - TN
+      - MA
+      - IN
+      - MO
+      - MD
+      - WI
+      - CO
+      - MN
+      - SC
+      - AL
+      - LA
+      - KY
+      - OR
+      - OK
+      - CT
+      - UT
+      - IA
+      - NV
+      - AR
+      - MS
+      - KS
+      - NM
+      - NE
+      - ID
+      - WV
+      - HI
+      - NH
+      - ME
+      - MT
+      - RI
+      - DE
+      - SD
+      - ND
+      - AK
+      - VT
+      - WY
+      - DC
+      weights:
+      - 0.1174
+      - 0.0906
+      - 0.0651
+      - 0.0581
+      - 0.0378
+      - 0.0371
+      - 0.0351
+      - 0.032
+      - 0.0316
+      - 0.0295
+      - 0.0274
+      - 0.026
+      - 0.0236
+      - 0.0222
+      - 0.0213
+      - 0.0208
+      - 0.0199
+      - 0.0184
+      - 0.0182
+      - 0.0176
+      - 0.0176
+      - 0.0166
+      - 0.0163
+      - 0.0147
+      - 0.0139
+      - 0.0133
+      - 0.0131
+      - 0.012
+      - 0.0107
+      - 0.0103
+      - 0.0094
+      - 0.0093
+      - 0.0091
+      - 0.0088
+      - 0.0086
+      - 0.0063
+      - 0.0058
+      - 0.0056
+      - 0.0052
+      - 0.0042
+      - 0.0042
+      - 0.004
+      - 0.0032
+      - 0.0031
+      - 0.003
+      - 0.0027
+      - 0.0023
+      - 0.0022
+      - 0.0019
+      - 0.0017
+      - 0.0021
+    formula: null
+    depends_on: []
+    modifiers: []
+  grounding:
+    level: strong
+    method: researched
+    source: https://www.census.gov/data/tables/time-series/demo/popest/2020s-state-total.html
+    note: 'Weights derived from US Census Bureau Vintage 2023 state population estimates
+      (July 1, 2023), normalized to sum to 1. California (~11.7%) and Texas (~9.1%)
+      are the largest. Wyoming (~0.17%) and Vermont (~0.19%) are smallest. DC included
+      at ~0.21%. Note: weights include all ages; adult-only proportions would differ
+      slightly but state rank-order is essentially identical.'
+  constraints:
+  - type: spec_expression
+    value: null
+    expression: abs(sum(weights) - 1.0) < 0.005
+    reason: Categorical weights must sum to approximately 1.0 (small rounding tolerance
+      for 51 categories)
+  - type: spec_expression
+    value: null
+    expression: len(options) == 51
+    reason: Must include all 50 states plus DC
+- name: race_ethnicity
+  type: categorical
+  category: universal
+  description: Racial/ethnic identity (White non-Hispanic, Black, Hispanic, Asian,
+    Other), representative of US census distributions.
+  scope: partner_correlated
+  correlation_rate: null
+  semantic_type: null
+  identity_type: race_ethnicity
+  display_format: null
+  sampling:
+    strategy: independent
+    distribution:
+      type: categorical
+      options:
+      - White non-Hispanic
+      - Hispanic
+      - Black non-Hispanic
+      - Asian non-Hispanic
+      - Other/Multiracial
+      weights:
+      - 0.578
+      - 0.191
+      - 0.121
+      - 0.059
+      - 0.051
+    formula: null
+    depends_on: []
+    modifiers: []
+  grounding:
+    level: strong
+    method: researched
+    source: https://www.pewresearch.org/race-and-ethnicity/2025/11/03/counting-race-how-the-census-measures-identity-and-what-americans-think-about-it/
+    note: '2020 Census (Pew Research): White non-Hispanic 57.8%, Hispanic 18.7%, Black
+      non-Hispanic 12.1%, Asian non-Hispanic 5.9%, Two or more races/other 4.1% (rounded
+      to 5.1% to absorb AIAN, NHPI, and other small groups). These are overall population
+      figures; adult-only figures differ marginally (Hispanic share is slightly lower
+      among adults due to younger age structure). Weights adjusted to sum to 1.'
+  constraints:
+  - type: spec_expression
+    value: null
+    expression: abs(sum(weights) - 1.0) < 0.001
+    reason: Categorical weights must sum to 1.0
+- name: openness
+  type: float
+  category: personality
+  description: 'Big Five openness to experience: curiosity, creativity, and willingness
+    to consider new ideas (0–1 scale).'
+  scope: individual
+  correlation_rate: null
+  semantic_type: null
+  identity_type: null
+  display_format: null
+  sampling:
+    strategy: independent
+    distribution:
+      type: beta
+      alpha: 7.0
+      beta: 4.5
+      min: 0.0
+      max: 1.0
+      min_formula: null
+      max_formula: null
+    formula: null
+    depends_on: []
+    modifiers: []
+  grounding:
+    level: medium
+    method: extrapolated
+    source: https://en.wikipedia.org/wiki/Big_Five_personality_traits; Soto & John
+      (2017) normative BFI-2 data; Terracciano et al. (2005) cross-cultural norms
+    note: 'Big Five Openness is typically measured on a 1-5 Likert scale. US normative
+      data (Soto & John 2017, n>1,000) place Openness mean near 3.7/5 (~0.60 on 0-1
+      scale) with SD ~0.7/5 (~0.14). A Beta(7.0, 4.5) distribution yields mean ~0.61
+      and SD ~0.13, appropriately right-of-center with a slight positive skew. Openness
+      is generally the highest-scoring of the Big Five in Western/US samples. Note:
+      women score slightly higher on openness-to-feelings facets while men score higher
+      on openness-to-ideas facets; aggregate is similar.'
+  constraints:
+  - type: hard_min
+    value: 0.0
+    expression: null
+    reason: Trait score is bounded at 0 (minimum possible)
+  - type: hard_max
+    value: 1.0
+    expression: null
+    reason: Trait score is bounded at 1 (maximum possible)
+- name: conscientiousness
+  type: float
+  category: personality
+  description: 'Big Five conscientiousness: organization, dependability, and self-discipline
+    (0–1 scale).'
+  scope: individual
+  correlation_rate: null
+  semantic_type: null
+  identity_type: null
+  display_format: null
+  sampling:
+    strategy: independent
+    distribution:
+      type: beta
+      alpha: 8.5
+      beta: 4.5
+      min: 0.0
+      max: 1.0
+      min_formula: null
+      max_formula: null
+    formula: null
+    depends_on: []
+    modifiers: []
+  grounding:
+    level: medium
+    method: extrapolated
+    source: https://en.wikipedia.org/wiki/Big_Five_personality_traits; Soto & John
+      (2017) normative BFI-2 US data; Costa & McCrae NEO norms
+    note: US normative data place Conscientiousness mean near 3.8/5 (~0.65 on 0-1
+      scale) with SD ~0.65/5 (~0.13). A Beta(8.5, 4.5) yields mean ~0.654 and SD ~0.12.
+      Conscientiousness tends to increase with age (research confirms adults 30+ score
+      higher), and the US adult population skews older, slightly elevating the mean
+      vs. college-age norms. Women score marginally higher than men.
+  constraints:
+  - type: hard_min
+    value: 0.0
+    expression: null
+    reason: Trait score is bounded at 0 (minimum possible)
+  - type: hard_max
+    value: 1.0
+    expression: null
+    reason: Trait score is bounded at 1 (maximum possible)
+- name: extraversion
+  type: float
+  category: personality
+  description: 'Big Five extraversion: sociability, assertiveness, and positive emotionality
+    (0–1 scale).'
+  scope: individual
+  correlation_rate: null
+  semantic_type: null
+  identity_type: null
+  display_format: null
+  sampling:
+    strategy: independent
+    distribution:
+      type: beta
+      alpha: 5.5
+      beta: 4.5
+      min: 0.0
+      max: 1.0
+      min_formula: null
+      max_formula: null
+    formula: null
+    depends_on: []
+    modifiers: []
+  grounding:
+    level: medium
+    method: extrapolated
+    source: https://en.wikipedia.org/wiki/Big_Five_personality_traits; Soto & John
+      (2017) normative BFI-2 US data
+    note: US normative data place Extraversion mean near 3.2/5 (~0.55 on 0-1 scale)
+      with SD ~0.8/5 (~0.16). A Beta(5.5, 4.5) yields mean ~0.55 and SD ~0.15, producing
+      a roughly symmetric distribution centered slightly above midpoint. This reflects
+      that the US population is roughly split between introverted and extraverted
+      tendencies, with a slight lean toward extraversion. Extraversion declines somewhat
+      with age; the adult population (mean age ~47) pulls mean slightly below young-adult
+      norms. Women score slightly higher than men on warmth/sociability facets.
+  constraints:
+  - type: hard_min
+    value: 0.0
+    expression: null
+    reason: Trait score is bounded at 0 (minimum possible)
+  - type: hard_max
+    value: 1.0
+    expression: null
+    reason: Trait score is bounded at 1 (maximum possible)
+- name: agreeableness
+  type: float
+  category: personality
+  description: 'Big Five agreeableness: cooperation, empathy, and trust toward others
+    (0–1 scale).'
+  scope: individual
+  correlation_rate: null
+  semantic_type: null
+  identity_type: null
+  display_format: null
+  sampling:
+    strategy: independent
+    distribution:
+      type: beta
+      alpha: 8.0
+      beta: 4.0
+      min: 0.0
+      max: 1.0
+      min_formula: null
+      max_formula: null
+    formula: null
+    depends_on: []
+    modifiers: []
+  grounding:
+    level: medium
+    method: extrapolated
+    source: https://en.wikipedia.org/wiki/Big_Five_personality_traits; Soto & John
+      (2017) normative BFI-2 US data; Costa & McCrae (2001) 26-country norms
+    note: US normative data place Agreeableness mean near 3.75/5 (~0.64 on 0-1 scale)
+      with SD ~0.65/5 (~0.13). A Beta(8.0, 4.0) yields mean ~0.667 and SD ~0.12. Agreeableness
+      increases with age, which is relevant given the older adult mean age in this
+      sample. Women consistently score higher than men on agreeableness across all
+      cultures studied (Costa et al. 2001). The distribution is moderately right-skewed
+      toward higher agreeableness.
+  constraints:
+  - type: hard_min
+    value: 0.0
+    expression: null
+    reason: Trait score is bounded at 0 (minimum possible)
+  - type: hard_max
+    value: 1.0
+    expression: null
+    reason: Trait score is bounded at 1 (maximum possible)
+- name: neuroticism
+  type: float
+  category: personality
+  description: 'Big Five neuroticism: emotional instability, anxiety, and negative
+    affect (0–1 scale).'
+  scope: individual
+  correlation_rate: null
+  semantic_type: null
+  identity_type: null
+  display_format: null
+  sampling:
+    strategy: independent
+    distribution:
+      type: beta
+      alpha: 4.5
+      beta: 6.5
+      min: 0.0
+      max: 1.0
+      min_formula: null
+      max_formula: null
+    formula: null
+    depends_on: []
+    modifiers: []
+  grounding:
+    level: medium
+    method: extrapolated
+    source: https://en.wikipedia.org/wiki/Big_Five_personality_traits; Soto & John
+      (2017) normative BFI-2 US data; Costa & McCrae (2001) 26-country norms
+    note: 'US normative data place Neuroticism mean near 2.9/5 (~0.45 on 0-1 scale)
+      with SD ~0.75/5 (~0.15). A Beta(4.5, 6.5) yields mean ~0.41 and SD ~0.14, slightly
+      below center reflecting that most US adults score in the moderate-to-low range.
+      Neuroticism decreases with age (adults 40+ tend to score lower). The most prominent
+      gender difference in Big Five: women score notably higher on neuroticism than
+      men across cultures (found in 49/55 nations studied). The adult US sample''s
+      slightly older mean age pulls the distribution modestly lower.'
+  constraints:
+  - type: hard_min
+    value: 0.0
+    expression: null
+    reason: Trait score is bounded at 0 (minimum possible)
+  - type: hard_max
+    value: 1.0
+    expression: null
+    reason: Trait score is bounded at 1 (maximum possible)
+- name: urban_rural
+  type: categorical
+  category: universal
+  description: 'Urbanicity of residence: Urban, Suburban, or Rural, conditioned on
+    state population density.'
+  scope: household
+  correlation_rate: null
+  semantic_type: null
+  identity_type: null
+  display_format: null
+  sampling:
+    strategy: conditional
+    distribution:
+      type: categorical
+      options:
+      - Urban
+      - Suburban
+      - Rural
+      weights:
+      - 0.31
+      - 0.55
+      - 0.14
+    formula: null
+    depends_on:
+    - state
+    modifiers:
+    - when: state in ['CA', 'NY', 'NJ', 'MA', 'IL', 'MD', 'CT', 'RI', 'DC', 'HI']
+      multiply: null
+      add: null
+      weight_overrides:
+        Urban: 0.6
+        Suburban: 0.32
+        Rural: 0.08
+      probability_override: null
+    - when: state in ['TX', 'FL', 'GA', 'WA', 'CO', 'AZ', 'NV', 'OR', 'VA', 'MN',
+        'PA', 'MI', 'OH', 'NC', 'TN', 'MO', 'IN', 'WI', 'SC', 'KS', 'NM', 'UT', 'NE',
+        'IA', 'OK', 'DE', 'NH']
+      multiply: null
+      add: null
+      weight_overrides:
+        Urban: 0.35
+        Suburban: 0.45
+        Rural: 0.2
+      probability_override: null
+    - when: state in ['WV', 'VT', 'ME', 'MT', 'SD', 'ND', 'AK', 'WY', 'MS', 'AR',
+        'AL', 'LA', 'KY', 'ID']
+      multiply: null
+      add: null
+      weight_overrides:
+        Urban: 0.2
+        Suburban: 0.3
+        Rural: 0.5
+      probability_override: null
+  grounding:
+    level: medium
+    method: researched
+    source: Pew Research Center urban/suburban/rural county analysis; Census 2020
+      urban/rural classification (80% urban, 20% rural at census level; Pew suburban
+      ~52% of population)
+    note: Census defines only urban/rural (80/20); the suburban split (~31% urban
+      core, 55% suburban, 14% rural) follows Pew's three-way classification. State
+      modifier will adjust heavily.
+  constraints:
+  - type: spec_expression
+    value: null
+    expression: sum(weights)==1.0
+    reason: Categorical weights must sum to 1.0
+- name: education_level
+  type: categorical
+  category: universal
+  description: Highest educational attainment (Less than HS, HS Diploma, Some College,
+    Associate's, Bachelor's, Graduate Degree).
+  scope: partner_correlated
+  correlation_rate: null
+  semantic_type: education
+  identity_type: null
+  display_format: null
+  sampling:
+    strategy: conditional
+    distribution:
+      type: categorical
+      options:
+      - Less than HS
+      - HS Diploma
+      - Some College
+      - Associate's
+      - Bachelor's
+      - Graduate Degree
+      weights:
+      - 0.09
+      - 0.27
+      - 0.2
+      - 0.1
+      - 0.22
+      - 0.12
+    formula: null
+    depends_on:
+    - age
+    modifiers:
+    - when: age < 25
+      multiply: null
+      add: null
+      weight_overrides:
+        Less than HS: 0.06
+        HS Diploma: 0.28
+        Some College: 0.38
+        Associate's: 0.08
+        Bachelor's: 0.16
+        Graduate Degree: 0.04
+      probability_override: null
+    - when: age >= 25 and age < 35
+      multiply: null
+      add: null
+      weight_overrides:
+        Less than HS: 0.07
+        HS Diploma: 0.22
+        Some College: 0.2
+        Associate's: 0.09
+        Bachelor's: 0.28
+        Graduate Degree: 0.14
+      probability_override: null
+    - when: age >= 35 and age < 55
+      multiply: null
+      add: null
+      weight_overrides:
+        Less than HS: 0.08
+        HS Diploma: 0.25
+        Some College: 0.2
+        Associate's: 0.1
+        Bachelor's: 0.24
+        Graduate Degree: 0.13
+      probability_override: null
+    - when: age >= 55
+      multiply: null
+      add: null
+      weight_overrides:
+        Less than HS: 0.1
+        HS Diploma: 0.32
+        Some College: 0.19
+        Associate's: 0.09
+        Bachelor's: 0.18
+        Graduate Degree: 0.12
+      probability_override: null
+  grounding:
+    level: strong
+    method: researched
+    source: 'US Census Bureau CPS 2023: 9% less than HS, 28% HS diploma, ~20% some
+      college, ~10% associate''s, ~22% bachelor''s, ~12% graduate degree (adults 18+)'
+    note: Weights normalized to exactly 1.0 (0.09+0.27+0.20+0.10+0.22+0.12=1.00).
+      Age modifier will reduce bachelor's/graduate for younger and older cohorts.
+  constraints:
+  - type: spec_expression
+    value: null
+    expression: sum(weights)==1.0
+    reason: Weights must sum to 1.0
+- name: household_income
+  type: int
+  category: universal
+  description: Annual household income in USD, conditioned on education level and
+    state.
+  scope: household
+  correlation_rate: null
+  semantic_type: income
+  identity_type: null
+  display_format: currency
+  sampling:
+    strategy: conditional
+    distribution:
+      type: lognormal
+      mean: 80000.0
+      std: 60000.0
+      min: 0.0
+      max: 1000000.0
+      mean_formula: 35000 if education_level == 'Less than HS' else 47000 if education_level
+        == 'HS Diploma' else 55000 if education_level == 'Some College' else 62000
+        if education_level == "Associate's" else 95000 if education_level == "Bachelor's"
+        else 130000 if education_level == 'Graduate Degree' else 80000
+      std_formula: 18000 if education_level == 'Less than HS' else 28000 if education_level
+        == 'HS Diploma' else 32000 if education_level == 'Some College' else 35000
+        if education_level == "Associate's" else 55000 if education_level == "Bachelor's"
+        else 75000 if education_level == 'Graduate Degree' else 45000
+      min_formula: null
+      max_formula: null
+    formula: null
+    depends_on:
+    - education_level
+    - state
+    modifiers:
+    - when: education_level == 'Less than HS' and state in ['CA', 'NY', 'MA', 'WA',
+        'CT', 'NJ', 'MD', 'CO', 'HI', 'DC']
+      multiply: 1.25
+      add: 0.0
+      weight_overrides: null
+      probability_override: null
+    - when: education_level == 'Bachelor\'s' and state in ['CA', 'NY', 'MA', 'WA',
+        'CT', 'NJ', 'MD', 'CO', 'HI', 'DC']
+      multiply: 1.35
+      add: 0.0
+      weight_overrides: null
+      probability_override: null
+    - when: education_level == 'Graduate Degree' and state in ['CA', 'NY', 'MA', 'WA',
+        'CT', 'NJ', 'MD', 'CO', 'HI', 'DC']
+      multiply: 1.4
+      add: 0.0
+      weight_overrides: null
+      probability_override: null
+    - when: education_level == 'Bachelor\'s' and state in ['MS', 'WV', 'AR', 'AL',
+        'NM', 'KY', 'LA', 'SD', 'MT', 'ID']
+      multiply: 0.82
+      add: 0.0
+      weight_overrides: null
+      probability_override: null
+    - when: education_level == 'Graduate Degree' and state in ['MS', 'WV', 'AR', 'AL',
+        'NM', 'KY', 'LA', 'SD', 'MT', 'ID']
+      multiply: 0.82
+      add: 0.0
+      weight_overrides: null
+      probability_override: null
+  grounding:
+    level: strong
+    method: researched
+    source: 'US Census Bureau 2023: median household income $80,610 nationally; income
+      by education well-documented in CPS/ACS data'
+    note: mean_formula uses chained ternary if/else — no dict.get() calls. Lognormal
+      is appropriate given right-skewed income distribution. State modifier will adjust
+      for COL differences.
+  constraints:
+  - type: hard_min
+    value: 0.0
+    expression: null
+    reason: Income cannot be negative
+  - type: hard_max
+    value: 1000000.0
+    expression: null
+    reason: Cap at $1M to avoid extreme outlier distortion
+- name: marital_status
+  type: categorical
+  category: universal
+  description: Current marital status (Single, Married, Divorced, Widowed, Domestic
+    Partnership).
+  scope: individual
+  correlation_rate: null
+  semantic_type: null
+  identity_type: null
+  display_format: null
+  sampling:
+    strategy: conditional
+    distribution:
+      type: categorical
+      options:
+      - Single
+      - Married
+      - Divorced
+      - Widowed
+      - Domestic Partnership
+      weights:
+      - 0.32
+      - 0.49
+      - 0.11
+      - 0.06
+      - 0.02
+    formula: null
+    depends_on:
+    - age
+    modifiers:
+    - when: age < 30
+      multiply: null
+      add: null
+      weight_overrides:
+        Single: 0.65
+        Married: 0.18
+        Divorced: 0.04
+        Widowed: 0.01
+        Domestic Partnership: 0.12
+      probability_override: null
+    - when: age >= 30 and age < 45
+      multiply: null
+      add: null
+      weight_overrides:
+        Single: 0.25
+        Married: 0.52
+        Divorced: 0.12
+        Widowed: 0.02
+        Domestic Partnership: 0.09
+      probability_override: null
+    - when: age >= 45 and age < 65
+      multiply: null
+      add: null
+      weight_overrides:
+        Single: 0.14
+        Married: 0.55
+        Divorced: 0.2
+        Widowed: 0.05
+        Domestic Partnership: 0.06
+      probability_override: null
+    - when: age >= 65
+      multiply: null
+      add: null
+      weight_overrides:
+        Single: 0.09
+        Married: 0.55
+        Divorced: 0.14
+        Widowed: 0.19
+        Domestic Partnership: 0.03
+      probability_override: null
+  grounding:
+    level: strong
+    method: researched
+    source: 'US Census Bureau 2023: ~49% married, ~32% never married (single), ~11%
+      divorced, ~6% widowed; domestic partnership ~2% estimated from cohabitation
+      data'
+    note: 'Age modifier critical: widowed rises sharply past 65, single peaks in 18-30s.
+      Domestic partnership is small but distinct from never-married.'
+  constraints:
+  - type: spec_expression
+    value: null
+    expression: sum(weights)==1.0
+    reason: Weights must sum to 1.0
+- name: household_size
+  type: int
+  category: universal
+  description: Total number of people living in the household.
+  scope: household
+  correlation_rate: null
+  semantic_type: null
+  identity_type: null
+  display_format: null
+  sampling:
+    strategy: conditional
+    distribution:
+      type: normal
+      mean: 2.51
+      std: 1.4
+      min: 1.0
+      max: 12.0
+      mean_formula: 1.0 if marital_status == 'Single' else 3.2 if marital_status ==
+        'Married' else 1.8 if marital_status == 'Divorced' else 1.3 if marital_status
+        == 'Widowed' else 2.5 if marital_status == 'Domestic Partnership' else 2.51
+      std_formula: null
+      min_formula: null
+      max_formula: null
+    formula: null
+    depends_on:
+    - marital_status
+    - age
+    modifiers:
+    - when: marital_status == 'Married' and age < 40
+      multiply: 1.15
+      add: 0.0
+      weight_overrides: null
+      probability_override: null
+    - when: marital_status == 'Single' and age >= 65
+      multiply: 0.95
+      add: 0.0
+      weight_overrides: null
+      probability_override: null
+    - when: marital_status == 'Widowed' and age >= 65
+      multiply: 0.9
+      add: 0.0
+      weight_overrides: null
+      probability_override: null
+  grounding:
+    level: strong
+    method: researched
+    source: 'US Census Bureau 2023: average household size 2.51 persons; married households
+      average ~3.2, single-person households common'
+    note: Mean formula uses chained ternary. Integer rounding applied post-sample.
+      Std kept at 1.4 to reflect broad spread.
+  constraints:
+  - type: hard_min
+    value: 1.0
+    expression: null
+    reason: Minimum household size is 1 (the person themselves)
+  - type: hard_max
+    value: 12.0
+    expression: null
+    reason: Extremely large households are very rare; cap at 12
+- name: has_children
+  type: boolean
+  category: universal
+  description: Whether the person has any children (under 18) living in the household.
+  scope: individual
+  correlation_rate: null
+  semantic_type: null
+  identity_type: parental_status
+  display_format: null
+  sampling:
+    strategy: conditional
+    distribution:
+      type: boolean
+      probability_true: 0.28
+    formula: null
+    depends_on:
+    - age
+    - marital_status
+    modifiers:
+    - when: age < 25 and marital_status == 'Single'
+      multiply: null
+      add: null
+      weight_overrides: null
+      probability_override: 0.06
+    - when: age >= 25 and age < 35 and marital_status == 'Married'
+      multiply: null
+      add: null
+      weight_overrides: null
+      probability_override: 0.48
+    - when: age >= 35 and age < 45 and marital_status == 'Married'
+      multiply: null
+      add: null
+      weight_overrides: null
+      probability_override: 0.58
+    - when: age >= 45 and age < 55 and marital_status == 'Married'
+      multiply: null
+      add: null
+      weight_overrides: null
+      probability_override: 0.3
+    - when: age >= 55
+      multiply: null
+      add: null
+      weight_overrides: null
+      probability_override: 0.06
+    - when: age >= 25 and age < 40 and marital_status == 'Domestic Partnership'
+      multiply: null
+      add: null
+      weight_overrides: null
+      probability_override: 0.28
+  grounding:
+    level: medium
+    method: researched
+    source: 'Census 2020: ~40% of family households had children under 18, but as
+      share of all adults ~28% have children under 18 at home. Age and marital status
+      modifiers will adjust substantially.'
+    note: Base rate is ~28% of adults having children under 18 in household. Peaks
+      strongly in ages 25-44, much lower for singles and elderly.
+  constraints: []
+- name: employment_status
+  type: categorical
+  category: universal
+  description: Current employment status (Full-time, Part-time, Self-employed, Unemployed,
+    Retired, Student).
+  scope: individual
+  correlation_rate: null
+  semantic_type: employment
+  identity_type: null
+  display_format: null
+  sampling:
+    strategy: conditional
+    distribution:
+      type: categorical
+      options:
+      - Full-time
+      - Part-time
+      - Self-employed
+      - Unemployed
+      - Retired
+      - Student
+      weights:
+      - 0.47
+      - 0.12
+      - 0.09
+      - 0.04
+      - 0.22
+      - 0.06
+    formula: null
+    depends_on:
+    - age
+    - education_level
+    modifiers:
+    - when: age < 25 and education_level in ['Less than HS', 'HS Diploma', 'Some College']
+      multiply: null
+      add: null
+      weight_overrides:
+        Full-time: 0.28
+        Part-time: 0.22
+        Self-employed: 0.03
+        Unemployed: 0.08
+        Retired: 0.0
+        Student: 0.39
+      probability_override: null
+    - when: age >= 25 and age < 55 and education_level in ['Bachelor\'s', 'Graduate
+        Degree']
+      multiply: null
+      add: null
+      weight_overrides:
+        Full-time: 0.72
+        Part-time: 0.08
+        Self-employed: 0.12
+        Unemployed: 0.03
+        Retired: 0.02
+        Student: 0.03
+      probability_override: null
+    - when: age >= 25 and age < 55 and education_level in ['Less than HS', 'HS Diploma',
+        'Some College', 'Associate\'s']
+      multiply: null
+      add: null
+      weight_overrides:
+        Full-time: 0.57
+        Part-time: 0.14
+        Self-employed: 0.08
+        Unemployed: 0.08
+        Retired: 0.02
+        Student: 0.11
+      probability_override: null
+    - when: age >= 55 and age < 65
+      multiply: null
+      add: null
+      weight_overrides:
+        Full-time: 0.5
+        Part-time: 0.12
+        Self-employed: 0.1
+        Unemployed: 0.05
+        Retired: 0.2
+        Student: 0.03
+      probability_override: null
+    - when: age >= 65
+      multiply: null
+      add: null
+      weight_overrides:
+        Full-time: 0.12
+        Part-time: 0.09
+        Self-employed: 0.07
+        Unemployed: 0.02
+        Retired: 0.69
+        Student: 0.01
+      probability_override: null
+  grounding:
+    level: strong
+    method: extrapolated
+    source: 'BLS 2023: ~62% employment-population ratio adults 16+; ~22% retired estimated
+      from age distribution; student ~6%; unemployed ~4% (unemployment rate ~3.7%
+      in 2023)'
+    note: 'Age is the dominant modifier: retirement rises sharply after 62, student
+      peaks 18-24. Education modifies full-time vs part-time propensity.'
+  constraints:
+  - type: spec_expression
+    value: null
+    expression: sum(weights)==1.0
+    reason: Weights must sum to 1.0
+- name: occupation
+  type: categorical
+  category: universal
+  description: Broad occupational category (Management, Professional, Service, Sales,
+    Construction, Production, Other) per BLS classification.
+  scope: individual
+  correlation_rate: null
+  semantic_type: occupation
+  identity_type: professional_identity
+  display_format: null
+  sampling:
+    strategy: conditional
+    distribution:
+      type: categorical
+      options:
+      - Management/Professional
+      - Service
+      - Sales/Office
+      - Construction/Extraction
+      - Production/Transport
+      - Other
+      weights:
+      - 0.38
+      - 0.17
+      - 0.2
+      - 0.09
+      - 0.11
+      - 0.05
+    formula: null
+    depends_on:
+    - education_level
+    - employment_status
+    modifiers:
+    - when: education_level == 'Graduate Degree' and employment_status == 'Full-time'
+      multiply: null
+      add: null
+      weight_overrides:
+        Management/Professional: 0.72
+        Service: 0.08
+        Sales/Office: 0.1
+        Construction/Extraction: 0.02
+        Production/Transport: 0.02
+        Other: 0.06
+      probability_override: null
+    - when: education_level == 'Bachelor\'s' and employment_status == 'Full-time'
+      multiply: null
+      add: null
+      weight_overrides:
+        Management/Professional: 0.55
+        Service: 0.1
+        Sales/Office: 0.22
+        Construction/Extraction: 0.04
+        Production/Transport: 0.04
+        Other: 0.05
+      probability_override: null
+    - when: education_level in ['Some College', 'Associate\'s'] and employment_status
+        == 'Full-time'
+      multiply: null
+      add: null
+      weight_overrides:
+        Management/Professional: 0.25
+        Service: 0.22
+        Sales/Office: 0.3
+        Construction/Extraction: 0.09
+        Production/Transport: 0.1
+        Other: 0.04
+      probability_override: null
+    - when: education_level in ['Less than HS', 'HS Diploma'] and employment_status
+        == 'Full-time'
+      multiply: null
+      add: null
+      weight_overrides:
+        Management/Professional: 0.1
+        Service: 0.28
+        Sales/Office: 0.22
+        Construction/Extraction: 0.18
+        Production/Transport: 0.18
+        Other: 0.04
+      probability_override: null
+    - when: education_level == 'Graduate Degree' and employment_status == 'Self-employed'
+      multiply: null
+      add: null
+      weight_overrides:
+        Management/Professional: 0.68
+        Service: 0.1
+        Sales/Office: 0.1
+        Construction/Extraction: 0.02
+        Production/Transport: 0.02
+        Other: 0.08
+      probability_override: null
+  grounding:
+    level: strong
+    method: researched
+    source: 'BLS Occupational Employment Statistics 2023: management/professional
+      ~38% of employed workers; service ~17%; sales/office ~20%; construction ~9%;
+      production/transport ~11%'
+    note: 'Only applies to employed persons. Education modifier critical: bachelor''s/graduate
+      degree strongly predicts management/professional category.'
+  constraints:
+  - type: spec_expression
+    value: null
+    expression: sum(weights)==1.0
+    reason: Weights must sum to 1.0
+- name: political_affiliation
+  type: categorical
+  category: population_specific
+  description: Political party identification (Strong Democrat, Lean Democrat, Independent,
+    Lean Republican, Strong Republican).
+  scope: partner_correlated
+  correlation_rate: null
+  semantic_type: null
+  identity_type: political_orientation
+  display_format: null
+  sampling:
+    strategy: conditional
+    distribution:
+      type: categorical
+      options:
+      - Strong Democrat
+      - Lean Democrat
+      - Independent
+      - Lean Republican
+      - Strong Republican
+      weights:
+      - 0.18
+      - 0.17
+      - 0.38
+      - 0.13
+      - 0.14
+    formula: null
+    depends_on:
+    - state
+    - education_level
+    modifiers:
+    - when: state in ['CA', 'NY', 'MA', 'IL', 'MD', 'CT', 'RI', 'VT', 'HI', 'DC',
+        'WA', 'OR', 'NJ', 'CO', 'NM', 'DE', 'ME']
+      multiply: null
+      add: null
+      weight_overrides:
+        Strong Democrat: 0.28
+        Lean Democrat: 0.22
+        Independent: 0.22
+        Lean Republican: 0.14
+        Strong Republican: 0.14
+      probability_override: null
+    - when: state in ['TX', 'FL', 'GA', 'NC', 'AZ', 'NV', 'VA', 'PA', 'MI', 'WI',
+        'MN', 'NH']
+      multiply: null
+      add: null
+      weight_overrides:
+        Strong Democrat: 0.18
+        Lean Democrat: 0.18
+        Independent: 0.25
+        Lean Republican: 0.2
+        Strong Republican: 0.19
+      probability_override: null
+    - when: state in ['WY', 'ID', 'ND', 'SD', 'NE', 'UT', 'KS', 'OK', 'AL', 'AR',
+        'WV', 'MS', 'TN', 'KY', 'SC', 'IN', 'MT', 'MO', 'LA', 'AK']
+      multiply: null
+      add: null
+      weight_overrides:
+        Strong Democrat: 0.12
+        Lean Democrat: 0.13
+        Independent: 0.2
+        Lean Republican: 0.22
+        Strong Republican: 0.33
+      probability_override: null
+    - when: education_level in ['Bachelor\'s', 'Graduate Degree']
+      multiply: null
+      add: null
+      weight_overrides:
+        Strong Democrat: 0.24
+        Lean Democrat: 0.21
+        Independent: 0.22
+        Lean Republican: 0.18
+        Strong Republican: 0.15
+      probability_override: null
+    - when: education_level in ['Less than HS', 'HS Diploma']
+      multiply: null
+      add: null
+      weight_overrides:
+        Strong Democrat: 0.16
+        Lean Democrat: 0.16
+        Independent: 0.23
+        Lean Republican: 0.2
+        Strong Republican: 0.25
+      probability_override: null
+  grounding:
+    level: strong
+    method: researched
+    source: 'Gallup/Pew 2023: ~31% Democrat-leaning, ~27% Republican-leaning, ~38%
+      Independent; strong partisan splits roughly 18/14 based on ANES data'
+    note: Weights sum to exactly 1.0 (0.18+0.17+0.38+0.13+0.14=1.00). State and education
+      modifiers will shift substantially (e.g., CA toward Democrat, WY toward Republican).
+  constraints:
+  - type: spec_expression
+    value: null
+    expression: sum(weights)==1.0
+    reason: Weights must sum to 1.0
+- name: political_ideology
+  type: categorical
+  category: population_specific
+  description: Self-described ideological placement on a scale (Very Liberal, Liberal,
+    Moderate, Conservative, Very Conservative).
+  scope: individual
+  correlation_rate: null
+  semantic_type: null
+  identity_type: political_orientation
+  display_format: null
+  sampling:
+    strategy: conditional
+    distribution:
+      type: categorical
+      options:
+      - Very Liberal
+      - Liberal
+      - Moderate
+      - Conservative
+      - Very Conservative
+      weights:
+      - 0.09
+      - 0.2
+      - 0.38
+      - 0.24
+      - 0.09
+    formula: null
+    depends_on:
+    - political_affiliation
+    modifiers:
+    - when: political_affiliation == 'Strong Democrat'
+      multiply: null
+      add: null
+      weight_overrides:
+        Very Liberal: 0.38
+        Liberal: 0.42
+        Moderate: 0.15
+        Conservative: 0.04
+        Very Conservative: 0.01
+      probability_override: null
+    - when: political_affiliation == 'Lean Democrat'
+      multiply: null
+      add: null
+      weight_overrides:
+        Very Liberal: 0.12
+        Liberal: 0.4
+        Moderate: 0.38
+        Conservative: 0.08
+        Very Conservative: 0.02
+      probability_override: null
+    - when: political_affiliation == 'Independent'
+      multiply: null
+      add: null
+      weight_overrides:
+        Very Liberal: 0.06
+        Liberal: 0.16
+        Moderate: 0.5
+        Conservative: 0.2
+        Very Conservative: 0.08
+      probability_override: null
+    - when: political_affiliation == 'Lean Republican'
+      multiply: null
+      add: null
+      weight_overrides:
+        Very Liberal: 0.02
+        Liberal: 0.07
+        Moderate: 0.35
+        Conservative: 0.42
+        Very Conservative: 0.14
+      probability_override: null
+    - when: political_affiliation == 'Strong Republican'
+      multiply: null
+      add: null
+      weight_overrides:
+        Very Liberal: 0.01
+        Liberal: 0.03
+        Moderate: 0.13
+        Conservative: 0.41
+        Very Conservative: 0.42
+      probability_override: null
+  grounding:
+    level: strong
+    method: researched
+    source: 'Gallup 2023 ideology: ~25% liberal, ~37% moderate, ~36% conservative;
+      very liberal/very conservative tails ~9% each from ANES data'
+    note: Political affiliation modifier will strongly shift these weights — Strong
+      Democrats shift toward Very Liberal, Strong Republicans toward Very Conservative.
+  constraints:
+  - type: spec_expression
+    value: null
+    expression: sum(weights)==1.0
+    reason: Weights must sum to 1.0
+- name: religious_affiliation
+  type: categorical
+  category: population_specific
+  description: Religious identity (Evangelical Protestant, Mainline Protestant, Catholic,
+    Other Christian, Jewish, Muslim, Other Non-Christian, None/Unaffiliated).
+  scope: partner_correlated
+  correlation_rate: null
+  semantic_type: null
+  identity_type: religious_affiliation
+  display_format: null
+  sampling:
+    strategy: conditional
+    distribution:
+      type: categorical
+      options:
+      - Evangelical Protestant
+      - Mainline Protestant
+      - Catholic
+      - Other Christian
+      - Jewish
+      - Muslim
+      - Other Non-Christian
+      - None/Unaffiliated
+      weights:
+      - 0.24
+      - 0.14
+      - 0.21
+      - 0.06
+      - 0.02
+      - 0.01
+      - 0.04
+      - 0.28
+    formula: null
+    depends_on:
+    - race_ethnicity
+    modifiers:
+    - when: race_ethnicity == 'White non-Hispanic'
+      multiply: null
+      add: null
+      weight_overrides:
+        Evangelical Protestant: 0.26
+        Mainline Protestant: 0.18
+        Catholic: 0.2
+        Other Christian: 0.06
+        Jewish: 0.03
+        Muslim: 0.01
+        Other Non-Christian: 0.03
+        None/Unaffiliated: 0.23
+      probability_override: null
+    - when: race_ethnicity == 'Black non-Hispanic'
+      multiply: null
+      add: null
+      weight_overrides:
+        Evangelical Protestant: 0.45
+        Mainline Protestant: 0.14
+        Catholic: 0.06
+        Other Christian: 0.12
+        Jewish: 0.01
+        Muslim: 0.04
+        Other Non-Christian: 0.02
+        None/Unaffiliated: 0.16
+      probability_override: null
+    - when: race_ethnicity == 'Hispanic'
+      multiply: null
+      add: null
+      weight_overrides:
+        Evangelical Protestant: 0.16
+        Mainline Protestant: 0.05
+        Catholic: 0.48
+        Other Christian: 0.08
+        Jewish: 0.01
+        Muslim: 0.01
+        Other Non-Christian: 0.03
+        None/Unaffiliated: 0.18
+      probability_override: null
+    - when: race_ethnicity == 'Asian non-Hispanic'
+      multiply: null
+      add: null
+      weight_overrides:
+        Evangelical Protestant: 0.08
+        Mainline Protestant: 0.06
+        Catholic: 0.08
+        Other Christian: 0.06
+        Jewish: 0.01
+        Muslim: 0.04
+        Other Non-Christian: 0.26
+        None/Unaffiliated: 0.41
+      probability_override: null
+    - when: race_ethnicity == 'Other/Multiracial'
+      multiply: null
+      add: null
+      weight_overrides:
+        Evangelical Protestant: 0.18
+        Mainline Protestant: 0.09
+        Catholic: 0.14
+        Other Christian: 0.09
+        Jewish: 0.02
+        Muslim: 0.03
+        Other Non-Christian: 0.09
+        None/Unaffiliated: 0.36
+      probability_override: null
+  grounding:
+    level: strong
+    method: researched
+    source: 'Pew Research Center 2023 Religious Landscape Study: 24% evangelical,
+      14% mainline Protestant, 21% Catholic, 28% unaffiliated; smaller shares for
+      Jewish, Muslim, other'
+    note: 'Race/ethnicity modifier important: Black non-Hispanic skews strongly toward
+      Protestant; Hispanic toward Catholic; Asian toward Other Non-Christian or None.'
+  constraints:
+  - type: spec_expression
+    value: null
+    expression: sum(weights)==1.0
+    reason: Weights must sum to 1.0
+- name: religious_attendance
+  type: categorical
+  category: population_specific
+  description: Frequency of attendance at religious services (Never, Seldom, A few
+    times/year, Monthly, Weekly, More than weekly).
+  scope: individual
+  correlation_rate: null
+  semantic_type: null
+  identity_type: null
+  display_format: null
+  sampling:
+    strategy: conditional
+    distribution:
+      type: categorical
+      options:
+      - Never
+      - Seldom
+      - A few times/year
+      - Monthly
+      - Weekly
+      - More than weekly
+      weights:
+      - 0.29
+      - 0.17
+      - 0.16
+      - 0.1
+      - 0.22
+      - 0.06
+    formula: null
+    depends_on:
+    - religious_affiliation
+    modifiers:
+    - when: religious_affiliation == 'None/Unaffiliated'
+      multiply: null
+      add: null
+      weight_overrides:
+        Never: 0.6
+        Seldom: 0.22
+        A few times/year: 0.1
+        Monthly: 0.04
+        Weekly: 0.03
+        More than weekly: 0.01
+      probability_override: null
+    - when: religious_affiliation == 'Evangelical Protestant'
+      multiply: null
+      add: null
+      weight_overrides:
+        Never: 0.06
+        Seldom: 0.1
+        A few times/year: 0.14
+        Monthly: 0.14
+        Weekly: 0.38
+        More than weekly: 0.18
+      probability_override: null
+    - when: religious_affiliation == 'Mainline Protestant'
+      multiply: null
+      add: null
+      weight_overrides:
+        Never: 0.1
+        Seldom: 0.18
+        A few times/year: 0.22
+        Monthly: 0.18
+        Weekly: 0.26
+        More than weekly: 0.06
+      probability_override: null
+    - when: religious_affiliation == 'Catholic'
+      multiply: null
+      add: null
+      weight_overrides:
+        Never: 0.12
+        Seldom: 0.2
+        A few times/year: 0.22
+        Monthly: 0.16
+        Weekly: 0.24
+        More than weekly: 0.06
+      probability_override: null
+    - when: religious_affiliation == 'Muslim'
+      multiply: null
+      add: null
+      weight_overrides:
+        Never: 0.06
+        Seldom: 0.12
+        A few times/year: 0.14
+        Monthly: 0.16
+        Weekly: 0.38
+        More than weekly: 0.14
+      probability_override: null
+    - when: religious_affiliation in ['Other Christian', 'Other Non-Christian', 'Jewish']
+      multiply: null
+      add: null
+      weight_overrides:
+        Never: 0.14
+        Seldom: 0.18
+        A few times/year: 0.2
+        Monthly: 0.18
+        Weekly: 0.22
+        More than weekly: 0.08
+      probability_override: null
+  grounding:
+    level: strong
+    method: researched
+    source: 'Pew Research 2023/Gallup: ~29% never attend, ~17% seldom, ~16% a few
+      times/year, ~10% monthly, ~22% weekly, ~6% more than weekly'
+    note: 'Religious affiliation modifier is dominant: None/Unaffiliated will shift
+      almost entirely to Never/Seldom; Evangelical Protestant shifts toward Weekly/More
+      than weekly.'
+  constraints:
+  - type: spec_expression
+    value: null
+    expression: sum(weights)==1.0
+    reason: Weights must sum to 1.0
+- name: primary_news_source
+  type: categorical
+  category: population_specific
+  description: Primary source for national news (TV, Online/Digital, Social Media,
+    Radio, Print Newspaper, None).
+  scope: individual
+  correlation_rate: null
+  semantic_type: null
+  identity_type: null
+  display_format: null
+  sampling:
+    strategy: conditional
+    distribution:
+      type: categorical
+      options:
+      - TV
+      - Online/Digital
+      - Social Media
+      - Radio
+      - Print Newspaper
+      - None
+      weights:
+      - 0.3
+      - 0.28
+      - 0.18
+      - 0.08
+      - 0.06
+      - 0.1
+    formula: null
+    depends_on:
+    - age
+    - education_level
+    modifiers:
+    - when: age < 30 and education_level in ['Less than HS', 'HS Diploma', 'Some College']
+      multiply: null
+      add: null
+      weight_overrides:
+        TV: 0.08
+        Online/Digital: 0.28
+        Social Media: 0.48
+        Radio: 0.04
+        Print Newspaper: 0.02
+        None: 0.1
+      probability_override: null
+    - when: age < 30 and education_level in ['Bachelor\'s', 'Graduate Degree']
+      multiply: null
+      add: null
+      weight_overrides:
+        TV: 0.06
+        Online/Digital: 0.5
+        Social Media: 0.3
+        Radio: 0.04
+        Print Newspaper: 0.04
+        None: 0.06
+      probability_override: null
+    - when: age >= 30 and age < 50 and education_level in ['Bachelor\'s', 'Graduate
+        Degree']
+      multiply: null
+      add: null
+      weight_overrides:
+        TV: 0.16
+        Online/Digital: 0.5
+        Social Media: 0.18
+        Radio: 0.08
+        Print Newspaper: 0.06
+        None: 0.02
+      probability_override: null
+    - when: age >= 30 and age < 50 and education_level in ['Less than HS', 'HS Diploma',
+        'Some College', 'Associate\'s']
+      multiply: null
+      add: null
+      weight_overrides:
+        TV: 0.28
+        Online/Digital: 0.28
+        Social Media: 0.3
+        Radio: 0.08
+        Print Newspaper: 0.03
+        None: 0.03
+      probability_override: null
+    - when: age >= 50 and age < 65
+      multiply: null
+      add: null
+      weight_overrides:
+        TV: 0.42
+        Online/Digital: 0.28
+        Social Media: 0.16
+        Radio: 0.09
+        Print Newspaper: 0.04
+        None: 0.01
+      probability_override: null
+    - when: age >= 65
+      multiply: null
+      add: null
+      weight_overrides:
+        TV: 0.56
+        Online/Digital: 0.18
+        Social Media: 0.1
+        Radio: 0.1
+        Print Newspaper: 0.05
+        None: 0.01
+      probability_override: null
+  grounding:
+    level: strong
+    method: researched
+    source: 'Pew Research 2023 News Consumption Survey: TV remains top source (~30%),
+      online/digital growing (~28%), social media ~18%, radio ~8%, print ~6%, none
+      ~10%'
+    note: 'Age is the primary modifier: TV dominates for 65+, social media dominates
+      for 18-29. Education raises online/digital and print use.'
+  constraints:
+  - type: spec_expression
+    value: null
+    expression: sum(weights)==1.0
+    reason: Weights must sum to 1.0
+- name: news_outlet_lean
+  type: categorical
+  category: population_specific
+  description: Political lean of preferred news outlets (Left-leaning, Center, Right-leaning,
+    Mixed/No Preference).
+  scope: individual
+  correlation_rate: null
+  semantic_type: null
+  identity_type: null
+  display_format: null
+  sampling:
+    strategy: conditional
+    distribution:
+      type: categorical
+      options:
+      - Left-leaning
+      - Center
+      - Right-leaning
+      - Mixed/No Preference
+      weights:
+      - 0.27
+      - 0.22
+      - 0.23
+      - 0.28
+    formula: null
+    depends_on:
+    - political_affiliation
+    - primary_news_source
+    modifiers:
+    - when: political_affiliation in ['Strong Democrat', 'Lean Democrat'] and primary_news_source
+        in ['TV', 'Online/Digital']
+      multiply: null
+      add: null
+      weight_overrides:
+        Left-leaning: 0.52
+        Center: 0.28
+        Right-leaning: 0.08
+        Mixed/No Preference: 0.12
+      probability_override: null
+    - when: political_affiliation in ['Strong Republican', 'Lean Republican'] and
+        primary_news_source in ['TV', 'Online/Digital']
+      multiply: null
+      add: null
+      weight_overrides:
+        Left-leaning: 0.06
+        Center: 0.16
+        Right-leaning: 0.62
+        Mixed/No Preference: 0.16
+      probability_override: null
+    - when: political_affiliation == 'Independent' and primary_news_source in ['TV',
+        'Online/Digital']
+      multiply: null
+      add: null
+      weight_overrides:
+        Left-leaning: 0.2
+        Center: 0.32
+        Right-leaning: 0.22
+        Mixed/No Preference: 0.26
+      probability_override: null
+    - when: primary_news_source == 'Social Media'
+      multiply: null
+      add: null
+      weight_overrides:
+        Left-leaning: 0.22
+        Center: 0.14
+        Right-leaning: 0.22
+        Mixed/No Preference: 0.42
+      probability_override: null
+    - when: primary_news_source == 'Print Newspaper'
+      multiply: null
+      add: null
+      weight_overrides:
+        Left-leaning: 0.28
+        Center: 0.38
+        Right-leaning: 0.18
+        Mixed/No Preference: 0.16
+      probability_override: null
+  grounding:
+    level: medium
+    method: extrapolated
+    source: 'Pew Media Bias research and AllSides ratings: roughly balanced left/right
+      at national level; strong partisans strongly prefer aligned outlets'
+    note: Political affiliation is the dominant modifier. Strong Democrats overwhelmingly
+      select left-leaning; Strong Republicans select right-leaning. Independents cluster
+      in Center/Mixed.
+  constraints:
+  - type: spec_expression
+    value: null
+    expression: sum(weights)==1.0
+    reason: Weights must sum to 1.0
+- name: social_media_platforms
+  type: categorical
+  category: population_specific
+  description: Primary social media platform used (Facebook, Twitter/X, Instagram,
+    TikTok, YouTube, None/Minimal).
+  scope: individual
+  correlation_rate: null
+  semantic_type: null
+  identity_type: null
+  display_format: null
+  sampling:
+    strategy: conditional
+    distribution:
+      type: categorical
+      options:
+      - Facebook
+      - YouTube
+      - Instagram
+      - TikTok
+      - Twitter/X
+      - None/Minimal
+      weights:
+      - 0.26
+      - 0.23
+      - 0.18
+      - 0.1
+      - 0.08
+      - 0.15
+    formula: null
+    depends_on:
+    - age
+    modifiers:
+    - when: age < 25
+      multiply: null
+      add: null
+      weight_overrides:
+        Facebook: 0.06
+        YouTube: 0.22
+        Instagram: 0.28
+        TikTok: 0.3
+        Twitter/X: 0.08
+        None/Minimal: 0.06
+      probability_override: null
+    - when: age >= 25 and age < 35
+      multiply: null
+      add: null
+      weight_overrides:
+        Facebook: 0.12
+        YouTube: 0.22
+        Instagram: 0.28
+        TikTok: 0.18
+        Twitter/X: 0.12
+        None/Minimal: 0.08
+      probability_override: null
+    - when: age >= 35 and age < 50
+      multiply: null
+      add: null
+      weight_overrides:
+        Facebook: 0.28
+        YouTube: 0.22
+        Instagram: 0.18
+        TikTok: 0.08
+        Twitter/X: 0.1
+        None/Minimal: 0.14
+      probability_override: null
+    - when: age >= 50 and age < 65
+      multiply: null
+      add: null
+      weight_overrides:
+        Facebook: 0.4
+        YouTube: 0.2
+        Instagram: 0.1
+        TikTok: 0.04
+        Twitter/X: 0.08
+        None/Minimal: 0.18
+      probability_override: null
+    - when: age >= 65
+      multiply: null
+      add: null
+      weight_overrides:
+        Facebook: 0.44
+        YouTube: 0.18
+        Instagram: 0.06
+        TikTok: 0.02
+        Twitter/X: 0.04
+        None/Minimal: 0.26
+      probability_override: null
+  grounding:
+    level: strong
+    method: researched
+    source: 'Pew Research 2023 Social Media Use Survey: Facebook 68% users, YouTube
+      83%, Instagram 47%, TikTok 33%, Twitter/X 22% of US adults; primary platform
+      weights estimated'
+    note: 'Age is the dominant modifier: Facebook primary for 50+, TikTok primary
+      for 18-24, Instagram primary for 25-34. None/Minimal higher for 65+.'
+  constraints:
+  - type: spec_expression
+    value: null
+    expression: sum(weights)==1.0
+    reason: Weights must sum to 1.0
+- name: social_media_hours_per_day
+  type: float
+  category: population_specific
+  description: Average daily hours spent consuming social media content.
+  scope: individual
+  correlation_rate: null
+  semantic_type: null
+  identity_type: null
+  display_format: null
+  sampling:
+    strategy: conditional
+    distribution:
+      type: lognormal
+      mean: 2.3
+      std: 2.1
+      min: 0.0
+      max: 16.0
+      mean_formula: 0.5 if social_media_platforms == 'None/Minimal' else 3.5 if social_media_platforms
+        == 'TikTok' else 2.8 if social_media_platforms == 'Instagram' else 2.3 if
+        social_media_platforms == 'YouTube' else 1.8 if social_media_platforms ==
+        'Facebook' else 2.0 if social_media_platforms == 'Twitter/X' else 2.3
+      std_formula: null
+      min_formula: null
+      max_formula: null
+    formula: null
+    depends_on:
+    - age
+    - social_media_platforms
+    modifiers:
+    - when: age < 25 and social_media_platforms == 'TikTok'
+      multiply: 1.2
+      add: 0.0
+      weight_overrides: null
+      probability_override: null
+    - when: age >= 65 and social_media_platforms == 'Facebook'
+      multiply: 0.75
+      add: 0.0
+      weight_overrides: null
+      probability_override: null
+    - when: age >= 65 and social_media_platforms == 'None/Minimal'
+      multiply: 0.8
+      add: 0.0
+      weight_overrides: null
+      probability_override: null
+  grounding:
+    level: medium
+    method: researched
+    source: 'Datareportal / Pew 2023: average US adult social media time ~2.3 hrs/day;
+      TikTok users average higher (~3+ hrs); lognormal reflects right skew'
+    note: Age modifier will reduce usage for 65+ and increase for 18-24. Lognormal
+      appropriate for this right-skewed distribution.
+  constraints:
+  - type: hard_min
+    value: 0.0
+    expression: null
+    reason: Cannot spend negative hours on social media
+  - type: hard_max
+    value: 16.0
+    expression: null
+    reason: Upper bound limited by waking hours
+- name: internet_access
+  type: categorical
+  category: population_specific
+  description: Quality of home internet access (Broadband, Mobile Only, Dial-up/Satellite,
+    None).
+  scope: household
+  correlation_rate: null
+  semantic_type: null
+  identity_type: null
+  display_format: null
+  sampling:
+    strategy: conditional
+    distribution:
+      type: categorical
+      options:
+      - Broadband
+      - Mobile Only
+      - Dial-up/Satellite
+      - None
+      weights:
+      - 0.77
+      - 0.15
+      - 0.04
+      - 0.04
+    formula: null
+    depends_on:
+    - urban_rural
+    - household_income
+    modifiers:
+    - when: urban_rural == 'Urban' and household_income > 60000
+      multiply: null
+      add: null
+      weight_overrides:
+        Broadband: 0.88
+        Mobile Only: 0.09
+        Dial-up/Satellite: 0.01
+        None: 0.02
+      probability_override: null
+    - when: urban_rural == 'Suburban' and household_income > 60000
+      multiply: null
+      add: null
+      weight_overrides:
+        Broadband: 0.85
+        Mobile Only: 0.1
+        Dial-up/Satellite: 0.03
+        None: 0.02
+      probability_override: null
+    - when: urban_rural == 'Urban' and household_income <= 60000
+      multiply: null
+      add: null
+      weight_overrides:
+        Broadband: 0.65
+        Mobile Only: 0.26
+        Dial-up/Satellite: 0.02
+        None: 0.07
+      probability_override: null
+    - when: urban_rural == 'Suburban' and household_income <= 60000
+      multiply: null
+      add: null
+      weight_overrides:
+        Broadband: 0.68
+        Mobile Only: 0.22
+        Dial-up/Satellite: 0.06
+        None: 0.04
+      probability_override: null
+    - when: urban_rural == 'Rural' and household_income > 60000
+      multiply: null
+      add: null
+      weight_overrides:
+        Broadband: 0.58
+        Mobile Only: 0.18
+        Dial-up/Satellite: 0.2
+        None: 0.04
+      probability_override: null
+    - when: urban_rural == 'Rural' and household_income <= 60000
+      multiply: null
+      add: null
+      weight_overrides:
+        Broadband: 0.38
+        Mobile Only: 0.24
+        Dial-up/Satellite: 0.28
+        None: 0.1
+      probability_override: null
+  grounding:
+    level: strong
+    method: researched
+    source: 'FCC/Pew 2023: ~77% broadband at home, ~15% mobile only, ~4% satellite/dial-up,
+      ~4% no internet; rural and low-income households shift toward mobile-only or
+      none'
+    note: 'Urban/rural and income are key modifiers: rural areas have much higher
+      satellite/none; low-income have more mobile-only.'
+  constraints:
+  - type: spec_expression
+    value: null
+    expression: sum(weights)==1.0
+    reason: Weights must sum to 1.0
+- name: civic_engagement
+  type: categorical
+  category: population_specific
+  description: Level of civic participation (Votes regularly, Votes sometimes, Rarely
+    votes/Never votes, Also actively volunteers or campaigns).
+  scope: individual
+  correlation_rate: null
+  semantic_type: null
+  identity_type: null
+  display_format: null
+  sampling:
+    strategy: conditional
+    distribution:
+      type: categorical
+      options:
+      - Votes regularly
+      - Votes sometimes
+      - Rarely/Never votes
+      - Actively volunteers or campaigns
+      weights:
+      - 0.46
+      - 0.24
+      - 0.22
+      - 0.08
+    formula: null
+    depends_on:
+    - age
+    - education_level
+    modifiers:
+    - when: age < 30 and education_level in ['Less than HS', 'HS Diploma', 'Some College']
+      multiply: null
+      add: null
+      weight_overrides:
+        Votes regularly: 0.2
+        Votes sometimes: 0.28
+        Rarely/Never votes: 0.46
+        Actively volunteers or campaigns: 0.06
+      probability_override: null
+    - when: age < 30 and education_level in ['Bachelor\'s', 'Graduate Degree']
+      multiply: null
+      add: null
+      weight_overrides:
+        Votes regularly: 0.32
+        Votes sometimes: 0.3
+        Rarely/Never votes: 0.24
+        Actively volunteers or campaigns: 0.14
+      probability_override: null
+    - when: age >= 30 and age < 50 and education_level in ['Less than HS', 'HS Diploma']
+      multiply: null
+      add: null
+      weight_overrides:
+        Votes regularly: 0.38
+        Votes sometimes: 0.28
+        Rarely/Never votes: 0.28
+        Actively volunteers or campaigns: 0.06
+      probability_override: null
+    - when: age >= 30 and age < 50 and education_level in ['Bachelor\'s', 'Graduate
+        Degree']
+      multiply: null
+      add: null
+      weight_overrides:
+        Votes regularly: 0.56
+        Votes sometimes: 0.22
+        Rarely/Never votes: 0.1
+        Actively volunteers or campaigns: 0.12
+      probability_override: null
+    - when: age >= 50 and education_level in ['Bachelor\'s', 'Graduate Degree']
+      multiply: null
+      add: null
+      weight_overrides:
+        Votes regularly: 0.68
+        Votes sometimes: 0.16
+        Rarely/Never votes: 0.06
+        Actively volunteers or campaigns: 0.1
+      probability_override: null
+    - when: age >= 50 and education_level in ['Less than HS', 'HS Diploma', 'Some
+        College', 'Associate\'s']
+      multiply: null
+      add: null
+      weight_overrides:
+        Votes regularly: 0.52
+        Votes sometimes: 0.26
+        Rarely/Never votes: 0.16
+        Actively volunteers or campaigns: 0.06
+      probability_override: null
+  grounding:
+    level: strong
+    method: researched
+    source: 'US Census Voting/Registration 2022: ~46% of adults voted in 2022 midterms;
+      ~61% in 2020 presidential; base uses midterm rate; active volunteers ~8% per
+      Pew civic engagement data'
+    note: 'Age and education are strong modifiers: voting rises with age and education.
+      Younger adults have the lowest turnout historically.'
+  constraints:
+  - type: spec_expression
+    value: null
+    expression: sum(weights)==1.0
+    reason: Weights must sum to 1.0
+- name: homeownership
+  type: boolean
+  category: population_specific
+  description: Whether the household owns (vs. rents) their primary residence.
+  scope: household
+  correlation_rate: null
+  semantic_type: null
+  identity_type: null
+  display_format: null
+  sampling:
+    strategy: conditional
+    distribution:
+      type: boolean
+      probability_true: 0.66
+    formula: null
+    depends_on:
+    - household_income
+    - age
+    modifiers:
+    - when: household_income > 100000 and age >= 35
+      multiply: null
+      add: null
+      weight_overrides: null
+      probability_override: 0.82
+    - when: household_income > 100000 and age < 35
+      multiply: null
+      add: null
+      weight_overrides: null
+      probability_override: 0.52
+    - when: household_income >= 50000 and household_income <= 100000 and age >= 40
+      multiply: null
+      add: null
+      weight_overrides: null
+      probability_override: 0.68
+    - when: household_income >= 50000 and household_income <= 100000 and age < 40
+      multiply: null
+      add: null
+      weight_overrides: null
+      probability_override: 0.4
+    - when: household_income < 50000 and age >= 55
+      multiply: null
+      add: null
+      weight_overrides: null
+      probability_override: 0.5
+    - when: household_income < 50000 and age < 55
+      multiply: null
+      add: null
+      weight_overrides: null
+      probability_override: 0.26
+  grounding:
+    level: strong
+    method: researched
+    source: 'US Census Bureau 2023 Housing Vacancy Survey: national homeownership
+      rate ~65.9%. Income and age are strong positive predictors.'
+    note: 'Income and age modifiers are critical: homeownership is ~38% for under-35
+      adults but ~79% for 65+. Low income households rent at much higher rates.'
+  constraints: []
+- name: health_insurance_type
+  type: categorical
+  category: population_specific
+  description: Type of health insurance coverage (Employer-sponsored, Medicaid/CHIP,
+    Medicare, Individual Market/ACA, Military/VA, Uninsured).
+  scope: individual
+  correlation_rate: null
+  semantic_type: null
+  identity_type: null
+  display_format: null
+  sampling:
+    strategy: conditional
+    distribution:
+      type: categorical
+      options:
+      - Employer-sponsored
+      - Medicaid/CHIP
+      - Medicare
+      - Individual Market/ACA
+      - Military/VA
+      - Uninsured
+      weights:
+      - 0.49
+      - 0.18
+      - 0.17
+      - 0.06
+      - 0.03
+      - 0.07
+    formula: null
+    depends_on:
+    - employment_status
+    - household_income
+    modifiers:
+    - when: employment_status == 'Full-time' and household_income > 50000
+      multiply: null
+      add: null
+      weight_overrides:
+        Employer-sponsored: 0.72
+        Medicaid/CHIP: 0.04
+        Medicare: 0.04
+        Individual Market/ACA: 0.1
+        Military/VA: 0.04
+        Uninsured: 0.06
+      probability_override: null
+    - when: employment_status == 'Full-time' and household_income <= 50000
+      multiply: null
+      add: null
+      weight_overrides:
+        Employer-sponsored: 0.46
+        Medicaid/CHIP: 0.18
+        Medicare: 0.02
+        Individual Market/ACA: 0.14
+        Military/VA: 0.04
+        Uninsured: 0.16
+      probability_override: null
+    - when: employment_status == 'Self-employed'
+      multiply: null
+      add: null
+      weight_overrides:
+        Employer-sponsored: 0.08
+        Medicaid/CHIP: 0.1
+        Medicare: 0.06
+        Individual Market/ACA: 0.52
+        Military/VA: 0.04
+        Uninsured: 0.2
+      probability_override: null
+    - when: employment_status == 'Retired' and household_income > 40000
+      multiply: null
+      add: null
+      weight_overrides:
+        Employer-sponsored: 0.12
+        Medicaid/CHIP: 0.04
+        Medicare: 0.72
+        Individual Market/ACA: 0.06
+        Military/VA: 0.05
+        Uninsured: 0.01
+      probability_override: null
+    - when: employment_status == 'Retired' and household_income <= 40000
+      multiply: null
+      add: null
+      weight_overrides:
+        Employer-sponsored: 0.04
+        Medicaid/CHIP: 0.26
+        Medicare: 0.58
+        Individual Market/ACA: 0.06
+        Military/VA: 0.04
+        Uninsured: 0.02
+      probability_override: null
+    - when: employment_status == 'Unemployed' and household_income <= 30000
+      multiply: null
+      add: null
+      weight_overrides:
+        Employer-sponsored: 0.06
+        Medicaid/CHIP: 0.46
+        Medicare: 0.04
+        Individual Market/ACA: 0.16
+        Military/VA: 0.03
+        Uninsured: 0.25
+      probability_override: null
+    - when: employment_status == 'Part-time' and household_income <= 40000
+      multiply: null
+      add: null
+      weight_overrides:
+        Employer-sponsored: 0.2
+        Medicaid/CHIP: 0.28
+        Medicare: 0.04
+        Individual Market/ACA: 0.2
+        Military/VA: 0.03
+        Uninsured: 0.25
+      probability_override: null
+    - when: employment_status == 'Student'
+      multiply: null
+      add: null
+      weight_overrides:
+        Employer-sponsored: 0.1
+        Medicaid/CHIP: 0.28
+        Medicare: 0.01
+        Individual Market/ACA: 0.28
+        Military/VA: 0.03
+        Uninsured: 0.3
+      probability_override: null
+  grounding:
+    level: strong
+    method: researched
+    source: 'Census Bureau Health Insurance Coverage 2023: ~49% employer, ~18% Medicaid/CHIP,
+      ~17% Medicare, ~6% individual market, ~3% military/VA, ~7-8% uninsured'
+    note: 'Employment status and income are key modifiers: retired shifts to Medicare,
+      unemployed low-income shifts to Medicaid/uninsured, full-time employed shifts
+      strongly to employer-sponsored.'
+  constraints:
+  - type: spec_expression
+    value: null
+    expression: sum(weights)==1.0
+    reason: Weights must sum to 1.0
+- name: immigration_status
+  type: categorical
+  category: population_specific
+  description: Citizenship and immigration status (US-born citizen, Naturalized citizen,
+    Permanent resident, Other).
+  scope: individual
+  correlation_rate: null
+  semantic_type: null
+  identity_type: citizenship
+  display_format: null
+  sampling:
+    strategy: conditional
+    distribution:
+      type: categorical
+      options:
+      - US-born citizen
+      - Naturalized citizen
+      - Permanent resident
+      - Other
+      weights:
+      - 0.86
+      - 0.07
+      - 0.04
+      - 0.03
+    formula: null
+    depends_on:
+    - race_ethnicity
+    modifiers:
+    - when: race_ethnicity == 'White non-Hispanic'
+      multiply: null
+      add: null
+      weight_overrides:
+        US-born citizen: 0.94
+        Naturalized citizen: 0.04
+        Permanent resident: 0.01
+        Other: 0.01
+      probability_override: null
+    - when: race_ethnicity == 'Black non-Hispanic'
+      multiply: null
+      add: null
+      weight_overrides:
+        US-born citizen: 0.88
+        Naturalized citizen: 0.07
+        Permanent resident: 0.03
+        Other: 0.02
+      probability_override: null
+    - when: race_ethnicity == 'Hispanic'
+      multiply: null
+      add: null
+      weight_overrides:
+        US-born citizen: 0.62
+        Naturalized citizen: 0.2
+        Permanent resident: 0.1
+        Other: 0.08
+      probability_override: null
+    - when: race_ethnicity == 'Asian non-Hispanic'
+      multiply: null
+      add: null
+      weight_overrides:
+        US-born citizen: 0.44
+        Naturalized citizen: 0.34
+        Permanent resident: 0.14
+        Other: 0.08
+      probability_override: null
+    - when: race_ethnicity == 'Other/Multiracial'
+      multiply: null
+      add: null
+      weight_overrides:
+        US-born citizen: 0.82
+        Naturalized citizen: 0.1
+        Permanent resident: 0.05
+        Other: 0.03
+      probability_override: null
+  grounding:
+    level: strong
+    method: researched
+    source: 'Census Bureau 2023: ~86% US-born citizens, ~7% naturalized, ~4% permanent
+      residents, ~3% other non-citizens among adult population'
+    note: 'Race/ethnicity modifier is critical: Hispanic adults have much higher foreign-born
+      share (~36%); Asian adults also higher (~55% foreign-born).'
+  constraints:
+  - type: spec_expression
+    value: null
+    expression: sum(weights)==1.0
+    reason: Weights must sum to 1.0
+- name: union_membership
+  type: boolean
+  category: population_specific
+  description: Whether the person is currently a member of a labor union.
+  scope: individual
+  correlation_rate: null
+  semantic_type: null
+  identity_type: null
+  display_format: null
+  sampling:
+    strategy: conditional
+    distribution:
+      type: boolean
+      probability_true: 0.1
+    formula: null
+    depends_on:
+    - occupation
+    - employment_status
+    modifiers:
+    - when: occupation == 'Production/Transport' and employment_status == 'Full-time'
+      multiply: null
+      add: null
+      weight_overrides: null
+      probability_override: 0.18
+    - when: occupation == 'Management/Professional' and employment_status == 'Full-time'
+      multiply: null
+      add: null
+      weight_overrides: null
+      probability_override: 0.12
+    - when: occupation == 'Service' and employment_status == 'Full-time'
+      multiply: null
+      add: null
+      weight_overrides: null
+      probability_override: 0.1
+    - when: occupation == 'Construction/Extraction' and employment_status == 'Full-time'
+      multiply: null
+      add: null
+      weight_overrides: null
+      probability_override: 0.14
+    - when: occupation == 'Sales/Office' and employment_status == 'Full-time'
+      multiply: null
+      add: null
+      weight_overrides: null
+      probability_override: 0.07
+    - when: employment_status == 'Self-employed'
+      multiply: null
+      add: null
+      weight_overrides: null
+      probability_override: 0.02
+    - when: employment_status == 'Part-time'
+      multiply: null
+      add: null
+      weight_overrides: null
+      probability_override: 0.06
+  grounding:
+    level: strong
+    method: researched
+    source: 'BLS Union Membership 2023: 10.0% of wage and salary workers were union
+      members in 2023, down from 10.1% in 2022'
+    note: 'Occupation and employment status are key modifiers: self-employed and management
+      rarely unionized; production/transport and public sector workers much higher.'
+  constraints: []
+- name: gun_ownership
+  type: boolean
+  category: population_specific
+  description: Whether the household contains at least one firearm.
+  scope: household
+  correlation_rate: null
+  semantic_type: null
+  identity_type: null
+  display_format: null
+  sampling:
+    strategy: conditional
+    distribution:
+      type: boolean
+      probability_true: 0.32
+    formula: null
+    depends_on:
+    - urban_rural
+    - state
+    modifiers:
+    - when: urban_rural == 'Rural' and state in ['WY', 'MT', 'AK', 'ID', 'WV', 'AR',
+        'ND', 'SD', 'AL', 'MS', 'KY', 'TN', 'OK', 'KS', 'NE', 'MO']
+      multiply: null
+      add: null
+      weight_overrides: null
+      probability_override: 0.72
+    - when: urban_rural == 'Rural' and state not in ['WY', 'MT', 'AK', 'ID', 'WV',
+        'AR', 'ND', 'SD', 'AL', 'MS', 'KY', 'TN', 'OK', 'KS', 'NE', 'MO', 'CA', 'NY',
+        'MA', 'CT', 'NJ', 'MD', 'DE', 'RI', 'HI', 'DC']
+      multiply: null
+      add: null
+      weight_overrides: null
+      probability_override: 0.56
+    - when: urban_rural == 'Suburban' and state in ['WY', 'MT', 'AK', 'ID', 'WV',
+        'AR', 'ND', 'SD', 'AL', 'MS', 'KY', 'TN', 'OK', 'KS', 'NE', 'MO']
+      multiply: null
+      add: null
+      weight_overrides: null
+      probability_override: 0.52
+    - when: urban_rural == 'Suburban' and state in ['CA', 'NY', 'MA', 'CT', 'NJ',
+        'MD', 'DE', 'RI', 'HI', 'DC']
+      multiply: null
+      add: null
+      weight_overrides: null
+      probability_override: 0.18
+    - when: urban_rural == 'Urban' and state in ['CA', 'NY', 'MA', 'CT', 'NJ', 'MD',
+        'DE', 'RI', 'HI', 'DC']
+      multiply: null
+      add: null
+      weight_overrides: null
+      probability_override: 0.1
+    - when: urban_rural == 'Urban' and state not in ['CA', 'NY', 'MA', 'CT', 'NJ',
+        'MD', 'DE', 'RI', 'HI', 'DC', 'WY', 'MT', 'AK', 'ID', 'WV', 'AR', 'ND', 'SD',
+        'AL', 'MS', 'KY', 'TN', 'OK', 'KS', 'NE', 'MO']
+      multiply: null
+      add: null
+      weight_overrides: null
+      probability_override: 0.28
+  grounding:
+    level: strong
+    method: researched
+    source: 'Pew Research 2023: ~32% of US adults personally own a gun; rural (~46%)
+      vs urban (~19%) gap is substantial. State also matters (e.g., Wyoming ~66%,
+      HI ~9%)'
+    note: Urban/rural and state modifiers are dominant. Rural residents nearly 2.5x
+      more likely to own guns than urban residents.
+  constraints: []
+- name: trust_in_institutions
+  type: float
+  category: personality
+  description: Generalized trust in government, media, and public institutions (0–1
+    scale, low = high distrust).
+  scope: individual
+  correlation_rate: null
+  semantic_type: null
+  identity_type: null
+  display_format: null
+  sampling:
+    strategy: conditional
+    distribution:
+      type: beta
+      alpha: 2.5
+      beta: 3.5
+      min: 0.0
+      max: 1.0
+      min_formula: null
+      max_formula: null
+    formula: null
+    depends_on:
+    - political_ideology
+    - education_level
+    modifiers:
+    - when: political_ideology == 'Very Liberal' and education_level in ['Bachelor\'s',
+        'Graduate Degree']
+      multiply: 1.0
+      add: 0.1
+      weight_overrides: null
+      probability_override: null
+    - when: political_ideology == 'Very Conservative'
+      multiply: 1.0
+      add: -0.14
+      weight_overrides: null
+      probability_override: null
+    - when: political_ideology == 'Conservative'
+      multiply: 1.0
+      add: -0.08
+      weight_overrides: null
+      probability_override: null
+    - when: political_ideology == 'Moderate' and education_level in ['Bachelor\'s',
+        'Graduate Degree']
+      multiply: 1.0
+      add: 0.05
+      weight_overrides: null
+      probability_override: null
+    - when: political_ideology == 'Liberal'
+      multiply: 1.0
+      add: 0.06
+      weight_overrides: null
+      probability_override: null
+    - when: education_level == 'Less than HS'
+      multiply: 1.0
+      add: -0.07
+      weight_overrides: null
+      probability_override: null
+  grounding:
+    level: strong
+    method: researched
+    source: 'Gallup/Pew 2023: institutional trust at historic lows — ~26% trust Congress,
+      ~38% trust presidency, ~36% trust media; Beta(2.5,3.5) gives mean ~0.42 reflecting
+      low-trust environment'
+    note: 'Political ideology is primary modifier: Very Conservative skews lower trust
+      in government/media; Very Liberal skews lower trust in courts/police. Education
+      weakly raises trust.'
+  constraints:
+  - type: hard_min
+    value: 0.0
+    expression: null
+    reason: Trust bounded at 0
+  - type: hard_max
+    value: 1.0
+    expression: null
+    reason: Trust bounded at 1
+- name: need_for_cognition
+  type: float
+  category: personality
+  description: Tendency to engage in and enjoy effortful analytical thinking when
+    forming opinions (0–1 scale).
+  scope: individual
+  correlation_rate: null
+  semantic_type: null
+  identity_type: null
+  display_format: null
+  sampling:
+    strategy: conditional
+    distribution:
+      type: beta
+      alpha: 2.5
+      beta: 2.5
+      min: 0.0
+      max: 1.0
+      min_formula: null
+      max_formula: null
+    formula: null
+    depends_on:
+    - education_level
+    modifiers:
+    - when: education_level == 'Graduate Degree'
+      multiply: 1.0
+      add: 0.15
+      weight_overrides: null
+      probability_override: null
+    - when: education_level == 'Bachelor\'s'
+      multiply: 1.0
+      add: 0.09
+      weight_overrides: null
+      probability_override: null
+    - when: education_level == 'Associate\'s'
+      multiply: 1.0
+      add: 0.03
+      weight_overrides: null
+      probability_override: null
+    - when: education_level in ['Less than HS', 'HS Diploma']
+      multiply: 1.0
+      add: -0.08
+      weight_overrides: null
+      probability_override: null
+  grounding:
+    level: medium
+    method: extrapolated
+    source: 'Cacioppo & Petty NFC research: roughly normally distributed in general
+      population; Beta(2.5,2.5) gives symmetric distribution with mean 0.5. Education
+      is a positive predictor.'
+    note: Education modifier shifts mean upward (graduate degree ~0.65, less than
+      HS ~0.35). Correlates with openness personality trait.
+  constraints:
+  - type: hard_min
+    value: 0.0
+    expression: null
+    reason: Scale bounded at 0
+  - type: hard_max
+    value: 1.0
+    expression: null
+    reason: Scale bounded at 1
+- name: susceptibility_to_misinformation
+  type: float
+  category: personality
+  description: Propensity to accept and share unverified or false information, inversely
+    related to media literacy (0–1 scale).
+  scope: individual
+  correlation_rate: null
+  semantic_type: null
+  identity_type: null
+  display_format: null
+  sampling:
+    strategy: conditional
+    distribution:
+      type: beta
+      alpha: 2.0
+      beta: 3.0
+      min: 0.0
+      max: 1.0
+      min_formula: null
+      max_formula: null
+    formula: null
+    depends_on:
+    - need_for_cognition
+    - social_media_hours_per_day
+    modifiers:
+    - when: need_for_cognition > 0.7 and social_media_hours_per_day < 2.0
+      multiply: 1.0
+      add: -0.15
+      weight_overrides: null
+      probability_override: null
+    - when: need_for_cognition < 0.35 and social_media_hours_per_day > 3.0
+      multiply: 1.0
+      add: 0.18
+      weight_overrides: null
+      probability_override: null
+    - when: need_for_cognition < 0.35 and social_media_hours_per_day >= 2.0 and social_media_hours_per_day
+        <= 3.0
+      multiply: 1.0
+      add: 0.1
+      weight_overrides: null
+      probability_override: null
+    - when: need_for_cognition > 0.7 and social_media_hours_per_day >= 2.0 and social_media_hours_per_day
+        <= 3.0
+      multiply: 1.0
+      add: -0.08
+      weight_overrides: null
+      probability_override: null
+    - when: need_for_cognition >= 0.35 and need_for_cognition <= 0.7 and social_media_hours_per_day
+        > 3.0
+      multiply: 1.0
+      add: 0.08
+      weight_overrides: null
+      probability_override: null
+  grounding:
+    level: medium
+    method: extrapolated
+    source: 'Pennycook & Rand (2019), Roozenbeek et al. (2020): susceptibility to
+      misinformation inversely correlated with need_for_cognition and media literacy;
+      Beta(2,3) mean ~0.4 reflects that most adults have moderate-low susceptibility'
+    note: 'Need_for_cognition and social_media_hours_per_day are key modifiers: high
+      NFC reduces susceptibility; high social media hours increases it. Inverse relationship
+      with education.'
+  constraints:
+  - type: hard_min
+    value: 0.0
+    expression: null
+    reason: Scale bounded at 0
+  - type: hard_max
+    value: 1.0
+    expression: null
+    reason: Scale bounded at 1
+sampling_order:
+- age
+- agreeableness
+- conscientiousness
+- education_level
+- civic_engagement
+- employment_status
+- extraversion
+- gender
+- marital_status
+- has_children
+- household_size
+- need_for_cognition
+- neuroticism
+- occupation
+- openness
+- primary_news_source
+- race_ethnicity
+- immigration_status
+- religious_affiliation
+- religious_attendance
+- social_media_platforms
+- social_media_hours_per_day
+- state
+- household_income
+- health_insurance_type
+- homeownership
+- political_affiliation
+- news_outlet_lean
+- political_ideology
+- susceptibility_to_misinformation
+- trust_in_institutions
+- union_membership
+- urban_rural
+- gun_ownership
+- internet_access

@@ -1,0 +1,1119 @@
+{
+  "timestamp": "2026-02-17T21:45:23.353773",
+  "function": "agentic_research",
+  "provider": "claude",
+  "request": {
+    "model": "claude-sonnet-4-6",
+    "prompt_length": 21699
+  },
+  "response": {
+    "id": "msg_01V4CgKAmx4KJRzEkYnZvBMp",
+    "content": [
+      {
+        "id": "srvtoolu_01AMMPrb97hhRRoZpSjALdeA",
+        "input": {
+          "query": "public opinion AI superintelligence trust belief skepticism survey 2024"
+        },
+        "name": "web_search",
+        "type": "server_tool_use",
+        "caller": {
+          "type": "direct"
+        }
+      },
+      {
+        "id": "srvtoolu_016LmjPisQoSZv9xuDdq2yow",
+        "input": {
+          "query": "American public emotional response AI existential risk anxiety hope survey 2024"
+        },
+        "name": "web_search",
+        "type": "server_tool_use",
+        "caller": {
+          "type": "direct"
+        }
+      },
+      {
+        "id": "srvtoolu_01Vc6mVHo2L5c97pbgCTqzWL",
+        "input": {
+          "query": "AI job automation fear perception by occupation education poll 2024"
+        },
+        "name": "web_search",
+        "type": "server_tool_use",
+        "caller": {
+          "type": "direct"
+        }
+      },
+      {
+        "content": [
+          {
+            "encrypted_content": "[REDACTED_TEXT length=4384]",
+            "page_age": "December 4, 2025",
+            "title": "Americans Express Real Concerns About Artificial Intelligence",
+            "type": "web_search_result",
+            "url": "https://news.gallup.com/poll/648953/americans-express-real-concerns-artificial-intelligence.aspx"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=5248]",
+            "page_age": "November 11, 2025",
+            "title": "How the US Public and AI Experts View Artificial Intelligence | Pew Research Center",
+            "type": "web_search_result",
+            "url": "https://www.pewresearch.org/internet/2025/04/03/how-the-us-public-and-ai-experts-view-artificial-intelligence/"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=4172]",
+            "page_age": "March 14, 2025",
+            "title": "Americans are increasingly skeptical about AI's effects | YouGov",
+            "type": "web_search_result",
+            "url": "https://today.yougov.com/technology/articles/51803-americans-increasingly-skeptical-about-ai-artificial-intelligence-effects-poll"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=3068]",
+            "page_age": null,
+            "title": "2023-2024 Survey of Public Attitudes on US Intelligence | Chicago Council on Global Affairs",
+            "type": "web_search_result",
+            "url": "https://globalaffairs.org/research/public-opinion-survey/2023-2024-survey-public-attitudes-us-intelligence"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=5496]",
+            "page_age": "August 13, 2024",
+            "title": "How Much Do People Trust AI in 2024? \u2013 Unite.AI",
+            "type": "web_search_result",
+            "url": "https://www.unite.ai/how-much-do-people-trust-ai/"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=4288]",
+            "page_age": null,
+            "title": "CHAPTER 8: Public Opinion",
+            "type": "web_search_result",
+            "url": "https://hai.stanford.edu/assets/files/hai_ai-index-report-2025_chapter8_final.pdf"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=2152]",
+            "page_age": "April 17, 2025",
+            "title": "Most Americans in new survey have doubts about AI-generated info",
+            "type": "web_search_result",
+            "url": "https://thehill.com/policy/technology/5253632-americans-trust-artificial-intelligence-survey/"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=388]",
+            "page_age": null,
+            "title": "Public Opinion | The 2024 AI Index Report | Stanford HAI",
+            "type": "web_search_result",
+            "url": "https://hai.stanford.edu/ai-index/2024-ai-index-report/public-opinion"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=3380]",
+            "page_age": "March 20, 2025",
+            "title": "New SRI/PEARL survey now published, reveals worldwide public opinion about AI \u2014 Schwartz Reisman Institute",
+            "type": "web_search_result",
+            "url": "https://srinstitute.utoronto.ca/news/public-opinion-ai-survey-24"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=468]",
+            "page_age": "November 12, 2025",
+            "title": "What Americans Really Think About AI Algorithms: Public Confidence and Transparency in Government - Cornell Brooks Public Policy",
+            "type": "web_search_result",
+            "url": "https://publicpolicy.cornell.edu/masters-blog/what-americans-really-think-about-ai-algorithms-public-confidence-and-transparency-in-government/"
+          }
+        ],
+        "tool_use_id": "srvtoolu_01AMMPrb97hhRRoZpSjALdeA",
+        "type": "web_search_tool_result"
+      },
+      {
+        "content": [
+          {
+            "encrypted_content": "[REDACTED_TEXT length=5632]",
+            "page_age": null,
+            "title": "Existential anxiety about artificial intelligence (AI)- is it the end of humanity era or a new chapter in the human revolution: questionnaire-based observational study - PMC",
+            "type": "web_search_result",
+            "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC11036542/"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=4248]",
+            "page_age": "December 31, 2025",
+            "title": "With AI\u2019s rise, hope and anxiety - Rochester BeaconRochester Beacon",
+            "type": "web_search_result",
+            "url": "https://rochesterbeacon.com/2025/12/24/with-ais-rise-hope-and-anxiety/"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=1720]",
+            "page_age": "January 25, 2024",
+            "title": "Weighing the Prophecies of AI Doom - IEEE Spectrum",
+            "type": "web_search_result",
+            "url": "https://spectrum.ieee.org/ai-existential-risk-survey"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=5344]",
+            "page_age": "April 9, 2024",
+            "title": "Existential anxiety about artificial intelligence (AI)- is it the end of humanity era or a new chapter in the human revolution: questionnaire-based observational study - PubMed",
+            "type": "web_search_result",
+            "url": "https://pubmed.ncbi.nlm.nih.gov/38654726/"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=5068]",
+            "page_age": null,
+            "title": "TRENDS IN PUBLIC ATTITUDE TOWARDS EXISTENTIAL RISK AND ARTIFICIAL INTELLIGENCE",
+            "type": "web_search_result",
+            "url": "https://www.existentialriskobservatory.org/papers_and_reports/Trends%20in%20Public%20Attitude%20Towards%20Existential%20Risk%20And%20Artificial%20Intelligence.pdf"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=5484]",
+            "page_age": "March 18, 2024",
+            "title": "Frontiers | Existential anxiety about artificial intelligence (AI)- is it the end of humanity era or a new chapter in the human revolution: questionnaire-based observational study",
+            "type": "web_search_result",
+            "url": "https://www.frontiersin.org/journals/psychiatry/articles/10.3389/fpsyt.2024.1368122/full"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=5392]",
+            "page_age": null,
+            "title": "Perceptions of AI Across Sectors: A Comparative Review of Public Attitudes",
+            "type": "web_search_result",
+            "url": "https://arxiv.org/pdf/2509.18233"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=5548]",
+            "page_age": "April 17, 2025",
+            "title": "Existential risk narratives about AI do not distract from its immediate harms | PNAS",
+            "type": "web_search_result",
+            "url": "https://www.pnas.org/doi/10.1073/pnas.2419055122"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=4232]",
+            "page_age": "September 8, 2025",
+            "title": "Frontiers | AI competence and sentiment: a mixed-methods study of attitudes and open-ended reflections",
+            "type": "web_search_result",
+            "url": "https://www.frontiersin.org/journals/artificial-intelligence/articles/10.3389/frai.2025.1658791/full"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=4220]",
+            "page_age": "August 23, 2025",
+            "title": "America\u2019s AI Angst Revealed: Why Fear Now Outpaces Excitement | by Evolution AI Hub | Medium",
+            "type": "web_search_result",
+            "url": "https://medium.com/@evolutionaihub/americas-ai-angst-revealed-why-fear-now-outpaces-excitement-063681fa41ab"
+          }
+        ],
+        "tool_use_id": "srvtoolu_016LmjPisQoSZv9xuDdq2yow",
+        "type": "web_search_tool_result"
+      },
+      {
+        "content": [
+          {
+            "encrypted_content": "[REDACTED_TEXT length=5808]",
+            "page_age": "March 9, 2022",
+            "title": "What jobs are affected by AI? Better-paid, better-educated workers face the most exposure | Brookings",
+            "type": "web_search_result",
+            "url": "https://www.brookings.edu/articles/what-jobs-are-affected-by-ai-better-paid-better-educated-workers-face-the-most-exposure/"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=5432]",
+            "page_age": null,
+            "title": "Top 20 Predictions from Experts on AI Job Loss",
+            "type": "web_search_result",
+            "url": "https://research.aimultiple.com/ai-job-loss/"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=6684]",
+            "page_age": "5 days ago",
+            "title": "Measuring US workers\u2019 capacity to adapt to AI-driven job displacement | Brookings",
+            "type": "web_search_result",
+            "url": "https://www.brookings.edu/articles/measuring-us-workers-capacity-to-adapt-to-ai-driven-job-displacement/"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=5332]",
+            "page_age": null,
+            "title": "OFFICE OF ECONOMIC POLICY Working Paper 2024-02 April 2024",
+            "type": "web_search_result",
+            "url": "https://home.treasury.gov/system/files/136/AI-Combined-PDF.pdf"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=5536]",
+            "page_age": "May 30, 2025",
+            "title": "59 AI Job Statistics: Future of U.S. Jobs | National University",
+            "type": "web_search_result",
+            "url": "https://www.nu.edu/blog/ai-job-statistics/"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=6348]",
+            "page_age": null,
+            "title": "AI Exposure and the Future of Work - Upjohn Research",
+            "type": "web_search_result",
+            "url": "https://research.upjohn.org/cgi/viewcontent.cgi?article=1319&context=reports"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=440]",
+            "page_age": null,
+            "title": "Young workers\u2019 employment drops in occupations with high AI exposure - Dallasfed.org",
+            "type": "web_search_result",
+            "url": "https://www.dallasfed.org/research/economics/2026/0106"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=476]",
+            "page_age": "August 20, 2025",
+            "title": "New Poll Finds 7 in 10 Americans Fear AI Job Loss",
+            "type": "web_search_result",
+            "url": "https://www.eweek.com/news/americans-fear-ai-job-loss-survey/"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=6652]",
+            "page_age": null,
+            "title": "AI exposure predicts unemployment risk: A new approach to technology-driven job loss - PMC",
+            "type": "web_search_result",
+            "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC11983276/"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=5600]",
+            "page_age": "July 31, 2025",
+            "title": "Artificial intelligence and technological unemployment: Understanding trends, technology's adverse roles, and current mitigation guidelines - ScienceDirect",
+            "type": "web_search_result",
+            "url": "https://www.sciencedirect.com/science/article/pii/S2199853125001428"
+          }
+        ],
+        "tool_use_id": "srvtoolu_01Vc6mVHo2L5c97pbgCTqzWL",
+        "type": "web_search_tool_result"
+      },
+      {
+        "citations": null,
+        "text": "[REDACTED_TEXT length=2029]",
+        "type": "text",
+        "parsed_output": null
+      },
+      {
+        "id": "toolu_01Cqs5bqq9yA5M3zWPd7AsDE",
+        "input": {
+          "attributes": [
+            {
+              "name": "ai_literacy",
+              "modifiers": [
+                {
+                  "when": "education_level in ['Bachelor\\'s', 'Graduate Degree'] and age < 45",
+                  "multiply": 1.15,
+                  "add": 0.06,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "education_level in ['Less than HS', 'HS Diploma'] and age > 55",
+                  "multiply": 0.9,
+                  "add": -0.04,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "occupation == 'Management/Professional'",
+                  "multiply": 1.1,
+                  "add": 0.05,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "occupation in ['Construction/Extraction', 'Production/Transport']",
+                  "multiply": 0.92,
+                  "add": -0.03,
+                  "weight_overrides": null,
+                  "probability_override": null
+                }
+              ]
+            },
+            {
+              "name": "asi_belief",
+              "modifiers": [
+                {
+                  "when": "trust_in_institutions > 0.65 and ai_literacy > 0.55",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": {
+                    "Fully believes": 0.42,
+                    "Mostly believes": 0.38,
+                    "Skeptical": 0.14,
+                    "Thinks it's fabricated/overhyped": 0.06
+                  },
+                  "probability_override": null
+                },
+                {
+                  "when": "trust_in_institutions > 0.65 and ai_literacy <= 0.55",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": {
+                    "Fully believes": 0.28,
+                    "Mostly believes": 0.38,
+                    "Skeptical": 0.24,
+                    "Thinks it's fabricated/overhyped": 0.1
+                  },
+                  "probability_override": null
+                },
+                {
+                  "when": "trust_in_institutions <= 0.35 and susceptibility_to_misinformation > 0.60",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": {
+                    "Fully believes": 0.18,
+                    "Mostly believes": 0.22,
+                    "Skeptical": 0.28,
+                    "Thinks it's fabricated/overhyped": 0.32
+                  },
+                  "probability_override": null
+                },
+                {
+                  "when": "trust_in_institutions <= 0.35 and susceptibility_to_misinformation <= 0.60",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": {
+                    "Fully believes": 0.12,
+                    "Mostly believes": 0.28,
+                    "Skeptical": 0.4,
+                    "Thinks it's fabricated/overhyped": 0.2
+                  },
+                  "probability_override": null
+                },
+                {
+                  "when": "trust_in_institutions > 0.35 and trust_in_institutions <= 0.65 and ai_literacy > 0.55",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": {
+                    "Fully believes": 0.28,
+                    "Mostly believes": 0.42,
+                    "Skeptical": 0.22,
+                    "Thinks it's fabricated/overhyped": 0.08
+                  },
+                  "probability_override": null
+                },
+                {
+                  "when": "trust_in_institutions > 0.35 and trust_in_institutions <= 0.65 and ai_literacy <= 0.55",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": {
+                    "Fully believes": 0.18,
+                    "Mostly believes": 0.35,
+                    "Skeptical": 0.3,
+                    "Thinks it's fabricated/overhyped": 0.17
+                  },
+                  "probability_override": null
+                }
+              ]
+            },
+            {
+              "name": "job_automation_risk_perception",
+              "modifiers": [
+                {
+                  "when": "occupation == 'Management/Professional'",
+                  "multiply": 1.25,
+                  "add": 0.18,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "occupation == 'Sales/Office'",
+                  "multiply": 1.3,
+                  "add": 0.2,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "occupation == 'Production/Transport'",
+                  "multiply": 1.2,
+                  "add": 0.15,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "occupation == 'Service'",
+                  "multiply": 1.1,
+                  "add": 0.08,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "occupation == 'Construction/Extraction'",
+                  "multiply": 1.05,
+                  "add": 0.04,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "employment_status == 'Full-time' and ai_literacy > 0.55",
+                  "multiply": 1.15,
+                  "add": 0.08,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "employment_status == 'Retired'",
+                  "multiply": 0.8,
+                  "add": -0.08,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "employment_status == 'Student'",
+                  "multiply": 1.1,
+                  "add": 0.05,
+                  "weight_overrides": null,
+                  "probability_override": null
+                }
+              ]
+            },
+            {
+              "name": "asi_emotional_response",
+              "modifiers": [
+                {
+                  "when": "neuroticism > 0.65 and asi_belief in ['Fully believes', 'Mostly believes']",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": {
+                    "Excited/Hopeful": 0.08,
+                    "Anxious/Fearful": 0.52,
+                    "Angry/Resentful": 0.14,
+                    "Indifferent": 0.04,
+                    "Mixed": 0.22
+                  },
+                  "probability_override": null
+                },
+                {
+                  "when": "neuroticism > 0.65 and asi_belief == 'Skeptical'",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": {
+                    "Excited/Hopeful": 0.06,
+                    "Anxious/Fearful": 0.34,
+                    "Angry/Resentful": 0.22,
+                    "Indifferent": 0.12,
+                    "Mixed": 0.26
+                  },
+                  "probability_override": null
+                },
+                {
+                  "when": "neuroticism > 0.65 and asi_belief == 'Thinks it\\'s fabricated/overhyped'",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": {
+                    "Excited/Hopeful": 0.04,
+                    "Anxious/Fearful": 0.18,
+                    "Angry/Resentful": 0.36,
+                    "Indifferent": 0.18,
+                    "Mixed": 0.24
+                  },
+                  "probability_override": null
+                },
+                {
+                  "when": "neuroticism <= 0.35 and openness > 0.60 and asi_belief in ['Fully believes', 'Mostly believes']",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": {
+                    "Excited/Hopeful": 0.46,
+                    "Anxious/Fearful": 0.14,
+                    "Angry/Resentful": 0.05,
+                    "Indifferent": 0.06,
+                    "Mixed": 0.29
+                  },
+                  "probability_override": null
+                },
+                {
+                  "when": "neuroticism <= 0.35 and openness <= 0.60 and asi_belief in ['Fully believes', 'Mostly believes']",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": {
+                    "Excited/Hopeful": 0.22,
+                    "Anxious/Fearful": 0.24,
+                    "Angry/Resentful": 0.1,
+                    "Indifferent": 0.14,
+                    "Mixed": 0.3
+                  },
+                  "probability_override": null
+                },
+                {
+                  "when": "neuroticism > 0.35 and neuroticism <= 0.65 and asi_belief in ['Fully believes', 'Mostly believes']",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": {
+                    "Excited/Hopeful": 0.16,
+                    "Anxious/Fearful": 0.32,
+                    "Angry/Resentful": 0.1,
+                    "Indifferent": 0.08,
+                    "Mixed": 0.34
+                  },
+                  "probability_override": null
+                },
+                {
+                  "when": "neuroticism <= 0.35 and openness > 0.60 and asi_belief in ['Skeptical', 'Thinks it\\'s fabricated/overhyped']",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": {
+                    "Excited/Hopeful": 0.18,
+                    "Anxious/Fearful": 0.12,
+                    "Angry/Resentful": 0.08,
+                    "Indifferent": 0.32,
+                    "Mixed": 0.3
+                  },
+                  "probability_override": null
+                },
+                {
+                  "when": "neuroticism > 0.35 and neuroticism <= 0.65 and asi_belief in ['Skeptical', 'Thinks it\\'s fabricated/overhyped']",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": {
+                    "Excited/Hopeful": 0.08,
+                    "Anxious/Fearful": 0.22,
+                    "Angry/Resentful": 0.2,
+                    "Indifferent": 0.28,
+                    "Mixed": 0.22
+                  },
+                  "probability_override": null
+                }
+              ]
+            },
+            {
+              "name": "asi_governance_stance",
+              "modifiers": [
+                {
+                  "when": "political_ideology in ['Very Conservative', 'Conservative'] and asi_belief in ['Fully believes', 'Mostly believes']",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": {
+                    "Immediate global moratorium": 0.18,
+                    "Strict national regulation": 0.38,
+                    "Light-touch oversight": 0.28,
+                    "Full open access": 0.1,
+                    "No opinion": 0.06
+                  },
+                  "probability_override": null
+                },
+                {
+                  "when": "political_ideology in ['Very Conservative', 'Conservative'] and asi_belief in ['Skeptical', 'Thinks it\\'s fabricated/overhyped']",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": {
+                    "Immediate global moratorium": 0.08,
+                    "Strict national regulation": 0.22,
+                    "Light-touch oversight": 0.36,
+                    "Full open access": 0.22,
+                    "No opinion": 0.12
+                  },
+                  "probability_override": null
+                },
+                {
+                  "when": "political_ideology in ['Very Liberal', 'Liberal'] and asi_belief in ['Fully believes', 'Mostly believes']",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": {
+                    "Immediate global moratorium": 0.32,
+                    "Strict national regulation": 0.42,
+                    "Light-touch oversight": 0.12,
+                    "Full open access": 0.04,
+                    "No opinion": 0.1
+                  },
+                  "probability_override": null
+                },
+                {
+                  "when": "political_ideology in ['Very Liberal', 'Liberal'] and asi_belief in ['Skeptical', 'Thinks it\\'s fabricated/overhyped']",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": {
+                    "Immediate global moratorium": 0.18,
+                    "Strict national regulation": 0.38,
+                    "Light-touch oversight": 0.22,
+                    "Full open access": 0.08,
+                    "No opinion": 0.14
+                  },
+                  "probability_override": null
+                },
+                {
+                  "when": "political_ideology == 'Moderate' and asi_belief in ['Fully believes', 'Mostly believes']",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": {
+                    "Immediate global moratorium": 0.22,
+                    "Strict national regulation": 0.42,
+                    "Light-touch oversight": 0.18,
+                    "Full open access": 0.06,
+                    "No opinion": 0.12
+                  },
+                  "probability_override": null
+                },
+                {
+                  "when": "political_ideology == 'Moderate' and asi_belief in ['Skeptical', 'Thinks it\\'s fabricated/overhyped']",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": {
+                    "Immediate global moratorium": 0.1,
+                    "Strict national regulation": 0.28,
+                    "Light-touch oversight": 0.3,
+                    "Full open access": 0.12,
+                    "No opinion": 0.2
+                  },
+                  "probability_override": null
+                },
+                {
+                  "when": "ai_literacy > 0.70 and asi_belief in ['Fully believes', 'Mostly believes']",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": {
+                    "Immediate global moratorium": 0.3,
+                    "Strict national regulation": 0.4,
+                    "Light-touch oversight": 0.18,
+                    "Full open access": 0.08,
+                    "No opinion": 0.04
+                  },
+                  "probability_override": null
+                }
+              ]
+            },
+            {
+              "name": "chronic_illness_in_household",
+              "modifiers": [
+                {
+                  "when": "age > 60 and household_size >= 2",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": null,
+                  "probability_override": 0.52
+                },
+                {
+                  "when": "age > 60 and household_size < 2",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": null,
+                  "probability_override": 0.38
+                },
+                {
+                  "when": "age > 40 and age <= 60 and household_size >= 3",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": null,
+                  "probability_override": 0.38
+                },
+                {
+                  "when": "age > 40 and age <= 60 and household_size < 3",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": null,
+                  "probability_override": 0.28
+                },
+                {
+                  "when": "age <= 40 and household_size >= 3",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": null,
+                  "probability_override": 0.18
+                },
+                {
+                  "when": "age <= 40 and household_size < 3",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": null,
+                  "probability_override": 0.1
+                }
+              ]
+            },
+            {
+              "name": "asi_cure_personal_stake",
+              "modifiers": [
+                {
+                  "when": "chronic_illness_in_household == true and age > 60",
+                  "multiply": 1.3,
+                  "add": 0.28,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "chronic_illness_in_household == true and age > 40 and age <= 60",
+                  "multiply": 1.2,
+                  "add": 0.2,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "chronic_illness_in_household == true and age <= 40",
+                  "multiply": 1.1,
+                  "add": 0.14,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "chronic_illness_in_household == false and age > 60",
+                  "multiply": 1.05,
+                  "add": 0.06,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "chronic_illness_in_household == false and age <= 60",
+                  "multiply": 0.9,
+                  "add": -0.03,
+                  "weight_overrides": null,
+                  "probability_override": null
+                }
+              ]
+            },
+            {
+              "name": "financial_resilience",
+              "modifiers": [
+                {
+                  "when": "employment_status == 'Unemployed' and household_income < 40000",
+                  "multiply": 0.82,
+                  "add": -0.08,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "employment_status == 'Full-time' and household_income > 120000 and homeownership == true",
+                  "multiply": 1.08,
+                  "add": 0.06,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "homeownership == false and household_income < 50000",
+                  "multiply": 0.88,
+                  "add": -0.06,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "employment_status == 'Retired' and homeownership == true",
+                  "multiply": 1.05,
+                  "add": 0.04,
+                  "weight_overrides": null,
+                  "probability_override": null
+                }
+              ]
+            },
+            {
+              "name": "tech_adoption_propensity",
+              "modifiers": [
+                {
+                  "when": "openness > 0.65 and ai_literacy > 0.55 and age < 40",
+                  "multiply": 1.22,
+                  "add": 0.1,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "openness > 0.65 and ai_literacy > 0.55 and age >= 40",
+                  "multiply": 1.12,
+                  "add": 0.07,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "openness <= 0.35 and age > 60",
+                  "multiply": 0.8,
+                  "add": -0.08,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "ai_literacy > 0.70 and age < 35",
+                  "multiply": 1.18,
+                  "add": 0.12,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "openness <= 0.35 and ai_literacy <= 0.35",
+                  "multiply": 0.85,
+                  "add": -0.06,
+                  "weight_overrides": null,
+                  "probability_override": null
+                }
+              ]
+            },
+            {
+              "name": "existential_risk_concern",
+              "modifiers": [
+                {
+                  "when": "ai_literacy > 0.60 and asi_belief in ['Fully believes', 'Mostly believes']",
+                  "multiply": 1.3,
+                  "add": 0.18,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "ai_literacy > 0.60 and asi_belief in ['Skeptical', 'Thinks it\\'s fabricated/overhyped']",
+                  "multiply": 1.05,
+                  "add": 0.04,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "ai_literacy <= 0.40 and asi_belief in ['Fully believes', 'Mostly believes']",
+                  "multiply": 1.2,
+                  "add": 0.14,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "neuroticism > 0.65 and asi_belief in ['Fully believes', 'Mostly believes']",
+                  "multiply": 1.25,
+                  "add": 0.16,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "neuroticism <= 0.35 and asi_belief in ['Thinks it\\'s fabricated/overhyped']",
+                  "multiply": 0.88,
+                  "add": -0.08,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "ai_literacy <= 0.40 and asi_belief in ['Thinks it\\'s fabricated/overhyped']",
+                  "multiply": 0.9,
+                  "add": -0.06,
+                  "weight_overrides": null,
+                  "probability_override": null
+                }
+              ]
+            },
+            {
+              "name": "redistribution_preference",
+              "modifiers": [
+                {
+                  "when": "political_ideology in ['Very Liberal', 'Liberal'] and financial_resilience < 0.45",
+                  "multiply": 1.2,
+                  "add": 0.14,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "political_ideology in ['Very Liberal', 'Liberal'] and financial_resilience >= 0.45",
+                  "multiply": 1.12,
+                  "add": 0.1,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "political_ideology in ['Very Conservative', 'Conservative'] and financial_resilience > 0.65",
+                  "multiply": 0.82,
+                  "add": -0.1,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "political_ideology in ['Very Conservative', 'Conservative'] and financial_resilience <= 0.65",
+                  "multiply": 0.88,
+                  "add": -0.06,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "political_ideology == 'Moderate' and financial_resilience < 0.35",
+                  "multiply": 1.1,
+                  "add": 0.08,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "household_income < 35000 and political_ideology not in ['Very Conservative', 'Conservative']",
+                  "multiply": 1.15,
+                  "add": 0.1,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "household_income > 150000 and political_ideology not in ['Very Liberal', 'Liberal']",
+                  "multiply": 0.88,
+                  "add": -0.08,
+                  "weight_overrides": null,
+                  "probability_override": null
+                }
+              ]
+            },
+            {
+              "name": "information_seeking_intensity",
+              "modifiers": [
+                {
+                  "when": "asi_belief in ['Fully believes', 'Mostly believes'] and need_for_cognition > 0.60",
+                  "multiply": 1.28,
+                  "add": 0.16,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "asi_belief in ['Fully believes', 'Mostly believes'] and need_for_cognition <= 0.60",
+                  "multiply": 1.15,
+                  "add": 0.1,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "asi_belief == 'Skeptical' and need_for_cognition > 0.60",
+                  "multiply": 1.18,
+                  "add": 0.08,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "asi_belief == 'Thinks it\\'s fabricated/overhyped' and need_for_cognition <= 0.40",
+                  "multiply": 0.78,
+                  "add": -0.1,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "asi_belief == 'Thinks it\\'s fabricated/overhyped' and need_for_cognition > 0.40",
+                  "multiply": 0.9,
+                  "add": -0.04,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "ai_literacy > 0.65 and asi_belief in ['Fully believes', 'Mostly believes']",
+                  "multiply": 1.2,
+                  "add": 0.12,
+                  "weight_overrides": null,
+                  "probability_override": null
+                }
+              ]
+            },
+            {
+              "name": "social_network_asi_sentiment",
+              "modifiers": [
+                {
+                  "when": "political_affiliation in ['Strong Democrat', 'Lean Democrat'] and education_level in ['Bachelor\\'s', 'Graduate Degree'] and urban_rural == 'Urban'",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": {
+                    "Mostly positive": 0.22,
+                    "Mostly negative": 0.28,
+                    "Divided": 0.38,
+                    "Mostly indifferent": 0.12
+                  },
+                  "probability_override": null
+                },
+                {
+                  "when": "political_affiliation in ['Strong Democrat', 'Lean Democrat'] and urban_rural == 'Rural'",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": {
+                    "Mostly positive": 0.14,
+                    "Mostly negative": 0.38,
+                    "Divided": 0.34,
+                    "Mostly indifferent": 0.14
+                  },
+                  "probability_override": null
+                },
+                {
+                  "when": "political_affiliation in ['Strong Republican', 'Lean Republican'] and urban_rural == 'Urban'",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": {
+                    "Mostly positive": 0.26,
+                    "Mostly negative": 0.28,
+                    "Divided": 0.32,
+                    "Mostly indifferent": 0.14
+                  },
+                  "probability_override": null
+                },
+                {
+                  "when": "political_affiliation in ['Strong Republican', 'Lean Republican'] and urban_rural == 'Rural'",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": {
+                    "Mostly positive": 0.18,
+                    "Mostly negative": 0.4,
+                    "Divided": 0.3,
+                    "Mostly indifferent": 0.12
+                  },
+                  "probability_override": null
+                },
+                {
+                  "when": "political_affiliation == 'Independent' and urban_rural == 'Suburban'",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": {
+                    "Mostly positive": 0.18,
+                    "Mostly negative": 0.3,
+                    "Divided": 0.38,
+                    "Mostly indifferent": 0.14
+                  },
+                  "probability_override": null
+                },
+                {
+                  "when": "education_level in ['Less than HS', 'HS Diploma'] and urban_rural == 'Rural'",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": {
+                    "Mostly positive": 0.12,
+                    "Mostly negative": 0.44,
+                    "Divided": 0.28,
+                    "Mostly indifferent": 0.16
+                  },
+                  "probability_override": null
+                },
+                {
+                  "when": "education_level in ['Bachelor\\'s', 'Graduate Degree'] and urban_rural == 'Urban' and political_affiliation == 'Independent'",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": {
+                    "Mostly positive": 0.24,
+                    "Mostly negative": 0.22,
+                    "Divided": 0.42,
+                    "Mostly indifferent": 0.12
+                  },
+                  "probability_override": null
+                }
+              ]
+            }
+          ]
+        },
+        "name": "conditional_modifiers_hydration",
+        "type": "tool_use",
+        "caller": {
+          "type": "direct"
+        }
+      }
+    ],
+    "model": "claude-sonnet-4-6",
+    "role": "assistant",
+    "stop_reason": "tool_use",
+    "stop_sequence": null,
+    "type": "message",
+    "usage": {
+      "cache_creation": {
+        "ephemeral_1h_input_tokens": "[REDACTED_SECRET]",
+        "ephemeral_5m_input_tokens": "[REDACTED_SECRET]"
+      },
+      "cache_creation_input_tokens": "[REDACTED_SECRET]",
+      "cache_read_input_tokens": "[REDACTED_SECRET]",
+      "input_tokens": 51534,
+      "output_tokens": 8355,
+      "server_tool_use": {
+        "web_search_requests": 3,
+        "web_fetch_requests": 0
+      },
+      "service_tier": "standard",
+      "inference_geo": "global"
+    }
+  },
+  "sources_extracted": [
+    "https://arxiv.org/pdf/2509.18233",
+    "https://www.existentialriskobservatory.org/papers_and_reports/Trends%20in%20Public%20Attitude%20Towards%20Existential%20Risk%20And%20Artificial%20Intelligence.pdf",
+    "https://www.pewresearch.org/internet/2025/04/03/how-the-us-public-and-ai-experts-view-artificial-intelligence/",
+    "https://www.unite.ai/how-much-do-people-trust-ai/",
+    "https://www.brookings.edu/articles/what-jobs-are-affected-by-ai-better-paid-better-educated-workers-face-the-most-exposure/",
+    "https://pmc.ncbi.nlm.nih.gov/articles/PMC11983276/",
+    "https://www.dallasfed.org/research/economics/2026/0106",
+    "https://research.upjohn.org/cgi/viewcontent.cgi?article=1319&context=reports",
+    "https://www.brookings.edu/articles/measuring-us-workers-capacity-to-adapt-to-ai-driven-job-displacement/",
+    "https://research.aimultiple.com/ai-job-loss/",
+    "https://www.sciencedirect.com/science/article/pii/S2199853125001428",
+    "https://pubmed.ncbi.nlm.nih.gov/38654726/",
+    "https://www.pnas.org/doi/10.1073/pnas.2419055122",
+    "https://www.frontiersin.org/journals/psychiatry/articles/10.3389/fpsyt.2024.1368122/full",
+    "https://www.nu.edu/blog/ai-job-statistics/",
+    "https://www.eweek.com/news/americans-fear-ai-job-loss-survey/",
+    "https://srinstitute.utoronto.ca/news/public-opinion-ai-survey-24",
+    "https://hai.stanford.edu/assets/files/hai_ai-index-report-2025_chapter8_final.pdf",
+    "https://medium.com/@evolutionaihub/americas-ai-angst-revealed-why-fear-now-outpaces-excitement-063681fa41ab",
+    "https://rochesterbeacon.com/2025/12/24/with-ais-rise-hope-and-anxiety/",
+    "https://pmc.ncbi.nlm.nih.gov/articles/PMC11036542/",
+    "https://today.yougov.com/technology/articles/51803-americans-increasingly-skeptical-about-ai-artificial-intelligence-effects-poll",
+    "https://home.treasury.gov/system/files/136/AI-Combined-PDF.pdf",
+    "https://publicpolicy.cornell.edu/masters-blog/what-americans-really-think-about-ai-algorithms-public-confidence-and-transparency-in-government/",
+    "https://spectrum.ieee.org/ai-existential-risk-survey",
+    "https://news.gallup.com/poll/648953/americans-express-real-concerns-artificial-intelligence.aspx",
+    "https://thehill.com/policy/technology/5253632-americans-trust-artificial-intelligence-survey/",
+    "https://www.frontiersin.org/journals/artificial-intelligence/articles/10.3389/frai.2025.1658791/full",
+    "https://globalaffairs.org/research/public-opinion-survey/2023-2024-survey-public-attitudes-us-intelligence",
+    "https://hai.stanford.edu/ai-index/2024-ai-index-report/public-opinion"
+  ]
+}

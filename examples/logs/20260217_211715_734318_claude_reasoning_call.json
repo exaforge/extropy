@@ -1,0 +1,103 @@
+{
+  "timestamp": "2026-02-17T21:17:15.734356",
+  "function": "reasoning_call",
+  "provider": "claude",
+  "request": {
+    "model": "claude-sonnet-4-6",
+    "prompt_length": 2669
+  },
+  "response": {
+    "id": "msg_01DDL6L7N1gd1kPdUWRLsXTF",
+    "content": [
+      {
+        "id": "toolu_01SmvczsPvDUqT6AghwpV81Z",
+        "input": {
+          "scenario_type": "evolving",
+          "timestep_unit": "day",
+          "max_timesteps": 14,
+          "background_context": "[REDACTED_TEXT length=387]",
+          "timeline_events": [
+            {
+              "timestep": 1,
+              "description": "Global governments and institutions issue emergency statements; social media erupts",
+              "content": "[REDACTED_TEXT length=631]",
+              "source": "International governments, United Nations, social media",
+              "credibility": 0.85,
+              "emotional_valence": -0.3,
+              "re_reasoning_intensity": "[REDACTED_TEXT length=7]"
+            },
+            {
+              "timestep": 3,
+              "description": "Leading AI scientists publish open letter questioning the ASI claim; stock markets react",
+              "content": "[REDACTED_TEXT length=660]",
+              "source": "Academic coalition open letter, financial news outlets",
+              "credibility": 0.9,
+              "emotional_valence": -0.2,
+              "re_reasoning_intensity": "[REDACTED_TEXT length=4]"
+            },
+            {
+              "timestep": 5,
+              "description": "OpenAI releases limited demonstration footage; deepfake accusations spread",
+              "content": "[REDACTED_TEXT length=690]",
+              "source": "OpenAI official channels, independent analysts, social media fact-checkers",
+              "credibility": 0.6,
+              "emotional_valence": 0.0,
+              "re_reasoning_intensity": "[REDACTED_TEXT length=4]"
+            },
+            {
+              "timestep": 7,
+              "description": "Whistleblower from inside OpenAI leaks internal documents raising safety concerns",
+              "content": "[REDACTED_TEXT length=699]",
+              "source": "Anonymous whistleblower via The New York Times and The Guardian",
+              "credibility": 0.55,
+              "emotional_valence": -0.75,
+              "re_reasoning_intensity": "[REDACTED_TEXT length=7]"
+            },
+            {
+              "timestep": 10,
+              "description": "Independent verification panel releases preliminary findings; global protests erupt",
+              "content": "[REDACTED_TEXT length=800]",
+              "source": "UN Independent ASI Verification Panel, international news outlets",
+              "credibility": 0.88,
+              "emotional_valence": -0.4,
+              "re_reasoning_intensity": "[REDACTED_TEXT length=7]"
+            },
+            {
+              "timestep": 13,
+              "description": "OpenAI CEO addresses the world in a live broadcast; announces governance framework",
+              "content": "[REDACTED_TEXT length=786]",
+              "source": "OpenAI CEO global televised address",
+              "credibility": 0.8,
+              "emotional_valence": 0.2,
+              "re_reasoning_intensity": "[REDACTED_TEXT length=7]"
+            }
+          ]
+        },
+        "name": "timeline_generation",
+        "type": "tool_use",
+        "caller": {
+          "type": "direct"
+        }
+      }
+    ],
+    "model": "claude-sonnet-4-6",
+    "role": "assistant",
+    "stop_reason": "tool_use",
+    "stop_sequence": null,
+    "type": "message",
+    "usage": {
+      "cache_creation": {
+        "ephemeral_1h_input_tokens": "[REDACTED_SECRET]",
+        "ephemeral_5m_input_tokens": "[REDACTED_SECRET]"
+      },
+      "cache_creation_input_tokens": "[REDACTED_SECRET]",
+      "cache_read_input_tokens": "[REDACTED_SECRET]",
+      "input_tokens": 1783,
+      "output_tokens": 1600,
+      "server_tool_use": null,
+      "service_tier": "standard",
+      "inference_geo": "global"
+    }
+  },
+  "sources_extracted": []
+}

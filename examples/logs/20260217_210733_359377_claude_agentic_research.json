@@ -1,0 +1,1938 @@
+{
+  "timestamp": "2026-02-17T21:07:33.359441",
+  "function": "agentic_research",
+  "provider": "claude",
+  "request": {
+    "model": "claude-sonnet-4-6",
+    "prompt_length": 12896
+  },
+  "response": {
+    "id": "msg_01ABrEUMe75RRXyNnTffkPMz",
+    "content": [
+      {
+        "id": "srvtoolu_013iyYGzPisxCrDKw6NSVWB3",
+        "input": {
+          "query": "US adult population urban rural distribution by state 2024"
+        },
+        "name": "web_search",
+        "type": "server_tool_use",
+        "caller": {
+          "type": "direct"
+        }
+      },
+      {
+        "id": "srvtoolu_01HCaVkm2uJZ7hZhkFjUJkUg",
+        "input": {
+          "query": "US education level distribution by age 2024 census"
+        },
+        "name": "web_search",
+        "type": "server_tool_use",
+        "caller": {
+          "type": "direct"
+        }
+      },
+      {
+        "id": "srvtoolu_0198gqvdbRdbaBpZJpELAfSu",
+        "input": {
+          "query": "US political affiliation by state education level 2024"
+        },
+        "name": "web_search",
+        "type": "server_tool_use",
+        "caller": {
+          "type": "direct"
+        }
+      },
+      {
+        "content": [
+          {
+            "encrypted_content": "[REDACTED_TEXT length=6668]",
+            "page_age": null,
+            "title": "Nation\u2019s Urban and Rural Populations Shift Following 2020 Census",
+            "type": "web_search_result",
+            "url": "https://www.census.gov/newsroom/press-releases/2022/urban-rural-populations.html"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=444]",
+            "page_age": null,
+            "title": "Urban Percentage of the Population for States, Historical | Iowa Community Indicators Program",
+            "type": "web_search_result",
+            "url": "https://www.icip.iastate.edu/tables/population/urban-pct-states"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=3068]",
+            "page_age": "September 20, 2025",
+            "title": "Urbanization in the United States - Wikipedia",
+            "type": "web_search_result",
+            "url": "https://en.wikipedia.org/wiki/Urbanization_in_the_United_States"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=6560]",
+            "page_age": "1 week ago",
+            "title": "Demographics of the United States - Wikipedia",
+            "type": "web_search_result",
+            "url": "https://en.wikipedia.org/wiki/Demographics_of_the_United_States"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=3336]",
+            "page_age": null,
+            "title": "Size of urban and rural population U.S. 2023 | Statista",
+            "type": "web_search_result",
+            "url": "https://www.statista.com/statistics/985183/size-urban-rural-population-us/"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=844]",
+            "page_age": null,
+            "title": "United States - Rural Population - 2026 Data 2027 Forecast 1960-2024 Historical",
+            "type": "web_search_result",
+            "url": "https://tradingeconomics.com/united-states/rural-population-percent-of-total-population-wb-data.html"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=5472]",
+            "page_age": null,
+            "title": "October 2024 RESEARCH REPORT 1 acsh HP-2024-22",
+            "type": "web_search_result",
+            "url": "https://aspe.hhs.gov/sites/default/files/documents/6056484066506a8d4ba3dcd8d9322490/rural-health-rr-30-Oct-24.pdf"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=1464]",
+            "page_age": null,
+            "title": "Urban and Rural",
+            "type": "web_search_result",
+            "url": "https://www.census.gov/programs-surveys/geography/guidance/geo-areas/urban-rural.html"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=5652]",
+            "page_age": "April 14, 2024",
+            "title": "Demographic and economic trends in urban, suburban and rural communities",
+            "type": "web_search_result",
+            "url": "https://www.pewresearch.org/social-trends/2018/05/22/demographic-and-economic-trends-in-urban-suburban-and-rural-communities/"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=5120]",
+            "page_age": null,
+            "title": "Changes to Population Distribution and Commuting Patterns Blur the Distinction between Rural and Urban",
+            "type": "web_search_result",
+            "url": "https://www.census.gov/library/stories/2024/08/redefining-rural.html"
+          }
+        ],
+        "tool_use_id": "srvtoolu_013iyYGzPisxCrDKw6NSVWB3",
+        "type": "web_search_tool_result"
+      },
+      {
+        "content": [
+          {
+            "encrypted_content": "[REDACTED_TEXT length=1392]",
+            "page_age": null,
+            "title": "Census Bureau Releases New Educational Attainment Data",
+            "type": "web_search_result",
+            "url": "https://www.census.gov/newsroom/press-releases/2025/educational-attainment-data.html"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=1348]",
+            "page_age": null,
+            "title": "Educational Attainment Tables",
+            "type": "web_search_result",
+            "url": "https://www.census.gov/topics/education/educational-attainment/data/tables.html"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=1476]",
+            "page_age": null,
+            "title": "Educational Attainment in the United States: 2024",
+            "type": "web_search_result",
+            "url": "https://www.census.gov/data/tables/2024/demo/educational-attainment/cps-detailed-tables.html"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=4032]",
+            "page_age": null,
+            "title": "Educational Attainment",
+            "type": "web_search_result",
+            "url": "https://www.census.gov/topics/education/educational-attainment.html"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=3672]",
+            "page_age": "September 10, 2025",
+            "title": "US Census Bureau Releases New Educational Attainment Data - Stephen's Lighthouse",
+            "type": "web_search_result",
+            "url": "https://stephenslighthouse.com/2025/09/10/us-census-bureau-releases-new-educational-attainment-data/"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=2860]",
+            "page_age": null,
+            "title": "Education",
+            "type": "web_search_result",
+            "url": "https://www.census.gov/topics/education.html"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=7456]",
+            "page_age": "3 weeks ago",
+            "title": "Educational attainment in the United States - Wikipedia",
+            "type": "web_search_result",
+            "url": "https://en.wikipedia.org/wiki/Educational_attainment_in_the_United_States"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=5676]",
+            "page_age": "January 15, 2025",
+            "title": "Educational Attainment Statistics [2025]: Levels by Demographic",
+            "type": "web_search_result",
+            "url": "https://educationdata.org/education-attainment-statistics"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=1108]",
+            "page_age": null,
+            "title": "CPS Historical Time Series Tables",
+            "type": "web_search_result",
+            "url": "https://www.census.gov/data/tables/time-series/demo/educational-attainment/cps-historical-time-series.html"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=2612]",
+            "page_age": null,
+            "title": "Educational attainment of population ages 25 to 34 | KIDS COUNT Data Center",
+            "type": "web_search_result",
+            "url": "https://datacenter.aecf.org/data/tables/6294-educational-attainment-of-population-ages-25-to-34"
+          }
+        ],
+        "tool_use_id": "srvtoolu_01HCaVkm2uJZ7hZhkFjUJkUg",
+        "type": "web_search_tool_result"
+      },
+      {
+        "content": [
+          {
+            "encrypted_content": "[REDACTED_TEXT length=5200]",
+            "page_age": "April 24, 2025",
+            "title": "Party affiliation of US voters by race, ethnicity, education | Pew Research Center",
+            "type": "web_search_result",
+            "url": "https://www.pewresearch.org/politics/2024/04/09/partisanship-by-race-ethnicity-and-education/"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=460]",
+            "page_age": "November 7, 2020",
+            "title": "The Most Educated States Voted Blue | by Kathryn Staublin | Medium",
+            "type": "web_search_result",
+            "url": "https://medium.com/@kathrynstaublin/the-most-educated-states-voted-blue-f60f304531f7"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=5640]",
+            "page_age": null,
+            "title": "Knowledge Box - Research Day: The United States Ever Changing Political Ideology and Educational Divide",
+            "type": "web_search_result",
+            "url": "https://kb.gcsu.edu/researchday/2024/all/41/"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=468]",
+            "page_age": "June 9, 2025",
+            "title": "Do smarter states vote blue? Study finds the most educated states lean Democratic \u2013 Lassen News",
+            "type": "web_search_result",
+            "url": "https://www.lassennews.com/do-smarter-states-vote-blue-study-finds-the-most-educated-states-lean-democratic"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=5440]",
+            "page_age": null,
+            "title": "Educational Attainment and the Presidential Elections",
+            "type": "web_search_result",
+            "url": "https://www.highereddatastories.com/2025/02/educational-attainment-and-presidential.html"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=1820]",
+            "page_age": "November 7, 2024",
+            "title": "College education levels predicted whether states went Trump or Harris",
+            "type": "web_search_result",
+            "url": "https://www.axios.com/2024/11/07/college-degree-voters-split-harris-trump"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=5648]",
+            "page_age": "September 11, 2025",
+            "title": "Which Party Really Has the Edge on Education? - Education Next",
+            "type": "web_search_result",
+            "url": "https://www.educationnext.org/which-party-really-has-the-edge-on-education/"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=452]",
+            "page_age": "November 7, 2024",
+            "title": "A Tale of Two Maps: Education and Politics in America \u2014 Collectiver",
+            "type": "web_search_result",
+            "url": "https://collectiver.com/blog/education-vote-correlation/"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=6456]",
+            "page_age": "October 14, 2024",
+            "title": "Analysis: Why education level has become the best predictor for how someone will vote | CNN Politics",
+            "type": "web_search_result",
+            "url": "https://www.cnn.com/2024/10/14/politics/the-biggest-predictor-of-how-someone-will-vote"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=5520]",
+            "page_age": "November 1, 2024",
+            "title": "How a college degree is one of the best predictors of which candidate voters support | PBS News",
+            "type": "web_search_result",
+            "url": "https://www.pbs.org/newshour/show/how-a-college-degree-is-one-of-the-best-predictors-of-which-candidate-voters-support"
+          }
+        ],
+        "tool_use_id": "srvtoolu_0198gqvdbRdbaBpZJpELAfSu",
+        "type": "web_search_tool_result"
+      },
+      {
+        "citations": null,
+        "text": "[REDACTED_TEXT length=206]",
+        "type": "text",
+        "parsed_output": null
+      },
+      {
+        "id": "toolu_01BWaVyfLEquNzRRXQN7hKP3",
+        "input": {
+          "attributes": [
+            {
+              "name": "urban_rural",
+              "modifiers": [
+                {
+                  "when": "state in ['CA', 'NY', 'NJ', 'MA', 'IL', 'MD', 'CT', 'RI', 'DC', 'HI']",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": {
+                    "Urban": 0.6,
+                    "Suburban": 0.32,
+                    "Rural": 0.08
+                  },
+                  "probability_override": null
+                },
+                {
+                  "when": "state in ['TX', 'FL', 'GA', 'WA', 'CO', 'AZ', 'NV', 'OR', 'VA', 'MN', 'PA', 'MI', 'OH', 'NC', 'TN', 'MO', 'IN', 'WI', 'SC', 'KS', 'NM', 'UT', 'NE', 'IA', 'OK', 'DE', 'NH']",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": {
+                    "Urban": 0.35,
+                    "Suburban": 0.45,
+                    "Rural": 0.2
+                  },
+                  "probability_override": null
+                },
+                {
+                  "when": "state in ['WV', 'VT', 'ME', 'MT', 'SD', 'ND', 'AK', 'WY', 'MS', 'AR', 'AL', 'LA', 'KY', 'ID']",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": {
+                    "Urban": 0.2,
+                    "Suburban": 0.3,
+                    "Rural": 0.5
+                  },
+                  "probability_override": null
+                }
+              ]
+            },
+            {
+              "name": "education_level",
+              "modifiers": [
+                {
+                  "when": "age < 25",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": {
+                    "Less than HS": 0.06,
+                    "HS Diploma": 0.28,
+                    "Some College": 0.38,
+                    "Associate's": 0.08,
+                    "Bachelor's": 0.16,
+                    "Graduate Degree": 0.04
+                  },
+                  "probability_override": null
+                },
+                {
+                  "when": "age >= 25 and age < 35",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": {
+                    "Less than HS": 0.07,
+                    "HS Diploma": 0.22,
+                    "Some College": 0.2,
+                    "Associate's": 0.09,
+                    "Bachelor's": 0.28,
+                    "Graduate Degree": 0.14
+                  },
+                  "probability_override": null
+                },
+                {
+                  "when": "age >= 35 and age < 55",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": {
+                    "Less than HS": 0.08,
+                    "HS Diploma": 0.25,
+                    "Some College": 0.2,
+                    "Associate's": 0.1,
+                    "Bachelor's": 0.24,
+                    "Graduate Degree": 0.13
+                  },
+                  "probability_override": null
+                },
+                {
+                  "when": "age >= 55",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": {
+                    "Less than HS": 0.1,
+                    "HS Diploma": 0.32,
+                    "Some College": 0.19,
+                    "Associate's": 0.09,
+                    "Bachelor's": 0.18,
+                    "Graduate Degree": 0.12
+                  },
+                  "probability_override": null
+                }
+              ]
+            },
+            {
+              "name": "household_income",
+              "modifiers": [
+                {
+                  "when": "education_level == 'Less than HS' and state in ['CA', 'NY', 'MA', 'WA', 'CT', 'NJ', 'MD', 'CO', 'HI', 'DC']",
+                  "multiply": 1.25,
+                  "add": 0,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "education_level == 'Bachelor\\'s' and state in ['CA', 'NY', 'MA', 'WA', 'CT', 'NJ', 'MD', 'CO', 'HI', 'DC']",
+                  "multiply": 1.35,
+                  "add": 0,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "education_level == 'Graduate Degree' and state in ['CA', 'NY', 'MA', 'WA', 'CT', 'NJ', 'MD', 'CO', 'HI', 'DC']",
+                  "multiply": 1.4,
+                  "add": 0,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "education_level == 'Bachelor\\'s' and state in ['MS', 'WV', 'AR', 'AL', 'NM', 'KY', 'LA', 'SD', 'MT', 'ID']",
+                  "multiply": 0.82,
+                  "add": 0,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "education_level == 'Graduate Degree' and state in ['MS', 'WV', 'AR', 'AL', 'NM', 'KY', 'LA', 'SD', 'MT', 'ID']",
+                  "multiply": 0.82,
+                  "add": 0,
+                  "weight_overrides": null,
+                  "probability_override": null
+                }
+              ]
+            },
+            {
+              "name": "marital_status",
+              "modifiers": [
+                {
+                  "when": "age < 30",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": {
+                    "Single": 0.65,
+                    "Married": 0.18,
+                    "Divorced": 0.04,
+                    "Widowed": 0.01,
+                    "Domestic Partnership": 0.12
+                  },
+                  "probability_override": null
+                },
+                {
+                  "when": "age >= 30 and age < 45",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": {
+                    "Single": 0.25,
+                    "Married": 0.52,
+                    "Divorced": 0.12,
+                    "Widowed": 0.02,
+                    "Domestic Partnership": 0.09
+                  },
+                  "probability_override": null
+                },
+                {
+                  "when": "age >= 45 and age < 65",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": {
+                    "Single": 0.14,
+                    "Married": 0.55,
+                    "Divorced": 0.2,
+                    "Widowed": 0.05,
+                    "Domestic Partnership": 0.06
+                  },
+                  "probability_override": null
+                },
+                {
+                  "when": "age >= 65",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": {
+                    "Single": 0.09,
+                    "Married": 0.55,
+                    "Divorced": 0.14,
+                    "Widowed": 0.19,
+                    "Domestic Partnership": 0.03
+                  },
+                  "probability_override": null
+                }
+              ]
+            },
+            {
+              "name": "household_size",
+              "modifiers": [
+                {
+                  "when": "marital_status == 'Married' and age < 40",
+                  "multiply": 1.15,
+                  "add": 0,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "marital_status == 'Single' and age >= 65",
+                  "multiply": 0.95,
+                  "add": 0,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "marital_status == 'Widowed' and age >= 65",
+                  "multiply": 0.9,
+                  "add": 0,
+                  "weight_overrides": null,
+                  "probability_override": null
+                }
+              ]
+            },
+            {
+              "name": "has_children",
+              "modifiers": [
+                {
+                  "when": "age < 25 and marital_status == 'Single'",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": null,
+                  "probability_override": 0.06
+                },
+                {
+                  "when": "age >= 25 and age < 35 and marital_status == 'Married'",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": null,
+                  "probability_override": 0.48
+                },
+                {
+                  "when": "age >= 35 and age < 45 and marital_status == 'Married'",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": null,
+                  "probability_override": 0.58
+                },
+                {
+                  "when": "age >= 45 and age < 55 and marital_status == 'Married'",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": null,
+                  "probability_override": 0.3
+                },
+                {
+                  "when": "age >= 55",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": null,
+                  "probability_override": 0.06
+                },
+                {
+                  "when": "age >= 25 and age < 40 and marital_status == 'Domestic Partnership'",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": null,
+                  "probability_override": 0.28
+                }
+              ]
+            },
+            {
+              "name": "employment_status",
+              "modifiers": [
+                {
+                  "when": "age < 25 and education_level in ['Less than HS', 'HS Diploma', 'Some College']",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": {
+                    "Full-time": 0.28,
+                    "Part-time": 0.22,
+                    "Self-employed": 0.03,
+                    "Unemployed": 0.08,
+                    "Retired": 0.0,
+                    "Student": 0.39
+                  },
+                  "probability_override": null
+                },
+                {
+                  "when": "age >= 25 and age < 55 and education_level in ['Bachelor\\'s', 'Graduate Degree']",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": {
+                    "Full-time": 0.72,
+                    "Part-time": 0.08,
+                    "Self-employed": 0.12,
+                    "Unemployed": 0.03,
+                    "Retired": 0.02,
+                    "Student": 0.03
+                  },
+                  "probability_override": null
+                },
+                {
+                  "when": "age >= 25 and age < 55 and education_level in ['Less than HS', 'HS Diploma', 'Some College', 'Associate\\'s']",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": {
+                    "Full-time": 0.57,
+                    "Part-time": 0.14,
+                    "Self-employed": 0.08,
+                    "Unemployed": 0.08,
+                    "Retired": 0.02,
+                    "Student": 0.11
+                  },
+                  "probability_override": null
+                },
+                {
+                  "when": "age >= 55 and age < 65",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": {
+                    "Full-time": 0.5,
+                    "Part-time": 0.12,
+                    "Self-employed": 0.1,
+                    "Unemployed": 0.05,
+                    "Retired": 0.2,
+                    "Student": 0.03
+                  },
+                  "probability_override": null
+                },
+                {
+                  "when": "age >= 65",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": {
+                    "Full-time": 0.12,
+                    "Part-time": 0.09,
+                    "Self-employed": 0.07,
+                    "Unemployed": 0.02,
+                    "Retired": 0.69,
+                    "Student": 0.01
+                  },
+                  "probability_override": null
+                }
+              ]
+            },
+            {
+              "name": "occupation",
+              "modifiers": [
+                {
+                  "when": "education_level == 'Graduate Degree' and employment_status == 'Full-time'",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": {
+                    "Management/Professional": 0.72,
+                    "Service": 0.08,
+                    "Sales/Office": 0.1,
+                    "Construction/Extraction": 0.02,
+                    "Production/Transport": 0.02,
+                    "Other": 0.06
+                  },
+                  "probability_override": null
+                },
+                {
+                  "when": "education_level == 'Bachelor\\'s' and employment_status == 'Full-time'",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": {
+                    "Management/Professional": 0.55,
+                    "Service": 0.1,
+                    "Sales/Office": 0.22,
+                    "Construction/Extraction": 0.04,
+                    "Production/Transport": 0.04,
+                    "Other": 0.05
+                  },
+                  "probability_override": null
+                },
+                {
+                  "when": "education_level in ['Some College', 'Associate\\'s'] and employment_status == 'Full-time'",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": {
+                    "Management/Professional": 0.25,
+                    "Service": 0.22,
+                    "Sales/Office": 0.3,
+                    "Construction/Extraction": 0.09,
+                    "Production/Transport": 0.1,
+                    "Other": 0.04
+                  },
+                  "probability_override": null
+                },
+                {
+                  "when": "education_level in ['Less than HS', 'HS Diploma'] and employment_status == 'Full-time'",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": {
+                    "Management/Professional": 0.1,
+                    "Service": 0.28,
+                    "Sales/Office": 0.22,
+                    "Construction/Extraction": 0.18,
+                    "Production/Transport": 0.18,
+                    "Other": 0.04
+                  },
+                  "probability_override": null
+                },
+                {
+                  "when": "education_level == 'Graduate Degree' and employment_status == 'Self-employed'",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": {
+                    "Management/Professional": 0.68,
+                    "Service": 0.1,
+                    "Sales/Office": 0.1,
+                    "Construction/Extraction": 0.02,
+                    "Production/Transport": 0.02,
+                    "Other": 0.08
+                  },
+                  "probability_override": null
+                }
+              ]
+            },
+            {
+              "name": "political_affiliation",
+              "modifiers": [
+                {
+                  "when": "state in ['CA', 'NY', 'MA', 'IL', 'MD', 'CT', 'RI', 'VT', 'HI', 'DC', 'WA', 'OR', 'NJ', 'CO', 'NM', 'DE', 'ME']",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": {
+                    "Strong Democrat": 0.28,
+                    "Lean Democrat": 0.22,
+                    "Independent": 0.22,
+                    "Lean Republican": 0.14,
+                    "Strong Republican": 0.14
+                  },
+                  "probability_override": null
+                },
+                {
+                  "when": "state in ['TX', 'FL', 'GA', 'NC', 'AZ', 'NV', 'VA', 'PA', 'MI', 'WI', 'MN', 'NH']",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": {
+                    "Strong Democrat": 0.18,
+                    "Lean Democrat": 0.18,
+                    "Independent": 0.25,
+                    "Lean Republican": 0.2,
+                    "Strong Republican": 0.19
+                  },
+                  "probability_override": null
+                },
+                {
+                  "when": "state in ['WY', 'ID', 'ND', 'SD', 'NE', 'UT', 'KS', 'OK', 'AL', 'AR', 'WV', 'MS', 'TN', 'KY', 'SC', 'IN', 'MT', 'MO', 'LA', 'AK']",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": {
+                    "Strong Democrat": 0.12,
+                    "Lean Democrat": 0.13,
+                    "Independent": 0.2,
+                    "Lean Republican": 0.22,
+                    "Strong Republican": 0.33
+                  },
+                  "probability_override": null
+                },
+                {
+                  "when": "education_level in ['Bachelor\\'s', 'Graduate Degree']",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": {
+                    "Strong Democrat": 0.24,
+                    "Lean Democrat": 0.21,
+                    "Independent": 0.22,
+                    "Lean Republican": 0.18,
+                    "Strong Republican": 0.15
+                  },
+                  "probability_override": null
+                },
+                {
+                  "when": "education_level in ['Less than HS', 'HS Diploma']",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": {
+                    "Strong Democrat": 0.16,
+                    "Lean Democrat": 0.16,
+                    "Independent": 0.23,
+                    "Lean Republican": 0.2,
+                    "Strong Republican": 0.25
+                  },
+                  "probability_override": null
+                }
+              ]
+            },
+            {
+              "name": "political_ideology",
+              "modifiers": [
+                {
+                  "when": "political_affiliation == 'Strong Democrat'",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": {
+                    "Very Liberal": 0.38,
+                    "Liberal": 0.42,
+                    "Moderate": 0.15,
+                    "Conservative": 0.04,
+                    "Very Conservative": 0.01
+                  },
+                  "probability_override": null
+                },
+                {
+                  "when": "political_affiliation == 'Lean Democrat'",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": {
+                    "Very Liberal": 0.12,
+                    "Liberal": 0.4,
+                    "Moderate": 0.38,
+                    "Conservative": 0.08,
+                    "Very Conservative": 0.02
+                  },
+                  "probability_override": null
+                },
+                {
+                  "when": "political_affiliation == 'Independent'",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": {
+                    "Very Liberal": 0.06,
+                    "Liberal": 0.16,
+                    "Moderate": 0.5,
+                    "Conservative": 0.2,
+                    "Very Conservative": 0.08
+                  },
+                  "probability_override": null
+                },
+                {
+                  "when": "political_affiliation == 'Lean Republican'",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": {
+                    "Very Liberal": 0.02,
+                    "Liberal": 0.07,
+                    "Moderate": 0.35,
+                    "Conservative": 0.42,
+                    "Very Conservative": 0.14
+                  },
+                  "probability_override": null
+                },
+                {
+                  "when": "political_affiliation == 'Strong Republican'",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": {
+                    "Very Liberal": 0.01,
+                    "Liberal": 0.03,
+                    "Moderate": 0.13,
+                    "Conservative": 0.41,
+                    "Very Conservative": 0.42
+                  },
+                  "probability_override": null
+                }
+              ]
+            },
+            {
+              "name": "religious_affiliation",
+              "modifiers": [
+                {
+                  "when": "race_ethnicity == 'White non-Hispanic'",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": {
+                    "Evangelical Protestant": 0.26,
+                    "Mainline Protestant": 0.18,
+                    "Catholic": 0.2,
+                    "Other Christian": 0.06,
+                    "Jewish": 0.03,
+                    "Muslim": 0.01,
+                    "Other Non-Christian": 0.03,
+                    "None/Unaffiliated": 0.23
+                  },
+                  "probability_override": null
+                },
+                {
+                  "when": "race_ethnicity == 'Black non-Hispanic'",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": {
+                    "Evangelical Protestant": 0.45,
+                    "Mainline Protestant": 0.14,
+                    "Catholic": 0.06,
+                    "Other Christian": 0.12,
+                    "Jewish": 0.01,
+                    "Muslim": 0.04,
+                    "Other Non-Christian": 0.02,
+                    "None/Unaffiliated": 0.16
+                  },
+                  "probability_override": null
+                },
+                {
+                  "when": "race_ethnicity == 'Hispanic'",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": {
+                    "Evangelical Protestant": 0.16,
+                    "Mainline Protestant": 0.05,
+                    "Catholic": 0.48,
+                    "Other Christian": 0.08,
+                    "Jewish": 0.01,
+                    "Muslim": 0.01,
+                    "Other Non-Christian": 0.03,
+                    "None/Unaffiliated": 0.18
+                  },
+                  "probability_override": null
+                },
+                {
+                  "when": "race_ethnicity == 'Asian non-Hispanic'",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": {
+                    "Evangelical Protestant": 0.08,
+                    "Mainline Protestant": 0.06,
+                    "Catholic": 0.08,
+                    "Other Christian": 0.06,
+                    "Jewish": 0.01,
+                    "Muslim": 0.04,
+                    "Other Non-Christian": 0.26,
+                    "None/Unaffiliated": 0.41
+                  },
+                  "probability_override": null
+                },
+                {
+                  "when": "race_ethnicity == 'Other/Multiracial'",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": {
+                    "Evangelical Protestant": 0.18,
+                    "Mainline Protestant": 0.09,
+                    "Catholic": 0.14,
+                    "Other Christian": 0.09,
+                    "Jewish": 0.02,
+                    "Muslim": 0.03,
+                    "Other Non-Christian": 0.09,
+                    "None/Unaffiliated": 0.36
+                  },
+                  "probability_override": null
+                }
+              ]
+            },
+            {
+              "name": "religious_attendance",
+              "modifiers": [
+                {
+                  "when": "religious_affiliation == 'None/Unaffiliated'",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": {
+                    "Never": 0.6,
+                    "Seldom": 0.22,
+                    "A few times/year": 0.1,
+                    "Monthly": 0.04,
+                    "Weekly": 0.03,
+                    "More than weekly": 0.01
+                  },
+                  "probability_override": null
+                },
+                {
+                  "when": "religious_affiliation == 'Evangelical Protestant'",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": {
+                    "Never": 0.06,
+                    "Seldom": 0.1,
+                    "A few times/year": 0.14,
+                    "Monthly": 0.14,
+                    "Weekly": 0.38,
+                    "More than weekly": 0.18
+                  },
+                  "probability_override": null
+                },
+                {
+                  "when": "religious_affiliation == 'Mainline Protestant'",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": {
+                    "Never": 0.1,
+                    "Seldom": 0.18,
+                    "A few times/year": 0.22,
+                    "Monthly": 0.18,
+                    "Weekly": 0.26,
+                    "More than weekly": 0.06
+                  },
+                  "probability_override": null
+                },
+                {
+                  "when": "religious_affiliation == 'Catholic'",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": {
+                    "Never": 0.12,
+                    "Seldom": 0.2,
+                    "A few times/year": 0.22,
+                    "Monthly": 0.16,
+                    "Weekly": 0.24,
+                    "More than weekly": 0.06
+                  },
+                  "probability_override": null
+                },
+                {
+                  "when": "religious_affiliation == 'Muslim'",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": {
+                    "Never": 0.06,
+                    "Seldom": 0.12,
+                    "A few times/year": 0.14,
+                    "Monthly": 0.16,
+                    "Weekly": 0.38,
+                    "More than weekly": 0.14
+                  },
+                  "probability_override": null
+                },
+                {
+                  "when": "religious_affiliation in ['Other Christian', 'Other Non-Christian', 'Jewish']",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": {
+                    "Never": 0.14,
+                    "Seldom": 0.18,
+                    "A few times/year": 0.2,
+                    "Monthly": 0.18,
+                    "Weekly": 0.22,
+                    "More than weekly": 0.08
+                  },
+                  "probability_override": null
+                }
+              ]
+            },
+            {
+              "name": "primary_news_source",
+              "modifiers": [
+                {
+                  "when": "age < 30 and education_level in ['Less than HS', 'HS Diploma', 'Some College']",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": {
+                    "TV": 0.08,
+                    "Online/Digital": 0.28,
+                    "Social Media": 0.48,
+                    "Radio": 0.04,
+                    "Print Newspaper": 0.02,
+                    "None": 0.1
+                  },
+                  "probability_override": null
+                },
+                {
+                  "when": "age < 30 and education_level in ['Bachelor\\'s', 'Graduate Degree']",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": {
+                    "TV": 0.06,
+                    "Online/Digital": 0.5,
+                    "Social Media": 0.3,
+                    "Radio": 0.04,
+                    "Print Newspaper": 0.04,
+                    "None": 0.06
+                  },
+                  "probability_override": null
+                },
+                {
+                  "when": "age >= 30 and age < 50 and education_level in ['Bachelor\\'s', 'Graduate Degree']",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": {
+                    "TV": 0.16,
+                    "Online/Digital": 0.5,
+                    "Social Media": 0.18,
+                    "Radio": 0.08,
+                    "Print Newspaper": 0.06,
+                    "None": 0.02
+                  },
+                  "probability_override": null
+                },
+                {
+                  "when": "age >= 30 and age < 50 and education_level in ['Less than HS', 'HS Diploma', 'Some College', 'Associate\\'s']",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": {
+                    "TV": 0.28,
+                    "Online/Digital": 0.28,
+                    "Social Media": 0.3,
+                    "Radio": 0.08,
+                    "Print Newspaper": 0.03,
+                    "None": 0.03
+                  },
+                  "probability_override": null
+                },
+                {
+                  "when": "age >= 50 and age < 65",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": {
+                    "TV": 0.42,
+                    "Online/Digital": 0.28,
+                    "Social Media": 0.16,
+                    "Radio": 0.09,
+                    "Print Newspaper": 0.04,
+                    "None": 0.01
+                  },
+                  "probability_override": null
+                },
+                {
+                  "when": "age >= 65",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": {
+                    "TV": 0.56,
+                    "Online/Digital": 0.18,
+                    "Social Media": 0.1,
+                    "Radio": 0.1,
+                    "Print Newspaper": 0.05,
+                    "None": 0.01
+                  },
+                  "probability_override": null
+                }
+              ]
+            },
+            {
+              "name": "news_outlet_lean",
+              "modifiers": [
+                {
+                  "when": "political_affiliation in ['Strong Democrat', 'Lean Democrat'] and primary_news_source in ['TV', 'Online/Digital']",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": {
+                    "Left-leaning": 0.52,
+                    "Center": 0.28,
+                    "Right-leaning": 0.08,
+                    "Mixed/No Preference": 0.12
+                  },
+                  "probability_override": null
+                },
+                {
+                  "when": "political_affiliation in ['Strong Republican', 'Lean Republican'] and primary_news_source in ['TV', 'Online/Digital']",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": {
+                    "Left-leaning": 0.06,
+                    "Center": 0.16,
+                    "Right-leaning": 0.62,
+                    "Mixed/No Preference": 0.16
+                  },
+                  "probability_override": null
+                },
+                {
+                  "when": "political_affiliation == 'Independent' and primary_news_source in ['TV', 'Online/Digital']",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": {
+                    "Left-leaning": 0.2,
+                    "Center": 0.32,
+                    "Right-leaning": 0.22,
+                    "Mixed/No Preference": 0.26
+                  },
+                  "probability_override": null
+                },
+                {
+                  "when": "primary_news_source == 'Social Media'",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": {
+                    "Left-leaning": 0.22,
+                    "Center": 0.14,
+                    "Right-leaning": 0.22,
+                    "Mixed/No Preference": 0.42
+                  },
+                  "probability_override": null
+                },
+                {
+                  "when": "primary_news_source == 'Print Newspaper'",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": {
+                    "Left-leaning": 0.28,
+                    "Center": 0.38,
+                    "Right-leaning": 0.18,
+                    "Mixed/No Preference": 0.16
+                  },
+                  "probability_override": null
+                }
+              ]
+            },
+            {
+              "name": "social_media_platforms",
+              "modifiers": [
+                {
+                  "when": "age < 25",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": {
+                    "Facebook": 0.06,
+                    "YouTube": 0.22,
+                    "Instagram": 0.28,
+                    "TikTok": 0.3,
+                    "Twitter/X": 0.08,
+                    "None/Minimal": 0.06
+                  },
+                  "probability_override": null
+                },
+                {
+                  "when": "age >= 25 and age < 35",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": {
+                    "Facebook": 0.12,
+                    "YouTube": 0.22,
+                    "Instagram": 0.28,
+                    "TikTok": 0.18,
+                    "Twitter/X": 0.12,
+                    "None/Minimal": 0.08
+                  },
+                  "probability_override": null
+                },
+                {
+                  "when": "age >= 35 and age < 50",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": {
+                    "Facebook": 0.28,
+                    "YouTube": 0.22,
+                    "Instagram": 0.18,
+                    "TikTok": 0.08,
+                    "Twitter/X": 0.1,
+                    "None/Minimal": 0.14
+                  },
+                  "probability_override": null
+                },
+                {
+                  "when": "age >= 50 and age < 65",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": {
+                    "Facebook": 0.4,
+                    "YouTube": 0.2,
+                    "Instagram": 0.1,
+                    "TikTok": 0.04,
+                    "Twitter/X": 0.08,
+                    "None/Minimal": 0.18
+                  },
+                  "probability_override": null
+                },
+                {
+                  "when": "age >= 65",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": {
+                    "Facebook": 0.44,
+                    "YouTube": 0.18,
+                    "Instagram": 0.06,
+                    "TikTok": 0.02,
+                    "Twitter/X": 0.04,
+                    "None/Minimal": 0.26
+                  },
+                  "probability_override": null
+                }
+              ]
+            },
+            {
+              "name": "social_media_hours_per_day",
+              "modifiers": [
+                {
+                  "when": "age < 25 and social_media_platforms == 'TikTok'",
+                  "multiply": 1.2,
+                  "add": 0,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "age >= 65 and social_media_platforms == 'Facebook'",
+                  "multiply": 0.75,
+                  "add": 0,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "age >= 65 and social_media_platforms == 'None/Minimal'",
+                  "multiply": 0.8,
+                  "add": 0,
+                  "weight_overrides": null,
+                  "probability_override": null
+                }
+              ]
+            },
+            {
+              "name": "internet_access",
+              "modifiers": [
+                {
+                  "when": "urban_rural == 'Urban' and household_income > 60000",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": {
+                    "Broadband": 0.88,
+                    "Mobile Only": 0.09,
+                    "Dial-up/Satellite": 0.01,
+                    "None": 0.02
+                  },
+                  "probability_override": null
+                },
+                {
+                  "when": "urban_rural == 'Suburban' and household_income > 60000",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": {
+                    "Broadband": 0.85,
+                    "Mobile Only": 0.1,
+                    "Dial-up/Satellite": 0.03,
+                    "None": 0.02
+                  },
+                  "probability_override": null
+                },
+                {
+                  "when": "urban_rural == 'Urban' and household_income <= 60000",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": {
+                    "Broadband": 0.65,
+                    "Mobile Only": 0.26,
+                    "Dial-up/Satellite": 0.02,
+                    "None": 0.07
+                  },
+                  "probability_override": null
+                },
+                {
+                  "when": "urban_rural == 'Suburban' and household_income <= 60000",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": {
+                    "Broadband": 0.68,
+                    "Mobile Only": 0.22,
+                    "Dial-up/Satellite": 0.06,
+                    "None": 0.04
+                  },
+                  "probability_override": null
+                },
+                {
+                  "when": "urban_rural == 'Rural' and household_income > 60000",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": {
+                    "Broadband": 0.58,
+                    "Mobile Only": 0.18,
+                    "Dial-up/Satellite": 0.2,
+                    "None": 0.04
+                  },
+                  "probability_override": null
+                },
+                {
+                  "when": "urban_rural == 'Rural' and household_income <= 60000",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": {
+                    "Broadband": 0.38,
+                    "Mobile Only": 0.24,
+                    "Dial-up/Satellite": 0.28,
+                    "None": 0.1
+                  },
+                  "probability_override": null
+                }
+              ]
+            },
+            {
+              "name": "civic_engagement",
+              "modifiers": [
+                {
+                  "when": "age < 30 and education_level in ['Less than HS', 'HS Diploma', 'Some College']",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": {
+                    "Votes regularly": 0.2,
+                    "Votes sometimes": 0.28,
+                    "Rarely/Never votes": 0.46,
+                    "Actively volunteers or campaigns": 0.06
+                  },
+                  "probability_override": null
+                },
+                {
+                  "when": "age < 30 and education_level in ['Bachelor\\'s', 'Graduate Degree']",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": {
+                    "Votes regularly": 0.32,
+                    "Votes sometimes": 0.3,
+                    "Rarely/Never votes": 0.24,
+                    "Actively volunteers or campaigns": 0.14
+                  },
+                  "probability_override": null
+                },
+                {
+                  "when": "age >= 30 and age < 50 and education_level in ['Less than HS', 'HS Diploma']",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": {
+                    "Votes regularly": 0.38,
+                    "Votes sometimes": 0.28,
+                    "Rarely/Never votes": 0.28,
+                    "Actively volunteers or campaigns": 0.06
+                  },
+                  "probability_override": null
+                },
+                {
+                  "when": "age >= 30 and age < 50 and education_level in ['Bachelor\\'s', 'Graduate Degree']",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": {
+                    "Votes regularly": 0.56,
+                    "Votes sometimes": 0.22,
+                    "Rarely/Never votes": 0.1,
+                    "Actively volunteers or campaigns": 0.12
+                  },
+                  "probability_override": null
+                },
+                {
+                  "when": "age >= 50 and education_level in ['Bachelor\\'s', 'Graduate Degree']",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": {
+                    "Votes regularly": 0.68,
+                    "Votes sometimes": 0.16,
+                    "Rarely/Never votes": 0.06,
+                    "Actively volunteers or campaigns": 0.1
+                  },
+                  "probability_override": null
+                },
+                {
+                  "when": "age >= 50 and education_level in ['Less than HS', 'HS Diploma', 'Some College', 'Associate\\'s']",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": {
+                    "Votes regularly": 0.52,
+                    "Votes sometimes": 0.26,
+                    "Rarely/Never votes": 0.16,
+                    "Actively volunteers or campaigns": 0.06
+                  },
+                  "probability_override": null
+                }
+              ]
+            },
+            {
+              "name": "homeownership",
+              "modifiers": [
+                {
+                  "when": "household_income > 100000 and age >= 35",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": null,
+                  "probability_override": 0.82
+                },
+                {
+                  "when": "household_income > 100000 and age < 35",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": null,
+                  "probability_override": 0.52
+                },
+                {
+                  "when": "household_income >= 50000 and household_income <= 100000 and age >= 40",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": null,
+                  "probability_override": 0.68
+                },
+                {
+                  "when": "household_income >= 50000 and household_income <= 100000 and age < 40",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": null,
+                  "probability_override": 0.4
+                },
+                {
+                  "when": "household_income < 50000 and age >= 55",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": null,
+                  "probability_override": 0.5
+                },
+                {
+                  "when": "household_income < 50000 and age < 55",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": null,
+                  "probability_override": 0.26
+                }
+              ]
+            },
+            {
+              "name": "health_insurance_type",
+              "modifiers": [
+                {
+                  "when": "employment_status == 'Full-time' and household_income > 50000",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": {
+                    "Employer-sponsored": 0.72,
+                    "Medicaid/CHIP": 0.04,
+                    "Medicare": 0.04,
+                    "Individual Market/ACA": 0.1,
+                    "Military/VA": 0.04,
+                    "Uninsured": 0.06
+                  },
+                  "probability_override": null
+                },
+                {
+                  "when": "employment_status == 'Full-time' and household_income <= 50000",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": {
+                    "Employer-sponsored": 0.46,
+                    "Medicaid/CHIP": 0.18,
+                    "Medicare": 0.02,
+                    "Individual Market/ACA": 0.14,
+                    "Military/VA": 0.04,
+                    "Uninsured": 0.16
+                  },
+                  "probability_override": null
+                },
+                {
+                  "when": "employment_status == 'Self-employed'",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": {
+                    "Employer-sponsored": 0.08,
+                    "Medicaid/CHIP": 0.1,
+                    "Medicare": 0.06,
+                    "Individual Market/ACA": 0.52,
+                    "Military/VA": 0.04,
+                    "Uninsured": 0.2
+                  },
+                  "probability_override": null
+                },
+                {
+                  "when": "employment_status == 'Retired' and household_income > 40000",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": {
+                    "Employer-sponsored": 0.12,
+                    "Medicaid/CHIP": 0.04,
+                    "Medicare": 0.72,
+                    "Individual Market/ACA": 0.06,
+                    "Military/VA": 0.05,
+                    "Uninsured": 0.01
+                  },
+                  "probability_override": null
+                },
+                {
+                  "when": "employment_status == 'Retired' and household_income <= 40000",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": {
+                    "Employer-sponsored": 0.04,
+                    "Medicaid/CHIP": 0.26,
+                    "Medicare": 0.58,
+                    "Individual Market/ACA": 0.06,
+                    "Military/VA": 0.04,
+                    "Uninsured": 0.02
+                  },
+                  "probability_override": null
+                },
+                {
+                  "when": "employment_status == 'Unemployed' and household_income <= 30000",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": {
+                    "Employer-sponsored": 0.06,
+                    "Medicaid/CHIP": 0.46,
+                    "Medicare": 0.04,
+                    "Individual Market/ACA": 0.16,
+                    "Military/VA": 0.03,
+                    "Uninsured": 0.25
+                  },
+                  "probability_override": null
+                },
+                {
+                  "when": "employment_status == 'Part-time' and household_income <= 40000",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": {
+                    "Employer-sponsored": 0.2,
+                    "Medicaid/CHIP": 0.28,
+                    "Medicare": 0.04,
+                    "Individual Market/ACA": 0.2,
+                    "Military/VA": 0.03,
+                    "Uninsured": 0.25
+                  },
+                  "probability_override": null
+                },
+                {
+                  "when": "employment_status == 'Student'",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": {
+                    "Employer-sponsored": 0.1,
+                    "Medicaid/CHIP": 0.28,
+                    "Medicare": 0.01,
+                    "Individual Market/ACA": 0.28,
+                    "Military/VA": 0.03,
+                    "Uninsured": 0.3
+                  },
+                  "probability_override": null
+                }
+              ]
+            },
+            {
+              "name": "immigration_status",
+              "modifiers": [
+                {
+                  "when": "race_ethnicity == 'White non-Hispanic'",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": {
+                    "US-born citizen": 0.94,
+                    "Naturalized citizen": 0.04,
+                    "Permanent resident": 0.01,
+                    "Other": 0.01
+                  },
+                  "probability_override": null
+                },
+                {
+                  "when": "race_ethnicity == 'Black non-Hispanic'",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": {
+                    "US-born citizen": 0.88,
+                    "Naturalized citizen": 0.07,
+                    "Permanent resident": 0.03,
+                    "Other": 0.02
+                  },
+                  "probability_override": null
+                },
+                {
+                  "when": "race_ethnicity == 'Hispanic'",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": {
+                    "US-born citizen": 0.62,
+                    "Naturalized citizen": 0.2,
+                    "Permanent resident": 0.1,
+                    "Other": 0.08
+                  },
+                  "probability_override": null
+                },
+                {
+                  "when": "race_ethnicity == 'Asian non-Hispanic'",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": {
+                    "US-born citizen": 0.44,
+                    "Naturalized citizen": 0.34,
+                    "Permanent resident": 0.14,
+                    "Other": 0.08
+                  },
+                  "probability_override": null
+                },
+                {
+                  "when": "race_ethnicity == 'Other/Multiracial'",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": {
+                    "US-born citizen": 0.82,
+                    "Naturalized citizen": 0.1,
+                    "Permanent resident": 0.05,
+                    "Other": 0.03
+                  },
+                  "probability_override": null
+                }
+              ]
+            },
+            {
+              "name": "union_membership",
+              "modifiers": [
+                {
+                  "when": "occupation == 'Production/Transport' and employment_status == 'Full-time'",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": null,
+                  "probability_override": 0.18
+                },
+                {
+                  "when": "occupation == 'Management/Professional' and employment_status == 'Full-time'",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": null,
+                  "probability_override": 0.12
+                },
+                {
+                  "when": "occupation == 'Service' and employment_status == 'Full-time'",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": null,
+                  "probability_override": 0.1
+                },
+                {
+                  "when": "occupation == 'Construction/Extraction' and employment_status == 'Full-time'",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": null,
+                  "probability_override": 0.14
+                },
+                {
+                  "when": "occupation == 'Sales/Office' and employment_status == 'Full-time'",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": null,
+                  "probability_override": 0.07
+                },
+                {
+                  "when": "employment_status == 'Self-employed'",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": null,
+                  "probability_override": 0.02
+                },
+                {
+                  "when": "employment_status == 'Part-time'",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": null,
+                  "probability_override": 0.06
+                }
+              ]
+            },
+            {
+              "name": "gun_ownership",
+              "modifiers": [
+                {
+                  "when": "urban_rural == 'Rural' and state in ['WY', 'MT', 'AK', 'ID', 'WV', 'AR', 'ND', 'SD', 'AL', 'MS', 'KY', 'TN', 'OK', 'KS', 'NE', 'MO']",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": null,
+                  "probability_override": 0.72
+                },
+                {
+                  "when": "urban_rural == 'Rural' and state not in ['WY', 'MT', 'AK', 'ID', 'WV', 'AR', 'ND', 'SD', 'AL', 'MS', 'KY', 'TN', 'OK', 'KS', 'NE', 'MO', 'CA', 'NY', 'MA', 'CT', 'NJ', 'MD', 'DE', 'RI', 'HI', 'DC']",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": null,
+                  "probability_override": 0.56
+                },
+                {
+                  "when": "urban_rural == 'Suburban' and state in ['WY', 'MT', 'AK', 'ID', 'WV', 'AR', 'ND', 'SD', 'AL', 'MS', 'KY', 'TN', 'OK', 'KS', 'NE', 'MO']",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": null,
+                  "probability_override": 0.52
+                },
+                {
+                  "when": "urban_rural == 'Suburban' and state in ['CA', 'NY', 'MA', 'CT', 'NJ', 'MD', 'DE', 'RI', 'HI', 'DC']",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": null,
+                  "probability_override": 0.18
+                },
+                {
+                  "when": "urban_rural == 'Urban' and state in ['CA', 'NY', 'MA', 'CT', 'NJ', 'MD', 'DE', 'RI', 'HI', 'DC']",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": null,
+                  "probability_override": 0.1
+                },
+                {
+                  "when": "urban_rural == 'Urban' and state not in ['CA', 'NY', 'MA', 'CT', 'NJ', 'MD', 'DE', 'RI', 'HI', 'DC', 'WY', 'MT', 'AK', 'ID', 'WV', 'AR', 'ND', 'SD', 'AL', 'MS', 'KY', 'TN', 'OK', 'KS', 'NE', 'MO']",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": null,
+                  "probability_override": 0.28
+                }
+              ]
+            },
+            {
+              "name": "trust_in_institutions",
+              "modifiers": [
+                {
+                  "when": "political_ideology == 'Very Liberal' and education_level in ['Bachelor\\'s', 'Graduate Degree']",
+                  "multiply": 1.0,
+                  "add": 0.1,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "political_ideology == 'Very Conservative'",
+                  "multiply": 1.0,
+                  "add": -0.14,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "political_ideology == 'Conservative'",
+                  "multiply": 1.0,
+                  "add": -0.08,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "political_ideology == 'Moderate' and education_level in ['Bachelor\\'s', 'Graduate Degree']",
+                  "multiply": 1.0,
+                  "add": 0.05,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "political_ideology == 'Liberal'",
+                  "multiply": 1.0,
+                  "add": 0.06,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "education_level == 'Less than HS'",
+                  "multiply": 1.0,
+                  "add": -0.07,
+                  "weight_overrides": null,
+                  "probability_override": null
+                }
+              ]
+            },
+            {
+              "name": "need_for_cognition",
+              "modifiers": [
+                {
+                  "when": "education_level == 'Graduate Degree'",
+                  "multiply": 1.0,
+                  "add": 0.15,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "education_level == 'Bachelor\\'s'",
+                  "multiply": 1.0,
+                  "add": 0.09,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "education_level == 'Associate\\'s'",
+                  "multiply": 1.0,
+                  "add": 0.03,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "education_level in ['Less than HS', 'HS Diploma']",
+                  "multiply": 1.0,
+                  "add": -0.08,
+                  "weight_overrides": null,
+                  "probability_override": null
+                }
+              ]
+            },
+            {
+              "name": "susceptibility_to_misinformation",
+              "modifiers": [
+                {
+                  "when": "need_for_cognition > 0.7 and social_media_hours_per_day < 2.0",
+                  "multiply": 1.0,
+                  "add": -0.15,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "need_for_cognition < 0.35 and social_media_hours_per_day > 3.0",
+                  "multiply": 1.0,
+                  "add": 0.18,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "need_for_cognition < 0.35 and social_media_hours_per_day >= 2.0 and social_media_hours_per_day <= 3.0",
+                  "multiply": 1.0,
+                  "add": 0.1,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "need_for_cognition > 0.7 and social_media_hours_per_day >= 2.0 and social_media_hours_per_day <= 3.0",
+                  "multiply": 1.0,
+                  "add": -0.08,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "need_for_cognition >= 0.35 and need_for_cognition <= 0.7 and social_media_hours_per_day > 3.0",
+                  "multiply": 1.0,
+                  "add": 0.08,
+                  "weight_overrides": null,
+                  "probability_override": null
+                }
+              ]
+            }
+          ]
+        },
+        "name": "conditional_modifiers_hydration",
+        "type": "tool_use",
+        "caller": {
+          "type": "direct"
+        }
+      }
+    ],
+    "model": "claude-sonnet-4-6",
+    "role": "assistant",
+    "stop_reason": "tool_use",
+    "stop_sequence": null,
+    "type": "message",
+    "usage": {
+      "cache_creation": {
+        "ephemeral_1h_input_tokens": "[REDACTED_SECRET]",
+        "ephemeral_5m_input_tokens": "[REDACTED_SECRET]"
+      },
+      "cache_creation_input_tokens": "[REDACTED_SECRET]",
+      "cache_read_input_tokens": "[REDACTED_SECRET]",
+      "input_tokens": 42836,
+      "output_tokens": 15659,
+      "server_tool_use": {
+        "web_search_requests": 3,
+        "web_fetch_requests": 0
+      },
+      "service_tier": "standard",
+      "inference_geo": "global"
+    }
+  },
+  "sources_extracted": [
+    "https://aspe.hhs.gov/sites/default/files/documents/6056484066506a8d4ba3dcd8d9322490/rural-health-rr-30-Oct-24.pdf",
+    "https://www.census.gov/data/tables/time-series/demo/educational-attainment/cps-historical-time-series.html",
+    "https://www.lassennews.com/do-smarter-states-vote-blue-study-finds-the-most-educated-states-lean-democratic",
+    "https://tradingeconomics.com/united-states/rural-population-percent-of-total-population-wb-data.html",
+    "https://www.census.gov/library/stories/2024/08/redefining-rural.html",
+    "https://www.highereddatastories.com/2025/02/educational-attainment-and-presidential.html",
+    "https://www.axios.com/2024/11/07/college-degree-voters-split-harris-trump",
+    "https://www.census.gov/data/tables/2024/demo/educational-attainment/cps-detailed-tables.html",
+    "https://medium.com/@kathrynstaublin/the-most-educated-states-voted-blue-f60f304531f7",
+    "https://www.cnn.com/2024/10/14/politics/the-biggest-predictor-of-how-someone-will-vote",
+    "https://en.wikipedia.org/wiki/Urbanization_in_the_United_States",
+    "https://www.educationnext.org/which-party-really-has-the-edge-on-education/",
+    "https://www.statista.com/statistics/985183/size-urban-rural-population-us/",
+    "https://kb.gcsu.edu/researchday/2024/all/41/",
+    "https://www.icip.iastate.edu/tables/population/urban-pct-states",
+    "https://www.census.gov/newsroom/press-releases/2022/urban-rural-populations.html",
+    "https://datacenter.aecf.org/data/tables/6294-educational-attainment-of-population-ages-25-to-34",
+    "https://stephenslighthouse.com/2025/09/10/us-census-bureau-releases-new-educational-attainment-data/",
+    "https://www.census.gov/topics/education/educational-attainment.html",
+    "https://www.pewresearch.org/politics/2024/04/09/partisanship-by-race-ethnicity-and-education/",
+    "https://www.census.gov/programs-surveys/geography/guidance/geo-areas/urban-rural.html",
+    "https://www.census.gov/newsroom/press-releases/2025/educational-attainment-data.html",
+    "https://www.pbs.org/newshour/show/how-a-college-degree-is-one-of-the-best-predictors-of-which-candidate-voters-support",
+    "https://educationdata.org/education-attainment-statistics",
+    "https://www.pewresearch.org/social-trends/2018/05/22/demographic-and-economic-trends-in-urban-suburban-and-rural-communities/",
+    "https://www.census.gov/topics/education/educational-attainment/data/tables.html",
+    "https://www.census.gov/topics/education.html",
+    "https://collectiver.com/blog/education-vote-correlation/",
+    "https://en.wikipedia.org/wiki/Demographics_of_the_United_States",
+    "https://en.wikipedia.org/wiki/Educational_attainment_in_the_United_States"
+  ]
+}
