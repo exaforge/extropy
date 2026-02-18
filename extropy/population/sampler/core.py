@@ -171,7 +171,6 @@ class SamplingError(Exception):
     pass
 
 
-
 def _has_household_attributes(spec: PopulationSpec) -> bool:
     """Check if the spec has household-scoped attributes, indicating household mode."""
     return any(attr.scope == "household" for attr in spec.attributes)
@@ -452,7 +451,11 @@ def _sample_population_households(
     """
     if config is None:
         config = HouseholdConfig()
-    focus_mode = agent_focus_mode if agent_focus_mode in ("all", "couples", "primary_only") else "primary_only"
+    focus_mode = (
+        agent_focus_mode
+        if agent_focus_mode in ("all", "couples", "primary_only")
+        else "primary_only"
+    )
 
     hh_id_width = len(str(target_n - 1))  # safe upper bound for household IDs
 

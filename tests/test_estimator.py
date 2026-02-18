@@ -217,10 +217,8 @@ class TestPricing:
         assert resolve_default_model("openai", "simple") == "gpt-5-mini"
 
     def test_resolve_claude_default(self):
-        assert (
-            resolve_default_model("claude", "reasoning") == "claude-sonnet-4-5-20250929"
-        )
-        assert resolve_default_model("claude", "simple") == "claude-haiku-4-5-20251001"
+        assert resolve_default_model("anthropic", "reasoning") == "claude-sonnet-4-6"
+        assert resolve_default_model("anthropic", "simple") == "claude-haiku-4-5-20251001"
 
     def test_resolve_unknown_provider_falls_back(self):
         model = resolve_default_model("unknown_provider", "reasoning")

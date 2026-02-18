@@ -140,7 +140,9 @@ class TestAgentFocusPrimaryOnly:
 
     def test_partners_are_npc(self):
         spec = _make_household_spec()
-        result = sample_population(spec, count=200, seed=42, agent_focus_mode="primary_only")
+        result = sample_population(
+            spec, count=200, seed=42, agent_focus_mode="primary_only"
+        )
         agents = result.agents
 
         # Find primary adults with partners
@@ -168,7 +170,9 @@ class TestAgentFocusPrimaryOnly:
 
     def test_no_partner_agents_in_result(self):
         spec = _make_household_spec()
-        result = sample_population(spec, count=200, seed=42, agent_focus_mode="primary_only")
+        result = sample_population(
+            spec, count=200, seed=42, agent_focus_mode="primary_only"
+        )
         agents = result.agents
 
         # Count agents with household_role = adult_secondary
@@ -183,12 +187,16 @@ class TestAgentFocusPrimaryOnly:
     def test_exact_agent_count(self):
         """Regression test: -n must produce exactly N agents."""
         spec = _make_household_spec()
-        result = sample_population(spec, count=500, seed=42, agent_focus_mode="primary_only")
+        result = sample_population(
+            spec, count=500, seed=42, agent_focus_mode="primary_only"
+        )
         assert len(result.agents) == 500
 
     def test_npc_partner_has_correlated_demographics(self):
         spec = _make_household_spec()
-        result = sample_population(spec, count=300, seed=42, agent_focus_mode="primary_only")
+        result = sample_population(
+            spec, count=300, seed=42, agent_focus_mode="primary_only"
+        )
         agents = result.agents
 
         age_diffs = []
@@ -211,7 +219,9 @@ class TestAgentFocusPrimaryOnly:
 
     def test_npc_partner_shares_last_name(self):
         spec = _make_household_spec()
-        result = sample_population(spec, count=200, seed=42, agent_focus_mode="primary_only")
+        result = sample_population(
+            spec, count=200, seed=42, agent_focus_mode="primary_only"
+        )
 
         for agent in result.agents:
             npc = agent.get("partner_npc")

@@ -404,7 +404,12 @@ class TestClaudeAgenticResearch:
         response.content = [search_block, tool_block, text_block]
 
         mock_client = MagicMock()
-        mock_client.messages.create.return_value = response
+        # Code uses client.messages.stream() context manager → .get_final_message()
+        mock_stream = MagicMock()
+        mock_stream.__enter__ = MagicMock(return_value=mock_stream)
+        mock_stream.__exit__ = MagicMock(return_value=False)
+        mock_stream.get_final_message.return_value = response
+        mock_client.messages.stream.return_value = mock_stream
         mock_get_client.return_value = mock_client
 
         result, sources = provider.agentic_research(
