@@ -269,7 +269,7 @@ class OpenAICompatProvider(LLMProvider):
             effective_prompt = f"{previous_errors}\n\n---\n\n{prompt}"
 
         def _call(ep: str) -> dict:
-            self._acquire_rate_limit(ep, model, max_output=16384)
+            self._acquire_rate_limit(ep, model, max_output=32768)
             params = self._build_params(model, ep, response_schema, schema_name, None)
             response = self._with_retry(
                 lambda: client.chat.completions.create(**params)
@@ -321,7 +321,7 @@ class OpenAICompatProvider(LLMProvider):
         all_sources: list[str] = []
 
         def _call(ep: str) -> dict:
-            self._acquire_rate_limit(ep, model, max_output=16384)
+            self._acquire_rate_limit(ep, model, max_output=32768)
             params = self._build_params(
                 search_model, ep, response_schema, schema_name, None
             )

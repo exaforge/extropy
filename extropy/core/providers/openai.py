@@ -447,7 +447,7 @@ class OpenAIProvider(LLMProvider):
 
         def _call(ep: str) -> dict:
             # Acquire rate limit capacity before each API call
-            self._acquire_rate_limit(ep, model, max_output=16384)
+            self._acquire_rate_limit(ep, model, max_output=32768)
 
             request_params = {
                 "model": model,
@@ -515,7 +515,7 @@ class OpenAIProvider(LLMProvider):
 
         def _call(ep: str) -> dict:
             # Acquire rate limit capacity before each API call
-            self._acquire_rate_limit(ep, model, max_output=16384)
+            self._acquire_rate_limit(ep, model, max_output=32768)
 
             request_params = {
                 "model": model,

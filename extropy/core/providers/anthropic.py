@@ -264,12 +264,12 @@ class AnthropicProvider(LLMProvider):
 
         def _call(ep: str) -> dict:
             # Acquire rate limit capacity before each API call
-            self._acquire_rate_limit(ep, model, max_output=16384)
+            self._acquire_rate_limit(ep, model, max_output=65536)
 
             response = self._with_retry(
                 lambda: client.messages.create(
                     model=model,
-                    max_tokens=16384,
+                    max_tokens=65536,  # Max allowed for Claude (64K)
                     tools=[tool],
                     tool_choice={"type": "tool", "name": schema_name},
                     messages=[{"role": "user", "content": ep}],
@@ -335,14 +335,14 @@ class AnthropicProvider(LLMProvider):
             )
 
             # Acquire rate limit capacity before each API call
-            self._acquire_rate_limit(research_prompt, model, max_output=16384)
+            self._acquire_rate_limit(research_prompt, model, max_output=65536)
 
             logger.info(f"[Claude] agentic_research - model={model}")
 
             response = self._with_retry(
                 lambda: client.messages.create(
                     model=model,
-                    max_tokens=16384,
+                    max_tokens=65536,  # Max allowed for Claude Sonnet (64K)
                     tools=[
                         {
                             "type": "web_search_20250305",
