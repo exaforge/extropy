@@ -102,12 +102,10 @@ class TestCreateScenario:
     @patch("extropy.scenario.compiler.parse_scenario")
     @patch("extropy.scenario.compiler.generate_seed_exposure")
     @patch("extropy.scenario.compiler.determine_interaction_model")
-    @patch("extropy.scenario.compiler.define_outcomes")
-    @patch("extropy.scenario.compiler.generate_timeline")
+    @patch("extropy.scenario.compiler.generate_timeline_and_outcomes")
     def test_creates_valid_scenario(
         self,
-        mock_timeline,
-        mock_outcomes,
+        mock_timeline_outcomes,
         mock_interaction,
         mock_exposure,
         mock_parse,
@@ -163,23 +161,22 @@ class TestCreateScenario:
             SpreadConfig(share_probability=0.3),
         )
 
-        mock_outcomes.return_value = OutcomeConfig(
-            suggested_outcomes=[
-                OutcomeDefinition(
-                    name="adoption",
-                    description="Whether the agent adopts the product",
-                    type=OutcomeType.CATEGORICAL,
-                    required=True,
-                    options=["adopt", "reject"],
-                ),
-            ],
-        )
-
-        mock_timeline.return_value = (
+        mock_timeline_outcomes.return_value = (
             [],
             None,
             _determine_simulation_config(),
-        )  # No timeline events, no background
+            OutcomeConfig(
+                suggested_outcomes=[
+                    OutcomeDefinition(
+                        name="adoption",
+                        description="Whether the agent adopts the product",
+                        type=OutcomeType.CATEGORICAL,
+                        required=True,
+                        options=["adopt", "reject"],
+                    ),
+                ],
+            ),
+        )
 
         spec, validation_result = create_scenario(
             description="Test product launch scenario",
@@ -197,12 +194,10 @@ class TestCreateScenario:
     @patch("extropy.scenario.compiler.parse_scenario")
     @patch("extropy.scenario.compiler.generate_seed_exposure")
     @patch("extropy.scenario.compiler.determine_interaction_model")
-    @patch("extropy.scenario.compiler.define_outcomes")
-    @patch("extropy.scenario.compiler.generate_timeline")
+    @patch("extropy.scenario.compiler.generate_timeline_and_outcomes")
     def test_progress_callback_called(
         self,
-        mock_timeline,
-        mock_outcomes,
+        mock_timeline_outcomes,
         mock_interaction,
         mock_exposure,
         mock_parse,
@@ -250,22 +245,22 @@ class TestCreateScenario:
             ),
             SpreadConfig(share_probability=0.3),
         )
-        mock_outcomes.return_value = OutcomeConfig(
-            suggested_outcomes=[
-                OutcomeDefinition(
-                    name="x",
-                    description="Boolean outcome",
-                    type=OutcomeType.BOOLEAN,
-                    required=True,
-                ),
-            ],
-        )
 
-        mock_timeline.return_value = (
+        mock_timeline_outcomes.return_value = (
             [],
             None,
             _determine_simulation_config(),
-        )  # No timeline events, no background
+            OutcomeConfig(
+                suggested_outcomes=[
+                    OutcomeDefinition(
+                        name="x",
+                        description="Boolean outcome",
+                        type=OutcomeType.BOOLEAN,
+                        required=True,
+                    ),
+                ],
+            ),
+        )
 
         progress_calls = []
 
@@ -281,8 +276,8 @@ class TestCreateScenario:
             on_progress=on_progress,
         )
 
-        # Should get 6 progress calls (steps 1/6 through 6/6)
-        # Note: step 1/6 is called twice (once for loading, once for parsing)
-        assert len(progress_calls) >= 6
+        # Should get 5 progress calls (steps 1/5 through 5/5)
+        # Note: step 1/5 is called twice (once for loading, once for parsing)
+        assert len(progress_calls) >= 5
         steps = [call[0] for call in progress_calls]
-        assert "6/6" in steps
+        assert "5/5" in steps

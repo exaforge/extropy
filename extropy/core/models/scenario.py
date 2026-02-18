@@ -21,7 +21,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Literal
 
 import yaml
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 from .population import AttributeSpec, HouseholdConfig
 
@@ -205,6 +205,15 @@ class SpreadConfig(BaseModel):
         default=None, description="Limit propagation depth (None=unlimited)"
     )
 
+    @field_validator("max_hops", mode="before")
+    @classmethod
+    def coerce_max_hops(cls, v):
+        if v is None or v == "null" or v == "None":
+            return None
+        if isinstance(v, str):
+            return int(v)
+        return v
+
 
 # =============================================================================
 # Outcomes
@@ -276,6 +285,7 @@ class TimestepUnit(str, Enum):
     DAY = "day"
     WEEK = "week"
     MONTH = "month"
+    YEAR = "year"
 
 
 class ScenarioSimConfig(BaseModel):

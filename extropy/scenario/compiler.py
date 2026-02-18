@@ -1,10 +1,10 @@
-"""Step 5: Scenario Compiler (Orchestrator).
+"""Scenario Compiler (Orchestrator).
 
 Orchestrates the full scenario compilation pipeline:
 1. Parse scenario description into Event
 2. Generate seed exposure rules
 3. Determine interaction model and spread config
-4. Define outcomes
+4. Generate timeline, outcomes, and background context
 5. Assemble and validate ScenarioSpec
 """
 
@@ -25,8 +25,7 @@ from ..core.llm import simple_call
 from .parser import parse_scenario
 from .exposure import generate_seed_exposure
 from .interaction import determine_interaction_model
-from .outcomes import define_outcomes
-from .timeline import generate_timeline
+from .timeline import generate_timeline_and_outcomes
 from ..utils.callbacks import StepProgressCallback
 from .validator import validate_scenario
 from ..storage import open_study_db
@@ -205,9 +204,8 @@ def create_scenario(
     1. Load population spec and parse event
     2. Generate seed exposure rules
     3. Determine interaction model and spread config
-    4. Define outcomes
-    5. Generate timeline and background context
-    6. Assemble ScenarioSpec and validate
+    4. Generate timeline, outcomes, and background context
+    5. Assemble ScenarioSpec and validate
 
     Args:
         description: Natural language scenario description
@@ -250,7 +248,7 @@ def create_scenario(
     # Load inputs
     # =========================================================================
 
-    progress("1/6", "Loading population spec...")
+    progress("1/5", "Loading population spec...")
 
     if not population_spec_path.exists():
         raise FileNotFoundError(f"Population spec not found: {population_spec_path}")
@@ -270,7 +268,7 @@ def create_scenario(
     # Step 1: Parse scenario description
     # =========================================================================
 
-    progress("1/6", "Parsing event definition...")
+    progress("1/5", "Parsing event definition...")
 
     event = parse_scenario(description, population_spec)
 
@@ -278,7 +276,7 @@ def create_scenario(
     # Step 2: Generate seed exposure
     # =========================================================================
 
-    progress("2/6", "Generating seed exposure rules...")
+    progress("2/5", "Generating seed exposure rules...")
 
     seed_exposure = generate_seed_exposure(
         event,
@@ -290,7 +288,7 @@ def create_scenario(
     # Step 3: Determine interaction model
     # =========================================================================
 
-    progress("3/6", "Determining interaction model...")
+    progress("3/5", "Determining interaction model...")
 
     interaction_config, spread_config = determine_interaction_model(
         event,
@@ -299,38 +297,28 @@ def create_scenario(
     )
 
     # =========================================================================
-    # Step 4: Define outcomes
+    # Step 4: Generate timeline, outcomes, and background context
     # =========================================================================
 
-    progress("4/6", "Defining outcomes...")
-
-    outcome_config = define_outcomes(
-        event,
-        population_spec,
-        description,
-    )
-
-    # =========================================================================
-    # Step 5: Generate timeline + background context
-    # =========================================================================
-
-    progress("5/6", "Generating timeline...")
+    progress("4/5", "Generating timeline and outcomes...")
 
     # Generate simulation config
     simulation_config = _determine_simulation_config()
 
-    timeline_events, background_context, simulation_config = generate_timeline(
-        scenario_description=description,
-        base_event=event,
-        simulation_config=simulation_config,
-        timeline_mode=timeline_mode,
+    timeline_events, background_context, simulation_config, outcome_config = (
+        generate_timeline_and_outcomes(
+            scenario_description=description,
+            base_event=event,
+            simulation_config=simulation_config,
+            timeline_mode=timeline_mode,
+        )
     )
 
     # =========================================================================
-    # Step 6: Assemble scenario spec
+    # Step 5: Assemble scenario spec
     # =========================================================================
 
-    progress("6/6", "Assembling scenario spec...")
+    progress("5/5", "Assembling scenario spec...")
 
     # Generate scenario name
     scenario_name = _generate_scenario_name(description)
@@ -385,6 +373,8 @@ def create_scenario_spec(
     extended_attributes: list | None = None,
     on_progress: StepProgressCallback | None = None,
     timeline_mode: str | None = None,
+    timestep_unit_override: str | None = None,
+    max_timesteps_override: int | None = None,
 ) -> tuple[ScenarioSpec, ValidationResult]:
     """
     Create a scenario spec without requiring agents or network.
@@ -399,6 +389,8 @@ def create_scenario_spec(
         extended_attributes: Optional list of extended AttributeSpecs from scenario
         on_progress: Optional callback(step, status) for progress updates
         timeline_mode: Timeline mode override. None = auto-detect.
+        timestep_unit_override: CLI override for timestep unit (e.g. "month").
+        max_timesteps_override: CLI override for max timesteps.
 
     Returns:
         Tuple of (ScenarioSpec, ValidationResult)
@@ -436,29 +428,24 @@ def create_scenario_spec(
         generic_network_summary,
     )
 
-    # Step 4: Define outcomes
-    progress("4/5", "Defining outcomes...")
-
-    outcome_config = define_outcomes(
-        event,
-        population_spec,
-        description,
-    )
-
-    # Step 5: Generate timeline + background context
-    progress("5/6", "Generating timeline...")
+    # Step 4: Generate timeline, outcomes, and background context
+    progress("4/5", "Generating timeline and outcomes...")
 
     simulation_config = _determine_simulation_config()
 
-    timeline_events, background_context, simulation_config = generate_timeline(
-        scenario_description=description,
-        base_event=event,
-        simulation_config=simulation_config,
-        timeline_mode=timeline_mode,
+    timeline_events, background_context, simulation_config, outcome_config = (
+        generate_timeline_and_outcomes(
+            scenario_description=description,
+            base_event=event,
+            simulation_config=simulation_config,
+            timeline_mode=timeline_mode,
+            timestep_unit_override=timestep_unit_override,
+            max_timesteps_override=max_timesteps_override,
+        )
     )
 
-    # Step 6: Detect identity dimensions
-    progress("6/6", "Detecting identity dimensions...")
+    # Step 5: Detect identity dimensions
+    progress("5/5", "Detecting identity dimensions...")
 
     identity_dimensions = _detect_identity_dimensions(
         description=description,

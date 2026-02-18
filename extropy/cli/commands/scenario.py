@@ -3,6 +3,7 @@
 import time
 from threading import Event, Thread
 
+import click
 import typer
 from rich.live import Live
 from rich.spinner import Spinner
@@ -49,19 +50,38 @@ def scenario_command(
         "--timeline",
         help="Timeline mode: auto (LLM decides), static (single event), evolving (multi-event)",
     ),
+    timestep_unit: str | None = typer.Option(
+        None,
+        "--timestep-unit",
+        help="Override timestep unit: hour, day, week, month, year",
+        click_type=click.Choice(["hour", "day", "week", "month", "year"]),
+    ),
+    max_timesteps: int | None = typer.Option(
+        None,
+        "--max-timesteps",
+        help="Override maximum number of timesteps",
+        min=1,
+    ),
     yes: bool = typer.Option(False, "--yes", "-y", help="Skip confirmation prompts"),
+    use_defaults: bool = typer.Option(
+        False, "--use-defaults", help="Accept default values for sufficiency questions"
+    ),
 ):
     """
     Create a scenario with extended attributes and event configuration.
 
     This command:
-    1. Discovers scenario-specific attributes (behavioral, psychographic)
-    2. Researches distributions for new attributes
-    3. Creates event/exposure/outcome configuration
+    1. Checks scenario description sufficiency
+    2. Discovers scenario-specific attributes (behavioral, psychographic)
+    3. Researches distributions for new attributes
+    4. Creates event/exposure/timeline/outcome configuration
 
     Examples:
         # Create new scenario
         extropy scenario "AI diagnostic tool adoption" -o ai-adoption
+
+        # With explicit timestep overrides
+        extropy scenario "AI replaces jobs over 6 months" -o ai-jobs --timestep-unit month --max-timesteps 6
 
         # Pin population version
         extropy scenario "vaccine mandate" -o vaccine @pop:v1
@@ -115,6 +135,132 @@ def scenario_command(
         )
         console.print(f"[dim]Base population: population.v{pop_version}.yaml[/dim]")
         console.print()
+
+    # Step 0: Scenario Sufficiency Check
+    from ...scenario.sufficiency import (
+        check_scenario_sufficiency,
+        check_scenario_sufficiency_with_answers,
+    )
+
+    sufficiency_result = None
+    if not agent_mode:
+        with console.status("[cyan]Checking scenario sufficiency...[/cyan]"):
+            try:
+                sufficiency_result = check_scenario_sufficiency(description)
+            except Exception as e:
+                console.print(f"[red]x[/red] Error checking sufficiency: {e}")
+                raise typer.Exit(1)
+    else:
+        try:
+            sufficiency_result = check_scenario_sufficiency(description)
+        except Exception as e:
+            out.error(
+                f"Error checking sufficiency: {e}",
+                exit_code=ExitCode.VALIDATION_ERROR,
+            )
+            raise typer.Exit(out.finish())
+
+    if not sufficiency_result.sufficient:
+        questions = sufficiency_result.questions
+
+        # Try using defaults if flag is set
+        if use_defaults and questions:
+            default_answers = {
+                q.id: q.default for q in questions if q.default is not None
+            }
+            if default_answers:
+                try:
+                    sufficiency_result = check_scenario_sufficiency_with_answers(
+                        description, default_answers
+                    )
+                except Exception as e:
+                    if not agent_mode:
+                        console.print(f"[red]x[/red] Error: {e}")
+                    else:
+                        out.error(str(e))
+                    raise typer.Exit(1)
+
+    if not sufficiency_result.sufficient:
+        questions = sufficiency_result.questions
+
+        if agent_mode:
+            out.error(
+                "Scenario description insufficient",
+                exit_code=ExitCode.CLARIFICATION_NEEDED,
+                questions=[
+                    {
+                        "id": q.id,
+                        "question": q.question,
+                        "type": q.type,
+                        "options": q.options,
+                        "default": q.default,
+                    }
+                    for q in questions
+                ],
+            )
+            raise typer.Exit(out.finish())
+
+        if questions:
+            console.print("[yellow]Additional info needed:[/yellow]")
+            collected_answers: dict[str, str | int] = {}
+            for q in questions:
+                default_hint = f" (default: {q.default})" if q.default else ""
+                if q.type == "single_choice" and q.options:
+                    console.print(f"\n{q.question}{default_hint}")
+                    for i, opt in enumerate(q.options, 1):
+                        console.print(f"  {i}. {opt}")
+                    answer = typer.prompt("Choice", default=str(q.default or ""))
+                    # Handle numeric selection
+                    try:
+                        idx = int(answer) - 1
+                        if 0 <= idx < len(q.options):
+                            answer = q.options[idx]
+                    except ValueError:
+                        pass
+                    collected_answers[q.id] = answer
+                elif q.type == "number":
+                    answer = typer.prompt(
+                        q.question, default=str(q.default or ""), type=int
+                    )
+                    collected_answers[q.id] = answer
+                else:
+                    answer = typer.prompt(q.question, default=str(q.default or ""))
+                    collected_answers[q.id] = answer
+
+            # Enrich description with answers
+            for key, value in collected_answers.items():
+                description = f"{description} | {key}: {value}"
+
+            console.print()
+            with console.status("[cyan]Re-checking scenario sufficiency...[/cyan]"):
+                try:
+                    sufficiency_result = check_scenario_sufficiency(description)
+                except Exception as e:
+                    console.print(f"[red]x[/red] Error: {e}")
+                    raise typer.Exit(1)
+
+            if not sufficiency_result.sufficient:
+                console.print("[red]x[/red] Still insufficient after clarification")
+                raise typer.Exit(1)
+        else:
+            console.print(
+                "[red]x[/red] Scenario description is insufficient. "
+                "Please provide more detail about the event, duration, and outcomes."
+            )
+            raise typer.Exit(1)
+
+    if not agent_mode:
+        parts = []
+        if sufficiency_result.inferred_duration:
+            parts.append(f"duration: {sufficiency_result.inferred_duration}")
+        if sufficiency_result.inferred_timestep_unit:
+            parts.append(f"unit: {sufficiency_result.inferred_timestep_unit}")
+        if sufficiency_result.inferred_scenario_type:
+            parts.append(f"type: {sufficiency_result.inferred_scenario_type}")
+        if sufficiency_result.has_explicit_outcomes:
+            parts.append("explicit outcomes detected")
+        detail = f" ({', '.join(parts)})" if parts else ""
+        console.print(f"[green]✓[/green] Scenario description sufficient{detail}")
 
     # Step 1: Attribute Selection (Extend Mode)
     selection_start = time.time()
@@ -316,6 +462,8 @@ def scenario_command(
                 extended_attributes=bound_attrs,
                 on_progress=on_scenario_progress,
                 timeline_mode=timeline_mode,
+                timestep_unit_override=timestep_unit,
+                max_timesteps_override=max_timesteps,
             )
         except Exception as e:
             pipeline_error = e
@@ -546,7 +694,7 @@ def _display_scenario_summary(spec) -> None:
             f"[bold]Extended Attributes:[/bold] {len(spec.extended_attributes)}"
         )
         for attr in spec.extended_attributes[:5]:
-            console.print(f"  - {attr.name} ({attr.type.value})")
+            console.print(f"  - {attr.name} ({attr.type})")
         if len(spec.extended_attributes) > 5:
             console.print(
                 f"  [dim]... and {len(spec.extended_attributes) - 5} more[/dim]"

@@ -4,10 +4,11 @@ The scenario compiler transforms natural language scenario descriptions
 into machine-readable scenario specs that Phase 3 executes.
 
 Pipeline:
+    Step 0: check_scenario_sufficiency() - Verify description completeness
     Step 1: parse_scenario() - Parse description into Event
     Step 2: generate_seed_exposure() - Generate exposure channels and rules
     Step 3: determine_interaction_model() - Select interaction model and spread config
-    Step 4: define_outcomes() - Define what outcomes to measure
+    Step 4: generate_timeline_and_outcomes() - Timeline, outcomes, and background context
     Step 5: create_scenario() - Orchestrate full pipeline, assemble spec
     Step 6: validate_scenario() - Validate spec against population/network
 
@@ -59,10 +60,14 @@ from ..core.models import (
 from .parser import parse_scenario
 from .exposure import generate_seed_exposure
 from .interaction import determine_interaction_model
-from .outcomes import define_outcomes
-from .timeline import generate_timeline
+from .timeline import generate_timeline_and_outcomes
 from .compiler import create_scenario, create_scenario_spec, compile_scenario_from_files
 from .validator import validate_scenario, load_and_validate_scenario
+from .sufficiency import (
+    check_scenario_sufficiency,
+    check_scenario_sufficiency_with_answers,
+    ScenarioSufficiencyResult,
+)
 
 
 __all__ = [
@@ -98,11 +103,14 @@ __all__ = [
     "parse_scenario",
     "generate_seed_exposure",
     "determine_interaction_model",
-    "define_outcomes",
-    "generate_timeline",
+    "generate_timeline_and_outcomes",
     "create_scenario",
     "create_scenario_spec",
     "compile_scenario_from_files",
     "validate_scenario",
     "load_and_validate_scenario",
+    # Sufficiency check
+    "check_scenario_sufficiency",
+    "check_scenario_sufficiency_with_answers",
+    "ScenarioSufficiencyResult",
 ]
