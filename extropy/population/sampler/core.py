@@ -682,6 +682,22 @@ def _sample_partner_agent(
         agent[attr_name] = value
         _update_stats(attr, value, stats, numeric_values)
 
+    # Generate first name for partner agent
+    gender = agent.get("gender") or agent.get("sex")
+    ethnicity = (
+        agent.get("race_ethnicity") or agent.get("ethnicity") or agent.get("race")
+    )
+    age = agent.get("age")
+    birth_decade = age_to_birth_decade(age) if age is not None else None
+    first_name, _ = generate_name(
+        gender=str(gender) if gender is not None else None,
+        ethnicity=str(ethnicity) if ethnicity is not None else None,
+        birth_decade=birth_decade,
+        seed=index,
+        name_config=spec.meta.name_config,
+    )
+    agent["first_name"] = first_name
+
     return agent
 
 
