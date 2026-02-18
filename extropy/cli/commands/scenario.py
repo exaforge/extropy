@@ -493,6 +493,7 @@ def scenario_command(
     result_spec.meta.base_population = f"population.v{pop_version}"
     result_spec.extended_attributes = bound_attrs
     result_spec.household_config = household_config
+    result_spec.agent_focus_mode = sufficiency_result.inferred_agent_focus_mode
 
     # Display Summary
     if not agent_mode:

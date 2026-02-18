@@ -32,7 +32,6 @@ from .households import (
     household_needs_kids,
     correlate_partner_attribute,
     generate_dependents,
-    estimate_household_count,
 )
 from .modifiers import apply_modifiers_and_sample
 from ...utils.eval_safe import eval_formula, FormulaError
@@ -172,24 +171,6 @@ class SamplingError(Exception):
     pass
 
 
-def _get_agent_focus_mode(
-    spec: PopulationSpec,
-) -> Literal["all", "couples", "primary_only"]:
-    """Get household agent scope from spec metadata.
-
-    Uses the LLM-classified agent_focus_mode field set during spec creation.
-    Falls back to primary_only if not set.
-
-    Returns:
-        "all" — everyone in household is an agent (families, communities)
-        "couples" — both partners are agents, kids are NPCs (retired couples, married couples)
-        "primary_only" — only the primary adult is an agent, partner + kids are NPCs (surgeons, students, subscribers)
-    """
-    mode = spec.meta.agent_focus_mode
-    if mode in ("all", "couples", "primary_only"):
-        return mode
-    return "primary_only"
-
 
 def _has_household_attributes(spec: PopulationSpec) -> bool:
     """Check if the spec has household-scoped attributes, indicating household mode."""
@@ -202,6 +183,7 @@ def sample_population(
     seed: int | None = None,
     on_progress: ItemProgressCallback | None = None,
     household_config: HouseholdConfig | None = None,
+    agent_focus_mode: Literal["primary_only", "couples", "all"] | None = None,
 ) -> SamplingResult:
     """
     Generate agents from a PopulationSpec.
@@ -275,6 +257,7 @@ def sample_population(
             numeric_values,
             on_progress,
             hh_config,
+            agent_focus_mode=agent_focus_mode,
         )
     else:
         agents = _sample_population_independent(
@@ -460,6 +443,7 @@ def _sample_population_households(
     numeric_values: dict[str, list[float]],
     on_progress: ItemProgressCallback | None = None,
     config: HouseholdConfig | None = None,
+    agent_focus_mode: Literal["primary_only", "couples", "all"] | None = None,
 ) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
     """Sample agents in household units with correlated demographics.
 
@@ -468,10 +452,9 @@ def _sample_population_households(
     """
     if config is None:
         config = HouseholdConfig()
-    focus_mode = _get_agent_focus_mode(spec)
+    focus_mode = agent_focus_mode if agent_focus_mode in ("all", "couples", "primary_only") else "primary_only"
 
-    num_households = estimate_household_count(target_n, config)
-    hh_id_width = len(str(num_households - 1))
+    hh_id_width = len(str(target_n - 1))  # safe upper bound for household IDs
 
     agents: list[dict[str, Any]] = []
     households: list[dict[str, Any]] = []
@@ -488,10 +471,8 @@ def _sample_population_households(
             if hasattr(dist, "options"):
                 categorical_options[attr.name] = dist.options
 
-    for hh_idx in range(num_households):
-        if agent_index >= target_n:
-            break
-
+    hh_idx = 0
+    while agent_index < target_n:
         household_id = f"household_{hh_idx:0{hh_id_width}d}"
 
         # Sample Adult 1 (primary) — always an agent
@@ -628,8 +609,18 @@ def _sample_population_households(
             }
         )
 
+        hh_idx += 1
+
         if on_progress:
             on_progress(min(agent_index, target_n), target_n)
+
+    # Trim excess agents (last household in couples/all mode may overshoot)
+    if len(agents) > target_n:
+        trimmed_ids = {a["_id"] for a in agents[target_n:]}
+        for a in agents[:target_n]:
+            if a.get("partner_id") in trimmed_ids:
+                a["partner_id"] = None
+        agents = agents[:target_n]
 
     return agents, households
 

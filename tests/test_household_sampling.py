@@ -397,8 +397,7 @@ class TestHouseholdPopulationSampling:
     def test_total_agent_count_matches_requested(self):
         spec = _make_household_spec(size=100)
         result = sample_population(spec, count=100, seed=42)
-        # Should produce at most the requested count
-        assert len(result.agents) <= 100
+        assert len(result.agents) == 100
 
     def test_meta_has_household_info(self):
         spec = _make_household_spec(size=50)

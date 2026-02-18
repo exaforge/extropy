@@ -461,10 +461,6 @@ class SpecMeta(BaseModel):
         default=None,
         description="Who the study agents represent (natural language). Used for display/documentation.",
     )
-    agent_focus_mode: Literal["primary_only", "couples", "all"] | None = Field(
-        default=None,
-        description="Household agent scope. primary_only: only primary adult is agent; couples: both partners are agents; all: everyone including children. Set by LLM during spec creation.",
-    )
     created_at: datetime = Field(default_factory=datetime.now)
     version: str = Field(default="1.0", description="Spec format version")
     persona_template: str | None = Field(
@@ -827,10 +823,6 @@ class SufficiencyResult(BaseModel):
     agent_focus: str | None = Field(
         default=None,
         description="Who this study is about, e.g. 'surgeons', 'high school students', 'retired couples', 'families'",
-    )
-    agent_focus_mode: Literal["primary_only", "couples", "all"] | None = Field(
-        default=None,
-        description="Household agent scope. Set by LLM during sufficiency check.",
     )
     clarifications_needed: list[str] = Field(default_factory=list)
     questions: list[ClarificationQuestion] = Field(

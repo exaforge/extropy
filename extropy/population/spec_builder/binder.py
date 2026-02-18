@@ -5,7 +5,6 @@ and assembles the final PopulationSpec.
 """
 
 from datetime import datetime
-from typing import Literal
 
 from ...core.models import (
     HydratedAttribute,
@@ -196,7 +195,6 @@ def build_spec(
     sampling_order: list[str],
     sources: list[str],
     agent_focus: str | None = None,
-    agent_focus_mode: Literal["primary_only", "couples", "all"] | None = None,
     name_config: NameConfig | None = None,
 ) -> PopulationSpec:
     """
@@ -209,7 +207,6 @@ def build_spec(
         sampling_order: Order for sampling
         sources: List of source URLs from research
         agent_focus: Who the study agents represent (natural language)
-        agent_focus_mode: Household agent scope (primary_only, couples, all)
         name_config: LLM-researched name frequency tables (None = use bundled CSVs)
 
     Returns:
@@ -219,7 +216,6 @@ def build_spec(
         description=description,
         geography=geography,
         agent_focus=agent_focus,
-        agent_focus_mode=agent_focus_mode,
         created_at=datetime.now(),
         name_config=name_config,
     )

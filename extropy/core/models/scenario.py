@@ -437,6 +437,13 @@ class ScenarioSpec(BaseModel):
         default=None,
         description="Household sampling config. Generated during scenario compilation.",
     )
+    # Household agent scope — determines which household members become agents
+    agent_focus_mode: Literal["primary_only", "couples", "all"] | None = Field(
+        default=None,
+        description="Household agent scope. primary_only: only primary adult is agent; "
+        "couples: both partners; all: everyone including children. "
+        "Inferred during scenario sufficiency check.",
+    )
     # Identity dimensions activated by this scenario (for identity-threat framing)
     identity_dimensions: list[IdentityDimension] | None = Field(
         default=None,

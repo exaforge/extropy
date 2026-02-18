@@ -149,8 +149,9 @@ def sample_command(
         sampling_order=merged_sampling_order,
     )
 
-    # Get household config from scenario (required for household sampling)
+    # Get household config and agent focus mode from scenario
     household_config = scenario_spec.household_config
+    agent_focus_mode = scenario_spec.agent_focus_mode
 
     out.success(
         f"Loaded scenario: [bold]{scenario_name}[/bold] "
@@ -236,6 +237,7 @@ def sample_command(
                     seed=seed,
                     on_progress=on_progress,
                     household_config=household_config,
+                    agent_focus_mode=agent_focus_mode,
                 )
             except SamplingError as e:
                 sampling_error = e
@@ -248,6 +250,7 @@ def sample_command(
                         count=count,
                         seed=seed,
                         household_config=household_config,
+                        agent_focus_mode=agent_focus_mode,
                     )
                 except SamplingError as e:
                     sampling_error = e
@@ -258,6 +261,7 @@ def sample_command(
                     count=count,
                     seed=seed,
                     household_config=household_config,
+                    agent_focus_mode=agent_focus_mode,
                 )
             except SamplingError as e:
                 sampling_error = e

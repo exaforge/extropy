@@ -37,6 +37,10 @@ class ScenarioSufficiencyResult(BaseModel):
         default=False,
         description="Whether the description contains explicit outcome definitions",
     )
+    inferred_agent_focus_mode: str | None = Field(
+        default=None,
+        description="Inferred household agent scope: primary_only, couples, or all",
+    )
 
 
 SCENARIO_SUFFICIENCY_SCHEMA = {
@@ -63,6 +67,15 @@ SCENARIO_SUFFICIENCY_SCHEMA = {
         "has_explicit_outcomes": {
             "type": "boolean",
             "description": "Whether the description specifies explicit outcome definitions",
+        },
+        "inferred_agent_focus_mode": {
+            "type": "string",
+            "enum": ["primary_only", "couples", "all"],
+            "description": "Who in each household should be a simulated agent: "
+            "'primary_only' = one adult per household (most scenarios — professional studies, opinion polling, consumer behavior); "
+            "'couples' = both partners are agents (relationship dynamics, dual-income studies, retirement planning); "
+            "'all' = all household members including children (family dynamics, community health, school policy). "
+            "Default to 'primary_only' unless the scenario clearly involves couple/partner dynamics or whole-family/community dynamics.",
         },
         "questions": {
             "type": "array",
@@ -102,6 +115,7 @@ SCENARIO_SUFFICIENCY_SCHEMA = {
         "inferred_timestep_unit",
         "inferred_scenario_type",
         "has_explicit_outcomes",
+        "inferred_agent_focus_mode",
         "questions",
     ],
     "additionalProperties": False,
@@ -148,6 +162,15 @@ A sufficient scenario description should have:
 4. **OUTCOMES** (optional but check) — does the description explicitly define outcome measurements?
    Look for sections like "Outcomes:", numbered outcome lists, or explicit mentions of what to track.
 
+5. **AGENT FOCUS MODE** — who in each household should be a simulated agent?
+   - "primary_only": Only one adult per household is an agent (partner/kids are background context).
+     Use for: opinion polls, consumer behavior, professional studies, most scenarios.
+   - "couples": Both partners are agents (kids are background).
+     Use for: relationship dynamics, dual-income household studies, retirement planning.
+   - "all": Everyone in the household including children is an agent.
+     Use for: family dynamics, community health, school policy, neighborhood studies.
+   Default to "primary_only" unless the scenario clearly involves couple/partner or whole-family dynamics.
+
 Be LENIENT — if you can reasonably infer duration and type from the scenario, mark as sufficient.
 Only mark insufficient if critical information is truly missing or ambiguous.
 
@@ -184,6 +207,7 @@ If insufficient, generate structured questions with:
         inferred_timestep_unit=data.get("inferred_timestep_unit"),
         inferred_scenario_type=data.get("inferred_scenario_type"),
         has_explicit_outcomes=data.get("has_explicit_outcomes", False),
+        inferred_agent_focus_mode=data.get("inferred_agent_focus_mode"),
     )
 
 

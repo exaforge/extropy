@@ -273,7 +273,6 @@ def spec_command(
 
     geography = sufficiency_result.geography
     agent_focus = sufficiency_result.agent_focus
-    agent_focus_mode = sufficiency_result.agent_focus_mode
     geo_str = f", {geography}" if geography else ""
     focus_str = f", focus: {agent_focus}" if agent_focus else ""
 
@@ -426,7 +425,6 @@ def spec_command(
             sampling_order=sampling_order,
             sources=sources,
             agent_focus=agent_focus,
-            agent_focus_mode=agent_focus_mode,
             name_config=name_config,
         )
 

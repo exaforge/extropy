@@ -512,6 +512,31 @@ def validate_scenario(
                 )
 
     # =========================================================================
+    # Validate Agent Focus Mode
+    # =========================================================================
+
+    if spec.agent_focus_mode is not None:
+        valid_modes = {"primary_only", "couples", "all"}
+        if spec.agent_focus_mode not in valid_modes:
+            errors.append(
+                ValidationError(
+                    category="agent_focus",
+                    location="agent_focus_mode",
+                    message=f"Invalid agent_focus_mode: '{spec.agent_focus_mode}'",
+                    suggestion=f"Use one of: {', '.join(sorted(valid_modes))}",
+                )
+            )
+    elif spec.household_config is not None:
+        warnings.append(
+            ValidationWarning(
+                category="agent_focus",
+                location="agent_focus_mode",
+                message="household_config present but agent_focus_mode not set (defaults to primary_only)",
+                suggestion="Set agent_focus_mode to 'primary_only', 'couples', or 'all'",
+            )
+        )
+
+    # =========================================================================
     # Validate File References
     # =========================================================================
 
