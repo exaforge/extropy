@@ -150,7 +150,7 @@ class AnthropicProvider(LLMProvider):
 
     @property
     def default_strong_model(self) -> str:
-        return "claude-sonnet-4-5-20250929"
+        return "claude-sonnet-4-6"
 
     def _get_client(self) -> anthropic.Anthropic:
         kwargs: dict = {"api_key": self._api_key}

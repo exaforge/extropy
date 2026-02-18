@@ -54,6 +54,7 @@ FALLBACK_PRICING: dict[str, ModelPricing] = {
     ),
     "claude-sonnet-4.5": ModelPricing(input_per_mtok=3.00, output_per_mtok=15.00),
     "claude-sonnet-4": ModelPricing(input_per_mtok=3.00, output_per_mtok=15.00),
+    "claude-sonnet-4-6": ModelPricing(input_per_mtok=3.00, output_per_mtok=15.00),
     "claude-haiku-4-5-20251001": ModelPricing(
         input_per_mtok=0.80, output_per_mtok=4.00
     ),
@@ -72,7 +73,7 @@ PROVIDER_DEFAULTS: dict[str, dict[str, str]] = {
     },
     "anthropic": {
         "fast": "claude-haiku-4-5-20251001",
-        "strong": "claude-sonnet-4-5-20250929",
+        "strong": "claude-sonnet-4-6",
     },
     "azure": {
         "fast": "gpt-5-mini",
@@ -97,7 +98,7 @@ PROVIDER_DEFAULTS: dict[str, dict[str, str]] = {
     # Legacy aliases
     "claude": {
         "fast": "claude-haiku-4-5-20251001",
-        "strong": "claude-sonnet-4-5-20250929",
+        "strong": "claude-sonnet-4-6",
     },
     "azure_openai": {
         "fast": "gpt-5-mini",

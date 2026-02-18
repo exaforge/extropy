@@ -70,6 +70,12 @@ RATE_LIMIT_PROFILES: dict[str, dict[str, dict[int, dict[str, int]]]] = {
             3: {"rpm": 2_000, "itpm": 800_000, "otpm": 160_000},
             4: {"rpm": 4_000, "itpm": 2_000_000, "otpm": 400_000},
         },
+        "claude-sonnet-4-6": {
+            1: {"rpm": 50, "itpm": 30_000, "otpm": 8_000},
+            2: {"rpm": 1_000, "itpm": 450_000, "otpm": 90_000},
+            3: {"rpm": 2_000, "itpm": 800_000, "otpm": 160_000},
+            4: {"rpm": 4_000, "itpm": 2_000_000, "otpm": 400_000},
+        },
         "claude-haiku-4.5": {
             1: {"rpm": 50, "itpm": 50_000, "otpm": 10_000},
             2: {"rpm": 1_000, "itpm": 450_000, "otpm": 90_000},
