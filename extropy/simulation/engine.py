@@ -2386,6 +2386,14 @@ def run_simulation(
         if auto_config_path.exists():
             persona_config = PersonaConfig.from_yaml(auto_config_path)
 
+    # Backfill population_stats if persona config has empty stats
+    if persona_config and not persona_config.population_stats.stats:
+        from ..population.persona.stats import compute_population_stats
+
+        persona_config = persona_config.model_copy(
+            update={"population_stats": compute_population_stats(agents)}
+        )
+
     # Create config
     # Resolve effective model strings for rate limiting
     from ..config import get_config

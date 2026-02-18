@@ -186,13 +186,25 @@ def persona_command(
         current_step[0] = step
         current_step[1] = status
 
+    # Try to load agents for population_stats (available if re-running after sample)
+    agents_for_stats = None
+    if study_ctx.db_path.exists():
+        try:
+            from ...storage import open_study_db
+
+            with open_study_db(study_ctx.db_path) as db:
+                agents_for_stats = db.get_agents_by_scenario(scenario_name)
+                if not agents_for_stats:
+                    agents_for_stats = None
+        except Exception:
+            pass  # No agents yet — stats will be computed at simulation time
+
     def do_generation():
         nonlocal config, gen_error
         try:
-            # Note: agents=None means stats will be computed at render time
             config = generate_persona_config(
                 spec=merged_spec,
-                agents=None,  # Stats computed at render time
+                agents=agents_for_stats,
                 log=True,
                 on_progress=on_progress,
             )

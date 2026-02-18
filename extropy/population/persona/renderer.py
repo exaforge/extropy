@@ -302,7 +302,11 @@ def render_intro(
             if value is None:
                 formatted[key] = "unknown"
             elif isinstance(value, bool):
-                formatted[key] = "yes" if value else "no"
+                bp = config.phrasings.get_phrasing(key)
+                if isinstance(bp, BooleanPhrasing):
+                    formatted[key] = bp.true_phrase if value else bp.false_phrase
+                else:
+                    formatted[key] = "yes" if value else "no"
             elif isinstance(value, (int, float)):
                 # Check LLM-classified display_format first
                 display_fmt = display_format_map.get(key)
@@ -585,7 +589,11 @@ def render_persona(
         if not group_obj:
             continue
 
-        lines = [f"## {group_obj.label}", ""]
+        # render_intro() already emits "## Who I Am" — skip duplicate
+        if group_obj.label == "Who I Am":
+            lines = [""]
+        else:
+            lines = [f"## {group_obj.label}", ""]
         phrases = []
         for attr_name in remaining_attrs:
             value = agent.get(attr_name)
