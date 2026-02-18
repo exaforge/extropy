@@ -90,9 +90,9 @@ class ResourceGovernor:
         requested_workers: int,
         memory_per_worker_gb: float,
     ) -> int:
-        requested_workers = max(1, int(requested_workers))
+        requested_workers = max(0, int(requested_workers))
         if self.resource_mode != "auto":
-            return requested_workers
+            return max(1, requested_workers)
 
         snap = self.snapshot()
         cpu_cap = (
@@ -103,7 +103,12 @@ class ResourceGovernor:
         if self.safe_auto_workers:
             cpu_cap = min(cpu_cap, 8)
 
-        return max(1, min(requested_workers, cpu_cap, mem_cap))
+        auto_cap = max(1, min(cpu_cap, mem_cap))
+
+        if requested_workers == 0:
+            return auto_cap
+
+        return max(1, min(requested_workers, auto_cap))
 
     def recommend_chunk_size(
         self,

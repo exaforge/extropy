@@ -76,10 +76,10 @@ def network_command(
         help="Blocking attribute (repeatable). If omitted, auto-selects top attributes",
     ),
     similarity_workers: int = typer.Option(
-        1,
+        0,
         "--similarity-workers",
-        min=1,
-        help="Worker processes for similarity computation",
+        min=0,
+        help="Worker processes for similarity computation (0 = auto-detect)",
     ),
     similarity_chunk_size: int = typer.Option(
         64,
