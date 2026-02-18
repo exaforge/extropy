@@ -239,7 +239,7 @@ Run a simulation from a scenario spec.
 
 ```bash
 extropy simulate -s ai-adoption
-extropy simulate -s ai-adoption --seed 42 --strong openai/gpt-5
+extropy simulate -s ai-adoption --seed 42 --strong anthropic/claude-sonnet-4-6
 extropy simulate -s ai-adoption --fidelity high
 extropy simulate -s asi-announcement --early-convergence off
 ```

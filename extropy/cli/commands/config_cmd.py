@@ -52,8 +52,8 @@ def config_command(
     Examples:
         extropy config show
         extropy config set models.fast openai/gpt-5-mini
-        extropy config set models.strong anthropic/claude-sonnet-4.5
-        extropy config set simulation.strong openrouter/anthropic/claude-sonnet-4.5
+        extropy config set models.strong anthropic/claude-sonnet-4-6
+        extropy config set simulation.strong openrouter/anthropic/claude-sonnet-4-6
         extropy config reset
     """
     if action == "show":
