@@ -87,6 +87,7 @@ The scenario command is a **mini spec builder** — it discovers and researches 
 ### Scenario Spec Contents
 
 - **`extended_attributes`** — Scenario-specific attributes with full distribution specs
+- **`household_config`** — Household composition parameters (age brackets, type weights, partner correlation)
 - **`event`** — Event definition
 - **`timeline`** — For evolving scenarios: subsequent events at different timesteps
 - **`seed_exposure`** — Channels and rules for initial exposure

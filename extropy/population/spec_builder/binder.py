@@ -14,7 +14,6 @@ from ...core.models import (
     SpecMeta,
     GroundingSummary,
     SamplingConfig,
-    HouseholdConfig,
     NameConfig,
 )
 from ...utils import topological_sort, extract_names_from_expression
@@ -198,7 +197,6 @@ def build_spec(
     sources: list[str],
     agent_focus: str | None = None,
     agent_focus_mode: Literal["primary_only", "couples", "all"] | None = None,
-    household_config: HouseholdConfig | None = None,
     name_config: NameConfig | None = None,
 ) -> PopulationSpec:
     """
@@ -212,7 +210,6 @@ def build_spec(
         sources: List of source URLs from research
         agent_focus: Who the study agents represent (natural language)
         agent_focus_mode: Household agent scope (primary_only, couples, all)
-        household_config: LLM-researched household composition (defaults to US Census)
         name_config: LLM-researched name frequency tables (None = use bundled CSVs)
 
     Returns:
@@ -224,7 +221,6 @@ def build_spec(
         agent_focus=agent_focus,
         agent_focus_mode=agent_focus_mode,
         created_at=datetime.now(),
-        household_config=household_config or HouseholdConfig(),
         name_config=name_config,
     )
 

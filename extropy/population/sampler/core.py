@@ -201,6 +201,7 @@ def sample_population(
     count: int,
     seed: int | None = None,
     on_progress: ItemProgressCallback | None = None,
+    household_config: HouseholdConfig | None = None,
 ) -> SamplingResult:
     """
     Generate agents from a PopulationSpec.
@@ -214,6 +215,7 @@ def sample_population(
         count: Number of agents to generate (required)
         seed: Random seed for reproducibility (None = random)
         on_progress: Optional callback(current, total) for progress updates
+        household_config: Household composition config (required if spec has household attributes)
 
     Returns:
         SamplingResult with agents list, metadata, and statistics
@@ -258,7 +260,9 @@ def sample_population(
     }
 
     use_households = _has_household_attributes(spec)
-    household_config = spec.meta.household_config
+
+    # Use provided household_config or default
+    hh_config = household_config or HouseholdConfig()
 
     if use_households:
         agents, households = _sample_population_households(
@@ -270,7 +274,7 @@ def sample_population(
             stats,
             numeric_values,
             on_progress,
-            household_config,
+            hh_config,
         )
     else:
         agents = _sample_population_independent(

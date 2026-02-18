@@ -142,17 +142,15 @@ def sample_command(
             merged_sampling_order.append(attr.name)
 
     # Create merged spec for sampling
-    # Use scenario's household_config if provided, otherwise fall back to base population's
-    merged_meta = pop_spec.meta.model_copy()
-    if scenario_spec.household_config is not None:
-        merged_meta.household_config = scenario_spec.household_config
-
     merged_spec = PopulationSpec(
-        meta=merged_meta,
+        meta=pop_spec.meta.model_copy(),
         grounding=pop_spec.grounding,
         attributes=merged_attributes,
         sampling_order=merged_sampling_order,
     )
+
+    # Get household config from scenario (required for household sampling)
+    household_config = scenario_spec.household_config
 
     out.success(
         f"Loaded scenario: [bold]{scenario_name}[/bold] "
@@ -233,7 +231,11 @@ def sample_command(
 
             try:
                 result = sample_population(
-                    merged_spec, count=count, seed=seed, on_progress=on_progress
+                    merged_spec,
+                    count=count,
+                    seed=seed,
+                    on_progress=on_progress,
+                    household_config=household_config,
                 )
             except SamplingError as e:
                 sampling_error = e
@@ -241,12 +243,22 @@ def sample_command(
         if not agent_mode:
             with console.status("[cyan]Sampling agents...[/cyan]"):
                 try:
-                    result = sample_population(merged_spec, count=count, seed=seed)
+                    result = sample_population(
+                        merged_spec,
+                        count=count,
+                        seed=seed,
+                        household_config=household_config,
+                    )
                 except SamplingError as e:
                     sampling_error = e
         else:
             try:
-                result = sample_population(merged_spec, count=count, seed=seed)
+                result = sample_population(
+                    merged_spec,
+                    count=count,
+                    seed=seed,
+                    household_config=household_config,
+                )
             except SamplingError as e:
                 sampling_error = e
 

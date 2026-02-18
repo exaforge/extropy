@@ -353,23 +353,17 @@ def spec_command(
         current_step[0] = step
         current_step[1] = status
 
-    household_config = None
     name_config = None
 
     def do_hydration():
-        nonlocal \
-            hydrated, \
-            sources, \
-            warnings, \
-            hydration_error, \
-            household_config, \
-            name_config
+        nonlocal hydrated, sources, warnings, hydration_error, name_config
         try:
-            hydrated, sources, warnings, household_config, name_config = (
+            hydrated, sources, warnings, _household_config, name_config = (
                 hydrate_attributes(
                     attributes, description, geography, on_progress=on_progress
                 )
             )
+            # Note: household_config is ignored at spec level - it's set per-scenario
         except Exception as e:
             hydration_error = e
         finally:
@@ -433,7 +427,6 @@ def spec_command(
             sources=sources,
             agent_focus=agent_focus,
             agent_focus_mode=agent_focus_mode,
-            household_config=household_config,
             name_config=name_config,
         )
 
