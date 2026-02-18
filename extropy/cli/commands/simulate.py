@@ -107,7 +107,10 @@ def simulate_command(
         help="Scenario name (auto-selects if only one exists)",
     ),
     output: Path | None = typer.Option(
-        None, "--output", "-o", help="Output results directory (defaults to results/{scenario}/)"
+        None,
+        "--output",
+        "-o",
+        help="Output results directory (defaults to results/{scenario}/)",
     ),
     strong: str = typer.Option(
         "",
