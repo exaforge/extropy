@@ -42,11 +42,11 @@ def network_command(
         "--generate-config/--no-generate-config",
         help="Generate network config via LLM from population spec (default: enabled)",
     ),
-    avg_degree: float = typer.Option(
-        20.0, "--avg-degree", help="Target average degree (connections per agent)"
+    avg_degree: float | None = typer.Option(
+        None, "--avg-degree", help="Target average degree (connections per agent)"
     ),
-    rewire_prob: float = typer.Option(
-        0.05, "--rewire-prob", help="Watts-Strogatz rewiring probability"
+    rewire_prob: float | None = typer.Option(
+        None, "--rewire-prob", help="Watts-Strogatz rewiring probability"
     ),
     seed: int | None = typer.Option(
         None, "--seed", help="Random seed for reproducibility"
@@ -392,10 +392,8 @@ def network_command(
             "(use -c or --generate-config for meaningful social structure)"
         )
 
-    # Apply CLI overrides
+    # Apply CLI overrides (only override avg_degree/rewire_prob when explicitly set)
     base_updates = {
-        "avg_degree": avg_degree,
-        "rewire_prob": rewire_prob,
         "seed": seed if seed is not None else config.seed,
         "candidate_mode": candidate_mode,
         "candidate_pool_multiplier": candidate_pool_multiplier,
@@ -407,6 +405,10 @@ def network_command(
         "auto_save_generated_config": auto_save_generated_config,
         "quarantine_suffix": quarantine_suffix,
     }
+    if avg_degree is not None:
+        base_updates["avg_degree"] = avg_degree
+    if rewire_prob is not None:
+        base_updates["rewire_prob"] = rewire_prob
     config = config.model_copy(update=base_updates).apply_quality_profile_defaults(
         force=True
     )
