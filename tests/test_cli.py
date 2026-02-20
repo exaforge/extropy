@@ -8,7 +8,11 @@ from pathlib import Path
 from typer.testing import CliRunner
 
 from extropy.cli.app import app
-from extropy.cli.commands.validate import _is_scenario_file
+from extropy.cli.commands.validate import (
+    _detect_spec_type,
+    _is_persona_file,
+    _is_scenario_file,
+)
 from extropy.population.network.config import NetworkConfig
 from extropy.storage import open_study_db
 
@@ -55,6 +59,261 @@ class TestValidateCommand:
         assert _is_scenario_file(Path("scenario.yaml"))
         assert _is_scenario_file(Path("foo.scenario.yaml"))
         assert not _is_scenario_file(Path("population.yaml"))
+
+    def test_persona_filename_detection(self):
+        assert _is_persona_file(Path("persona.yaml"))
+        assert _is_persona_file(Path("foo.persona.yaml"))
+        assert _is_persona_file(Path("persona.v1.yaml"))
+        assert not _is_persona_file(Path("population.yaml"))
+
+    def test_detect_spec_type_by_content(self, tmp_path):
+        persona_like = tmp_path / "config.yaml"
+        persona_like.write_text("""
+intro_template: "I am {role}."
+treatments: []
+groups: []
+phrasings:
+  boolean: []
+  categorical: []
+  relative: []
+  concrete: []
+""")
+
+        assert _detect_spec_type(persona_like) == "persona"
+
+    def test_validate_persona_config_passes(self, tmp_path):
+        study_dir = tmp_path / "study"
+        scenario_dir = study_dir / "scenario" / "test"
+        scenario_dir.mkdir(parents=True)
+
+        pop_yaml = study_dir / "population.v1.yaml"
+        pop_yaml.write_text("""
+meta:
+  description: Test population
+  geography: USA
+  agent_focus: test agents
+
+grounding:
+  overall: low
+  sources_count: 0
+  strong_count: 0
+  medium_count: 0
+  low_count: 2
+
+attributes:
+  - name: role
+    type: categorical
+    category: population_specific
+    description: Role
+    sampling:
+      strategy: independent
+      distribution:
+        type: categorical
+        options: [x, y]
+        weights: [0.5, 0.5]
+    grounding:
+      level: low
+      method: estimated
+  - name: has_children
+    type: boolean
+    category: population_specific
+    description: Children in household
+    sampling:
+      strategy: independent
+      distribution:
+        type: boolean
+        probability_true: 0.4
+    grounding:
+      level: low
+      method: estimated
+
+sampling_order:
+  - role
+  - has_children
+""")
+
+        scenario_yaml = scenario_dir / "scenario.v1.yaml"
+        scenario_yaml.write_text("""
+meta:
+  name: test
+  description: Test scenario
+  base_population: population.v1
+  created_at: 2024-01-01T00:00:00
+
+event:
+  type: announcement
+  content: Test announcement
+  source: test_source
+  credibility: 0.8
+  ambiguity: 0.2
+  emotional_valence: 0.0
+
+seed_exposure:
+  channels: []
+  rules: []
+
+interaction:
+  primary_model: passive_observation
+  description: Test interaction
+
+spread:
+  share_probability: 0.3
+
+outcomes:
+  suggested_outcomes: []
+  capture_full_reasoning: true
+
+simulation:
+  max_timesteps: 10
+  timestep_unit: day
+""")
+
+        persona_yaml = scenario_dir / "persona.v1.yaml"
+        persona_yaml.write_text("""
+population_description: Test population
+created_at: "2024-01-01T00:00:00"
+intro_template: "I am {role}."
+treatments:
+  - attribute: role
+    treatment: concrete
+    group: basics
+  - attribute: has_children
+    treatment: concrete
+    group: basics
+groups:
+  - name: basics
+    label: Basics
+    attributes:
+      - role
+      - has_children
+phrasings:
+  boolean:
+    - attribute: has_children
+      true_phrase: I have children.
+      false_phrase: I do not have children.
+  categorical:
+    - attribute: role
+      phrases:
+        x: I am in role x.
+        y: I am in role y.
+      null_options: []
+      null_phrase: null
+      fallback: null
+  relative: []
+  concrete: []
+population_stats:
+  stats: {}
+""")
+
+        result = runner.invoke(app, ["validate", str(persona_yaml)])
+        assert result.exit_code == 0, result.output
+
+    def test_validate_persona_config_fails_on_option_mismatch(self, tmp_path):
+        study_dir = tmp_path / "study"
+        scenario_dir = study_dir / "scenario" / "test"
+        scenario_dir.mkdir(parents=True)
+
+        pop_yaml = study_dir / "population.v1.yaml"
+        pop_yaml.write_text("""
+meta:
+  description: Test population
+  geography: USA
+  agent_focus: test agents
+
+grounding:
+  overall: low
+  sources_count: 0
+  strong_count: 0
+  medium_count: 0
+  low_count: 2
+
+attributes:
+  - name: role
+    type: categorical
+    category: population_specific
+    description: Role
+    sampling:
+      strategy: independent
+      distribution:
+        type: categorical
+        options: [x, y]
+        weights: [0.5, 0.5]
+    grounding:
+      level: low
+      method: estimated
+
+sampling_order:
+  - role
+""")
+
+        scenario_yaml = scenario_dir / "scenario.v1.yaml"
+        scenario_yaml.write_text("""
+meta:
+  name: test
+  description: Test scenario
+  base_population: population.v1
+  created_at: 2024-01-01T00:00:00
+
+event:
+  type: announcement
+  content: Test announcement
+  source: test_source
+  credibility: 0.8
+  ambiguity: 0.2
+  emotional_valence: 0.0
+
+seed_exposure:
+  channels: []
+  rules: []
+
+interaction:
+  primary_model: passive_observation
+  description: Test interaction
+
+spread:
+  share_probability: 0.3
+
+outcomes:
+  suggested_outcomes: []
+  capture_full_reasoning: true
+
+simulation:
+  max_timesteps: 10
+  timestep_unit: day
+""")
+
+        persona_yaml = scenario_dir / "persona.v1.yaml"
+        persona_yaml.write_text("""
+population_description: Test population
+created_at: "2024-01-01T00:00:00"
+intro_template: "I am {role}."
+treatments:
+  - attribute: role
+    treatment: concrete
+    group: basics
+groups:
+  - name: basics
+    label: Basics
+    attributes:
+      - role
+phrasings:
+  boolean: []
+  categorical:
+    - attribute: role
+      phrases:
+        x: I am in role x.
+      null_options: []
+      null_phrase: null
+      fallback: null
+  relative: []
+  concrete: []
+population_stats:
+  stats: {}
+""")
+
+        result = runner.invoke(app, ["validate", str(persona_yaml)])
+        assert result.exit_code != 0
+        assert "missing options" in result.output.lower()
 
 
 class TestVersionFlag:
