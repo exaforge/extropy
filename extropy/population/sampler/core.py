@@ -34,7 +34,7 @@ from .households import (
     generate_dependents,
 )
 from .modifiers import apply_modifiers_and_sample
-from ...utils.eval_safe import eval_formula, FormulaError
+from ...utils.eval_safe import ConditionError, eval_formula, FormulaError
 from ..names import generate_name
 from ..names.generator import age_to_birth_decade
 
@@ -183,6 +183,7 @@ def sample_population(
     on_progress: ItemProgressCallback | None = None,
     household_config: HouseholdConfig | None = None,
     agent_focus_mode: Literal["primary_only", "couples", "all"] | None = None,
+    strict_condition_errors: bool = False,
 ) -> SamplingResult:
     """
     Generate agents from a PopulationSpec.
@@ -197,6 +198,8 @@ def sample_population(
         seed: Random seed for reproducibility (None = random)
         on_progress: Optional callback(current, total) for progress updates
         household_config: Household composition config (required if spec has household attributes)
+        strict_condition_errors: If True, modifier condition evaluation failures
+            raise SamplingError; if False, failures are recorded as warnings.
 
     Returns:
         SamplingResult with agents list, metadata, and statistics
@@ -257,10 +260,19 @@ def sample_population(
             on_progress,
             hh_config,
             agent_focus_mode=agent_focus_mode,
+            strict_condition_errors=strict_condition_errors,
         )
     else:
         agents = _sample_population_independent(
-            spec, attr_map, rng, n, id_width, stats, numeric_values, on_progress
+            spec,
+            attr_map,
+            rng,
+            n,
+            id_width,
+            stats,
+            numeric_values,
+            on_progress,
+            strict_condition_errors=strict_condition_errors,
         )
         households = []
 
@@ -307,12 +319,20 @@ def _sample_population_independent(
     stats: SamplingStats,
     numeric_values: dict[str, list[float]],
     on_progress: ItemProgressCallback | None = None,
+    strict_condition_errors: bool = False,
 ) -> list[dict[str, Any]]:
     """Sample N agents independently (legacy path)."""
     agents: list[dict[str, Any]] = []
     for i in range(n):
         agent = _sample_single_agent(
-            spec, attr_map, rng, i, id_width, stats, numeric_values
+            spec,
+            attr_map,
+            rng,
+            i,
+            id_width,
+            stats,
+            numeric_values,
+            strict_condition_errors=strict_condition_errors,
         )
         agents.append(agent)
         if on_progress:
@@ -418,6 +438,7 @@ def _sample_dependent_as_agent(
     dependent: Any,
     parent: dict[str, Any],
     household_id: str,
+    strict_condition_errors: bool = False,
 ) -> dict[str, Any]:
     """Promote a dependent to a full agent with all attributes sampled.
 
@@ -425,7 +446,14 @@ def _sample_dependent_as_agent(
     then samples remaining attributes normally.
     """
     agent = _sample_single_agent(
-        spec, attr_map, rng, index, id_width, stats, numeric_values
+        spec,
+        attr_map,
+        rng,
+        index,
+        id_width,
+        stats,
+        numeric_values,
+        strict_condition_errors=strict_condition_errors,
     )
 
     # Override with dependent's known attributes
@@ -462,6 +490,7 @@ def _sample_population_households(
     on_progress: ItemProgressCallback | None = None,
     config: HouseholdConfig | None = None,
     agent_focus_mode: Literal["primary_only", "couples", "all"] | None = None,
+    strict_condition_errors: bool = False,
 ) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
     """Sample agents in household units with correlated demographics.
 
@@ -499,7 +528,14 @@ def _sample_population_households(
 
         # Sample Adult 1 (primary) — always an agent
         adult1 = _sample_single_agent(
-            spec, attr_map, rng, agent_index, id_width, stats, numeric_values
+            spec,
+            attr_map,
+            rng,
+            agent_index,
+            id_width,
+            stats,
+            numeric_values,
+            strict_condition_errors=strict_condition_errors,
         )
         adult1_age = adult1.get("age", 35)
         agent_index += 1
@@ -542,6 +578,7 @@ def _sample_population_households(
                     household_attrs,
                     categorical_options,
                     config,
+                    strict_condition_errors=strict_condition_errors,
                 )
                 adult2["household_id"] = household_id
                 adult2["household_role"] = "adult_secondary"
@@ -598,6 +635,7 @@ def _sample_population_households(
                     dep,
                     adult1,
                     household_id,
+                    strict_condition_errors=strict_condition_errors,
                 )
                 agents.append(kid_agent)
                 adult_ids.append(kid_agent["_id"])
@@ -890,6 +928,7 @@ def _sample_partner_agent(
     household_attrs: set[str],
     categorical_options: dict[str, list[str]],
     config: HouseholdConfig | None = None,
+    strict_condition_errors: bool = False,
 ) -> dict[str, Any]:
     """Sample a partner agent with correlated demographics.
 
@@ -927,8 +966,14 @@ def _sample_partner_agent(
         else:
             # Individual scope: sample independently
             try:
-                value = _sample_attribute(attr, rng, agent, stats)
-            except FormulaError as e:
+                value = _sample_attribute(
+                    attr,
+                    rng,
+                    agent,
+                    stats,
+                    strict_condition_errors=strict_condition_errors,
+                )
+            except (FormulaError, ConditionError) as e:
                 raise SamplingError(
                     f"Agent {index}: Failed to sample '{attr_name}': {e}"
                 ) from e
@@ -965,6 +1010,7 @@ def _sample_single_agent(
     id_width: int,
     stats: SamplingStats,
     numeric_values: dict[str, list[float]],
+    strict_condition_errors: bool = False,
 ) -> dict[str, Any]:
     """Sample a single agent following the sampling order."""
     agent: dict[str, Any] = {"_id": f"agent_{index:0{id_width}d}"}
@@ -976,8 +1022,14 @@ def _sample_single_agent(
             continue
 
         try:
-            value = _sample_attribute(attr, rng, agent, stats)
-        except FormulaError as e:
+            value = _sample_attribute(
+                attr,
+                rng,
+                agent,
+                stats,
+                strict_condition_errors=strict_condition_errors,
+            )
+        except (FormulaError, ConditionError) as e:
             raise SamplingError(
                 f"Agent {index}: Failed to sample '{attr_name}': {e}"
             ) from e
@@ -1019,6 +1071,7 @@ def _sample_attribute(
     rng: random.Random,
     agent: dict[str, Any],
     stats: SamplingStats,
+    strict_condition_errors: bool = False,
 ) -> Any:
     """Sample a single attribute based on its strategy."""
     strategy = attr.sampling.strategy
@@ -1053,6 +1106,8 @@ def _sample_attribute(
             attr.sampling.modifiers,
             rng,
             agent,
+            strict_condition_errors=strict_condition_errors,
+            condition_warnings=stats.condition_warnings,
         )
 
         # Update modifier trigger stats

@@ -1244,3 +1244,74 @@ class TestQuickValidation:
         result = validate_conditional_base_response(data, ["score"])
         # Should NOT error - static max=100 satisfies the constraint
         assert not any("max_formula" in str(e.suggestion) for e in result.errors)
+
+
+class TestModifierConditionErrorHandling:
+    """Runtime behavior for modifier condition evaluation failures."""
+
+    def _make_spec_with_bad_modifier_condition(self) -> PopulationSpec:
+        return PopulationSpec(
+            meta=SpecMeta(description="bad condition test", size=10),
+            grounding=GroundingSummary(
+                overall="low",
+                sources_count=0,
+                strong_count=0,
+                medium_count=0,
+                low_count=2,
+            ),
+            attributes=[
+                AttributeSpec(
+                    name="age",
+                    type="int",
+                    category="universal",
+                    description="Age",
+                    sampling=SamplingConfig(
+                        strategy="independent",
+                        distribution=NormalDistribution(
+                            type="normal",
+                            mean=40,
+                            std=10,
+                            min=18,
+                            max=80,
+                        ),
+                    ),
+                    grounding=GroundingInfo(level="low", method="estimated"),
+                ),
+                AttributeSpec(
+                    name="salary",
+                    type="float",
+                    category="population_specific",
+                    description="Salary",
+                    sampling=SamplingConfig(
+                        strategy="conditional",
+                        distribution=NormalDistribution(
+                            type="normal",
+                            mean=70000,
+                            std=15000,
+                            min=0,
+                            max=300000,
+                        ),
+                        depends_on=["age"],
+                        modifiers=[
+                            Modifier(
+                                when="unknown_var > 0",
+                                multiply=1.1,
+                            )
+                        ],
+                    ),
+                    grounding=GroundingInfo(level="low", method="estimated"),
+                ),
+            ],
+            sampling_order=["age", "salary"],
+        )
+
+    def test_strict_condition_errors_raise_sampling_error(self):
+        spec = self._make_spec_with_bad_modifier_condition()
+        with pytest.raises(SamplingError):
+            sample_population(spec, count=20, seed=42, strict_condition_errors=True)
+
+    def test_permissive_condition_errors_record_warnings(self):
+        spec = self._make_spec_with_bad_modifier_condition()
+        result = sample_population(spec, count=20, seed=42, strict_condition_errors=False)
+        assert len(result.agents) == 20
+        assert len(result.stats.condition_warnings) > 0

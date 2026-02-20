@@ -20,7 +20,7 @@ from ...core.models import (
     CategoricalDistribution,
     BooleanDistribution,
 )
-from ...utils.eval_safe import eval_condition
+from ...utils.eval_safe import ConditionError, eval_condition
 from .distributions import (
     _sample_normal,
     _sample_lognormal,
@@ -39,6 +39,9 @@ def apply_modifiers_and_sample(
     modifiers: list[Modifier],
     rng: random.Random,
     agent: dict[str, Any],
+    *,
+    strict_condition_errors: bool = False,
+    condition_warnings: list[str] | None = None,
 ) -> tuple[Any, list[int]]:
     """
     Apply matching modifiers to a distribution and sample.
@@ -62,8 +65,12 @@ def apply_modifiers_and_sample(
                 matching_modifiers.append((i, mod))
                 triggered_indices.append(i)
         except Exception as e:
-            # Log warning but continue - condition failure means modifier doesn't apply
-            logger.warning(f"Modifier condition '{mod.when}' failed: {e}")
+            message = f"Modifier condition '{mod.when}' failed: {e}"
+            if strict_condition_errors:
+                raise ConditionError(message) from e
+            logger.warning(message)
+            if condition_warnings is not None:
+                condition_warnings.append(message)
 
     # Route to type-specific handler
     if isinstance(dist, (NormalDistribution, LognormalDistribution)):
