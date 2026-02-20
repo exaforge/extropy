@@ -349,6 +349,14 @@ class SamplingConfig(BaseModel):
         default_factory=list,
         description="Conditional modifiers (for conditional strategy)",
     )
+    modifier_overlap_policy: Literal["exclusive", "ordered_override"] | None = Field(
+        default=None,
+        description=(
+            "Optional policy for overlapping conditional modifiers on categorical/"
+            "boolean attributes. exclusive=conditions should be mutually exclusive; "
+            "ordered_override=last-match precedence is intentional."
+        ),
+    )
 
 
 # =============================================================================

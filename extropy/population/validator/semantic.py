@@ -4,6 +4,8 @@ These checks produce WARNING severity issues that don't block sampling.
 They help identify potential issues but don't indicate structural problems.
 """
 
+import ast
+
 from ...core.models.validation import Severity, ValidationIssue
 from ...core.models import (
     PopulationSpec,
@@ -30,6 +32,7 @@ def run_semantic_checks(spec: PopulationSpec) -> list[ValidationIssue]:
     11. Modifier Stacking Analysis
     12. Condition Value Validity
     13. Partner-Correlation Policy Completeness
+    14. Modifier Overlap Ambiguity
     """
     issues: list[ValidationIssue] = []
 
@@ -48,6 +51,9 @@ def run_semantic_checks(spec: PopulationSpec) -> list[ValidationIssue]:
 
         # Category 13: Partner-correlation policy completeness
         issues.extend(_check_partner_correlation_policy(attr))
+
+        # Category 14: Modifier overlap ambiguity
+        issues.extend(_check_modifier_overlap(attr))
 
     return issues
 
@@ -286,3 +292,128 @@ def _check_partner_correlation_policy(attr: AttributeSpec) -> list[ValidationIss
             ),
         )
     ]
+
+
+# =============================================================================
+# Category 14: Modifier Overlap Ambiguity
+# =============================================================================
+
+
+def _extract_literal_sets(expr: str) -> dict[str, set[str]]:
+    """Extract literal comparison sets per attribute from an expression."""
+    try:
+        tree = ast.parse(expr, mode="eval")
+    except SyntaxError:
+        return {}
+
+    extracted: dict[str, set[str]] = {}
+
+    def _add(attr_name: str, value: str) -> None:
+        extracted.setdefault(attr_name, set()).add(value)
+
+    def _extract_values(node: ast.AST) -> list[str]:
+        values: list[str] = []
+        if isinstance(node, ast.Constant):
+            if isinstance(node.value, (str, bool, int, float)):
+                values.append(str(node.value))
+        elif isinstance(node, ast.List):
+            for elt in node.elts:
+                if isinstance(elt, ast.Constant) and isinstance(
+                    elt.value, (str, bool, int, float)
+                ):
+                    values.append(str(elt.value))
+        elif isinstance(node, ast.Tuple):
+            for elt in node.elts:
+                if isinstance(elt, ast.Constant) and isinstance(
+                    elt.value, (str, bool, int, float)
+                ):
+                    values.append(str(elt.value))
+        return values
+
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Compare):
+            continue
+        if not isinstance(node.left, ast.Name):
+            continue
+        attr_name = node.left.id
+        for comparator in node.comparators:
+            for value in _extract_values(comparator):
+                _add(attr_name, value)
+
+    return extracted
+
+
+def _conditions_could_overlap(expr_a: str, expr_b: str) -> bool:
+    """Conservative overlap check for modifier conditions.
+
+    Returns True only when overlap is plausible from literal comparisons.
+    """
+    if expr_a.strip() == expr_b.strip():
+        return True
+
+    literals_a = _extract_literal_sets(expr_a)
+    literals_b = _extract_literal_sets(expr_b)
+    if not literals_a or not literals_b:
+        return False
+
+    shared_attrs = set(literals_a) & set(literals_b)
+    if not shared_attrs:
+        return False
+
+    for attr_name in shared_attrs:
+        if literals_a[attr_name].isdisjoint(literals_b[attr_name]):
+            return False
+
+    return True
+
+
+def _check_modifier_overlap(attr: AttributeSpec) -> list[ValidationIssue]:
+    """Warn when categorical/boolean modifiers appear to overlap ambiguously."""
+    if attr.type not in {"categorical", "boolean"}:
+        return []
+    if len(attr.sampling.modifiers) < 2:
+        return []
+    if attr.sampling.modifier_overlap_policy == "ordered_override":
+        return []
+
+    issues: list[ValidationIssue] = []
+    for i in range(len(attr.sampling.modifiers)):
+        for j in range(i + 1, len(attr.sampling.modifiers)):
+            mod_i = attr.sampling.modifiers[i]
+            mod_j = attr.sampling.modifiers[j]
+            if not mod_i.when or not mod_j.when:
+                continue
+            if not _conditions_could_overlap(mod_i.when, mod_j.when):
+                continue
+
+            policy = attr.sampling.modifier_overlap_policy
+            if policy == "exclusive":
+                message = (
+                    f"modifiers[{i}] and modifiers[{j}] overlap despite "
+                    "modifier_overlap_policy='exclusive'"
+                )
+                suggestion = (
+                    "Make the conditions mutually exclusive, or set "
+                    "modifier_overlap_policy: ordered_override if precedence is intended"
+                )
+            else:
+                message = (
+                    f"modifiers[{i}] and modifiers[{j}] may overlap; categorical/boolean "
+                    "modifiers use last-wins semantics"
+                )
+                suggestion = (
+                    "Set sampling.modifier_overlap_policy to 'ordered_override' "
+                    "if intentional, otherwise make conditions mutually exclusive"
+                )
+
+            issues.append(
+                ValidationIssue(
+                    severity=Severity.WARNING,
+                    category="MODIFIER_OVERLAP",
+                    location=attr.name,
+                    message=message,
+                    suggestion=suggestion,
+                )
+            )
+
+    return issues

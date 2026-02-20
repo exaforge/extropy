@@ -55,6 +55,7 @@ def make_attr(
     formula: str | None = None,
     depends_on: list[str] | None = None,
     modifiers: list[Modifier] | None = None,
+    modifier_overlap_policy: str | None = None,
 ) -> AttributeSpec:
     """Helper to create an AttributeSpec for testing."""
     if distribution is None and strategy != "derived":
@@ -78,6 +79,7 @@ def make_attr(
             formula=formula,
             depends_on=depends_on or [],
             modifiers=modifiers or [],
+            modifier_overlap_policy=modifier_overlap_policy,
         ),
         grounding=GroundingInfo(level="low", method="estimated"),
     )
@@ -736,6 +738,107 @@ class TestPartnerCorrelationPolicyWarnings:
         result = validate_spec(spec)
 
         assert not any(w.category == "PARTNER_POLICY" for w in result.warnings)
+
+
+class TestModifierOverlapWarnings:
+    """Tests for categorical/boolean modifier overlap detection."""
+
+    def test_overlap_warning_for_categorical_modifiers(self):
+        region = make_attr(
+            "region",
+            "categorical",
+            distribution=CategoricalDistribution(
+                options=["Urban", "Suburban", "Rural"],
+                weights=[0.4, 0.3, 0.3],
+            ),
+        )
+        audience = make_attr(
+            "audience_segment",
+            "categorical",
+            strategy="conditional",
+            distribution=CategoricalDistribution(
+                options=["A", "B"],
+                weights=[0.5, 0.5],
+            ),
+            depends_on=["region"],
+            modifiers=[
+                Modifier(when="region == 'Urban'", weight_overrides={"A": 0.8, "B": 0.2}),
+                Modifier(
+                    when="region in ['Urban', 'Suburban']",
+                    weight_overrides={"A": 0.3, "B": 0.7},
+                ),
+            ],
+        )
+
+        spec = make_spec([region, audience], ["region", "audience_segment"])
+        result = validate_spec(spec)
+
+        assert any(w.category == "MODIFIER_OVERLAP" for w in result.warnings)
+
+    def test_ordered_override_policy_suppresses_overlap_warning(self):
+        region = make_attr(
+            "region",
+            "categorical",
+            distribution=CategoricalDistribution(
+                options=["Urban", "Suburban", "Rural"],
+                weights=[0.4, 0.3, 0.3],
+            ),
+        )
+        audience = make_attr(
+            "audience_segment",
+            "categorical",
+            strategy="conditional",
+            distribution=CategoricalDistribution(
+                options=["A", "B"],
+                weights=[0.5, 0.5],
+            ),
+            depends_on=["region"],
+            modifier_overlap_policy="ordered_override",
+            modifiers=[
+                Modifier(when="region == 'Urban'", weight_overrides={"A": 0.8, "B": 0.2}),
+                Modifier(
+                    when="region in ['Urban', 'Suburban']",
+                    weight_overrides={"A": 0.3, "B": 0.7},
+                ),
+            ],
+        )
+
+        spec = make_spec([region, audience], ["region", "audience_segment"])
+        result = validate_spec(spec)
+
+        assert not any(w.category == "MODIFIER_OVERLAP" for w in result.warnings)
+
+    def test_exclusive_policy_still_warns_on_overlap(self):
+        region = make_attr(
+            "region",
+            "categorical",
+            distribution=CategoricalDistribution(
+                options=["Urban", "Suburban", "Rural"],
+                weights=[0.4, 0.3, 0.3],
+            ),
+        )
+        audience = make_attr(
+            "audience_segment",
+            "categorical",
+            strategy="conditional",
+            distribution=CategoricalDistribution(
+                options=["A", "B"],
+                weights=[0.5, 0.5],
+            ),
+            depends_on=["region"],
+            modifier_overlap_policy="exclusive",
+            modifiers=[
+                Modifier(when="region == 'Urban'", weight_overrides={"A": 0.8, "B": 0.2}),
+                Modifier(when="region in ['Urban', 'Suburban']", weight_overrides={"A": 0.3, "B": 0.7}),
+            ],
+        )
+
+        spec = make_spec([region, audience], ["region", "audience_segment"])
+        result = validate_spec(spec)
+
+        overlap_warnings = [w for w in result.warnings if w.category == "MODIFIER_OVERLAP"]
+        assert overlap_warnings
+        assert "exclusive" in overlap_warnings[0].message
 
 
 class TestValidationIssue:
