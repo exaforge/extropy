@@ -30,14 +30,10 @@ import random
 _DEFAULT_CONFIG = HouseholdConfig()
 
 
-def _make_household_spec(
-    size: int = 100, agent_focus: str | None = "couples"
-) -> PopulationSpec:
+def _make_household_spec(size: int = 100) -> PopulationSpec:
     """Create a minimal spec with household-scoped attributes."""
     return PopulationSpec(
-        meta=SpecMeta(
-            description="Test household spec", size=size, agent_focus=agent_focus
-        ),
+        meta=SpecMeta(description="Test household spec", size=size),
         grounding=GroundingSummary(
             overall="medium",
             sources_count=1,
@@ -114,7 +110,6 @@ def _make_household_spec(
                 category="universal",
                 description="Education",
                 scope="partner_correlated",  # Correlated between partners
-                correlation_rate=0.6,  # ~60% same education
                 sampling=SamplingConfig(
                     strategy="independent",
                     distribution=CategoricalDistribution(
@@ -222,7 +217,7 @@ class TestHouseholdSamplingHelpers:
         """Age correlation uses gaussian offset from HouseholdConfig."""
         rng = random.Random(42)
         partner_age = correlate_partner_attribute(
-            "age", "int", 35, None, rng, _DEFAULT_CONFIG
+            "age", "int", 35, rng, _DEFAULT_CONFIG
         )
         assert isinstance(partner_age, int)
         assert partner_age >= 18
@@ -237,7 +232,6 @@ class TestHouseholdSamplingHelpers:
                 "race_ethnicity",
                 "categorical",
                 "white",
-                None,  # Uses per-group rates from config
                 rng,
                 _DEFAULT_CONFIG,
                 available_options=["white", "black", "hispanic"],
@@ -249,7 +243,7 @@ class TestHouseholdSamplingHelpers:
         assert 0.80 < rate < 0.97, f"Same-race rate {rate:.2f} outside expected range"
 
     def test_correlate_education_assortative(self):
-        """Education uses explicit correlation_rate."""
+        """Education uses household assortative-mating defaults."""
         rng = random.Random(42)
         same_count = 0
         trials = 500
@@ -258,7 +252,6 @@ class TestHouseholdSamplingHelpers:
                 "education_level",
                 "categorical",
                 "bachelors",
-                0.6,  # Explicit correlation rate
                 rng,
                 _DEFAULT_CONFIG,
                 available_options=["high_school", "bachelors", "masters", "doctorate"],
@@ -266,11 +259,11 @@ class TestHouseholdSamplingHelpers:
             if result == "bachelors":
                 same_count += 1
         rate = same_count / trials
-        # Expect ~60% same education
-        assert 0.50 < rate < 0.75, f"Assortative rate {rate:.2f} outside expected range"
+        # Expect moderate assortative matching from default config table
+        assert 0.50 < rate < 0.70, f"Assortative rate {rate:.2f} outside expected range"
 
     def test_correlate_with_default_rate(self):
-        """Unknown attributes use default_same_group_rate when no explicit rate."""
+        """Unknown attributes use default_same_group_rate."""
         rng = random.Random(42)
         same_count = 0
         trials = 500
@@ -279,7 +272,6 @@ class TestHouseholdSamplingHelpers:
                 "some_attribute",
                 "categorical",
                 "value_a",
-                None,  # No explicit rate, uses default
                 rng,
                 _DEFAULT_CONFIG,
                 available_options=["value_a", "value_b", "value_c"],
@@ -292,9 +284,7 @@ class TestHouseholdSamplingHelpers:
 
     def test_generate_dependents_no_kids(self):
         rng = random.Random(42)
-        deps = generate_dependents(
-            HouseholdType.COUPLE, 2, 2, 40, rng, _DEFAULT_CONFIG, name_config=None
-        )
+        deps = generate_dependents(HouseholdType.COUPLE, 2, 2, 40, rng, _DEFAULT_CONFIG)
         assert len(deps) == 0
 
     def test_generate_dependents_with_kids(self):
@@ -306,7 +296,6 @@ class TestHouseholdSamplingHelpers:
             40,
             rng,
             _DEFAULT_CONFIG,
-            name_config=None,
         )
         assert len(deps) == 2
         for d in deps:
@@ -323,7 +312,6 @@ class TestHouseholdSamplingHelpers:
             45,
             rng,
             _DEFAULT_CONFIG,
-            name_config=None,
         )
         assert len(deps) == 2
         relationships = [d.relationship for d in deps]
@@ -369,6 +357,38 @@ class TestHouseholdPopulationSampling:
                     f"Household-scoped attr 'state' should match: "
                     f"{agent['state']} != {partner['state']}"
                 )
+
+    def test_household_members_share_surname(self):
+        spec = _make_household_spec(size=120)
+        result = sample_population(spec, count=120, seed=7)
+        by_household: dict[str, list[dict]] = {}
+        for agent in result.agents:
+            hid = agent.get("household_id")
+            if isinstance(hid, str):
+                by_household.setdefault(hid, []).append(agent)
+
+        for members in by_household.values():
+            primary = next(
+                (m for m in members if m.get("household_role") == "adult_primary"),
+                members[0],
+            )
+            primary_last = primary.get("last_name")
+            if not primary_last:
+                continue
+
+            for member in members:
+                assert member.get("last_name") == primary_last
+
+            partner_npc = primary.get("partner_npc")
+            if isinstance(partner_npc, dict) and partner_npc.get("last_name"):
+                assert partner_npc.get("last_name") == primary_last
+
+            for dep in primary.get("dependents", []) or []:
+                if not isinstance(dep, dict):
+                    continue
+                dep_name = dep.get("name")
+                if isinstance(dep_name, str) and dep_name.strip():
+                    assert dep_name.split()[-1] == primary_last
 
     def test_dependent_count_matches(self):
         spec = _make_household_spec(size=50)
@@ -457,7 +477,7 @@ class TestCorrelatedDemographics:
         for _ in range(total):
             primary_country = rng.choice(countries)
             partner_country = correlate_partner_attribute(
-                "country", "categorical", primary_country, None, rng, config, countries
+                "country", "categorical", primary_country, rng, config, countries
             )
             if partner_country == primary_country:
                 same_country += 1

@@ -2,23 +2,19 @@
 
 This document walks through Extropy's capabilities by example. Each section describes a type of scenario you can run today, with the underlying mechanics that make it work.
 
----
-
 ## Any Country, Any Culture
 
 Extropy isn't locked to US demographics. You can simulate populations anywhere.
 
 **US population responding to a Netflix price hike**: Out of the box. Names come from bundled SSA baby name data (1940-2010 birth decades) and Census surname data by ethnicity. A 45-year-old Black woman born in 1980 gets a name that reflects naming trends for Black girls in that era. Her white husband gets an appropriately correlated name. Their kids get names consistent with 2010s trends.
 
-**Japanese employees reacting to a remote work policy**: Works. You provide a `NameConfig` with Japanese naming conventions (or let the LLM research it), and Extropy generates culturally appropriate names. The simulation mechanics are identical - the agents reason in first-person, form opinions, share with their network.
+**Japanese employees reacting to a remote work policy**: Works. Extropy uses Faker-first locale routing with geography hints and CSV fallback for culturally plausible names. The simulation mechanics are identical - the agents reason in first-person, form opinions, share with their network.
 
 **Indian consumers across Mumbai, Delhi, and Bangalore responding to a fintech launch**: Works. Define city as an attribute with your desired distribution. Agents get sampled across cities, connected via network edges that respect geography, and exposed to marketing through channels you define.
 
 **Brazilian families deciding whether to migrate for work**: Works. Household sampling gives you family units with correlated attributes. Partners share socioeconomic status, have age gaps that reflect real patterns, and kids are generated as dependents with appropriate ages.
 
 The pattern: define your population's attributes and distributions, optionally provide country-specific name data, and run the pipeline. The simulation engine doesn't care about geography - it cares about attributes, networks, and reasoning.
-
----
 
 ## Individuals or Households
 
@@ -28,7 +24,7 @@ You control whether agents exist as isolated individuals or as family units.
 
 **Households deciding whether to adopt rooftop solar**: Set `household_mode: true`. Now you get family units. A married couple shares a `household_id` and `last_name`. They have correlated attributes - similar education levels, aligned political views (with configurable assortative mating rates), compatible religious backgrounds.
 
-The `agent_focus` field in your population spec controls who reasons vs. who exists as context:
+The scenario-level `agent_focus_mode` field controls who reasons vs. who exists as context:
 
 **Primary only (default)**: Only the primary adult in each household is a reasoning agent. Partners and children exist as NPC data attached to that agent - named, with attributes, but not making decisions. Use this when you care about one decision-maker per household (e.g., "the subscriber", "the homeowner").
 
@@ -36,9 +32,10 @@ The `agent_focus` field in your population spec controls who reasons vs. who exi
 
 **All (families)**: Everyone in the household is a reasoning agent, including children old enough to have opinions. Use this when family dynamics matter (e.g., teens influencing parents on tech adoption, multi-generational disagreements).
 
-The mechanism: set `agent_focus` in your population spec metadata. Values like "families", "households", or "everyone" trigger the "all" mode. Values like "couples", "partners", or "spouses" trigger couples mode. Everything else defaults to primary-only.
+The mechanism: scenario generation sets `agent_focus_mode` to one of `primary_only`, `couples`, or `all`, and sample uses that value directly.
 
 **Household types are sampled by age bracket**:
+
 - Singles (one adult, no kids)
 - Couples (two adults, no kids)
 - Single parents (one adult with kids)
@@ -78,11 +75,13 @@ Some scenarios are a single shock. Others unfold over time.
 **Static: Netflix announces a price increase**: One event, one moment. Netflix raises prices by $3/month. Agents hear about it through news, social media, or email. They form opinions - cancel, keep, or downgrade. They share with their network. Over a few timesteps, information propagates, opinions stabilize, and you see the final distribution. The event itself doesn't change; what evolves is awareness and social influence.
 
 This is the right model when:
+
 - The event is a discrete announcement or decision
 - What matters is how the population responds and influences each other
 - There's no new information after the initial shock
 
 **Evolving: Netflix password crackdown unfolds over months**:
+
 - Month 1: Netflix announces upcoming password-sharing restrictions
 - Month 2: Enforcement begins in select markets
 - Month 3: Full rollout, first reports of account lockouts
@@ -92,11 +91,13 @@ This is the right model when:
 Each timestep, agents see what's happened so far. Their prompts include a recap: "Over the past few months, Netflix first announced the crackdown, then started enforcing it. Last month they offered a cheaper add-on option." The timeline creates a narrative arc where agent reasoning evolves with new information.
 
 This is the right model when:
+
 - The situation develops with new facts over time
 - Agent responses to Week 1 should differ from Week 5
 - You want to model how opinions shift as circumstances change
 
 **Evolving: A crisis that develops and resolves**:
+
 - Day 1: Initial reports of data breach, uncertainty about scope
 - Day 2: Company confirms breach, announces investigation
 - Day 3: Details emerge - 10 million accounts affected
@@ -111,6 +112,7 @@ Agents experience the crisis as it unfolds. Early timesteps have high uncertaint
 **Timeline-safe stopping**: In evolving scenarios, convergence/quiescence auto-stop is suppressed while future timeline events remain (unless explicitly overridden). This prevents runs from ending before later events fire.
 
 **Per-event re-reasoning intensity**: Timeline events can carry `re_reasoning_intensity`:
+
 - `normal`: direct timeline recipients force re-reasoning.
 - `high`: direct plus traced network propagation from that epoch can force re-reasoning.
 - `extreme`: high behavior plus one-time force for all aware agents when the event lands.
@@ -136,6 +138,7 @@ People hear about things through different channels, and the channel matters.
 **Observation lets agents notice behavior**: Agents can witness what others do, not just hear what they say. When a neighbor buys an electric car, agents on that network edge might get exposed through observation. This models the "seeing is believing" dynamic.
 
 Each channel has:
+
 - Reach probability (what fraction of eligible agents get exposed)
 - Targeting rules (which agents are eligible)
 - Experience template (how the agent encounters the information)
@@ -157,6 +160,7 @@ You decide what you're measuring.
 **Open-ended responses**: "What are your main concerns?" Free text. The agent reasons naturally without being forced into categories. These skip the classification pass entirely - the reasoning itself is the outcome.
 
 You can mix outcome types. A scenario might have:
+
 - A categorical position (support/oppose/neutral)
 - A boolean share intention
 - A continuous intensity score
@@ -171,6 +175,7 @@ All get captured in the same simulation run.
 You control the tradeoff between cost and reasoning quality.
 
 **Two-pass (default)**:
+
 1. Pass 1 asks the agent to reason freely in first-person. No outcome categories in sight. Just "You're this person, this happened, how do you feel?"
 2. Pass 2 takes that reasoning and classifies it into your defined outcomes using a faster, cheaper model.
 
@@ -180,11 +185,13 @@ This separation prevents the central tendency problem where agents gravitate to 
 Single call with both reasoning and outcomes in one schema. Cheaper - one API call instead of two. Faster - no round-trip between passes. But the agent sees the outcome categories while reasoning, which can bias responses toward the middle.
 
 Use merged pass for:
+
 - Cost-sensitive runs with many agents
 - Quick exploratory simulations
 - Scenarios where you trust the model to reason past the schema
 
 Use two-pass for:
+
 - Final production runs where quality matters
 - Scenarios with polarizing topics where central tendency is a real risk
 - Research where reasoning traces need to be unbiased
@@ -244,6 +251,7 @@ Agents can talk to each other. When reasoning, an agent can choose to initiate a
 **Conflict resolution**: When multiple agents want to talk to the same target, priority determines who wins. Higher relationship weight wins - a partner request beats a coworker request. Deferred requests can execute in later timesteps.
 
 **Fidelity control**: The `--fidelity` flag controls conversation depth and prompt richness:
+
 - `low`: No conversations, last 5 memory traces, basic prompts
 - `medium` (default): 2 turns (4 messages), 1 conversation per agent, full memory traces
 - `high`: 3 turns (6 messages), up to 2 conversations per agent, explicit THINK vs SAY separation, repetition detection

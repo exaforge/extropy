@@ -5,7 +5,6 @@ Functions under test in extropy/population/names/generator.py.
 
 from extropy.population.names import generate_name
 from extropy.population.names.generator import age_to_birth_decade
-from extropy.core.models.population import NameConfig, NameEntry
 
 
 class TestGenerateName:
@@ -27,34 +26,28 @@ class TestGenerateName:
         assert isinstance(first, str)
 
     def test_hispanic_surname(self):
-        """Hispanic ethnicity produces a Hispanic surname."""
-        # Run several seeds — at least one should be recognizably Hispanic
-        surnames = set()
+        """Hispanic routing should differ from default white routing."""
+        hispanic_surnames = set()
+        white_surnames = set()
         for s in range(20):
             _, last = generate_name(ethnicity="hispanic", seed=s)
-            surnames.add(last)
-        hispanic_names = {
-            "Garcia",
-            "Rodriguez",
-            "Martinez",
-            "Hernandez",
-            "Lopez",
-            "Gonzalez",
-            "Perez",
-            "Sanchez",
-            "Ramirez",
-            "Torres",
-        }
-        assert surnames & hispanic_names, f"Expected Hispanic surnames, got {surnames}"
+            hispanic_surnames.add(last)
+            _, white_last = generate_name(ethnicity="white", seed=s)
+            white_surnames.add(white_last)
+        assert len(hispanic_surnames) > 1
+        assert hispanic_surnames != white_surnames
 
     def test_asian_surname(self):
-        """Asian ethnicity produces an Asian surname."""
-        surnames = set()
+        """Asian routing should differ from default white routing."""
+        asian_surnames = set()
+        white_surnames = set()
         for s in range(20):
             _, last = generate_name(ethnicity="asian", seed=s)
-            surnames.add(last)
-        asian_names = {"Kim", "Lee", "Park", "Nguyen", "Chen", "Wang", "Patel", "Singh"}
-        assert surnames & asian_names, f"Expected Asian surnames, got {surnames}"
+            asian_surnames.add(last)
+            _, white_last = generate_name(ethnicity="white", seed=s)
+            white_surnames.add(white_last)
+        assert len(asian_surnames) > 1
+        assert asian_surnames != white_surnames
 
     def test_black_surname(self):
         """Black ethnicity produces surnames from the black distribution."""
@@ -129,84 +122,25 @@ class TestGenerateName:
             first, last = generate_name(ethnicity=alias, seed=0)
             assert isinstance(first, str)
 
+    def test_country_aliases_resolve_consistently(self):
+        """Country aliases/codes should resolve to the same locale pool."""
+        by_name = generate_name(gender="male", country="India", seed=17)
+        by_alpha2 = generate_name(gender="male", country="IN", seed=17)
+        by_alpha3 = generate_name(gender="male", country="IND", seed=17)
+        assert by_name == by_alpha2 == by_alpha3
 
-class TestNameConfig:
-    """Test generate_name() with NameConfig-based generation."""
+    def test_region_aliases_resolve_consistently(self):
+        """Region spelling variants should normalize to a common region scope."""
+        full = generate_name(gender="female", country="Southeast Asia", seed=31)
+        short = generate_name(gender="female", country="SE Asia", seed=31)
+        spaced = generate_name(gender="female", country="South East Asia", seed=31)
+        assert full == short == spaced
 
-    def _make_config(self) -> NameConfig:
-        return NameConfig(
-            male_first_names=[
-                NameEntry(name="Haruto", weight=5.0),
-                NameEntry(name="Ren", weight=3.0),
-                NameEntry(name="Sota", weight=2.0),
-            ],
-            female_first_names=[
-                NameEntry(name="Yui", weight=5.0),
-                NameEntry(name="Hana", weight=3.0),
-                NameEntry(name="Aoi", weight=2.0),
-            ],
-            last_names=[
-                NameEntry(name="Tanaka", weight=5.0),
-                NameEntry(name="Suzuki", weight=4.0),
-                NameEntry(name="Sato", weight=3.0),
-            ],
-        )
-
-    def test_config_male_draws_from_config(self):
-        config = self._make_config()
-        names = set()
-        for s in range(20):
-            first, last = generate_name(gender="male", seed=s, name_config=config)
-            names.add(first)
-        expected = {"Haruto", "Ren", "Sota"}
-        assert names.issubset(expected), f"Got unexpected names: {names - expected}"
-        assert len(names) > 1
-
-    def test_config_female_draws_from_config(self):
-        config = self._make_config()
-        names = set()
-        for s in range(20):
-            first, last = generate_name(gender="female", seed=s, name_config=config)
-            names.add(first)
-        expected = {"Yui", "Hana", "Aoi"}
-        assert names.issubset(expected), f"Got unexpected names: {names - expected}"
-        assert len(names) > 1
-
-    def test_config_last_names_from_config(self):
-        config = self._make_config()
-        surnames = set()
-        for s in range(20):
-            _, last = generate_name(seed=s, name_config=config)
-            surnames.add(last)
-        expected = {"Tanaka", "Suzuki", "Sato"}
-        assert surnames.issubset(expected), (
-            f"Got unexpected surnames: {surnames - expected}"
-        )
-        assert len(surnames) > 1
-
-    def test_config_seeded_reproducibility(self):
-        config = self._make_config()
-        a1, b1 = generate_name(gender="male", seed=42, name_config=config)
-        a2, b2 = generate_name(gender="male", seed=42, name_config=config)
-        assert a1 == a2
-        assert b1 == b2
-
-    def test_empty_config_falls_back_to_csv(self):
-        """NameConfig with empty lists falls back to CSV names."""
-        empty_config = NameConfig()
-        first, last = generate_name(gender="male", seed=42, name_config=empty_config)
-        # Should still produce valid names from CSV fallback
-        assert isinstance(first, str) and len(first) > 0
-        assert isinstance(last, str) and len(last) > 0
-
-    def test_none_config_uses_csv(self):
-        """name_config=None is identical to no-config behavior."""
-        first1, last1 = generate_name(gender="female", ethnicity="white", seed=99)
-        first2, last2 = generate_name(
-            gender="female", ethnicity="white", seed=99, name_config=None
-        )
-        assert first1 == first2
-        assert last1 == last2
+    def test_us_city_hint_resolves_to_us_scope(self):
+        """Subnational US hints (city + state) should route to US locale scope."""
+        us_name = generate_name(gender="male", country="US", seed=9)
+        city_name = generate_name(gender="male", country="Austin, TX", seed=9)
+        assert city_name == us_name
 
 
 class TestAgeToBirthDecade:

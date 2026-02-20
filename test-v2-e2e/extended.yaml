@@ -80,7 +80,6 @@ meta:
       label: high_school
     adult_stage_label: adult
     avg_household_size: 3.2
-  name_config: null
 grounding:
   overall: medium
   sources_count: 308
