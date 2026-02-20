@@ -316,6 +316,187 @@ population_stats:
         assert "missing options" in result.output.lower()
 
 
+class TestSampleValidationGates:
+    """Tests for promoted-warning gating in sample command."""
+
+    def _setup_study_with_condition_value_warning(self, tmp_path):
+        study_dir = tmp_path / "study"
+        scenario_dir = study_dir / "scenario" / "test"
+        scenario_dir.mkdir(parents=True)
+        study_db = study_dir / "study.db"
+        with open_study_db(study_db):
+            pass
+
+        pop_yaml = study_dir / "population.v1.yaml"
+        pop_yaml.write_text("""
+meta:
+  description: Test population
+  geography: USA
+  agent_focus: test agents
+
+grounding:
+  overall: low
+  sources_count: 0
+  strong_count: 0
+  medium_count: 0
+  low_count: 2
+
+attributes:
+  - name: region
+    type: categorical
+    category: universal
+    description: Region
+    sampling:
+      strategy: independent
+      distribution:
+        type: categorical
+        options: [Urban, Rural]
+        weights: [0.6, 0.4]
+    grounding:
+      level: low
+      method: estimated
+  - name: audience_segment
+    type: categorical
+    category: population_specific
+    description: Audience segment
+    sampling:
+      strategy: conditional
+      distribution:
+        type: categorical
+        options: [A, B]
+        weights: [0.5, 0.5]
+      depends_on: [region]
+      modifiers:
+        - when: "region == 'Suburban'"
+          weight_overrides:
+            A: 0.8
+            B: 0.2
+    grounding:
+      level: low
+      method: estimated
+
+sampling_order:
+  - region
+  - audience_segment
+""")
+
+        scenario_yaml = scenario_dir / "scenario.v1.yaml"
+        scenario_yaml.write_text("""
+meta:
+  name: test
+  description: Test scenario
+  base_population: population.v1
+  created_at: 2024-01-01T00:00:00
+
+event:
+  type: announcement
+  content: Test announcement
+  source: test_source
+  credibility: 0.8
+  ambiguity: 0.2
+  emotional_valence: 0.0
+
+seed_exposure:
+  channels: []
+  rules: []
+
+interaction:
+  primary_model: passive_observation
+  description: Test interaction
+
+spread:
+  share_probability: 0.3
+
+outcomes:
+  suggested_outcomes: []
+  capture_full_reasoning: true
+
+simulation:
+  max_timesteps: 10
+  timestep_unit: day
+""")
+
+        persona_yaml = scenario_dir / "persona.v1.yaml"
+        persona_yaml.write_text("""
+population_description: Test population
+created_at: "2024-01-01T00:00:00"
+intro_template: "I am in {region}."
+treatments:
+  - attribute: region
+    treatment: concrete
+    group: basics
+  - attribute: audience_segment
+    treatment: concrete
+    group: basics
+groups:
+  - name: basics
+    label: Basics
+    attributes:
+      - region
+      - audience_segment
+phrasings:
+  boolean: []
+  categorical:
+    - attribute: region
+      phrases:
+        Urban: I live in an urban area.
+        Rural: I live in a rural area.
+      null_options: []
+      null_phrase: null
+      fallback: null
+    - attribute: audience_segment
+      phrases:
+        A: I am in segment A.
+        B: I am in segment B.
+      null_options: []
+      null_phrase: null
+      fallback: null
+  relative: []
+  concrete: []
+population_stats:
+  stats: {}
+""")
+
+        return study_dir
+
+    def test_sample_fails_on_promoted_warnings_by_default(self, tmp_path):
+        study_dir = self._setup_study_with_condition_value_warning(tmp_path)
+
+        old_cwd = os.getcwd()
+        try:
+            os.chdir(study_dir)
+            result = runner.invoke(app, ["sample", "-s", "test", "-n", "30", "--seed", "42"])
+        finally:
+            os.chdir(old_cwd)
+
+        assert result.exit_code != 0
+        assert "promoted warning" in result.output.lower()
+
+    def test_sample_skip_validation_allows_promoted_warnings(self, tmp_path):
+        study_dir = self._setup_study_with_condition_value_warning(tmp_path)
+
+        old_cwd = os.getcwd()
+        try:
+            os.chdir(study_dir)
+            result = runner.invoke(
+                app,
+                [
+                    "sample",
+                    "-s",
+                    "test",
+                    "-n",
+                    "30",
+                    "--seed",
+                    "42",
+                    "--skip-validation",
+                ],
+            )
+        finally:
+            os.chdir(old_cwd)
+
+        assert result.exit_code == 0
+
+
 class TestVersionFlag:
     """Test the --version flag."""
 

@@ -1315,3 +1315,78 @@ class TestModifierConditionErrorHandling:
         result = sample_population(spec, count=20, seed=42, strict_condition_errors=False)
         assert len(result.agents) == 20
         assert len(result.stats.condition_warnings) > 0
+
+
+class TestExpressionConstraintEnforcement:
+    """Strict/permissive handling for expression constraints."""
+
+    def _make_constraint_violation_spec(self) -> PopulationSpec:
+        return PopulationSpec(
+            meta=SpecMeta(description="constraint enforcement test", size=20),
+            grounding=GroundingSummary(
+                overall="low",
+                sources_count=0,
+                strong_count=0,
+                medium_count=0,
+                low_count=2,
+            ),
+            attributes=[
+                AttributeSpec(
+                    name="age",
+                    type="int",
+                    category="universal",
+                    description="Age",
+                    sampling=SamplingConfig(
+                        strategy="independent",
+                        distribution=NormalDistribution(
+                            type="normal",
+                            mean=24,
+                            std=2,
+                            min=18,
+                            max=30,
+                        ),
+                    ),
+                    grounding=GroundingInfo(level="low", method="estimated"),
+                ),
+                AttributeSpec(
+                    name="children_count",
+                    type="int",
+                    category="universal",
+                    description="Children count",
+                    sampling=SamplingConfig(
+                        strategy="independent",
+                        distribution=NormalDistribution(
+                            type="normal",
+                            mean=3,
+                            std=1,
+                            min=0,
+                            max=6,
+                        ),
+                    ),
+                    constraints=[
+                        Constraint(
+                            type="expression",
+                            expression="value <= max(0, age - 30)",
+                        )
+                    ],
+                    grounding=GroundingInfo(level="low", method="estimated"),
+                ),
+            ],
+            sampling_order=["age", "children_count"],
+        )
+
+    def test_enforced_constraints_raise_sampling_error(self):
+        spec = self._make_constraint_violation_spec()
+        with pytest.raises(SamplingError):
+            sample_population(spec, count=30, seed=123, enforce_expression_constraints=True)
+
+    def test_non_enforced_constraints_record_violations(self):
+        spec = self._make_constraint_violation_spec()
+        result = sample_population(
+            spec,
+            count=30,
+            seed=123,
+            enforce_expression_constraints=False,
+        )
+        assert len(result.agents) == 30
+        assert result.stats.constraint_violations

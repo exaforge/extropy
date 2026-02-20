@@ -184,6 +184,7 @@ def sample_population(
     household_config: HouseholdConfig | None = None,
     agent_focus_mode: Literal["primary_only", "couples", "all"] | None = None,
     strict_condition_errors: bool = False,
+    enforce_expression_constraints: bool = False,
 ) -> SamplingResult:
     """
     Generate agents from a PopulationSpec.
@@ -200,6 +201,8 @@ def sample_population(
         household_config: Household composition config (required if spec has household attributes)
         strict_condition_errors: If True, modifier condition evaluation failures
             raise SamplingError; if False, failures are recorded as warnings.
+        enforce_expression_constraints: If True, fail sampling when expression
+            constraints are violated by any sampled agent.
 
     Returns:
         SamplingResult with agents list, metadata, and statistics
@@ -284,7 +287,19 @@ def sample_population(
     _finalize_stats(stats, numeric_values, len(agents))
 
     # Check expression constraints
-    _check_expression_constraints(spec, agents, stats)
+    total_constraint_violations = _check_expression_constraints(spec, agents, stats)
+    if enforce_expression_constraints and total_constraint_violations > 0:
+        top = sorted(
+            stats.constraint_violations.items(),
+            key=lambda kv: kv[1],
+            reverse=True,
+        )[:3]
+        details = "; ".join([f"{k} ({v})" for k, v in top])
+        raise SamplingError(
+            "Expression constraint violations detected: "
+            f"{total_constraint_violations} total violation(s). "
+            f"Top constraints: {details}"
+        )
 
     # Build metadata
     meta: dict[str, Any] = {
@@ -1219,7 +1234,7 @@ def _check_expression_constraints(
     spec: PopulationSpec,
     agents: list[dict[str, Any]],
     stats: SamplingStats,
-) -> None:
+) -> int:
     """Check expression constraints and count violations.
 
     Only checks constraints with type='expression' (agent-level constraints).
@@ -1227,6 +1242,8 @@ def _check_expression_constraints(
     (e.g., sum(weights)==1) and are NOT evaluated against individual agents.
     """
     from ...utils.eval_safe import eval_condition
+
+    total_violations = 0
 
     for attr in spec.attributes:
         for constraint in attr.constraints:
@@ -1250,6 +1267,9 @@ def _check_expression_constraints(
                 if violation_count > 0:
                     key = f"{attr.name}: {constraint.expression}"
                     stats.constraint_violations[key] = violation_count
+                    total_violations += violation_count
+
+    return total_violations
 
 
 def save_json(result: SamplingResult, path: Path | str) -> None:

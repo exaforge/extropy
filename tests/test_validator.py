@@ -836,7 +836,11 @@ class TestModifierOverlapWarnings:
         spec = make_spec([region, audience], ["region", "audience_segment"])
         result = validate_spec(spec)
 
-        overlap_warnings = [w for w in result.warnings if w.category == "MODIFIER_OVERLAP"]
+        overlap_warnings = [
+            w
+            for w in result.warnings
+            if w.category == "MODIFIER_OVERLAP_EXCLUSIVE"
+        ]
         assert overlap_warnings
         assert "exclusive" in overlap_warnings[0].message
 

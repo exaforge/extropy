@@ -396,6 +396,7 @@ def _check_modifier_overlap(attr: AttributeSpec) -> list[ValidationIssue]:
                     "Make the conditions mutually exclusive, or set "
                     "modifier_overlap_policy: ordered_override if precedence is intended"
                 )
+                category = "MODIFIER_OVERLAP_EXCLUSIVE"
             else:
                 message = (
                     f"modifiers[{i}] and modifiers[{j}] may overlap; categorical/boolean "
@@ -405,11 +406,12 @@ def _check_modifier_overlap(attr: AttributeSpec) -> list[ValidationIssue]:
                     "Set sampling.modifier_overlap_policy to 'ordered_override' "
                     "if intentional, otherwise make conditions mutually exclusive"
                 )
+                category = "MODIFIER_OVERLAP"
 
             issues.append(
                 ValidationIssue(
                     severity=Severity.WARNING,
-                    category="MODIFIER_OVERLAP",
+                    category=category,
                     location=attr.name,
                     message=message,
                     suggestion=suggestion,
