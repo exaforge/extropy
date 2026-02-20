@@ -647,7 +647,9 @@ class TestHouseholdReconciliation:
                 members[0],
             )
             dependents = primary.get("dependents", [])
-            expected_size = len(members) + (len(dependents) if isinstance(dependents, list) else 0)
+            expected_size = len(members) + (
+                len(dependents) if isinstance(dependents, list) else 0
+            )
             for member in members:
                 assert member.get("household_size") == expected_size
 
@@ -669,7 +671,10 @@ class TestHouseholdReconciliation:
             if isinstance(dependents, list):
                 for dep in dependents:
                     relationship = str(dep.get("relationship", "")).lower()
-                    if any(token in relationship for token in ("son", "daughter", "child", "kid")):
+                    if any(
+                        token in relationship
+                        for token in ("son", "daughter", "child", "kid")
+                    ):
                         child_count += 1
             expected = child_count > 0
             for member in members:

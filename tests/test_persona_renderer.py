@@ -8,7 +8,10 @@ from extropy.population.persona.config import (
     ConcretePhrasing,
     PersonaConfig,
 )
-from extropy.population.persona.renderer import _format_categorical_value, render_persona
+from extropy.population.persona.renderer import (
+    _format_categorical_value,
+    render_persona,
+)
 
 
 def test_categorical_null_option_prefers_null_phrase():
@@ -75,7 +78,9 @@ def _make_contextual_test_config() -> PersonaConfig:
             AttributeTreatment(
                 attribute="employment_status", treatment="concrete", group="work"
             ),
-            AttributeTreatment(attribute="occupation", treatment="concrete", group="identity"),
+            AttributeTreatment(
+                attribute="occupation", treatment="concrete", group="identity"
+            ),
         ],
         groups=[
             AttributeGroup(

@@ -801,7 +801,11 @@ def _resolve_marital_attribute(
 
             for token in partnered_priority:
                 matched = next(
-                    (raw for raw, norm in zip(options, normalized, strict=False) if token in norm),
+                    (
+                        raw
+                        for raw, norm in zip(options, normalized, strict=False)
+                        if token in norm
+                    ),
                     None,
                 )
                 if matched:
@@ -812,7 +816,11 @@ def _resolve_marital_attribute(
 
             for token in unpartnered_priority:
                 matched = next(
-                    (raw for raw, norm in zip(options, normalized, strict=False) if token in norm),
+                    (
+                        raw
+                        for raw, norm in zip(options, normalized, strict=False)
+                        if token in norm
+                    ),
                     None,
                 )
                 if matched:
@@ -884,14 +892,18 @@ def _reconcile_household_attributes(
             )
         )
 
-        child_dependents = _count_child_dependents(npc_dependents) + promoted_child_agents
+        child_dependents = (
+            _count_child_dependents(npc_dependents) + promoted_child_agents
+        )
         actual_size = len(members) + len(npc_dependents)
 
         for member in members:
             is_dependent_agent = str(member.get("household_role", "")).startswith(
                 "dependent_"
             )
-            has_partner = bool(member.get("partner_id")) or bool(member.get("partner_npc"))
+            has_partner = bool(member.get("partner_id")) or bool(
+                member.get("partner_npc")
+            )
 
             if household_size_attr and household_size_attr in attr_map:
                 size_attr = attr_map[household_size_attr]
@@ -901,7 +913,9 @@ def _reconcile_household_attributes(
                     member[household_size_attr] = int(actual_size)
 
             if has_children_attr:
-                member[has_children_attr] = False if is_dependent_agent else child_dependents > 0
+                member[has_children_attr] = (
+                    False if is_dependent_agent else child_dependents > 0
+                )
 
             if children_count_attr and children_count_attr in attr_map:
                 count_attr = attr_map[children_count_attr]

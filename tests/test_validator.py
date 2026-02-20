@@ -762,7 +762,9 @@ class TestModifierOverlapWarnings:
             ),
             depends_on=["region"],
             modifiers=[
-                Modifier(when="region == 'Urban'", weight_overrides={"A": 0.8, "B": 0.2}),
+                Modifier(
+                    when="region == 'Urban'", weight_overrides={"A": 0.8, "B": 0.2}
+                ),
                 Modifier(
                     when="region in ['Urban', 'Suburban']",
                     weight_overrides={"A": 0.3, "B": 0.7},
@@ -795,7 +797,9 @@ class TestModifierOverlapWarnings:
             depends_on=["region"],
             modifier_overlap_policy="ordered_override",
             modifiers=[
-                Modifier(when="region == 'Urban'", weight_overrides={"A": 0.8, "B": 0.2}),
+                Modifier(
+                    when="region == 'Urban'", weight_overrides={"A": 0.8, "B": 0.2}
+                ),
                 Modifier(
                     when="region in ['Urban', 'Suburban']",
                     weight_overrides={"A": 0.3, "B": 0.7},
@@ -828,8 +832,13 @@ class TestModifierOverlapWarnings:
             depends_on=["region"],
             modifier_overlap_policy="exclusive",
             modifiers=[
-                Modifier(when="region == 'Urban'", weight_overrides={"A": 0.8, "B": 0.2}),
-                Modifier(when="region in ['Urban', 'Suburban']", weight_overrides={"A": 0.3, "B": 0.7}),
+                Modifier(
+                    when="region == 'Urban'", weight_overrides={"A": 0.8, "B": 0.2}
+                ),
+                Modifier(
+                    when="region in ['Urban', 'Suburban']",
+                    weight_overrides={"A": 0.3, "B": 0.7},
+                ),
             ],
         )
 
@@ -837,9 +846,7 @@ class TestModifierOverlapWarnings:
         result = validate_spec(spec)
 
         overlap_warnings = [
-            w
-            for w in result.warnings
-            if w.category == "MODIFIER_OVERLAP_EXCLUSIVE"
+            w for w in result.warnings if w.category == "MODIFIER_OVERLAP_EXCLUSIVE"
         ]
         assert overlap_warnings
         assert "exclusive" in overlap_warnings[0].message

@@ -465,7 +465,9 @@ population_stats:
         old_cwd = os.getcwd()
         try:
             os.chdir(study_dir)
-            result = runner.invoke(app, ["sample", "-s", "test", "-n", "30", "--seed", "42"])
+            result = runner.invoke(
+                app, ["sample", "-s", "test", "-n", "30", "--seed", "42"]
+            )
         finally:
             os.chdir(old_cwd)
 

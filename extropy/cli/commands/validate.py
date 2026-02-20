@@ -64,7 +64,14 @@ def _detect_spec_type(path: Path) -> str:
         keys = set(data.keys())
         if {"intro_template", "treatments", "groups", "phrasings"}.issubset(keys):
             return "persona"
-        if {"event", "seed_exposure", "interaction", "spread", "outcomes", "simulation"}.issubset(keys):
+        if {
+            "event",
+            "seed_exposure",
+            "interaction",
+            "spread",
+            "outcomes",
+            "simulation",
+        }.issubset(keys):
             return "scenario"
 
     return "population"
@@ -147,7 +154,9 @@ def _resolve_population_from_scenario(
     elif scenario_spec.meta.population_spec:
         from ...utils import resolve_relative_to
 
-        pop_path = resolve_relative_to(scenario_spec.meta.population_spec, scenario_path)
+        pop_path = resolve_relative_to(
+            scenario_spec.meta.population_spec, scenario_path
+        )
     else:
         return None, "Scenario does not define base_population or population_spec"
 
@@ -238,7 +247,9 @@ def _validate_persona_config(spec_file: Path, out: Output) -> int:
     # Structural checks.
     group_names: list[str] = [g.name for g in config.groups]
     group_name_set = set(group_names)
-    duplicate_group_names = sorted({name for name in group_names if group_names.count(name) > 1})
+    duplicate_group_names = sorted(
+        {name for name in group_names if group_names.count(name) > 1}
+    )
     for name in duplicate_group_names:
         errors.append(f"Duplicate group name: {name}")
 
@@ -405,7 +416,10 @@ def _validate_persona_config(spec_file: Path, out: Output) -> int:
                 errors.append(
                     f"Boolean attribute {attr_name} must use boolean phrasing (found {phrasing_kind})"
                 )
-            if attr_type == "categorical" and phrasing_kind not in {None, "categorical"}:
+            if attr_type == "categorical" and phrasing_kind not in {
+                None,
+                "categorical",
+            }:
                 errors.append(
                     f"Categorical attribute {attr_name} must use categorical phrasing (found {phrasing_kind})"
                 )

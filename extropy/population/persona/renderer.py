@@ -594,7 +594,9 @@ def render_persona(
     employment_attrs = []
     if semantic_type_map:
         employment_attrs = [
-            name for name, semantic in semantic_type_map.items() if semantic == "employment"
+            name
+            for name, semantic in semantic_type_map.items()
+            if semantic == "employment"
         ]
     not_currently_working = any(
         _is_non_working_status(agent.get(attr_name)) for attr_name in employment_attrs
