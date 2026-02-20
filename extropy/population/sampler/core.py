@@ -264,6 +264,10 @@ def sample_population(
         )
         households = []
 
+    # Rebuild value-distribution stats from finalized agents. This keeps stats
+    # accurate when post-sampling reconciliation mutates sampled values.
+    numeric_values = _rebuild_stats_from_agents(spec, agents, stats)
+
     # Compute final statistics
     _finalize_stats(stats, numeric_values, len(agents))
 
@@ -625,7 +629,238 @@ def _sample_population_households(
                 a["partner_id"] = None
         agents = agents[:target_n]
 
+    _reconcile_household_attributes(agents, households, attr_map)
+
     return agents, households
+
+
+def _resolve_household_size_attribute(attr_map: dict[str, AttributeSpec]) -> str | None:
+    """Identify the attribute representing total household membership size."""
+    if "household_size" in attr_map:
+        return "household_size"
+
+    for attr_name, attr in attr_map.items():
+        if attr.type not in ("int", "float"):
+            continue
+        if attr.scope != "household":
+            continue
+        lowered = attr_name.lower()
+        if "household" in lowered and ("size" in lowered or "count" in lowered):
+            return attr_name
+    return None
+
+
+def _resolve_has_children_attribute(attr_map: dict[str, AttributeSpec]) -> str | None:
+    """Identify a boolean parenthood indicator attribute (e.g., has_children)."""
+    if "has_children" in attr_map and attr_map["has_children"].type == "boolean":
+        return "has_children"
+
+    for attr_name, attr in attr_map.items():
+        if attr.type != "boolean":
+            continue
+        if attr.identity_type == "parental_status":
+            return attr_name
+        lowered = attr_name.lower()
+        if "child" in lowered or "kid" in lowered:
+            return attr_name
+    return None
+
+
+def _resolve_children_count_attribute(attr_map: dict[str, AttributeSpec]) -> str | None:
+    """Identify an integer child-count attribute when present."""
+    for attr_name, attr in attr_map.items():
+        if attr.type not in ("int", "float"):
+            continue
+        lowered = attr_name.lower()
+        if (
+            ("child" in lowered or "kid" in lowered)
+            and ("count" in lowered or "num" in lowered)
+        ) or "dependent_count" in lowered:
+            return attr_name
+    return None
+
+
+def _resolve_marital_attribute(
+    attr_map: dict[str, AttributeSpec],
+) -> tuple[str | None, str | None, str | None, set[str]]:
+    """Identify marital-status attribute and representative option values.
+
+    Returns:
+        (attr_name, partnered_value, unpartnered_value, partnered_values_set)
+    """
+    candidate_attr: str | None = None
+    partnered_value: str | None = None
+    unpartnered_value: str | None = None
+    partnered_values: set[str] = set()
+
+    partnered_priority = [
+        "married",
+        "domestic partner",
+        "partnered",
+        "civil union",
+        "cohab",
+    ]
+    unpartnered_priority = [
+        "single",
+        "never married",
+        "divorc",
+        "widow",
+        "separat",
+        "unmarried",
+    ]
+
+    for attr_name, attr in attr_map.items():
+        if attr.type != "categorical":
+            continue
+        dist = attr.sampling.distribution
+        if not dist or not hasattr(dist, "options") or not dist.options:
+            continue
+
+        options = [str(o) for o in dist.options]
+        normalized = [o.lower().replace("_", " ").replace("-", " ") for o in options]
+
+        local_partnered: list[str] = []
+        local_unpartnered: list[str] = []
+        for raw, norm in zip(options, normalized, strict=False):
+            if any(token in norm for token in partnered_priority):
+                local_partnered.append(raw)
+            if any(token in norm for token in unpartnered_priority):
+                local_unpartnered.append(raw)
+
+        if local_partnered and local_unpartnered:
+            candidate_attr = attr_name
+            partnered_values = set(local_partnered)
+
+            for token in partnered_priority:
+                matched = next(
+                    (raw for raw, norm in zip(options, normalized, strict=False) if token in norm),
+                    None,
+                )
+                if matched:
+                    partnered_value = matched
+                    break
+            if partnered_value is None:
+                partnered_value = local_partnered[0]
+
+            for token in unpartnered_priority:
+                matched = next(
+                    (raw for raw, norm in zip(options, normalized, strict=False) if token in norm),
+                    None,
+                )
+                if matched:
+                    unpartnered_value = matched
+                    break
+            if unpartnered_value is None:
+                unpartnered_value = local_unpartnered[0]
+            break
+
+    return candidate_attr, partnered_value, unpartnered_value, partnered_values
+
+
+def _count_child_dependents(dependents: list[dict[str, Any]]) -> int:
+    """Count child dependents from dependent records."""
+    child_count = 0
+    for dep in dependents:
+        relationship = str(dep.get("relationship", "")).lower()
+        if any(
+            token in relationship
+            for token in ("son", "daughter", "child", "kid", "stepchild")
+        ):
+            child_count += 1
+    return child_count
+
+
+def _reconcile_household_attributes(
+    agents: list[dict[str, Any]],
+    households: list[dict[str, Any]],
+    attr_map: dict[str, AttributeSpec],
+) -> None:
+    """Reconcile household-derived attributes after partner/dependent assignment."""
+    if not agents:
+        return
+
+    household_size_attr = _resolve_household_size_attribute(attr_map)
+    has_children_attr = _resolve_has_children_attribute(attr_map)
+    children_count_attr = _resolve_children_count_attribute(attr_map)
+    marital_attr, partnered_value, unpartnered_value, partnered_values = (
+        _resolve_marital_attribute(attr_map)
+    )
+
+    members_by_household: dict[str, list[dict[str, Any]]] = {}
+    for agent in agents:
+        hh_id = agent.get("household_id")
+        if not hh_id:
+            continue
+        members_by_household.setdefault(str(hh_id), []).append(agent)
+
+    household_record_by_id = {
+        str(hh.get("id")): hh for hh in households if isinstance(hh, dict)
+    }
+
+    for hh_id, members in members_by_household.items():
+        primary = next(
+            (m for m in members if m.get("household_role") == "adult_primary"),
+            members[0],
+        )
+        npc_dependents = primary.get("dependents")
+        if not isinstance(npc_dependents, list):
+            npc_dependents = []
+
+        promoted_child_agents = sum(
+            1
+            for m in members
+            if str(m.get("household_role", "")).startswith("dependent_")
+            and any(
+                token in str(m.get("relationship_to_primary", "")).lower()
+                for token in ("son", "daughter", "child", "kid")
+            )
+        )
+
+        child_dependents = _count_child_dependents(npc_dependents) + promoted_child_agents
+        actual_size = len(members) + len(npc_dependents)
+
+        for member in members:
+            is_dependent_agent = str(member.get("household_role", "")).startswith(
+                "dependent_"
+            )
+            has_partner = bool(member.get("partner_id")) or bool(member.get("partner_npc"))
+
+            if household_size_attr and household_size_attr in attr_map:
+                size_attr = attr_map[household_size_attr]
+                if size_attr.type == "float":
+                    member[household_size_attr] = float(actual_size)
+                else:
+                    member[household_size_attr] = int(actual_size)
+
+            if has_children_attr:
+                member[has_children_attr] = False if is_dependent_agent else child_dependents > 0
+
+            if children_count_attr and children_count_attr in attr_map:
+                count_attr = attr_map[children_count_attr]
+                value = 0 if is_dependent_agent else child_dependents
+                if count_attr.type == "float":
+                    member[children_count_attr] = float(value)
+                else:
+                    member[children_count_attr] = int(value)
+
+            if marital_attr and partnered_value:
+                if is_dependent_agent and unpartnered_value:
+                    member[marital_attr] = unpartnered_value
+                elif has_partner and member.get(marital_attr) not in partnered_values:
+                    member[marital_attr] = partnered_value
+
+        hh_record = household_record_by_id.get(hh_id)
+        if not hh_record:
+            continue
+        shared = hh_record.get("shared_attributes")
+        if not isinstance(shared, dict):
+            continue
+        if household_size_attr and household_size_attr in shared:
+            shared[household_size_attr] = int(actual_size)
+        if has_children_attr and has_children_attr in shared:
+            shared[has_children_attr] = child_dependents > 0
+        if children_count_attr and children_count_attr in shared:
+            shared[children_count_attr] = int(child_dependents)
 
 
 def _sample_partner_agent(
@@ -847,6 +1082,46 @@ def _update_stats(
     elif attr.type == "boolean":
         bool_value = bool(value)
         stats.boolean_counts[attr.name][bool_value] += 1
+
+
+def _rebuild_stats_from_agents(
+    spec: PopulationSpec,
+    agents: list[dict[str, Any]],
+    stats: SamplingStats,
+) -> dict[str, list[float]]:
+    """Rebuild distribution stats from finalized agent records."""
+    numeric_values: dict[str, list[float]] = {}
+
+    for attr in spec.attributes:
+        if attr.type in ("int", "float"):
+            stats.attribute_means[attr.name] = 0.0
+            stats.attribute_stds[attr.name] = 0.0
+            numeric_values[attr.name] = []
+        elif attr.type == "categorical":
+            stats.categorical_counts[attr.name] = {}
+        elif attr.type == "boolean":
+            stats.boolean_counts[attr.name] = {True: 0, False: 0}
+
+    for agent in agents:
+        for attr in spec.attributes:
+            if attr.name not in agent:
+                continue
+
+            value = agent[attr.name]
+            if attr.type in ("int", "float") and isinstance(value, (int, float)):
+                numeric_values[attr.name].append(float(value))
+            elif attr.type == "categorical":
+                str_value = str(value)
+                stats.categorical_counts[attr.name][str_value] = (
+                    stats.categorical_counts[attr.name].get(str_value, 0) + 1
+                )
+            elif attr.type == "boolean":
+                bool_value = bool(value)
+                stats.boolean_counts[attr.name][bool_value] = (
+                    stats.boolean_counts[attr.name].get(bool_value, 0) + 1
+                )
+
+    return numeric_values
 
 
 def _finalize_stats(
