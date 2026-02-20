@@ -14,6 +14,7 @@ import random
 import sqlite3
 from datetime import datetime
 from pathlib import Path
+import re
 from typing import Any, Literal
 
 from ...core.models import (
@@ -22,7 +23,8 @@ from ...core.models import (
     SamplingStats,
     SamplingResult,
     HouseholdConfig,
-    NameConfig,
+    SamplingSemanticRoles,
+    MaritalRoles,
 )
 from ...utils.callbacks import ItemProgressCallback
 from .distributions import sample_distribution, coerce_to_type
@@ -176,6 +178,120 @@ def _has_household_attributes(spec: PopulationSpec) -> bool:
     return any(attr.scope == "household" for attr in spec.attributes)
 
 
+_GENERIC_CITIZENSHIP_VALUES = {
+    "citizen",
+    "citizenship",
+    "noncitizen",
+    "non_citizen",
+    "non citizen",
+    "resident",
+    "permanent_resident",
+    "permanent resident",
+    "immigrant",
+    "non_immigrant",
+    "non immigrant",
+    "unknown",
+    "na",
+    "n_a",
+    "n/a",
+}
+
+
+def _extract_country_from_citizenship(value: str) -> str | None:
+    """Extract country-like token from citizenship-style values.
+
+    Examples:
+    - "US citizen" -> "US"
+    - "citizen of India" -> "India"
+    - "non_citizen" -> None
+    """
+    text = value.strip()
+    if not text:
+        return None
+
+    normalized = _normalize_attr_token(text)
+    if normalized in _GENERIC_CITIZENSHIP_VALUES:
+        return None
+
+    cleaned = text
+    for pattern in (
+        r"\bcitizenship\b",
+        r"\bcitizen\b",
+        r"\bnationality\b",
+        r"\bnational\b",
+        r"\bpermanent resident\b",
+        r"\bresident\b",
+        r"\bpassport\b",
+        r"\bholder\b",
+        r"\bof\b",
+    ):
+        cleaned = re.sub(pattern, " ", cleaned, flags=re.IGNORECASE)
+    cleaned = re.sub(r"\s+", " ", cleaned).strip(" ,;/")
+    if not cleaned:
+        return None
+
+    cleaned_norm = _normalize_attr_token(cleaned)
+    if cleaned_norm in _GENERIC_CITIZENSHIP_VALUES:
+        return None
+
+    return cleaned
+
+
+def _resolve_country_hint(
+    agent: dict[str, Any],
+    default_geography: str | None = None,
+    semantic_roles: SamplingSemanticRoles | None = None,
+) -> str:
+    """Resolve geography hint for name generation.
+
+    Precedence:
+    1. Explicit country-like agent fields
+    2. Spec-level geography (pipeline scope anchor)
+    3. Broader region/location fields
+    4. US fallback
+    """
+    geo_roles = semantic_roles.geo_roles if semantic_roles else None
+
+    prioritized_keys: list[str] = []
+    if geo_roles and geo_roles.country_attr:
+        prioritized_keys.append(geo_roles.country_attr)
+    prioritized_keys.extend(("country", "country_code", "nationality"))
+
+    for key in prioritized_keys:
+        value = agent.get(key)
+        if value is None:
+            continue
+        text = str(value).strip()
+        if text:
+            return text
+
+    citizenship_value = agent.get("citizenship")
+    if citizenship_value is not None:
+        parsed_country = _extract_country_from_citizenship(str(citizenship_value))
+        if parsed_country:
+            return parsed_country
+
+    if default_geography:
+        text = str(default_geography).strip()
+        if text:
+            return text
+
+    region_keys: list[str] = []
+    if geo_roles and geo_roles.region_attr:
+        region_keys.append(geo_roles.region_attr)
+    region_keys.extend(("region", "geography", "location"))
+
+    for key in region_keys:
+        value = agent.get(key)
+        if value is None:
+            continue
+        text = str(value).strip()
+        if text:
+            return text
+
+    return "US"
+
+
 def sample_population(
     spec: PopulationSpec,
     count: int,
@@ -183,6 +299,7 @@ def sample_population(
     on_progress: ItemProgressCallback | None = None,
     household_config: HouseholdConfig | None = None,
     agent_focus_mode: Literal["primary_only", "couples", "all"] | None = None,
+    semantic_roles: SamplingSemanticRoles | None = None,
 ) -> SamplingResult:
     """
     Generate agents from a PopulationSpec.
@@ -257,15 +374,27 @@ def sample_population(
             on_progress,
             hh_config,
             agent_focus_mode=agent_focus_mode,
+            semantic_roles=semantic_roles,
+        )
+        _reconcile_household_coherence(
+            agents, attr_map, stats, semantic_roles=semantic_roles
         )
     else:
         agents = _sample_population_independent(
-            spec, attr_map, rng, n, id_width, stats, numeric_values, on_progress
+            spec,
+            attr_map,
+            rng,
+            n,
+            id_width,
+            stats,
+            numeric_values,
+            on_progress,
+            semantic_roles=semantic_roles,
         )
         households = []
 
-    # Compute final statistics
-    _finalize_stats(stats, numeric_values, len(agents))
+    # Recompute descriptive stats from finalized agent payloads
+    _recompute_descriptive_stats(spec, agents, stats)
 
     # Check expression constraints
     _check_expression_constraints(spec, agents, stats)
@@ -303,12 +432,20 @@ def _sample_population_independent(
     stats: SamplingStats,
     numeric_values: dict[str, list[float]],
     on_progress: ItemProgressCallback | None = None,
+    semantic_roles: SamplingSemanticRoles | None = None,
 ) -> list[dict[str, Any]]:
     """Sample N agents independently (legacy path)."""
     agents: list[dict[str, Any]] = []
     for i in range(n):
         agent = _sample_single_agent(
-            spec, attr_map, rng, i, id_width, stats, numeric_values
+            spec,
+            attr_map,
+            rng,
+            i,
+            id_width,
+            stats,
+            numeric_values,
+            semantic_roles=semantic_roles,
         )
         agents.append(agent)
         if on_progress:
@@ -322,7 +459,8 @@ def _generate_npc_partner(
     categorical_options: dict[str, list[str]],
     rng: random.Random,
     config: HouseholdConfig,
-    name_config: NameConfig | None = None,
+    geography_hint: str | None = None,
+    semantic_roles: SamplingSemanticRoles | None = None,
 ) -> dict[str, Any]:
     """Generate a lightweight NPC partner profile for context.
 
@@ -340,9 +478,11 @@ def _generate_npc_partner(
             "age",
             "int",
             primary["age"],
-            None,  # Uses gaussian offset
             rng,
             config,
+            semantic_type=getattr(attr_map.get("age"), "semantic_type", "age"),
+            identity_type=getattr(attr_map.get("age"), "identity_type", None),
+            policy_override=_resolve_partner_policy_override("age", semantic_roles),
         )
 
     # Process attributes based on their scope
@@ -359,10 +499,14 @@ def _generate_npc_partner(
                 attr_name,
                 attr.type,
                 primary[attr_name],
-                attr.correlation_rate,
                 rng,
                 config,
                 available_options=categorical_options.get(attr_name),
+                semantic_type=attr.semantic_type,
+                identity_type=attr.identity_type,
+                policy_override=_resolve_partner_policy_override(
+                    attr_name, semantic_roles
+                ),
             )
         # Individual scope: skip for NPC (not enough data to sample fully)
 
@@ -376,8 +520,12 @@ def _generate_npc_partner(
         gender=partner["gender"],
         ethnicity=str(ethnicity) if ethnicity else None,
         birth_decade=birth_decade,
+        country=_resolve_country_hint(
+            primary,
+            geography_hint,
+            semantic_roles=semantic_roles,
+        ),
         seed=rng.randint(0, 2**31),
-        name_config=name_config,
     )
     partner["first_name"] = first_name
 
@@ -399,6 +547,7 @@ def _sample_dependent_as_agent(
     dependent: Any,
     parent: dict[str, Any],
     household_id: str,
+    semantic_roles: SamplingSemanticRoles | None = None,
 ) -> dict[str, Any]:
     """Promote a dependent to a full agent with all attributes sampled.
 
@@ -406,7 +555,14 @@ def _sample_dependent_as_agent(
     then samples remaining attributes normally.
     """
     agent = _sample_single_agent(
-        spec, attr_map, rng, index, id_width, stats, numeric_values
+        spec,
+        attr_map,
+        rng,
+        index,
+        id_width,
+        stats,
+        numeric_values,
+        semantic_roles=semantic_roles,
     )
 
     # Override with dependent's known attributes
@@ -417,7 +573,7 @@ def _sample_dependent_as_agent(
     agent["relationship_to_primary"] = dependent.relationship
     dep_name = str(getattr(dependent, "name", "")).strip()
     if dep_name:
-        agent["first_name"] = dep_name
+        agent["first_name"] = dep_name.split()[0]
     if parent.get("last_name"):
         agent["last_name"] = parent["last_name"]
 
@@ -443,6 +599,7 @@ def _sample_population_households(
     on_progress: ItemProgressCallback | None = None,
     config: HouseholdConfig | None = None,
     agent_focus_mode: Literal["primary_only", "couples", "all"] | None = None,
+    semantic_roles: SamplingSemanticRoles | None = None,
 ) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
     """Sample agents in household units with correlated demographics.
 
@@ -480,7 +637,14 @@ def _sample_population_households(
 
         # Sample Adult 1 (primary) — always an agent
         adult1 = _sample_single_agent(
-            spec, attr_map, rng, agent_index, id_width, stats, numeric_values
+            spec,
+            attr_map,
+            rng,
+            agent_index,
+            id_width,
+            stats,
+            numeric_values,
+            semantic_roles=semantic_roles,
         )
         adult1_age = adult1.get("age", 35)
         agent_index += 1
@@ -523,6 +687,7 @@ def _sample_population_households(
                     household_attrs,
                     categorical_options,
                     config,
+                    semantic_roles=semantic_roles,
                 )
                 adult2["household_id"] = household_id
                 adult2["household_role"] = "adult_secondary"
@@ -541,7 +706,8 @@ def _sample_population_households(
                     categorical_options,
                     rng,
                     config,
-                    name_config=spec.meta.name_config,
+                    geography_hint=spec.meta.geography,
+                    semantic_roles=semantic_roles,
                 )
                 adult1["partner_npc"] = npc_partner
                 adult1["partner_id"] = None
@@ -557,7 +723,12 @@ def _sample_population_households(
             rng,
             config,
             ethnicity=adult1.get("race_ethnicity"),
-            name_config=spec.meta.name_config,
+            country=_resolve_country_hint(
+                adult1,
+                spec.meta.geography,
+                semantic_roles=semantic_roles,
+            ),
+            household_last_name=adult1.get("last_name"),
         )
 
         if has_kids and focus_mode == "all":
@@ -579,6 +750,7 @@ def _sample_population_households(
                     dep,
                     adult1,
                     household_id,
+                    semantic_roles=semantic_roles,
                 )
                 agents.append(kid_agent)
                 adult_ids.append(kid_agent["_id"])
@@ -640,6 +812,7 @@ def _sample_partner_agent(
     household_attrs: set[str],
     categorical_options: dict[str, list[str]],
     config: HouseholdConfig | None = None,
+    semantic_roles: SamplingSemanticRoles | None = None,
 ) -> dict[str, Any]:
     """Sample a partner agent with correlated demographics.
 
@@ -666,10 +839,14 @@ def _sample_partner_agent(
                 attr_name,
                 attr.type,
                 primary[attr_name],
-                attr.correlation_rate,
                 rng,
                 config,
                 available_options=categorical_options.get(attr_name),
+                semantic_type=attr.semantic_type,
+                identity_type=attr.identity_type,
+                policy_override=_resolve_partner_policy_override(
+                    attr_name, semantic_roles
+                ),
             )
         else:
             # Individual scope: sample independently
@@ -696,8 +873,12 @@ def _sample_partner_agent(
         gender=str(gender) if gender is not None else None,
         ethnicity=str(ethnicity) if ethnicity is not None else None,
         birth_decade=birth_decade,
+        country=_resolve_country_hint(
+            agent,
+            spec.meta.geography,
+            semantic_roles=semantic_roles,
+        ),
         seed=index,
-        name_config=spec.meta.name_config,
     )
     agent["first_name"] = first_name
 
@@ -712,6 +893,7 @@ def _sample_single_agent(
     id_width: int,
     stats: SamplingStats,
     numeric_values: dict[str, list[float]],
+    semantic_roles: SamplingSemanticRoles | None = None,
 ) -> dict[str, Any]:
     """Sample a single agent following the sampling order."""
     agent: dict[str, Any] = {"_id": f"agent_{index:0{id_width}d}"}
@@ -741,7 +923,6 @@ def _sample_single_agent(
         _update_stats(attr, value, stats, numeric_values)
 
     # Generate demographically-plausible name
-    name_config = spec.meta.name_config
     gender = agent.get("gender") or agent.get("sex")
     ethnicity = (
         agent.get("race_ethnicity") or agent.get("ethnicity") or agent.get("race")
@@ -752,8 +933,12 @@ def _sample_single_agent(
         gender=str(gender) if gender is not None else None,
         ethnicity=str(ethnicity) if ethnicity is not None else None,
         birth_decade=birth_decade,
+        country=_resolve_country_hint(
+            agent,
+            spec.meta.geography,
+            semantic_roles=semantic_roles,
+        ),
         seed=index,
-        name_config=name_config,
     )
     agent["first_name"] = first_name
     agent["last_name"] = last_name
@@ -795,7 +980,7 @@ def _sample_attribute(
             # No modifiers, sample directly
             return sample_distribution(attr.sampling.distribution, rng, agent)
 
-        value, triggered = apply_modifiers_and_sample(
+        value, triggered, condition_warnings = apply_modifiers_and_sample(
             attr.sampling.distribution,
             attr.sampling.modifiers,
             rng,
@@ -806,6 +991,13 @@ def _sample_attribute(
         if attr.name in stats.modifier_triggers:
             for idx in triggered:
                 stats.modifier_triggers[attr.name][idx] += 1
+        for warning in condition_warnings:
+            if len(stats.condition_warnings) < 100:
+                stats.condition_warnings.append(f"{attr.name}: {warning}")
+            elif len(stats.condition_warnings) == 100:
+                stats.condition_warnings.append(
+                    "... additional condition warnings truncated"
+                )
 
         return value
 
@@ -865,6 +1057,271 @@ def _finalize_stats(
             stats.attribute_stds[name] = variance**0.5
         else:
             stats.attribute_stds[name] = 0.0
+
+
+def _recompute_descriptive_stats(
+    spec: PopulationSpec,
+    agents: list[dict[str, Any]],
+    stats: SamplingStats,
+) -> None:
+    """Recompute descriptive stats from finalized agents."""
+    stats.attribute_means = {}
+    stats.attribute_stds = {}
+    stats.categorical_counts = {}
+    stats.boolean_counts = {}
+
+    numeric_values: dict[str, list[float]] = {}
+    for attr in spec.attributes:
+        if attr.type in ("int", "float"):
+            numeric_values[attr.name] = []
+        elif attr.type == "categorical":
+            stats.categorical_counts[attr.name] = {}
+        elif attr.type == "boolean":
+            stats.boolean_counts[attr.name] = {True: 0, False: 0}
+
+    for agent in agents:
+        for attr in spec.attributes:
+            if attr.name not in agent:
+                continue
+            value = agent[attr.name]
+            if attr.type in ("int", "float") and isinstance(value, (int, float)):
+                numeric_values[attr.name].append(float(value))
+            elif attr.type == "categorical":
+                key = str(value)
+                stats.categorical_counts[attr.name][key] = (
+                    stats.categorical_counts[attr.name].get(key, 0) + 1
+                )
+            elif attr.type == "boolean":
+                key = bool(value)
+                stats.boolean_counts[attr.name][key] = (
+                    stats.boolean_counts[attr.name].get(key, 0) + 1
+                )
+
+    _finalize_stats(stats, numeric_values, len(agents))
+
+
+def _normalize_attr_token(name: str) -> str:
+    """Normalize attribute tokens for tolerant matching."""
+    token = name.strip().lower()
+    token = re.sub(r"[\s\-]+", "_", token)
+    token = re.sub(r"[^a-z0-9_]", "", token)
+    token = re.sub(r"_+", "_", token).strip("_")
+    return token
+
+
+def _find_attr_name(
+    attr_map: dict[str, AttributeSpec],
+    aliases: set[str],
+) -> str | None:
+    """Find an attribute by normalized alias set."""
+    normalized_aliases = {_normalize_attr_token(a) for a in aliases}
+    for name in attr_map:
+        if _normalize_attr_token(name) in normalized_aliases:
+            return name
+    return None
+
+
+def _resolve_partner_policy_override(
+    attr_name: str,
+    semantic_roles: SamplingSemanticRoles | None,
+) -> str | None:
+    """Resolve scenario-owned partner-correlation policy override."""
+    if semantic_roles is None:
+        return None
+    override = semantic_roles.partner_correlation_roles.get(attr_name)
+    return str(override) if override else None
+
+
+def _pick_marital_value(
+    attr: AttributeSpec,
+    has_partner: bool,
+    marital_roles: MaritalRoles | None = None,
+) -> Any | None:
+    """Pick a coherent marital value based on realized partner status."""
+    if attr.type == "boolean":
+        return has_partner
+
+    if (
+        attr.type != "categorical"
+        or attr.sampling.distribution is None
+        or not hasattr(attr.sampling.distribution, "options")
+    ):
+        return None
+
+    options = list(getattr(attr.sampling.distribution, "options", []) or [])
+    if not options:
+        return None
+
+    if marital_roles and marital_roles.attr:
+        if _normalize_attr_token(attr.name) == _normalize_attr_token(
+            marital_roles.attr
+        ):
+            preferred = (
+                marital_roles.partnered_values
+                if has_partner
+                else marital_roles.single_values
+            )
+            for value in preferred:
+                if value in options:
+                    return value
+
+    normalized = {opt: _normalize_attr_token(opt) for opt in options}
+    partnered_tokens = (
+        "married",
+        "partner",
+        "cohabit",
+        "relationship",
+        "civil_union",
+    )
+    single_tokens = ("single", "unmarried", "not_married", "divorced", "widowed")
+
+    token_set = partnered_tokens if has_partner else single_tokens
+    for opt, norm in normalized.items():
+        if any(token in norm for token in token_set):
+            return opt
+    return options[0]
+
+
+def _extract_surname_from_name(name: Any) -> str | None:
+    """Extract surname token from a full-name-like value."""
+    if not isinstance(name, str):
+        return None
+    parts = [p for p in name.strip().split() if p]
+    if len(parts) < 2:
+        return None
+    return parts[-1]
+
+
+def _household_surname_seed(
+    primary: dict[str, Any], members: list[dict[str, Any]]
+) -> str | None:
+    """Choose canonical household surname from available household context."""
+    for candidate in (primary.get("last_name"),):
+        if isinstance(candidate, str) and candidate.strip():
+            return candidate.strip()
+
+    for member in members:
+        candidate = member.get("last_name")
+        if isinstance(candidate, str) and candidate.strip():
+            return candidate.strip()
+
+    partner_npc = primary.get("partner_npc")
+    if isinstance(partner_npc, dict):
+        candidate = partner_npc.get("last_name")
+        if isinstance(candidate, str) and candidate.strip():
+            return candidate.strip()
+
+    dependents = primary.get("dependents")
+    if isinstance(dependents, list):
+        for dep in dependents:
+            if not isinstance(dep, dict):
+                continue
+            candidate = _extract_surname_from_name(dep.get("name"))
+            if candidate:
+                return candidate
+
+    return None
+
+
+def _reconcile_household_coherence(
+    agents: list[dict[str, Any]],
+    attr_map: dict[str, AttributeSpec],
+    stats: SamplingStats,
+    semantic_roles: SamplingSemanticRoles | None = None,
+) -> None:
+    """Deterministically reconcile household coherence after realization."""
+    by_household: dict[str, list[dict[str, Any]]] = {}
+    for agent in agents:
+        hid = agent.get("household_id")
+        if not isinstance(hid, str) or not hid:
+            continue
+        by_household.setdefault(hid, []).append(agent)
+
+    if not by_household:
+        return
+
+    marital_attr = _find_attr_name(
+        attr_map,
+        {"marital_status", "marital", "relationship_status"},
+    )
+    household_size_attr = _find_attr_name(attr_map, {"household_size"})
+
+    marital_updates = 0
+    household_size_updates = 0
+    surname_updates = 0
+
+    for members in by_household.values():
+        primary = next(
+            (m for m in members if m.get("household_role") == "adult_primary"),
+            members[0],
+        )
+        dependents = primary.get("dependents", [])
+        npc_partner_count = 1 if primary.get("partner_npc") else 0
+        npc_dependents_count = len(dependents) if isinstance(dependents, list) else 0
+        realized_size = len(members) + npc_partner_count + npc_dependents_count
+        household_surname = _household_surname_seed(primary, members)
+
+        if household_size_attr:
+            for member in members:
+                current = member.get(household_size_attr)
+                if current != realized_size:
+                    member[household_size_attr] = realized_size
+                    household_size_updates += 1
+
+        if household_surname:
+            for member in members:
+                if member.get("last_name") != household_surname:
+                    member["last_name"] = household_surname
+                    surname_updates += 1
+
+            partner_npc = primary.get("partner_npc")
+            if isinstance(partner_npc, dict):
+                if partner_npc.get("last_name") != household_surname:
+                    partner_npc["last_name"] = household_surname
+                    surname_updates += 1
+
+            # Dependents are represented as NPC dicts with `name`.
+            # Normalize them to the household surname for consistency.
+            if isinstance(dependents, list):
+                for dep in dependents:
+                    if not isinstance(dep, dict):
+                        continue
+                    dep_name = dep.get("name")
+                    if isinstance(dep_name, str) and dep_name.strip():
+                        first = dep_name.strip().split()[0]
+                        corrected = f"{first} {household_surname}"
+                        if dep_name != corrected:
+                            dep["name"] = corrected
+                            surname_updates += 1
+
+        if marital_attr:
+            marital_spec = attr_map[marital_attr]
+            for member in members:
+                has_partner = bool(
+                    member.get("partner_id") or member.get("partner_npc")
+                )
+                desired = _pick_marital_value(
+                    marital_spec,
+                    has_partner,
+                    marital_roles=(
+                        semantic_roles.marital_roles if semantic_roles else None
+                    ),
+                )
+                if desired is None:
+                    continue
+                if member.get(marital_attr) != desired:
+                    member[marital_attr] = desired
+                    marital_updates += 1
+
+    reconciliation: dict[str, int] = {}
+    if marital_updates:
+        reconciliation["marital_status_updates"] = marital_updates
+    if household_size_updates:
+        reconciliation["household_size_updates"] = household_size_updates
+    if surname_updates:
+        reconciliation["household_surname_updates"] = surname_updates
+    if reconciliation:
+        stats.reconciliation_counts.update(reconciliation)
 
 
 def _check_expression_constraints(
