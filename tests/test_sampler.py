@@ -1244,3 +1244,195 @@ class TestQuickValidation:
         result = validate_conditional_base_response(data, ["score"])
         # Should NOT error - static max=100 satisfies the constraint
         assert not any("max_formula" in str(e.suggestion) for e in result.errors)
+
+    def test_quick_validate_categorical_bad_weights_are_reported_not_crashed(self):
+        """Mixed invalid weight types should produce validation errors, not runtime crashes."""
+        from extropy.population.validator import validate_independent_response
+
+        data = {
+            "attributes": [
+                {
+                    "name": "media_source",
+                    "distribution": {
+                        "type": "categorical",
+                        "options": ["tv", "social"],
+                        "weights": [0.5, "bad-value"],
+                    },
+                    "constraints": [],
+                },
+            ],
+        }
+
+        result = validate_independent_response(data, ["media_source"])
+        assert not result.valid
+        assert any(
+            e.location == "media_source.distribution.weights[1]" for e in result.errors
+        )
+
+    def test_quick_validate_modifier_bad_weight_overrides_are_reported(self):
+        """Invalid weight_overrides values should be flagged as validation errors."""
+        from extropy.population.validator import validate_modifier_data
+
+        errors = validate_modifier_data(
+            modifier_data={
+                "when": "region == 'Urban'",
+                "weight_overrides": {"A": 0.6, "B": "bad-value"},
+            },
+            attr_name="political_affiliation",
+            modifier_index=0,
+            dist_type="categorical",
+        )
+        assert any(
+            e.location == "political_affiliation.modifiers[0].weight_overrides.B"
+            for e in errors
+        )
+
+
+class TestModifierConditionErrorHandling:
+    """Runtime behavior for modifier condition evaluation failures."""
+
+    def _make_spec_with_bad_modifier_condition(self) -> PopulationSpec:
+        return PopulationSpec(
+            meta=SpecMeta(description="bad condition test", size=10),
+            grounding=GroundingSummary(
+                overall="low",
+                sources_count=0,
+                strong_count=0,
+                medium_count=0,
+                low_count=2,
+            ),
+            attributes=[
+                AttributeSpec(
+                    name="age",
+                    type="int",
+                    category="universal",
+                    description="Age",
+                    sampling=SamplingConfig(
+                        strategy="independent",
+                        distribution=NormalDistribution(
+                            type="normal",
+                            mean=40,
+                            std=10,
+                            min=18,
+                            max=80,
+                        ),
+                    ),
+                    grounding=GroundingInfo(level="low", method="estimated"),
+                ),
+                AttributeSpec(
+                    name="salary",
+                    type="float",
+                    category="population_specific",
+                    description="Salary",
+                    sampling=SamplingConfig(
+                        strategy="conditional",
+                        distribution=NormalDistribution(
+                            type="normal",
+                            mean=70000,
+                            std=15000,
+                            min=0,
+                            max=300000,
+                        ),
+                        depends_on=["age"],
+                        modifiers=[
+                            Modifier(
+                                when="unknown_var > 0",
+                                multiply=1.1,
+                            )
+                        ],
+                    ),
+                    grounding=GroundingInfo(level="low", method="estimated"),
+                ),
+            ],
+            sampling_order=["age", "salary"],
+        )
+
+    def test_strict_condition_errors_raise_sampling_error(self):
+        spec = self._make_spec_with_bad_modifier_condition()
+        with pytest.raises(SamplingError):
+            sample_population(spec, count=20, seed=42, strict_condition_errors=True)
+
+    def test_permissive_condition_errors_record_warnings(self):
+        spec = self._make_spec_with_bad_modifier_condition()
+        result = sample_population(
+            spec, count=20, seed=42, strict_condition_errors=False
+        )
+        assert len(result.agents) == 20
+        assert len(result.stats.condition_warnings) > 0
+
+
+class TestExpressionConstraintEnforcement:
+    """Strict/permissive handling for expression constraints."""
+
+    def _make_constraint_violation_spec(self) -> PopulationSpec:
+        return PopulationSpec(
+            meta=SpecMeta(description="constraint enforcement test", size=20),
+            grounding=GroundingSummary(
+                overall="low",
+                sources_count=0,
+                strong_count=0,
+                medium_count=0,
+                low_count=2,
+            ),
+            attributes=[
+                AttributeSpec(
+                    name="age",
+                    type="int",
+                    category="universal",
+                    description="Age",
+                    sampling=SamplingConfig(
+                        strategy="independent",
+                        distribution=NormalDistribution(
+                            type="normal",
+                            mean=24,
+                            std=2,
+                            min=18,
+                            max=30,
+                        ),
+                    ),
+                    grounding=GroundingInfo(level="low", method="estimated"),
+                ),
+                AttributeSpec(
+                    name="children_count",
+                    type="int",
+                    category="universal",
+                    description="Children count",
+                    sampling=SamplingConfig(
+                        strategy="independent",
+                        distribution=NormalDistribution(
+                            type="normal",
+                            mean=3,
+                            std=1,
+                            min=0,
+                            max=6,
+                        ),
+                    ),
+                    constraints=[
+                        Constraint(
+                            type="expression",
+                            expression="value <= max(0, age - 30)",
+                        )
+                    ],
+                    grounding=GroundingInfo(level="low", method="estimated"),
+                ),
+            ],
+            sampling_order=["age", "children_count"],
+        )
+
+    def test_enforced_constraints_raise_sampling_error(self):
+        spec = self._make_constraint_violation_spec()
+        with pytest.raises(SamplingError):
+            sample_population(
+                spec, count=30, seed=123, enforce_expression_constraints=True
+            )
+
+    def test_non_enforced_constraints_record_violations(self):
+        spec = self._make_constraint_violation_spec()
+        result = sample_population(
+            spec,
+            count=30,
+            seed=123,
+            enforce_expression_constraints=False,
+        )
+        assert len(result.agents) == 30
+        assert result.stats.constraint_violations

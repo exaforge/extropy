@@ -193,6 +193,56 @@ def sample_command(
                 out.text("[dim]Use --skip-validation to sample anyway[/dim]")
             raise typer.Exit(out.finish())
     else:
+        promoted_warning_categories = {
+            "CONDITION_VALUE",
+            "MODIFIER_OVERLAP_EXCLUSIVE",
+            "PARTNER_POLICY",
+        }
+        promoted_warnings = [
+            w
+            for w in validation_result.warnings
+            if w.category in promoted_warning_categories
+        ]
+        if promoted_warnings:
+            out.set_data(
+                "promoted_warning_categories",
+                sorted(promoted_warning_categories),
+            )
+            out.set_data(
+                "promoted_warnings",
+                [
+                    {
+                        "location": w.location,
+                        "category": w.category,
+                        "message": w.message,
+                        "suggestion": w.suggestion,
+                    }
+                    for w in promoted_warnings
+                ],
+            )
+
+            if skip_validation:
+                out.warning(
+                    f"Spec has {len(promoted_warnings)} promoted warning(s) - skipping validation"
+                )
+            else:
+                out.error(
+                    f"Merged spec has {len(promoted_warnings)} promoted warning(s)",
+                    exit_code=ExitCode.VALIDATION_ERROR,
+                )
+                if not agent_mode:
+                    for warn in promoted_warnings[:5]:
+                        out.text(
+                            f"  [red]✗[/red] [{warn.category}] {warn.location}: {warn.message}"
+                        )
+                    if len(promoted_warnings) > 5:
+                        out.text(
+                            f"  [dim]... and {len(promoted_warnings) - 5} more[/dim]"
+                        )
+                    out.blank()
+                    out.text("[dim]Use --skip-validation to sample anyway[/dim]")
+                raise typer.Exit(out.finish())
+
         if validation_result.warnings:
             out.success(
                 f"Spec validated with {len(validation_result.warnings)} warning(s)"
@@ -205,6 +255,8 @@ def sample_command(
     sampling_start = time.time()
     result = None
     sampling_error = None
+    strict_condition_errors = not skip_validation
+    enforce_expression_constraints = not skip_validation
 
     show_progress = count >= 100 and not agent_mode
 
@@ -238,6 +290,8 @@ def sample_command(
                     on_progress=on_progress,
                     household_config=household_config,
                     agent_focus_mode=agent_focus_mode,
+                    strict_condition_errors=strict_condition_errors,
+                    enforce_expression_constraints=enforce_expression_constraints,
                 )
             except SamplingError as e:
                 sampling_error = e
@@ -251,6 +305,8 @@ def sample_command(
                         seed=seed,
                         household_config=household_config,
                         agent_focus_mode=agent_focus_mode,
+                        strict_condition_errors=strict_condition_errors,
+                        enforce_expression_constraints=enforce_expression_constraints,
                     )
                 except SamplingError as e:
                     sampling_error = e
@@ -262,6 +318,8 @@ def sample_command(
                     seed=seed,
                     household_config=household_config,
                     agent_focus_mode=agent_focus_mode,
+                    strict_condition_errors=strict_condition_errors,
+                    enforce_expression_constraints=enforce_expression_constraints,
                 )
             except SamplingError as e:
                 sampling_error = e
@@ -281,6 +339,18 @@ def sample_command(
         seed=result.meta["seed"],
         sampling_time_seconds=sampling_elapsed,
     )
+
+    if result.stats.condition_warnings:
+        warning_count = len(result.stats.condition_warnings)
+        out.warning(
+            f"{warning_count} modifier condition evaluation warning(s) encountered during sampling"
+        )
+        out.set_data("condition_warning_count", warning_count)
+        if report and not agent_mode:
+            for warning in result.stats.condition_warnings[:3]:
+                out.text(f"  [yellow]⚠[/yellow] {warning}")
+            if warning_count > 3:
+                out.text(f"  [dim]... and {warning_count - 3} more[/dim]")
 
     # Report
     if agent_mode or report:

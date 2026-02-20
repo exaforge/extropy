@@ -349,6 +349,14 @@ class SamplingConfig(BaseModel):
         default_factory=list,
         description="Conditional modifiers (for conditional strategy)",
     )
+    modifier_overlap_policy: Literal["exclusive", "ordered_override"] | None = Field(
+        default=None,
+        description=(
+            "Optional policy for overlapping conditional modifiers on categorical/"
+            "boolean attributes. exclusive=conditions should be mutually exclusive; "
+            "ordered_override=last-match precedence is intentional."
+        ),
+    )
 
 
 # =============================================================================
@@ -408,6 +416,16 @@ class AttributeSpec(BaseModel):
     correlation_rate: float | None = Field(
         default=None,
         description="For partner_correlated scope: probability (0-1) that partner has same value. None uses type-specific defaults (age uses gaussian, race uses per-group rates).",
+    )
+    partner_correlation_policy: Literal[
+        "gaussian_offset", "same_group_rate", "same_value_probability", None
+    ] = Field(
+        default=None,
+        description=(
+            "Optional explicit policy for scope=partner_correlated. "
+            "When unset, sampler resolves a policy from semantic_type/identity_type "
+            "with legacy-name fallback."
+        ),
     )
     semantic_type: Literal[
         "age", "income", "education", "employment", "occupation", None
@@ -706,6 +724,9 @@ class DiscoveredAttribute(BaseModel):
         default=None,
         description="For partner_correlated scope: probability (0-1) that partner has same value",
     )
+    partner_correlation_policy: Literal[
+        "gaussian_offset", "same_group_rate", "same_value_probability", None
+    ] = Field(default=None)
     semantic_type: Literal[
         "age", "income", "education", "employment", "occupation", None
     ] = Field(
@@ -766,6 +787,9 @@ class HydratedAttribute(BaseModel):
         default=None,
         description="For partner_correlated scope: probability (0-1) that partner has same value",
     )
+    partner_correlation_policy: Literal[
+        "gaussian_offset", "same_group_rate", "same_value_probability", None
+    ] = Field(default=None)
     semantic_type: Literal[
         "age", "income", "education", "employment", "occupation", None
     ] = Field(

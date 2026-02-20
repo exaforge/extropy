@@ -14,13 +14,24 @@ from __future__ import annotations
 
 import math
 import random
-from typing import Any, TYPE_CHECKING
+from typing import Any, TYPE_CHECKING, Literal
 
 from ...core.models.population import Dependent, HouseholdConfig, HouseholdType
 from ..names.generator import generate_name
 
 if TYPE_CHECKING:
     from ...core.models.population import NameConfig
+
+
+# Legacy name-based mapping for backward compatibility only.
+# New specs should drive partner-correlation behavior via metadata/policy.
+_LEGACY_POLICY_HINTS: dict[str, dict[str, str]] = {
+    "age": {"semantic_type": "age"},
+    "race_ethnicity": {"identity_type": "race_ethnicity"},
+    "race": {"identity_type": "race_ethnicity"},
+    "ethnicity": {"identity_type": "race_ethnicity"},
+    "country": {"identity_type": "citizenship"},
+}
 
 
 def _age_bracket(age: int, config: HouseholdConfig) -> str:
@@ -78,13 +89,20 @@ def correlate_partner_attribute(
     rng: random.Random,
     config: HouseholdConfig,
     available_options: list[str] | None = None,
+    semantic_type: str | None = None,
+    identity_type: str | None = None,
+    partner_correlation_policy: Literal[
+        "gaussian_offset", "same_group_rate", "same_value_probability"
+    ]
+    | None = None,
 ) -> Any:
     """Produce a correlated value for a partner based on the primary's value.
 
-    Uses the correlation_rate from the attribute spec. Special handling:
-    - age (int/float): Gaussian offset using config.partner_age_gap_mean/std
-    - race_ethnicity-like attrs: Per-group rates from config.same_group_rates
-    - Other categorical/boolean: Simple probability of same value
+    Policy resolution order:
+    1. Explicit `partner_correlation_policy` from attribute metadata
+    2. semantic_type / identity_type metadata
+    3. Legacy name-based compatibility mapping
+    4. Default same-value probability behavior
 
     Args:
         attr_name: Name of the attribute
@@ -95,11 +113,24 @@ def correlate_partner_attribute(
         config: HouseholdConfig with default rates
         available_options: For categorical attrs, list of valid options to sample from
 
+        semantic_type: Optional semantic type from AttributeSpec
+        identity_type: Optional identity type from AttributeSpec
+        partner_correlation_policy: Optional explicit policy from AttributeSpec
+
     Returns:
-        The correlated value for the partner.
+        Correlated value for the partner.
     """
-    # Age uses gaussian offset, not simple correlation
-    if attr_name == "age" and attr_type in ("int", "float"):
+    policy = _resolve_partner_policy(
+        attr_name=attr_name,
+        attr_type=attr_type,
+        correlation_rate=correlation_rate,
+        config=config,
+        semantic_type=semantic_type,
+        identity_type=identity_type,
+        partner_correlation_policy=partner_correlation_policy,
+    )
+
+    if policy == "gaussian_offset":
         partner_age = int(
             round(
                 rng.gauss(
@@ -110,8 +141,7 @@ def correlate_partner_attribute(
         )
         return max(config.min_adult_age, partner_age)
 
-    # Race/ethnicity uses per-group rates from config
-    if attr_name in ("race_ethnicity", "ethnicity", "race"):
+    if policy == "same_group_rate":
         same_rate = config.same_group_rates.get(
             str(primary_value).lower(), config.default_same_group_rate
         )
@@ -123,26 +153,11 @@ def correlate_partner_attribute(
                 return rng.choice(others)
         return primary_value
 
-    # Country uses same_country_rate from config if no explicit rate
-    if attr_name == "country":
-        rate = (
-            correlation_rate
-            if correlation_rate is not None
-            else config.same_country_rate
-        )
-        if rng.random() < rate:
-            return primary_value
-        if available_options:
-            others = [o for o in available_options if o != primary_value]
-            if others:
-                return rng.choice(others)
-        return primary_value
-
-    # For all other attributes, use the explicit correlation_rate or a default
-    rate = (
-        correlation_rate
-        if correlation_rate is not None
-        else config.default_same_group_rate
+    rate = _resolve_same_value_rate(
+        attr_name=attr_name,
+        correlation_rate=correlation_rate,
+        config=config,
+        identity_type=identity_type,
     )
     if rng.random() < rate:
         return primary_value
@@ -154,6 +169,73 @@ def correlate_partner_attribute(
             return rng.choice(others)
 
     return primary_value
+
+
+def _resolve_partner_policy(
+    attr_name: str,
+    attr_type: str,
+    correlation_rate: float | None,
+    config: HouseholdConfig,
+    semantic_type: str | None = None,
+    identity_type: str | None = None,
+    partner_correlation_policy: Literal[
+        "gaussian_offset", "same_group_rate", "same_value_probability"
+    ]
+    | None = None,
+) -> Literal["gaussian_offset", "same_group_rate", "same_value_probability"]:
+    """Resolve which partner-correlation algorithm to use."""
+    if partner_correlation_policy is not None:
+        return partner_correlation_policy
+
+    inferred_semantic = semantic_type
+    inferred_identity = identity_type
+
+    # Backward compatibility: infer missing metadata from legacy names.
+    if inferred_semantic is None and inferred_identity is None:
+        hints = _LEGACY_POLICY_HINTS.get(attr_name.lower())
+        if hints:
+            inferred_semantic = hints.get("semantic_type")
+            inferred_identity = hints.get("identity_type")
+
+    if inferred_semantic == "age" and attr_type in ("int", "float"):
+        return "gaussian_offset"
+
+    if inferred_identity == "race_ethnicity":
+        return "same_group_rate"
+
+    # Treat citizenship-like identity as same-country behavior.
+    if inferred_identity == "citizenship":
+        return "same_value_probability"
+
+    # Default fallback remains same-value probability.
+    _ = correlation_rate
+    _ = config
+    return "same_value_probability"
+
+
+def _resolve_same_value_rate(
+    attr_name: str,
+    correlation_rate: float | None,
+    config: HouseholdConfig,
+    identity_type: str | None = None,
+) -> float:
+    """Resolve same-value probability for partner correlation."""
+    if correlation_rate is not None:
+        return correlation_rate
+
+    inferred_identity = identity_type
+    if inferred_identity is None:
+        hints = _LEGACY_POLICY_HINTS.get(attr_name.lower())
+        if hints:
+            inferred_identity = hints.get("identity_type")
+
+    if inferred_identity == "citizenship":
+        return config.same_country_rate
+
+    if attr_name in config.assortative_mating:
+        return config.assortative_mating[attr_name]
+
+    return config.default_same_group_rate
 
 
 def generate_dependents(

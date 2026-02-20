@@ -279,6 +279,48 @@ def _ensure_period(phrase: str) -> str:
     return phrase
 
 
+def _is_non_working_status(value: Any) -> bool:
+    """Heuristic for employment statuses that imply no current job."""
+    if value is None:
+        return False
+    text = str(value).lower().replace("_", " ").replace("-", " ")
+    non_working_tokens = (
+        "unemployed",
+        "not employed",
+        "not in labor",
+        "retired",
+        "homemaker",
+        "stay at home",
+        "disabled",
+    )
+    return any(token in text for token in non_working_tokens)
+
+
+def _apply_contextual_phrase_overrides(
+    attr_name: str,
+    phrase: str,
+    *,
+    semantic_type_map: dict[str, str] | None = None,
+    not_currently_working: bool = False,
+) -> str:
+    """Adjust phrases using semantic context to avoid contradictions."""
+    if not phrase:
+        return phrase
+    if not semantic_type_map:
+        return phrase
+
+    semantic_type = semantic_type_map.get(attr_name)
+    if semantic_type == "occupation" and not_currently_working:
+        lowered = phrase.lower()
+        if lowered.startswith("i work in "):
+            return "My background is in " + phrase[10:]
+        if lowered.startswith("i work as "):
+            return "My background is as " + phrase[10:]
+        if lowered.startswith("i work "):
+            return "My work background is " + phrase[7:]
+    return phrase
+
+
 def render_intro(
     agent: dict[str, Any],
     config: PersonaConfig,
@@ -529,6 +571,7 @@ def render_persona(
     config: PersonaConfig,
     decision_relevant_attributes: list[str] | None = None,
     display_format_map: dict[str, str] | None = None,
+    semantic_type_map: dict[str, str] | None = None,
 ) -> str:
     """Render complete first-person persona for an agent.
 
@@ -540,11 +583,24 @@ def render_persona(
             "Most Relevant to This Decision" section.
         display_format_map: Optional mapping of attr_name -> display_format
             (from AttributeSpec.display_format, set by LLM during spec creation)
+        semantic_type_map: Optional mapping of attr_name -> semantic_type
+            (from AttributeSpec.semantic_type, set by LLM during spec creation)
 
     Returns:
         Complete persona as markdown string
     """
     sections = []
+
+    employment_attrs = []
+    if semantic_type_map:
+        employment_attrs = [
+            name
+            for name, semantic in semantic_type_map.items()
+            if semantic == "employment"
+        ]
+    not_currently_working = any(
+        _is_non_working_status(agent.get(attr_name)) for attr_name in employment_attrs
+    )
 
     # Render intro
     intro = render_intro(agent, config, display_format_map)
@@ -570,6 +626,12 @@ def render_persona(
         for attr_name in decision_relevant_attributes:
             value = agent.get(attr_name)
             phrase = render_attribute(attr_name, value, config)
+            phrase = _apply_contextual_phrase_overrides(
+                attr_name,
+                phrase,
+                semantic_type_map=semantic_type_map,
+                not_currently_working=not_currently_working,
+            )
             if phrase:
                 decision_phrases.append(_ensure_period(phrase))
         if decision_phrases:
@@ -591,13 +653,19 @@ def render_persona(
 
         # render_intro() already emits "## Who I Am" — skip duplicate
         if group_obj.label == "Who I Am":
-            lines = [""]
+            lines = ["## More About Me", ""]
         else:
             lines = [f"## {group_obj.label}", ""]
         phrases = []
         for attr_name in remaining_attrs:
             value = agent.get(attr_name)
             phrase = render_attribute(attr_name, value, config)
+            phrase = _apply_contextual_phrase_overrides(
+                attr_name,
+                phrase,
+                semantic_type_map=semantic_type_map,
+                not_currently_working=not_currently_working,
+            )
             if phrase:
                 phrases.append(_ensure_period(phrase))
 

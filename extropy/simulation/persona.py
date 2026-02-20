@@ -276,15 +276,25 @@ def generate_persona(
 
         # Build display_format_map from population_spec if available
         display_format_map = None
+        semantic_type_map = None
         if population_spec:
             display_format_map = {
                 attr.name: attr.display_format
                 for attr in population_spec.attributes
                 if attr.display_format
             }
+            semantic_type_map = {
+                attr.name: attr.semantic_type
+                for attr in population_spec.attributes
+                if attr.semantic_type
+            }
 
         return render_new_persona(
-            agent, persona_config, decision_relevant_attributes, display_format_map
+            agent,
+            persona_config,
+            decision_relevant_attributes,
+            display_format_map,
+            semantic_type_map,
         )
 
     # Legacy rendering below

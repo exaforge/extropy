@@ -344,4 +344,9 @@ def format_sampling_stats_for_json(stats, spec) -> dict[str, Any]:
     if stats.constraint_violations:
         result["constraint_violations"] = stats.constraint_violations
 
+    # Condition evaluation warnings (permissive mode)
+    if stats.condition_warnings:
+        result["condition_warning_count"] = len(stats.condition_warnings)
+        result["condition_warnings"] = stats.condition_warnings[:50]
+
     return result

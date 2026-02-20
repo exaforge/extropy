@@ -9,6 +9,7 @@ from extropy.core.models.population import (
     GroundingInfo,
     NormalDistribution,
     CategoricalDistribution,
+    BooleanDistribution,
     HouseholdType,
     HouseholdConfig,
     Dependent,
@@ -175,6 +176,101 @@ def _make_individual_spec(size: int = 50) -> PopulationSpec:
     )
 
 
+def _make_household_consistency_spec(size: int = 200) -> PopulationSpec:
+    """Spec with household-related attributes for reconciliation tests."""
+    return PopulationSpec(
+        meta=SpecMeta(description="Household consistency spec", size=size),
+        grounding=GroundingSummary(
+            overall="medium",
+            sources_count=1,
+            strong_count=2,
+            medium_count=2,
+            low_count=2,
+        ),
+        attributes=[
+            AttributeSpec(
+                name="age",
+                type="int",
+                category="universal",
+                description="Age",
+                scope="partner_correlated",
+                sampling=SamplingConfig(
+                    strategy="independent",
+                    distribution=NormalDistribution(
+                        type="normal", mean=38, std=12, min=18, max=85
+                    ),
+                ),
+                grounding=GroundingInfo(level="strong", method="researched"),
+            ),
+            AttributeSpec(
+                name="gender",
+                type="categorical",
+                category="universal",
+                description="Gender",
+                sampling=SamplingConfig(
+                    strategy="independent",
+                    distribution=CategoricalDistribution(
+                        type="categorical",
+                        options=["male", "female"],
+                        weights=[0.49, 0.51],
+                    ),
+                ),
+                grounding=GroundingInfo(level="strong", method="researched"),
+            ),
+            AttributeSpec(
+                name="marital_status",
+                type="categorical",
+                category="universal",
+                description="Marital status",
+                sampling=SamplingConfig(
+                    strategy="independent",
+                    distribution=CategoricalDistribution(
+                        type="categorical",
+                        options=["Single", "Married", "Divorced", "Widowed"],
+                        weights=[0.62, 0.25, 0.09, 0.04],
+                    ),
+                ),
+                grounding=GroundingInfo(level="medium", method="estimated"),
+            ),
+            AttributeSpec(
+                name="household_size",
+                type="int",
+                category="universal",
+                description="Number of people in household",
+                scope="household",
+                sampling=SamplingConfig(
+                    strategy="independent",
+                    distribution=NormalDistribution(
+                        type="normal", mean=1.3, std=0.6, min=1, max=6
+                    ),
+                ),
+                grounding=GroundingInfo(level="medium", method="estimated"),
+            ),
+            AttributeSpec(
+                name="has_children",
+                type="boolean",
+                category="universal",
+                description="Whether the agent has children under 18",
+                sampling=SamplingConfig(
+                    strategy="independent",
+                    distribution=BooleanDistribution(
+                        type="boolean",
+                        probability_true=0.35,
+                    ),
+                ),
+                grounding=GroundingInfo(level="medium", method="estimated"),
+            ),
+        ],
+        sampling_order=[
+            "age",
+            "gender",
+            "marital_status",
+            "household_size",
+            "has_children",
+        ],
+    )
+
+
 class TestHouseholdModels:
     def test_household_type_enum(self):
         assert HouseholdType.SINGLE.value == "single"
@@ -289,6 +385,63 @@ class TestHouseholdSamplingHelpers:
         rate = same_count / trials
         # Expect ~85% (default_same_group_rate)
         assert 0.75 < rate < 0.95, f"Default rate {rate:.2f} outside expected range"
+
+    def test_correlate_uses_semantic_type_for_age_policy(self):
+        """Semantic metadata should trigger gaussian age policy without name matching."""
+        rng = random.Random(42)
+        values = [
+            correlate_partner_attribute(
+                "years_old",
+                "int",
+                35,
+                None,
+                rng,
+                _DEFAULT_CONFIG,
+                semantic_type="age",
+            )
+            for _ in range(200)
+        ]
+        assert all(v >= _DEFAULT_CONFIG.min_adult_age for v in values)
+        assert len(set(values)) > 1
+
+    def test_correlate_uses_identity_type_for_group_rate_policy(self):
+        """Identity metadata should trigger same-group rate without name matching."""
+        rng = random.Random(42)
+        same_count = 0
+        trials = 500
+        for _ in range(trials):
+            result = correlate_partner_attribute(
+                "ethnic_group",
+                "categorical",
+                "white",
+                None,
+                rng,
+                _DEFAULT_CONFIG,
+                available_options=["white", "black", "hispanic"],
+                identity_type="race_ethnicity",
+            )
+            if result == "white":
+                same_count += 1
+        rate = same_count / trials
+        assert 0.80 < rate < 0.97, f"Same-group rate {rate:.2f} outside expected range"
+
+    def test_correlate_respects_explicit_policy_override(self):
+        """Explicit partner policy should override inferred/default behavior."""
+        rng = random.Random(42)
+        values = [
+            correlate_partner_attribute(
+                "custom_numeric",
+                "int",
+                40,
+                None,
+                rng,
+                _DEFAULT_CONFIG,
+                partner_correlation_policy="gaussian_offset",
+            )
+            for _ in range(100)
+        ]
+        assert all(v >= _DEFAULT_CONFIG.min_adult_age for v in values)
+        assert len(set(values)) > 1
 
     def test_generate_dependents_no_kids(self):
         rng = random.Random(42)
@@ -465,3 +618,64 @@ class TestCorrelatedDemographics:
         rate = same_country / total
         # Should be close to 0.95 (within statistical margin)
         assert 0.90 < rate < 0.99, f"Same-country rate {rate:.2%} out of expected range"
+
+
+class TestHouseholdReconciliation:
+    def test_partnered_agents_are_not_left_single(self):
+        spec = _make_household_consistency_spec(size=500)
+        result = sample_population(spec, count=500, seed=42)
+
+        partnered = [
+            a
+            for a in result.agents
+            if a.get("partner_id") is not None or a.get("partner_npc") is not None
+        ]
+        assert partnered, "Expected at least some partnered agents"
+        assert all(a.get("marital_status") == "Married" for a in partnered)
+
+    def test_household_size_matches_actual_membership(self):
+        spec = _make_household_consistency_spec(size=300)
+        result = sample_population(spec, count=300, seed=7, agent_focus_mode="couples")
+
+        by_household: dict[str, list[dict]] = {}
+        for agent in result.agents:
+            by_household.setdefault(agent["household_id"], []).append(agent)
+
+        for members in by_household.values():
+            primary = next(
+                (m for m in members if m.get("household_role") == "adult_primary"),
+                members[0],
+            )
+            dependents = primary.get("dependents", [])
+            expected_size = len(members) + (
+                len(dependents) if isinstance(dependents, list) else 0
+            )
+            for member in members:
+                assert member.get("household_size") == expected_size
+
+    def test_has_children_matches_generated_dependents(self):
+        spec = _make_household_consistency_spec(size=300)
+        result = sample_population(spec, count=300, seed=21)
+
+        by_household: dict[str, list[dict]] = {}
+        for agent in result.agents:
+            by_household.setdefault(agent["household_id"], []).append(agent)
+
+        for members in by_household.values():
+            primary = next(
+                (m for m in members if m.get("household_role") == "adult_primary"),
+                members[0],
+            )
+            dependents = primary.get("dependents", [])
+            child_count = 0
+            if isinstance(dependents, list):
+                for dep in dependents:
+                    relationship = str(dep.get("relationship", "")).lower()
+                    if any(
+                        token in relationship
+                        for token in ("son", "daughter", "child", "kid")
+                    ):
+                        child_count += 1
+            expected = child_count > 0
+            for member in members:
+                assert member.get("has_children") is expected

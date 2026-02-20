@@ -38,6 +38,73 @@ def _make_error(
     )
 
 
+def _coerce_float(value: Any) -> float | None:
+    """Coerce value to float, returning None when not numeric-like."""
+    if isinstance(value, bool):
+        return None
+    if isinstance(value, (int, float)):
+        return float(value)
+    if isinstance(value, str):
+        stripped = value.strip()
+        if not stripped:
+            return None
+        try:
+            return float(stripped)
+        except ValueError:
+            return None
+    return None
+
+
+def _coerce_numeric_list(
+    values: list[Any],
+    field: str,
+    errors: list[ValidationIssue],
+) -> list[float] | None:
+    """Coerce a list of values to floats, recording validation errors."""
+    coerced: list[float] = []
+    invalid = False
+    for idx, value in enumerate(values):
+        numeric = _coerce_float(value)
+        if numeric is None:
+            invalid = True
+            errors.append(
+                _make_error(
+                    field=f"{field}[{idx}]",
+                    value=str(value),
+                    error="value must be numeric",
+                    suggestion="Use numeric values (e.g., 0.25)",
+                )
+            )
+            continue
+        coerced.append(numeric)
+    return None if invalid else coerced
+
+
+def _coerce_numeric_mapping(
+    values: dict[str, Any],
+    field: str,
+    errors: list[ValidationIssue],
+) -> dict[str, float] | None:
+    """Coerce mapping values to floats, recording validation errors."""
+    coerced: dict[str, float] = {}
+    invalid = False
+    for key, value in values.items():
+        numeric = _coerce_float(value)
+        if numeric is None:
+            invalid = True
+            errors.append(
+                _make_error(
+                    field=f"{field}.{key}",
+                    value=str(value),
+                    error="value must be numeric",
+                    suggestion="Use numeric values (e.g., 0.25)",
+                )
+            )
+            continue
+        coerced[key] = numeric
+    return None if invalid else coerced
+
+
 # Spec-level variable patterns that should use spec_expression, not expression
 SPEC_LEVEL_PATTERNS = {"weights", "options"}
 
@@ -232,34 +299,76 @@ def validate_distribution_data(
 
         # Check std is positive if present
         std = dist_data.get("std")
-        if std is not None and std < 0:
-            errors.append(
-                _make_error(
-                    field=f"{attr_name}.distribution.std",
-                    value=str(std),
-                    error="standard deviation cannot be negative",
-                    suggestion="Use a positive value for std",
+        if std is not None:
+            std_num = _coerce_float(std)
+            if std_num is None:
+                errors.append(
+                    _make_error(
+                        field=f"{attr_name}.distribution.std",
+                        value=str(std),
+                        error="standard deviation must be numeric",
+                        suggestion="Use a numeric value for std",
+                    )
                 )
-            )
+            elif std_num < 0:
+                errors.append(
+                    _make_error(
+                        field=f"{attr_name}.distribution.std",
+                        value=str(std),
+                        error="standard deviation cannot be negative",
+                        suggestion="Use a positive value for std",
+                    )
+                )
 
         # Check min < max if both present
         min_val = dist_data.get("min")
         max_val = dist_data.get("max")
-        if min_val is not None and max_val is not None and min_val >= max_val:
-            errors.append(
-                _make_error(
-                    field=f"{attr_name}.distribution.min/max",
-                    value=f"min={min_val}, max={max_val}",
-                    error="min must be less than max",
-                    suggestion="Swap min and max values",
+        if min_val is not None and max_val is not None:
+            min_num = _coerce_float(min_val)
+            max_num = _coerce_float(max_val)
+            if min_num is None:
+                errors.append(
+                    _make_error(
+                        field=f"{attr_name}.distribution.min",
+                        value=str(min_val),
+                        error="min must be numeric",
+                        suggestion="Use a numeric value for min",
+                    )
                 )
-            )
+            if max_num is None:
+                errors.append(
+                    _make_error(
+                        field=f"{attr_name}.distribution.max",
+                        value=str(max_val),
+                        error="max must be numeric",
+                        suggestion="Use a numeric value for max",
+                    )
+                )
+            if min_num is not None and max_num is not None and min_num >= max_num:
+                errors.append(
+                    _make_error(
+                        field=f"{attr_name}.distribution.min/max",
+                        value=f"min={min_val}, max={max_val}",
+                        error="min must be less than max",
+                        suggestion="Swap min and max values",
+                    )
+                )
 
     elif dist_type == "beta":
         alpha = dist_data.get("alpha")
         beta = dist_data.get("beta")
 
-        if alpha is None or alpha <= 0:
+        alpha_num = _coerce_float(alpha) if alpha is not None else None
+        if alpha is None or alpha_num is None:
+            errors.append(
+                _make_error(
+                    field=f"{attr_name}.distribution.alpha",
+                    value=str(alpha),
+                    error="alpha must be numeric",
+                    suggestion="Use a positive value like 2.0",
+                )
+            )
+        elif alpha_num <= 0:
             errors.append(
                 _make_error(
                     field=f"{attr_name}.distribution.alpha",
@@ -269,7 +378,17 @@ def validate_distribution_data(
                 )
             )
 
-        if beta is None or beta <= 0:
+        beta_num = _coerce_float(beta) if beta is not None else None
+        if beta is None or beta_num is None:
+            errors.append(
+                _make_error(
+                    field=f"{attr_name}.distribution.beta",
+                    value=str(beta),
+                    error="beta must be numeric",
+                    suggestion="Use a positive value like 5.0",
+                )
+            )
+        elif beta_num <= 0:
             errors.append(
                 _make_error(
                     field=f"{attr_name}.distribution.beta",
@@ -283,15 +402,36 @@ def validate_distribution_data(
         min_val = dist_data.get("min")
         max_val = dist_data.get("max")
 
-        if min_val is not None and max_val is not None and min_val >= max_val:
-            errors.append(
-                _make_error(
-                    field=f"{attr_name}.distribution.min/max",
-                    value=f"min={min_val}, max={max_val}",
-                    error="min must be less than max",
-                    suggestion="Swap min and max values",
+        if min_val is not None and max_val is not None:
+            min_num = _coerce_float(min_val)
+            max_num = _coerce_float(max_val)
+            if min_num is None:
+                errors.append(
+                    _make_error(
+                        field=f"{attr_name}.distribution.min",
+                        value=str(min_val),
+                        error="min must be numeric",
+                        suggestion="Use a numeric value for min",
+                    )
                 )
-            )
+            if max_num is None:
+                errors.append(
+                    _make_error(
+                        field=f"{attr_name}.distribution.max",
+                        value=str(max_val),
+                        error="max must be numeric",
+                        suggestion="Use a numeric value for max",
+                    )
+                )
+            if min_num is not None and max_num is not None and min_num >= max_num:
+                errors.append(
+                    _make_error(
+                        field=f"{attr_name}.distribution.min/max",
+                        value=f"min={min_val}, max={max_val}",
+                        error="min must be less than max",
+                        suggestion="Swap min and max values",
+                    )
+                )
 
     elif dist_type == "categorical":
         options = dist_data.get("options")
@@ -316,28 +456,43 @@ def validate_distribution_data(
                 )
             )
         elif weights:
-            weight_sum = sum(weights)
-            if abs(weight_sum - 1.0) > 0.02:
-                errors.append(
-                    _make_error(
-                        field=f"{attr_name}.distribution.weights",
-                        value=f"sum={weight_sum:.3f}",
-                        error="weights must sum to 1.0",
-                        suggestion="Normalize weights to sum to 1.0",
+            numeric_weights = _coerce_numeric_list(
+                list(weights), f"{attr_name}.distribution.weights", errors
+            )
+            if numeric_weights is not None:
+                weight_sum = sum(numeric_weights)
+                if abs(weight_sum - 1.0) > 0.02:
+                    errors.append(
+                        _make_error(
+                            field=f"{attr_name}.distribution.weights",
+                            value=f"sum={weight_sum:.3f}",
+                            error="weights must sum to 1.0",
+                            suggestion="Normalize weights to sum to 1.0",
+                        )
                     )
-                )
 
     elif dist_type == "boolean":
         prob = dist_data.get("probability_true")
-        if prob is not None and (prob < 0 or prob > 1):
-            errors.append(
-                _make_error(
-                    field=f"{attr_name}.distribution.probability_true",
-                    value=str(prob),
-                    error="probability must be between 0 and 1",
-                    suggestion="Use a value like 0.5 or 0.75",
+        if prob is not None:
+            prob_num = _coerce_float(prob)
+            if prob_num is None:
+                errors.append(
+                    _make_error(
+                        field=f"{attr_name}.distribution.probability_true",
+                        value=str(prob),
+                        error="probability must be numeric",
+                        suggestion="Use a value like 0.5 or 0.75",
+                    )
                 )
-            )
+            elif prob_num < 0 or prob_num > 1:
+                errors.append(
+                    _make_error(
+                        field=f"{attr_name}.distribution.probability_true",
+                        value=str(prob),
+                        error="probability must be between 0 and 1",
+                        suggestion="Use a value like 0.5 or 0.75",
+                    )
+                )
 
     return errors
 
@@ -439,29 +594,46 @@ def validate_modifier_data(
 
     # Validate probability_override range
     prob_override = modifier_data.get("probability_override")
-    if prob_override is not None and (prob_override < 0 or prob_override > 1):
-        errors.append(
-            _make_error(
-                field=f"{attr_name}.modifiers[{modifier_index}].probability_override",
-                value=str(prob_override),
-                error="probability_override must be between 0 and 1",
-                suggestion="Use a value like 0.75",
+    if prob_override is not None:
+        prob_override_num = _coerce_float(prob_override)
+        if prob_override_num is None:
+            errors.append(
+                _make_error(
+                    field=f"{attr_name}.modifiers[{modifier_index}].probability_override",
+                    value=str(prob_override),
+                    error="probability_override must be numeric",
+                    suggestion="Use a value like 0.75",
+                )
             )
-        )
+        elif prob_override_num < 0 or prob_override_num > 1:
+            errors.append(
+                _make_error(
+                    field=f"{attr_name}.modifiers[{modifier_index}].probability_override",
+                    value=str(prob_override),
+                    error="probability_override must be between 0 and 1",
+                    suggestion="Use a value like 0.75",
+                )
+            )
 
     # Validate weight_overrides sum to 1.0
     weight_overrides = modifier_data.get("weight_overrides")
     if weight_overrides and isinstance(weight_overrides, dict):
-        weight_sum = sum(weight_overrides.values())
-        if abs(weight_sum - 1.0) > 0.02:
-            errors.append(
-                _make_error(
-                    field=f"{attr_name}.modifiers[{modifier_index}].weight_overrides",
-                    value=f"sum={weight_sum:.3f}",
-                    error="weight_overrides must sum to 1.0",
-                    suggestion="Normalize weights to sum to 1.0",
+        numeric_weight_overrides = _coerce_numeric_mapping(
+            weight_overrides,
+            f"{attr_name}.modifiers[{modifier_index}].weight_overrides",
+            errors,
+        )
+        if numeric_weight_overrides is not None:
+            weight_sum = sum(numeric_weight_overrides.values())
+            if abs(weight_sum - 1.0) > 0.02:
+                errors.append(
+                    _make_error(
+                        field=f"{attr_name}.modifiers[{modifier_index}].weight_overrides",
+                        value=f"sum={weight_sum:.3f}",
+                        error="weight_overrides must sum to 1.0",
+                        suggestion="Normalize weights to sum to 1.0",
+                    )
                 )
-            )
 
     return errors
 

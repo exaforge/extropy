@@ -18,6 +18,7 @@ from extropy.core.models.scenario import (
     SeedExposure,
     SpreadModifier,
     SpreadConfig,
+    TimelineEvent,
 )
 from extropy.scenario.validator import load_and_validate_scenario, validate_scenario
 from extropy.storage import open_study_db
@@ -182,3 +183,133 @@ def test_validate_scenario_allows_edge_weight_in_spread_modifier(tmp_path: Path)
         if issue.location == "spread.share_modifiers[0].when"
     ]
     assert not edge_weight_errors
+
+
+def test_validate_scenario_allows_extended_attribute_reference(
+    minimal_population_spec,
+):
+    """Extended attributes should be valid in scenario when-expressions."""
+    spec = _make_scenario_spec("population.yaml", "study.db")
+    spec.seed_exposure.rules[0].when = "extended_signal > 0"
+    spec.extended_attributes = [
+        minimal_population_spec.attributes[0].model_copy(
+            update={"name": "extended_signal"}
+        )
+    ]
+
+    result = validate_scenario(spec, population_spec=minimal_population_spec)
+
+    ref_errors = [
+        issue
+        for issue in result.errors
+        if issue.location == "seed_exposure.rules[0].when"
+        and issue.category == "attribute_reference"
+    ]
+    assert not ref_errors
+
+
+def test_validate_scenario_still_rejects_unknown_attribute_reference(
+    minimal_population_spec,
+):
+    """Unknown attributes must still fail even with extended attrs present."""
+    spec = _make_scenario_spec("population.yaml", "study.db")
+    spec.seed_exposure.rules[0].when = "missing_signal > 0"
+    spec.extended_attributes = [
+        minimal_population_spec.attributes[0].model_copy(
+            update={"name": "extended_signal"}
+        )
+    ]
+
+    result = validate_scenario(spec, population_spec=minimal_population_spec)
+
+    assert any(
+        issue.location == "seed_exposure.rules[0].when"
+        and issue.category == "attribute_reference"
+        for issue in result.errors
+    )
+
+
+def test_validate_scenario_rejects_invalid_seed_condition_literal(
+    minimal_population_spec,
+):
+    """Seed rule literals must match categorical option domains exactly."""
+    spec = _make_scenario_spec("population.yaml", "study.db")
+    spec.seed_exposure.rules[0].when = "gender == 'Male'"
+
+    result = validate_scenario(spec, population_spec=minimal_population_spec)
+
+    assert any(
+        issue.location == "seed_exposure.rules[0].when"
+        and issue.category == "condition_value"
+        for issue in result.errors
+    )
+
+
+def test_validate_scenario_rejects_invalid_spread_modifier_literal(
+    minimal_population_spec,
+):
+    """Spread modifier literals must match categorical option domains exactly."""
+    spec = _make_scenario_spec("population.yaml", "study.db")
+    spec.spread.share_modifiers = [
+        SpreadModifier(when="gender == 'Male'", multiply=1.1, add=0.0)
+    ]
+
+    result = validate_scenario(spec, population_spec=minimal_population_spec)
+
+    assert any(
+        issue.location == "spread.share_modifiers[0].when"
+        and issue.category == "condition_value"
+        for issue in result.errors
+    )
+
+
+def test_validate_scenario_rejects_invalid_timeline_rule_literal(
+    minimal_population_spec,
+):
+    """Timeline exposure-rule literals must match categorical option domains."""
+    spec = _make_scenario_spec("population.yaml", "study.db")
+    spec.timeline = [
+        TimelineEvent(
+            timestep=1,
+            event=Event(
+                type=EventType.NEWS,
+                content="Follow-up event",
+                source="Test source",
+                credibility=0.9,
+                ambiguity=0.1,
+                emotional_valence=0.0,
+            ),
+            exposure_rules=[
+                ExposureRule(
+                    channel="official_notice",
+                    when="gender == 'Male'",
+                    probability=1.0,
+                    timestep=0,
+                )
+            ],
+        )
+    ]
+
+    result = validate_scenario(spec, population_spec=minimal_population_spec)
+
+    assert any(
+        issue.location == "timeline[0].exposure_rules[0].when"
+        and issue.category == "condition_value"
+        for issue in result.errors
+    )
+
+
+def test_validate_scenario_accepts_valid_condition_literals(minimal_population_spec):
+    """Valid categorical literals should pass domain validation."""
+    spec = _make_scenario_spec("population.yaml", "study.db")
+    spec.seed_exposure.rules[0].when = "gender == 'male'"
+    spec.spread.share_modifiers = [
+        SpreadModifier(when="gender in ['male', 'female']", multiply=1.05, add=0.0)
+    ]
+
+    result = validate_scenario(spec, population_spec=minimal_population_spec)
+
+    condition_value_errors = [
+        issue for issue in result.errors if issue.category == "condition_value"
+    ]
+    assert not condition_value_errors
