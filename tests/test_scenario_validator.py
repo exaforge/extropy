@@ -182,3 +182,47 @@ def test_validate_scenario_allows_edge_weight_in_spread_modifier(tmp_path: Path)
         if issue.location == "spread.share_modifiers[0].when"
     ]
     assert not edge_weight_errors
+
+
+def test_validate_scenario_allows_extended_attribute_reference(
+    minimal_population_spec,
+):
+    """Extended attributes should be valid in scenario when-expressions."""
+    spec = _make_scenario_spec("population.yaml", "study.db")
+    spec.seed_exposure.rules[0].when = "extended_signal > 0"
+    spec.extended_attributes = [
+        minimal_population_spec.attributes[0].model_copy(
+            update={"name": "extended_signal"}
+        )
+    ]
+
+    result = validate_scenario(spec, population_spec=minimal_population_spec)
+
+    ref_errors = [
+        issue
+        for issue in result.errors
+        if issue.location == "seed_exposure.rules[0].when"
+        and issue.category == "attribute_reference"
+    ]
+    assert not ref_errors
+
+
+def test_validate_scenario_still_rejects_unknown_attribute_reference(
+    minimal_population_spec,
+):
+    """Unknown attributes must still fail even with extended attrs present."""
+    spec = _make_scenario_spec("population.yaml", "study.db")
+    spec.seed_exposure.rules[0].when = "missing_signal > 0"
+    spec.extended_attributes = [
+        minimal_population_spec.attributes[0].model_copy(
+            update={"name": "extended_signal"}
+        )
+    ]
+
+    result = validate_scenario(spec, population_spec=minimal_population_spec)
+
+    assert any(
+        issue.location == "seed_exposure.rules[0].when"
+        and issue.category == "attribute_reference"
+        for issue in result.errors
+    )

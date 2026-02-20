@@ -116,10 +116,12 @@ def validate_scenario(
     errors: list[ValidationIssue] = []
     warnings: list[ValidationIssue] = []
 
-    # Build set of known attributes from population spec
+    # Build set of known attributes from population spec + scenario extensions
     known_attributes: set[str] = set()
     if population_spec:
         known_attributes = {attr.name for attr in population_spec.attributes}
+    if spec.extended_attributes:
+        known_attributes |= {attr.name for attr in spec.extended_attributes}
 
     # Build set of known edge types from network
     # Check both 'edge_type' and 'type' fields (different network formats)
