@@ -22,7 +22,13 @@ from ..study import (
     parse_population_ref,
 )
 from ..display import display_extend_attributes
-from ..utils import format_elapsed, Output, ExitCode
+from ..utils import (
+    format_elapsed,
+    Output,
+    ExitCode,
+    get_next_invalid_artifact_path,
+    save_invalid_json_artifact,
+)
 
 
 @app.command("scenario")
@@ -299,6 +305,23 @@ def scenario_command(
         out.error(f"Attribute selection failed: {selection_error}")
         raise typer.Exit(1)
 
+    if not new_attributes:
+        invalid_path = save_invalid_json_artifact(
+            {
+                "stage": "scenario",
+                "error": "No scenario-specific extended attributes discovered",
+                "description": description,
+                "base_population": f"population.v{pop_version}",
+            },
+            scenario_path,
+            extension=".json",
+        )
+        out.error(
+            f"Scenario requires non-empty extended_attributes. Saved: {invalid_path}",
+            exit_code=ExitCode.SCENARIO_ERROR,
+        )
+        raise typer.Exit(out.finish())
+
     if not agent_mode:
         console.print(
             f"[green]✓[/green] Found {len(new_attributes)} NEW attributes ({format_elapsed(selection_elapsed)})"
@@ -349,25 +372,17 @@ def scenario_command(
         current_step[1] = status
 
     household_config = None
-    name_config = None
 
     def do_hydration():
-        nonlocal \
-            hydrated, \
-            sources, \
-            warnings, \
-            hydration_error, \
-            household_config, \
-            name_config
+        nonlocal hydrated, sources, warnings, hydration_error, household_config
         try:
-            hydrated, sources, warnings, household_config, name_config = (
-                hydrate_attributes(
-                    attributes=new_attributes,
-                    description=f"{pop_spec.meta.description} + {description}",
-                    geography=pop_spec.meta.geography,
-                    context=pop_spec.attributes,
-                    on_progress=on_progress,
-                )
+            hydrated, sources, warnings, household_config = hydrate_attributes(
+                attributes=new_attributes,
+                description=f"{pop_spec.meta.description} + {description}",
+                geography=pop_spec.meta.geography,
+                context=pop_spec.attributes,
+                include_household=True,
+                on_progress=on_progress,
             )
         except Exception as e:
             hydration_error = e
@@ -454,15 +469,20 @@ def scenario_command(
         nonlocal result_spec, validation_result, pipeline_error
         try:
             timeline_mode = None if timeline == "auto" else timeline
+            resolved_timestep_unit = (
+                timestep_unit or sufficiency_result.inferred_timestep_unit
+            )
             # We need to create a merged spec first to pass to scenario creation
             # For now, create scenario without agents (they'll be sampled later)
             result_spec, validation_result = create_scenario_spec(
                 description=description,
                 population_spec=pop_spec,
                 extended_attributes=bound_attrs,
+                household_config=household_config,
+                agent_focus_mode=sufficiency_result.inferred_agent_focus_mode,
                 on_progress=on_scenario_progress,
                 timeline_mode=timeline_mode,
-                timestep_unit_override=timestep_unit,
+                timestep_unit_override=resolved_timestep_unit,
                 max_timesteps_override=max_timesteps,
             )
         except Exception as e:
@@ -482,6 +502,20 @@ def scenario_command(
             time.sleep(0.1)
 
     if pipeline_error:
+        invalid_path = save_invalid_json_artifact(
+            {
+                "stage": "scenario",
+                "error": str(pipeline_error),
+                "description": description,
+                "base_population": f"population.v{pop_version}",
+            },
+            scenario_path,
+            extension=".json",
+        )
+        if not agent_mode:
+            console.print(
+                f"[yellow]⚠[/yellow] Scenario invalid artifact saved: [bold]{invalid_path}[/bold]"
+            )
         out.error(f"Scenario creation failed: {pipeline_error}")
         raise typer.Exit(1)
 
@@ -491,9 +525,6 @@ def scenario_command(
     # Set metadata
     result_spec.meta.name = scenario_name
     result_spec.meta.base_population = f"population.v{pop_version}"
-    result_spec.extended_attributes = bound_attrs
-    result_spec.household_config = household_config
-    result_spec.agent_focus_mode = sufficiency_result.inferred_agent_focus_mode
 
     # Display Summary
     if not agent_mode:
@@ -501,14 +532,14 @@ def scenario_command(
 
     # Validation
     if validation_result and validation_result.errors:
-        invalid_path = scenario_path.with_suffix(".invalid.yaml")
+        invalid_path = get_next_invalid_artifact_path(scenario_path)
         result_spec.to_yaml(invalid_path)
         if not agent_mode:
             console.print(
                 f"[yellow]⚠[/yellow] Scenario saved to [bold]{invalid_path}[/bold] for review"
             )
-        out.error("Scenario validation failed")
-        raise typer.Exit(1)
+        out.error("Scenario validation failed", exit_code=ExitCode.SCENARIO_ERROR)
+        raise typer.Exit(out.finish())
 
     # Human Checkpoint #2
     if not agent_mode and not yes:
@@ -686,7 +717,7 @@ def _display_scenario_summary(spec) -> None:
     if spec.seed_exposure:
         console.print("[bold]Exposure Channels:[/bold]")
         for ch in spec.seed_exposure.channels:
-            console.print(f"  - {ch.name} ({ch.reach})")
+            console.print(f"  - {ch.name}")
         console.print()
 
     # Extended attributes

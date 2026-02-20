@@ -7,6 +7,8 @@ Discovers all relevant attributes for a population across four categories:
 - Personality: Behavioral/psychological traits when relevant
 """
 
+import re
+
 from ...core.llm import reasoning_call
 from ...core.models import AttributeSpec, DiscoveredAttribute
 
@@ -70,6 +72,15 @@ def _is_multi_country_geography(geography: str | None, description: str) -> bool
     return False
 
 
+def _canonicalize_attribute_name(name: str) -> str:
+    """Normalize model-produced attribute names into stable snake_case."""
+    normalized = name.strip().lower()
+    normalized = re.sub(r"[\s\-\/]+", "_", normalized)
+    normalized = re.sub(r"[^a-z0-9_]", "", normalized)
+    normalized = re.sub(r"_+", "_", normalized).strip("_")
+    return normalized
+
+
 # JSON schema for attribute selection response
 ATTRIBUTE_SELECTION_SCHEMA = {
     "type": "object",
@@ -111,12 +122,6 @@ ATTRIBUTE_SELECTION_SCHEMA = {
                         "type": "string",
                         "enum": ["individual", "household", "partner_correlated"],
                         "description": "individual: varies per person; household: shared across household members; partner_correlated: correlated between partners (e.g., age, education, religion, politics)",
-                    },
-                    "correlation_rate": {
-                        "type": "number",
-                        "minimum": 0,
-                        "maximum": 1,
-                        "description": "For partner_correlated scope only: probability (0-1) that partner has same value. Use ~0.6-0.7 for education, ~0.7-0.8 for religion, ~0.5-0.6 for politics. Omit for age (uses gaussian offset) and race/ethnicity (uses per-group rates).",
                     },
                     "depends_on": {
                         "type": "array",
@@ -353,13 +358,6 @@ def select_attributes(
     - `partner_correlated`: Correlated between partners (assortative mating)
       - Examples: age, education_level, religious_affiliation, political views, race/ethnicity, country
       - Partners tend to have similar values but NOT identical
-      - Provide `correlation_rate` (0-1) for probability of same value:
-        - age: OMIT (uses gaussian offset automatically)
-        - race/ethnicity: OMIT (uses per-group rates automatically)
-        - education: ~0.6-0.7
-        - religion: ~0.7-0.8
-        - politics: ~0.5-0.6
-        - country: ~0.95 (most people marry within their country)
 
     - `individual`: Varies per person, sampled independently
       - Examples: gender, occupation, personality traits, personal attitudes
@@ -383,7 +381,6 @@ def select_attributes(
     - description: One clear sentence
     - strategy: independent, derived, or conditional
     - scope: individual, household, or partner_correlated
-    - correlation_rate: (only for partner_correlated scope, omit for age/race)
     - depends_on: List of attribute names (max 3, empty if independent)"""
 
     data = reasoning_call(
@@ -395,9 +392,30 @@ def select_attributes(
     )
 
     attributes = []
+    seen_raw_by_canonical: dict[str, str] = {}
     for attr_data in data.get("attributes", []):
+        raw_name = str(attr_data.get("name", "")).strip()
+        canonical_name = _canonicalize_attribute_name(attr_data.get("name", ""))
+        if not canonical_name:
+            continue
+        if canonical_name in seen_raw_by_canonical:
+            prev_raw = seen_raw_by_canonical[canonical_name]
+            if prev_raw != raw_name:
+                raise ValueError(
+                    "Ambiguous attribute-name normalization: "
+                    f"'{prev_raw}' and '{raw_name}' both normalize to '{canonical_name}'"
+                )
+            continue
+
         strategy = attr_data.get("strategy", "independent")
-        depends_on = attr_data.get("depends_on", [])
+        depends_on = [
+            dep
+            for dep in (
+                _canonicalize_attribute_name(str(dep))
+                for dep in attr_data.get("depends_on", [])
+            )
+            if dep and dep != canonical_name
+        ]
 
         if strategy == "independent" and depends_on:
             strategy = "conditional"
@@ -405,19 +423,19 @@ def select_attributes(
             strategy = "independent"
 
         attr = DiscoveredAttribute(
-            name=attr_data["name"],
+            name=canonical_name,
             type=attr_data["type"],
             category=attr_data["category"],
             description=attr_data["description"],
             strategy=strategy,
             scope=attr_data.get("scope", "individual"),
-            correlation_rate=attr_data.get("correlation_rate"),
             semantic_type=attr_data.get("semantic_type"),
             identity_type=attr_data.get("identity_type"),
             display_format=attr_data.get("display_format"),
             depends_on=depends_on,
         )
         attributes.append(attr)
+        seen_raw_by_canonical[canonical_name] = raw_name
 
     # Add Big Five if recommended and not already present
     if data.get("include_big_five", False):

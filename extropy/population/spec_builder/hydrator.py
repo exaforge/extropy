@@ -22,7 +22,6 @@ from ...core.models import (
     DiscoveredAttribute,
     HydratedAttribute,
     HouseholdConfig,
-    NameConfig,
 )
 from ...utils.callbacks import HydrationProgressCallback
 from .hydrators import (
@@ -31,7 +30,6 @@ from .hydrators import (
     hydrate_conditional_base,
     hydrate_conditional_modifiers,
     hydrate_household_config,
-    hydrate_name_config,
 )
 
 logger = logging.getLogger(__name__)
@@ -124,12 +122,11 @@ def hydrate_attributes(
     description: str,
     geography: str | None = None,
     context: list[AttributeSpec] | None = None,
+    include_household: bool = True,
     model: str | None = None,
     reasoning_effort: str = "low",
     on_progress: ProgressCallback | None = None,
-) -> tuple[
-    list[HydratedAttribute], list[str], list[str], HouseholdConfig, NameConfig | None
-]:
+) -> tuple[list[HydratedAttribute], list[str], list[str], HouseholdConfig]:
     """
     Research distributions for discovered attributes using split hydration.
 
@@ -148,15 +145,16 @@ def hydrate_attributes(
         description: Original population description
         geography: Geographic scope for research
         context: Existing attributes from base population (for extend mode)
+        include_household: Whether to hydrate household config (Step 2e)
         model: Model to use
         reasoning_effort: "low", "medium", or "high"
         on_progress: Optional callback for progress updates (step, status, count)
 
     Returns:
-        Tuple of (list of HydratedAttribute, list of source URLs, list of validation warnings, HouseholdConfig, NameConfig | None)
+        Tuple of (list of HydratedAttribute, list of source URLs, list of validation warnings, HouseholdConfig)
     """
     if not attributes:
-        return [], [], [], HouseholdConfig(), None
+        return [], [], [], HouseholdConfig()
 
     all_sources = []
     all_warnings = []
@@ -302,8 +300,8 @@ def hydrate_attributes(
             len(modifier_sources),
         )
 
-    # Step 2e: Household config (conditional - skip for purely professional populations)
-    if _should_hydrate_household_config(population, attributes):
+    # Step 2e: Household config (optional; enabled by scenario stage)
+    if include_household and _should_hydrate_household_config(population, attributes):
         report("2e", "Researching household composition...")
         household_config, hh_sources = hydrate_household_config(
             population=population,
@@ -314,28 +312,16 @@ def hydrate_attributes(
         )
         all_sources.extend(hh_sources)
         report("2e", "Household config researched", len(hh_sources))
-    else:
+    elif include_household:
         logger.info(
             "Skipping household config hydration - no household-scoped attributes "
             "or household keywords in population description"
         )
         household_config = HouseholdConfig()
         report("2e", "Skipped (no household context)", 0)
-
-    # Step 2f: Name config
-    report("2f", "Researching population-appropriate names...")
-    name_config, name_sources = hydrate_name_config(
-        population=population,
-        geography=geography,
-        model=model,
-        reasoning_effort=reasoning_effort,
-        on_retry=make_retry_callback("2f"),
-    )
-    all_sources.extend(name_sources)
-    if name_config is not None:
-        report("2f", "Name config researched", len(name_sources))
     else:
-        report("2f", "Using bundled CSV names", 0)
+        household_config = HouseholdConfig()
+        report("2e", "Skipped (disabled for this stage)", 0)
 
     # Combine all hydrated attributes
     all_hydrated = independent_attrs + derived_attrs + conditional_attrs
@@ -347,4 +333,4 @@ def hydrate_attributes(
     # when validate_spec() is called on the final PopulationSpec
     report("strategy", "Strategy consistency check passed", None)
 
-    return all_hydrated, unique_sources, all_warnings, household_config, name_config
+    return all_hydrated, unique_sources, all_warnings, household_config
