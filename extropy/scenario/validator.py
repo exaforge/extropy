@@ -17,6 +17,7 @@ from ..core.models import (
     ValidationResult,
 )
 from ..utils.expressions import (
+    extract_comparisons_from_expression,
     extract_names_from_expression,
     validate_expression_syntax,
 )
@@ -118,10 +119,29 @@ def validate_scenario(
 
     # Build set of known attributes from population spec + scenario extensions
     known_attributes: set[str] = set()
+    categorical_options_by_attr: dict[str, set[str]] = {}
     if population_spec:
         known_attributes = {attr.name for attr in population_spec.attributes}
+        for attr in population_spec.attributes:
+            dist = attr.sampling.distribution
+            if (
+                attr.type == "categorical"
+                and dist is not None
+                and hasattr(dist, "options")
+                and getattr(dist, "options")
+            ):
+                categorical_options_by_attr[attr.name] = set(dist.options)
     if spec.extended_attributes:
         known_attributes |= {attr.name for attr in spec.extended_attributes}
+        for attr in spec.extended_attributes:
+            dist = attr.sampling.distribution
+            if (
+                attr.type == "categorical"
+                and dist is not None
+                and hasattr(dist, "options")
+                and getattr(dist, "options")
+            ):
+                categorical_options_by_attr[attr.name] = set(dist.options)
 
     # Build set of known edge types from network
     # Check both 'edge_type' and 'type' fields (different network formats)
@@ -215,7 +235,7 @@ def validate_scenario(
             )
         else:
             # Check attribute references
-            if population_spec:
+            if known_attributes:
                 refs = extract_names_from_expression(rule.when)
                 unknown_refs = refs - known_attributes
                 if unknown_refs:
@@ -225,6 +245,31 @@ def validate_scenario(
                             location=f"seed_exposure.rules[{i}].when",
                             message=f"References unknown attribute(s): {', '.join(sorted(unknown_refs))}",
                             suggestion="Check attribute names in population spec",
+                        )
+                    )
+
+            # Check compared string literals against categorical domains
+            comparisons = extract_comparisons_from_expression(rule.when)
+            for attr_name, compared_values in comparisons:
+                valid_options = categorical_options_by_attr.get(attr_name)
+                if not valid_options:
+                    continue
+                invalid_values = [
+                    value for value in compared_values if value not in valid_options
+                ]
+                if invalid_values:
+                    errors.append(
+                        ValidationError(
+                            category="condition_value",
+                            location=f"seed_exposure.rules[{i}].when",
+                            message=(
+                                f"Condition compares {attr_name} to invalid value(s): "
+                                f"{', '.join(repr(v) for v in invalid_values)}"
+                            ),
+                            suggestion=(
+                                f"Valid options for {attr_name}: "
+                                f"{', '.join(sorted(valid_options))}"
+                            ),
                         )
                     )
 
@@ -293,7 +338,7 @@ def validate_scenario(
             # Allow edge attributes injected during propagation
             refs_without_edge_fields = refs - {"edge_type", "edge_weight"}
 
-            if population_spec:
+            if known_attributes:
                 unknown_refs = refs_without_edge_fields - known_attributes
                 if unknown_refs:
                     errors.append(
@@ -321,6 +366,31 @@ def validate_scenario(
                                 message=f"References edge_type '{referenced_edge_type}' not found in network",
                             )
                         )
+
+            # Check compared string literals against categorical domains
+            comparisons = extract_comparisons_from_expression(modifier.when)
+            for attr_name, compared_values in comparisons:
+                valid_options = categorical_options_by_attr.get(attr_name)
+                if not valid_options:
+                    continue
+                invalid_values = [
+                    value for value in compared_values if value not in valid_options
+                ]
+                if invalid_values:
+                    errors.append(
+                        ValidationError(
+                            category="condition_value",
+                            location=f"spread.share_modifiers[{i}].when",
+                            message=(
+                                f"Condition compares {attr_name} to invalid value(s): "
+                                f"{', '.join(repr(v) for v in invalid_values)}"
+                            ),
+                            suggestion=(
+                                f"Valid options for {attr_name}: "
+                                f"{', '.join(sorted(valid_options))}"
+                            ),
+                        )
+                    )
 
         # Warn about potentially problematic multipliers
         if modifier.multiply < 0:
@@ -450,6 +520,64 @@ def validate_scenario(
                         ),
                     )
                 )
+
+            # Validate custom timeline exposure rules (if provided)
+            if te.exposure_rules:
+                for j, rule in enumerate(te.exposure_rules):
+                    syntax_error = validate_expression_syntax(rule.when)
+                    if syntax_error:
+                        errors.append(
+                            ValidationError(
+                                category="timeline",
+                                location=f"timeline[{i}].exposure_rules[{j}].when",
+                                message=f"Invalid expression syntax: {syntax_error}",
+                                suggestion="Use valid Python expression syntax",
+                            )
+                        )
+                        continue
+
+                    if known_attributes:
+                        refs = extract_names_from_expression(rule.when)
+                        unknown_refs = refs - known_attributes
+                        if unknown_refs:
+                            errors.append(
+                                ValidationError(
+                                    category="attribute_reference",
+                                    location=f"timeline[{i}].exposure_rules[{j}].when",
+                                    message=(
+                                        "References unknown attribute(s): "
+                                        f"{', '.join(sorted(unknown_refs))}"
+                                    ),
+                                    suggestion="Check attribute names in population/spec",
+                                )
+                            )
+
+                    comparisons = extract_comparisons_from_expression(rule.when)
+                    for attr_name, compared_values in comparisons:
+                        valid_options = categorical_options_by_attr.get(attr_name)
+                        if not valid_options:
+                            continue
+                        invalid_values = [
+                            value
+                            for value in compared_values
+                            if value not in valid_options
+                        ]
+                        if invalid_values:
+                            errors.append(
+                                ValidationError(
+                                    category="condition_value",
+                                    location=f"timeline[{i}].exposure_rules[{j}].when",
+                                    message=(
+                                        "Condition compares "
+                                        f"{attr_name} to invalid value(s): "
+                                        f"{', '.join(repr(v) for v in invalid_values)}"
+                                    ),
+                                    suggestion=(
+                                        f"Valid options for {attr_name}: "
+                                        f"{', '.join(sorted(valid_options))}"
+                                    ),
+                                )
+                            )
 
     # =========================================================================
     # Validate Simulation Config
