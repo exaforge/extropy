@@ -26,6 +26,12 @@ class SamplingStats(BaseModel):
     # Condition evaluation warnings
     condition_warnings: list[str] = Field(default_factory=list)
 
+    # Deterministic post-household reconciliation counters
+    reconciliation_counts: dict[str, int] = Field(default_factory=dict)
+
+    # Rule-pack quality summary (impossible/implausible backpressure)
+    rule_pack: dict[str, Any] = Field(default_factory=dict)
+
 
 class SamplingResult(BaseModel):
     """Result of sampling a population."""

@@ -13,6 +13,7 @@ from ...core.models import (
     UniformDistribution,
     BetaDistribution,
     CategoricalDistribution,
+    BooleanDistribution,
 )
 from ...utils import extract_comparisons_from_expression
 
@@ -29,6 +30,7 @@ def run_semantic_checks(spec: PopulationSpec) -> list[ValidationIssue]:
     10. No-Op Detection
     11. Modifier Stacking Analysis
     12. Condition Value Validity
+    13. Last-Wins Overlap Detection
     """
     issues: list[ValidationIssue] = []
 
@@ -44,6 +46,9 @@ def run_semantic_checks(spec: PopulationSpec) -> list[ValidationIssue]:
 
         # Category 12: Condition Value Validity
         issues.extend(_check_condition_values(attr, attr_lookup))
+
+        # Category 13: Last-Wins overlap detection for categorical/boolean
+        issues.extend(_check_last_wins_overlaps(attr))
 
     return issues
 
@@ -246,5 +251,73 @@ def _check_condition_values(
                             suggestion=f"Valid options for {compared_attr}: {', '.join(sorted(valid_options))}",
                         )
                     )
+
+    return issues
+
+
+# =============================================================================
+# Category 13: Last-Wins Overlap Detection
+# =============================================================================
+
+
+def _check_last_wins_overlaps(attr: AttributeSpec) -> list[ValidationIssue]:
+    """Warn when categorical/boolean modifiers may overlap under last-wins semantics."""
+    issues: list[ValidationIssue] = []
+    dist = attr.sampling.distribution
+    modifiers = attr.sampling.modifiers
+    if not dist or not modifiers or len(modifiers) < 2:
+        return issues
+
+    is_last_wins_categorical = isinstance(dist, CategoricalDistribution)
+    is_last_wins_boolean = isinstance(dist, BooleanDistribution)
+    if not (is_last_wins_categorical or is_last_wins_boolean):
+        return issues
+
+    def normalize_when(expr: str) -> str:
+        return expr.strip().lower().replace(" ", "")
+
+    def is_unconditional(expr: str) -> bool:
+        normalized = normalize_when(expr)
+        return normalized in {"true", "1==1", "(true)"}
+
+    def compared_pairs(expr: str) -> set[tuple[str, str]]:
+        pairs: set[tuple[str, str]] = set()
+        for attr_name, values in extract_comparisons_from_expression(expr):
+            for value in values:
+                pairs.add((attr_name, str(value)))
+        return pairs
+
+    for i in range(len(modifiers)):
+        for j in range(i + 1, len(modifiers)):
+            left = modifiers[i].when
+            right = modifiers[j].when
+            if not left or not right:
+                continue
+
+            may_overlap = False
+            if is_unconditional(left) or is_unconditional(right):
+                may_overlap = True
+            elif normalize_when(left) == normalize_when(right):
+                may_overlap = True
+            else:
+                left_pairs = compared_pairs(left)
+                right_pairs = compared_pairs(right)
+                if not left_pairs or not right_pairs:
+                    may_overlap = True
+                elif left_pairs.intersection(right_pairs):
+                    may_overlap = True
+
+            if may_overlap:
+                issues.append(
+                    ValidationIssue(
+                        severity=Severity.WARNING,
+                        category="MODIFIER_OVERLAP",
+                        location=attr.name,
+                        message=(
+                            f"modifiers {i} and {j} may overlap under last-wins semantics"
+                        ),
+                        suggestion="Make conditions mutually exclusive or merge the modifier logic",
+                    )
+                )
 
     return issues

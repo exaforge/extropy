@@ -121,7 +121,6 @@ simulation:
 meta:
   description: Test population
   geography: USA
-  agent_focus: test agents
 
 grounding:
   overall: low

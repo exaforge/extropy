@@ -43,6 +43,7 @@ from .config import (
     DegreeMultiplierConfig,
     EdgeTypeRule,
     InfluenceFactorConfig,
+    StructuralAttributeRoles,
 )
 from .similarity import (
     compute_similarity,
@@ -76,6 +77,7 @@ __all__ = [
     "DegreeMultiplierConfig",
     "EdgeTypeRule",
     "InfluenceFactorConfig",
+    "StructuralAttributeRoles",
     # Result types
     "Edge",
     "NetworkResult",

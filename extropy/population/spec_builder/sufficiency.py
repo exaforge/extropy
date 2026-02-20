@@ -19,10 +19,6 @@ SUFFICIENCY_SCHEMA = {
             "type": ["string", "null"],
             "description": "Geographic scope if mentioned (e.g., 'Germany', 'US', 'California')",
         },
-        "agent_focus": {
-            "type": ["string", "null"],
-            "description": "Natural language description of who should be simulated (e.g., 'families', 'surgeons', 'couples'). Used for documentation.",
-        },
         "clarifications_needed": {
             "type": "array",
             "items": {"type": "string"},
@@ -63,7 +59,6 @@ SUFFICIENCY_SCHEMA = {
     "required": [
         "sufficient",
         "geography",
-        "agent_focus",
         "clarifications_needed",
         "questions",
     ],
@@ -102,25 +97,11 @@ A sufficient description should specify:
    - Extract if mentioned (e.g., "German surgeons" → Germany)
    - Can be country, region, or city
 
-3. AGENT FOCUS - who should be simulated as active agents?
-   This controls how households are sampled:
-   - "families" or "households" → everyone in household gets simulated (both partners, older kids)
-     Use for: communities, neighborhoods, social dynamics, local issues
-   - "couples" or "partners" → both adults simulated, children are background NPCs
-     Use for: relationship studies, retirement planning, couple decisions
-   - Specific roles like "surgeons", "subscribers" → one person per household, partner/kids are NPCs
-     Use for: professional studies, product research, individual behavior
-
-   Examples:
-   - "community reacting to school policy" → "families" (both parents may have opinions)
-   - "German surgeons" → "surgeons" (study is about the surgeon, not their family)
-   - "retired couples planning travel" → "couples" (both partners matter)
-
 If the description is too vague to create meaningful attributes, mark as insufficient
 and provide BOTH:
 1. `clarifications_needed`: Simple list of question strings (for backward compat)
 2. `questions`: Structured questions with these fields:
-   - id: snake_case identifier (e.g., "geography", "agent_focus")
+   - id: snake_case identifier (e.g., "geography")
    - question: Human-readable question text
    - type: "single_choice" (with options), "text" (free text), or "number"
    - options: Array of choices for single_choice (null for text/number)
@@ -160,7 +141,6 @@ Be lenient - if you can reasonably infer a specific population, mark as sufficie
     return SufficiencyResult(
         sufficient=data.get("sufficient", False),
         geography=data.get("geography"),
-        agent_focus=data.get("agent_focus"),
         clarifications_needed=data.get("clarifications_needed", []),
         questions=questions,
     )

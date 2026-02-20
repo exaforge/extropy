@@ -30,6 +30,16 @@ def _is_scenario_file(path: Path) -> bool:
     return False
 
 
+def _is_persona_file(path: Path) -> bool:
+    """Check if file is a persona config based on naming convention."""
+    name = path.name
+    if name in {"persona.yaml", "persona.yml"}:
+        return True
+    if re.match(r"^persona\.v\d+\.ya?ml$", name):
+        return True
+    return False
+
+
 def _validate_population_spec(spec_file: Path, strict: bool, out: Output) -> int:
     """Validate a population spec."""
     # Load spec
@@ -260,6 +270,113 @@ def _validate_scenario_spec(spec_file: Path, out: Output) -> int:
     return out.finish()
 
 
+def _resolve_merged_population_for_persona(persona_file: Path) -> PopulationSpec:
+    """Resolve merged population spec (base + extension) for persona validation."""
+    from ...core.models import PopulationSpec
+    from ...core.models.scenario import ScenarioSpec
+
+    scenario_dir = persona_file.parent
+    scenario_files = sorted(
+        scenario_dir.glob("scenario.v*.yaml"),
+        key=lambda p: int(re.search(r"scenario\.v(\d+)\.yaml$", p.name).group(1)),  # type: ignore[union-attr]
+    )
+    if not scenario_files:
+        raise FileNotFoundError(
+            f"No scenario.vN.yaml found next to persona file: {persona_file}"
+        )
+
+    # Choose latest scenario version in this directory.
+    scenario_path = scenario_files[-1]
+    scenario_spec = ScenarioSpec.from_yaml(scenario_path)
+
+    pop_name, pop_version = scenario_spec.meta.get_population_ref()
+    if pop_version is None:
+        raise ValueError(
+            "Scenario must reference a versioned base_population for persona validation"
+        )
+
+    # Study layout: <study>/scenario/<name>/persona.vN.yaml
+    study_root = scenario_dir.parent.parent
+    pop_path = study_root / f"{pop_name}.v{pop_version}.yaml"
+    if not pop_path.exists():
+        raise FileNotFoundError(f"Referenced population spec not found: {pop_path}")
+
+    pop_spec = PopulationSpec.from_yaml(pop_path)
+    ext_attrs = scenario_spec.extended_attributes or []
+    merged_attrs = list(pop_spec.attributes) + ext_attrs
+    merged_order = pop_spec.merged_sampling_order(ext_attrs)
+    return PopulationSpec(
+        meta=pop_spec.meta,
+        grounding=pop_spec.grounding,
+        attributes=merged_attrs,
+        sampling_order=merged_order,
+    )
+
+
+def _validate_persona_spec(spec_file: Path, out: Output) -> int:
+    """Validate a persona config against merged scenario attributes."""
+    from ...population.persona import PersonaConfig, validate_persona_config
+
+    if not _is_json_output():
+        with console.status("[cyan]Loading persona config...[/cyan]"):
+            try:
+                config = PersonaConfig.from_yaml(spec_file)
+                merged_spec = _resolve_merged_population_for_persona(spec_file)
+                result = validate_persona_config(merged_spec, config)
+            except Exception as e:
+                out.error(
+                    f"Failed to validate persona: {e}",
+                    exit_code=ExitCode.VALIDATION_ERROR,
+                )
+                return out.finish()
+    else:
+        try:
+            config = PersonaConfig.from_yaml(spec_file)
+            merged_spec = _resolve_merged_population_for_persona(spec_file)
+            result = validate_persona_config(merged_spec, config)
+        except Exception as e:
+            out.error(
+                f"Failed to validate persona: {e}", exit_code=ExitCode.VALIDATION_ERROR
+            )
+            return out.finish()
+
+    out.success(
+        f"Loaded persona config ({len(config.treatments)} treatments)",
+        spec_file=str(spec_file),
+        treatment_count=len(config.treatments),
+    )
+    out.blank()
+    out.set_data("validation", format_validation_for_json(result))
+
+    if result.errors:
+        out.error(
+            f"Persona has {len(result.errors)} error(s)",
+            exit_code=ExitCode.VALIDATION_ERROR,
+        )
+        if not _is_json_output():
+            for err in result.errors[:10]:
+                out.text(
+                    f"  [red]✗[/red] [{err.category}] {err.location}: {err.message}"
+                )
+            if len(result.errors) > 10:
+                out.text(f"  [dim]... and {len(result.errors) - 10} more[/dim]")
+        return out.finish()
+
+    if result.warnings:
+        out.success(f"Persona validated with {len(result.warnings)} warning(s)")
+        if not _is_json_output():
+            for warn in result.warnings[:5]:
+                out.warning(f"[{warn.category}] {warn.location}: {warn.message}")
+    else:
+        out.success("Persona validated")
+
+    out.blank()
+    out.divider()
+    out.text("[green]Validation passed[/green]")
+    out.divider()
+    return out.finish()
+
+
 @app.command("validate")
 def validate_command(
     spec_file: Path = typer.Argument(
@@ -270,10 +387,11 @@ def validate_command(
     ),
 ):
     """
-    Validate a population spec or scenario spec.
+    Validate a population spec, scenario spec, or persona config.
 
     Auto-detects file type based on naming:
     - *.scenario.yaml → scenario spec validation
+    - persona.vN.yaml → persona config validation
     - *.yaml → population spec validation
 
     EXIT CODES:
@@ -301,6 +419,8 @@ def validate_command(
     # Route to appropriate validator
     if _is_scenario_file(spec_file):
         exit_code = _validate_scenario_spec(spec_file, out)
+    elif _is_persona_file(spec_file):
+        exit_code = _validate_persona_spec(spec_file, out)
     else:
         exit_code = _validate_population_spec(spec_file, strict, out)
 

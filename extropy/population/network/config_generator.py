@@ -20,6 +20,7 @@ from .config import (
     DegreeMultiplierConfig,
     EdgeTypeRule,
     InfluenceFactorConfig,
+    StructuralAttributeRoles,
 )
 
 logger = logging.getLogger(__name__)
@@ -208,6 +209,33 @@ NETWORK_CONFIG_SCHEMA = {
     "additionalProperties": False,
 }
 
+STRUCTURAL_ROLE_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "household_id": {"type": ["string", "null"]},
+        "partner_id": {"type": ["string", "null"]},
+        "age": {"type": ["string", "null"]},
+        "sector": {"type": ["string", "null"]},
+        "region": {"type": ["string", "null"]},
+        "urbanicity": {"type": ["string", "null"]},
+        "religion": {"type": ["string", "null"]},
+        "dependents": {"type": ["string", "null"]},
+        "reasoning": {"type": "string"},
+    },
+    "required": [
+        "household_id",
+        "partner_id",
+        "age",
+        "sector",
+        "region",
+        "urbanicity",
+        "religion",
+        "dependents",
+        "reasoning",
+    ],
+    "additionalProperties": False,
+}
+
 
 def _build_prompt(
     population_spec: PopulationSpec,
@@ -216,7 +244,8 @@ def _build_prompt(
     """Build the prompt for network config generation."""
     # Summarize population attributes
     attr_lines = []
-    for attr in population_spec.attributes:
+    max_prompt_attrs = 50
+    for attr in population_spec.attributes[:max_prompt_attrs]:
         line = f"  - {attr.name} ({attr.type})"
         if attr.category:
             line += f" [{attr.category}]"
@@ -234,6 +263,10 @@ def _build_prompt(
                 if dist_mean is not None:
                     line += f" (mean={dist_mean})"
         attr_lines.append(line)
+    if len(population_spec.attributes) > max_prompt_attrs:
+        attr_lines.append(
+            f"  - ... ({len(population_spec.attributes) - max_prompt_attrs} more attributes omitted)"
+        )
 
     attr_summary = "\n".join(attr_lines)
 
@@ -294,7 +327,80 @@ IMPORTANT:
 - For within_n match type, you MUST provide ordinal_levels mapping
 - For edge type conditions, use a_{{attribute}} and b_{{attribute}} syntax
 - For degree_multipliers condition_value, use the same type as the attribute (boolean/number/string)
+    """
+
+
+def _build_structural_role_prompt(population_spec: PopulationSpec) -> str:
+    """Build minimal prompt for structural-role mapping only."""
+    max_prompt_attrs = 50
+    attribute_names = [
+        attr.name for attr in population_spec.attributes[:max_prompt_attrs]
+    ]
+    attr_lines = "\n".join(f"- {name}" for name in attribute_names)
+    omitted_note = ""
+    if len(population_spec.attributes) > max_prompt_attrs:
+        omitted = len(population_spec.attributes) - max_prompt_attrs
+        omitted_note = f"\nNote: {omitted} additional attributes are omitted for prompt compactness."
+
+    return f"""Map structural network roles to exact attribute names from this population.
+
+Population: {population_spec.meta.description}
+Geography/context: {population_spec.meta.geography or "unspecified"}
+
+Available attribute names:
+{attr_lines}
+{omitted_note}
+
+Roles to map (return exact attribute name or null):
+- household_id: household grouping identifier
+- partner_id: partner/spouse agent id reference
+- age: person's age
+- sector: occupation/employment sector
+- region: location bucket (state/province/country/region)
+- urbanicity: urban/rural style location bucket
+- religion: faith/religious affiliation
+- dependents: list of children/dependents
+
+Rules:
+- NEVER invent names; choose only from Available attribute names.
+- If role is not represented, return null.
+- Keep this mapping pragmatic for structural edges: partner, household, coworker, neighbor, congregation, school_parent.
 """
+
+
+def _generate_structural_attribute_roles(
+    population_spec: PopulationSpec,
+    model: str | None = None,
+) -> StructuralAttributeRoles:
+    """Generate structural-role mapping in a focused low-load call."""
+    prompt = _build_structural_role_prompt(population_spec)
+    data = reasoning_call(
+        prompt=prompt,
+        response_schema=STRUCTURAL_ROLE_SCHEMA,
+        schema_name="structural_roles",
+        model=model,
+        reasoning_effort="low",
+        max_retries=1,
+    )
+
+    known_attrs = {attr.name for attr in population_spec.attributes}
+    roles: dict[str, str | None] = {}
+    for role_name in (
+        "household_id",
+        "partner_id",
+        "age",
+        "sector",
+        "region",
+        "urbanicity",
+        "religion",
+        "dependents",
+    ):
+        value = data.get(role_name)
+        if isinstance(value, str) and value in known_attrs:
+            roles[role_name] = value
+        else:
+            roles[role_name] = None
+    return StructuralAttributeRoles.model_validate(roles)
 
 
 def _validate_config(data: dict, population_spec: PopulationSpec) -> list[str]:
@@ -523,11 +629,9 @@ def generate_network_config(
 ) -> NetworkConfig:
     """Generate a NetworkConfig from a population spec using LLM reasoning.
 
-    The LLM analyzes the population's attributes and determines:
-    - Which attributes create social connections (homophily weights)
-    - Who are the natural hubs (degree multipliers)
-    - What types of relationships exist (edge type rules)
-    - Who influences whom (influence factors)
+    Uses two focused LLM calls:
+    1) core network config (weights, multipliers, edge rules, influence, avg degree)
+    2) structural attribute role mapping (household/partner/region/etc.)
 
     Args:
         population_spec: The population specification with attribute definitions
@@ -553,13 +657,23 @@ def generate_network_config(
     )
 
     config = _convert_to_network_config(data, population_spec)
+    config = config.model_copy(
+        update={
+            "structural_attribute_roles": _generate_structural_attribute_roles(
+                population_spec,
+                model=model,
+            )
+        }
+    )
 
     logger.info(
         f"[NetworkConfigGen] Generated config: "
         f"{len(config.attribute_weights)} weights, "
         f"{len(config.degree_multipliers)} multipliers, "
         f"{len(config.edge_type_rules)} edge rules, "
-        f"{len(config.influence_factors)} influence factors"
+        f"{len(config.influence_factors)} influence factors, "
+        f"structural roles="
+        f"{sum(1 for v in config.structural_attribute_roles.model_dump().values() if v)}"
     )
 
     return config

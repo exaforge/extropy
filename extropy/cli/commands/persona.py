@@ -12,7 +12,14 @@ from ...core.models import PopulationSpec
 from ...core.models.scenario import ScenarioSpec
 from ..app import app, console, is_agent_mode, get_study_path
 from ..study import StudyContext, detect_study_folder, resolve_scenario
-from ..utils import format_elapsed, Output, ExitCode
+from ..utils import (
+    format_elapsed,
+    Output,
+    ExitCode,
+    format_validation_for_json,
+    get_next_invalid_artifact_path,
+    save_invalid_json_artifact,
+)
 
 
 @app.command("persona")
@@ -71,6 +78,7 @@ def persona_command(
     from ...population.persona import (
         generate_persona_config,
         PersonaConfigError,
+        validate_persona_config,
     )
     from ...core.cost.tracker import CostTracker
 
@@ -229,8 +237,45 @@ def persona_command(
     gen_elapsed = time.time() - gen_start
 
     if gen_error:
-        out.error(f"Failed to generate persona config: {gen_error}")
-        raise typer.Exit(3)
+        invalid_path = save_invalid_json_artifact(
+            {
+                "stage": "persona",
+                "scenario": scenario_name,
+                "error": str(gen_error),
+            },
+            persona_path.with_suffix(".json"),
+            stem=persona_path.stem,
+            extension=".json",
+        )
+        out.error(
+            f"Failed to generate persona config: {gen_error}. Saved: {invalid_path}",
+            exit_code=ExitCode.VALIDATION_ERROR,
+        )
+        raise typer.Exit(out.finish())
+
+    validation_result = validate_persona_config(merged_spec, config)
+    out.set_data("validation", format_validation_for_json(validation_result))
+    if validation_result.errors:
+        invalid_path = get_next_invalid_artifact_path(persona_path)
+        config.to_yaml(invalid_path)
+        out.error(
+            f"Persona config validation failed ({len(validation_result.errors)} errors). Saved: {invalid_path}",
+            exit_code=ExitCode.VALIDATION_ERROR,
+        )
+        if not agent_mode:
+            for err in validation_result.errors[:10]:
+                console.print(f"[red]✗[/red] {err.location}: {err.message}")
+            if len(validation_result.errors) > 10:
+                console.print(
+                    f"[dim]... and {len(validation_result.errors) - 10} more[/dim]"
+                )
+        raise typer.Exit(out.finish())
+    if validation_result.warnings and not agent_mode:
+        console.print(
+            f"[yellow]⚠[/yellow] Persona validation warnings: {len(validation_result.warnings)}"
+        )
+        for warn in validation_result.warnings[:5]:
+            console.print(f"  [dim]- {warn.location}: {warn.message}[/dim]")
 
     if not agent_mode:
         console.print(

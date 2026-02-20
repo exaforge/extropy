@@ -8,7 +8,6 @@ from extropy.core.models.scenario import (
     ExposureChannel,
     ExposureRule,
     InteractionConfig,
-    InteractionType,
     OutcomeConfig,
     OutcomeDefinition,
     OutcomeType,
@@ -18,6 +17,15 @@ from extropy.core.models.scenario import (
     SeedExposure,
     SpreadModifier,
     SpreadConfig,
+    SamplingSemanticRoles,
+    MaritalRoles,
+    GeoRoles,
+)
+from extropy.core.models.population import (
+    AttributeSpec,
+    SamplingConfig,
+    GroundingInfo,
+    CategoricalDistribution,
 )
 from extropy.scenario.validator import load_and_validate_scenario, validate_scenario
 from extropy.storage import open_study_db
@@ -49,7 +57,6 @@ def _make_scenario_spec(
                 ExposureChannel(
                     name="official_notice",
                     description="Official notice",
-                    reach="broadcast",
                 )
             ],
             rules=[
@@ -62,7 +69,6 @@ def _make_scenario_spec(
             ],
         ),
         interaction=InteractionConfig(
-            primary_model=InteractionType.PASSIVE_OBSERVATION,
             description="Passive observation test",
         ),
         spread=SpreadConfig(share_probability=0.3),
@@ -182,3 +188,103 @@ def test_validate_scenario_allows_edge_weight_in_spread_modifier(tmp_path: Path)
         if issue.location == "spread.share_modifiers[0].when"
     ]
     assert not edge_weight_errors
+
+
+def _extended_categorical_attr(name: str, options: list[str]) -> AttributeSpec:
+    return AttributeSpec(
+        name=name,
+        type="categorical",
+        category="context_specific",
+        description=f"{name} attribute",
+        sampling=SamplingConfig(
+            strategy="independent",
+            distribution=CategoricalDistribution(
+                type="categorical",
+                options=options,
+                weights=[1.0 / len(options)] * len(options),
+            ),
+        ),
+        grounding=GroundingInfo(level="low", method="estimated"),
+    )
+
+
+def test_validate_scenario_ref_namespace_includes_extended_attrs(
+    minimal_population_spec,
+):
+    spec = _make_scenario_spec("population.yaml", "study.db")
+    spec.meta.base_population = "population.v1"
+    spec.extended_attributes = [
+        _extended_categorical_attr(
+            "info_channel_preference",
+            ["official_notice", "social_media"],
+        )
+    ]
+    spec.seed_exposure.rules[0].when = "info_channel_preference == 'official_notice'"
+
+    result = validate_scenario(spec, population_spec=minimal_population_spec)
+
+    assert result.valid, result.errors
+    assert not any(issue.category == "attribute_reference" for issue in result.errors)
+
+
+def test_validate_scenario_rejects_invalid_literal_in_when(minimal_population_spec):
+    spec = _make_scenario_spec("population.yaml", "study.db")
+    spec.meta.base_population = "population.v1"
+    spec.extended_attributes = [
+        _extended_categorical_attr(
+            "info_channel_preference",
+            ["official_notice", "social_media"],
+        )
+    ]
+    spec.seed_exposure.rules[0].when = "info_channel_preference == 'telepathy'"
+
+    result = validate_scenario(spec, population_spec=minimal_population_spec)
+
+    assert not result.valid
+    assert any(issue.category == "attribute_literal" for issue in result.errors)
+
+
+def test_validate_scenario_rejects_unknown_sampling_semantic_role_attr(
+    minimal_population_spec,
+):
+    spec = _make_scenario_spec("population.yaml", "study.db")
+    spec.meta.base_population = "population.v1"
+    spec.extended_attributes = [
+        _extended_categorical_attr("marital_status", ["single", "married"])
+    ]
+    spec.sampling_semantic_roles = SamplingSemanticRoles(
+        geo_roles=GeoRoles(country_attr="missing_country_attr")
+    )
+
+    result = validate_scenario(spec, population_spec=minimal_population_spec)
+
+    assert not result.valid
+    assert any(
+        issue.location == "sampling_semantic_roles.geo_roles.country_attr"
+        for issue in result.errors
+    )
+
+
+def test_validate_scenario_rejects_overlapping_marital_role_values(
+    minimal_population_spec,
+):
+    spec = _make_scenario_spec("population.yaml", "study.db")
+    spec.meta.base_population = "population.v1"
+    spec.extended_attributes = [
+        _extended_categorical_attr("marital_status", ["single", "married"])
+    ]
+    spec.sampling_semantic_roles = SamplingSemanticRoles(
+        marital_roles=MaritalRoles(
+            attr="marital_status",
+            partnered_values=["married", "single"],
+            single_values=["single"],
+        )
+    )
+
+    result = validate_scenario(spec, population_spec=minimal_population_spec)
+
+    assert not result.valid
+    assert any(
+        issue.location == "sampling_semantic_roles.marital_roles"
+        for issue in result.errors
+    )

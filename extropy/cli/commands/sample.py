@@ -8,6 +8,7 @@ import typer
 from ...core.models import PopulationSpec
 from ...core.models.scenario import ScenarioSpec
 from ...population.validator import validate_spec
+from ...utils import topological_sort, CircularDependencyError
 from ..app import app, console, is_agent_mode, get_study_path
 from ..study import StudyContext, detect_study_folder, resolve_scenario
 from ..utils import (
@@ -16,6 +17,7 @@ from ..utils import (
     format_elapsed,
     format_validation_for_json,
     format_sampling_stats_for_json,
+    save_invalid_json_artifact,
 )
 
 
@@ -41,6 +43,11 @@ def sample_command(
     ),
     skip_validation: bool = typer.Option(
         False, "--skip-validation", help="Skip validator errors"
+    ),
+    strict_gates: bool = typer.Option(
+        False,
+        "--strict-gates",
+        help="Fail on high-risk warnings and post-sampling coherence gate violations",
     ),
 ):
     """
@@ -135,11 +142,34 @@ def sample_command(
     extended_attrs = scenario_spec.extended_attributes or []
     merged_attributes.extend(extended_attrs)
 
-    # Compute merged sampling order
-    merged_sampling_order = list(pop_spec.sampling_order)
-    for attr in extended_attrs:
-        if attr.name not in merged_sampling_order:
-            merged_sampling_order.append(attr.name)
+    # Compute merged sampling order deterministically via topological sort
+    try:
+        merged_deps: dict[str, list[str]] = {
+            attr.name: list(attr.sampling.depends_on or [])
+            for attr in merged_attributes
+        }
+        merged_names = set(merged_deps.keys())
+        merged_deps = {
+            name: [dep for dep in deps if dep in merged_names]
+            for name, deps in merged_deps.items()
+        }
+        merged_sampling_order = topological_sort(merged_deps)
+    except CircularDependencyError as e:
+        invalid_path = save_invalid_json_artifact(
+            {
+                "stage": "sample",
+                "scenario": scenario_name,
+                "error": f"merged_sampling_order_cycle: {e}",
+            },
+            study_ctx.get_scenario_dir(scenario_name) / "sample.json",
+            stem="sample",
+            extension=".json",
+        )
+        out.error(
+            f"Merged sampling order has circular dependency: {e}. Saved: {invalid_path}",
+            exit_code=ExitCode.VALIDATION_ERROR,
+        )
+        raise typer.Exit(out.finish())
 
     # Create merged spec for sampling
     merged_spec = PopulationSpec(
@@ -152,6 +182,7 @@ def sample_command(
     # Get household config and agent focus mode from scenario
     household_config = scenario_spec.household_config
     agent_focus_mode = scenario_spec.agent_focus_mode
+    sampling_semantic_roles = scenario_spec.sampling_semantic_roles
 
     out.success(
         f"Loaded scenario: [bold]{scenario_name}[/bold] "
@@ -160,6 +191,7 @@ def sample_command(
         base_population=f"{pop_name}.v{pop_version}",
         attribute_count=len(merged_attributes),
         agent_count=count,
+        strict_gates=strict_gates,
     )
 
     # Validation Gate
@@ -178,8 +210,19 @@ def sample_command(
                 f"Spec has {len(validation_result.errors)} error(s) - skipping validation"
             )
         else:
+            invalid_path = save_invalid_json_artifact(
+                {
+                    "stage": "sample",
+                    "scenario": scenario_name,
+                    "error": "merged_spec_validation_failed",
+                    "validation": format_validation_for_json(validation_result),
+                },
+                study_ctx.get_scenario_dir(scenario_name) / "sample.json",
+                stem="sample",
+                extension=".json",
+            )
             out.error(
-                f"Merged spec has {len(validation_result.errors)} error(s)",
+                f"Merged spec has {len(validation_result.errors)} error(s). Saved: {invalid_path}",
                 exit_code=ExitCode.VALIDATION_ERROR,
             )
             if not agent_mode:
@@ -199,6 +242,38 @@ def sample_command(
             )
         else:
             out.success("Spec validated")
+
+    if strict_gates:
+        strict_warning_categories = {"CONDITION_VALUE", "MODIFIER_OVERLAP"}
+        promoted = [
+            warn
+            for warn in (validation_result.warnings or [])
+            if warn.category in strict_warning_categories
+        ]
+        if promoted:
+            invalid_path = save_invalid_json_artifact(
+                {
+                    "stage": "sample",
+                    "scenario": scenario_name,
+                    "error": "strict_gate_pre_sample_failed",
+                    "promoted_warnings": [
+                        {
+                            "location": w.location,
+                            "category": w.category,
+                            "message": w.message,
+                        }
+                        for w in promoted
+                    ],
+                },
+                study_ctx.get_scenario_dir(scenario_name) / "sample.json",
+                stem="sample",
+                extension=".json",
+            )
+            out.error(
+                f"Strict gate blocked sampling due to high-risk warnings ({len(promoted)}). Saved: {invalid_path}",
+                exit_code=ExitCode.VALIDATION_ERROR,
+            )
+            raise typer.Exit(out.finish())
 
     # Sampling
     out.blank()
@@ -238,6 +313,7 @@ def sample_command(
                     on_progress=on_progress,
                     household_config=household_config,
                     agent_focus_mode=agent_focus_mode,
+                    semantic_roles=sampling_semantic_roles,
                 )
             except SamplingError as e:
                 sampling_error = e
@@ -251,6 +327,7 @@ def sample_command(
                         seed=seed,
                         household_config=household_config,
                         agent_focus_mode=agent_focus_mode,
+                        semantic_roles=sampling_semantic_roles,
                     )
                 except SamplingError as e:
                     sampling_error = e
@@ -262,13 +339,24 @@ def sample_command(
                     seed=seed,
                     household_config=household_config,
                     agent_focus_mode=agent_focus_mode,
+                    semantic_roles=sampling_semantic_roles,
                 )
             except SamplingError as e:
                 sampling_error = e
 
     if sampling_error:
+        invalid_path = save_invalid_json_artifact(
+            {
+                "stage": "sample",
+                "scenario": scenario_name,
+                "error": str(sampling_error),
+            },
+            study_ctx.get_scenario_dir(scenario_name) / "sample.json",
+            stem="sample",
+            extension=".json",
+        )
         out.error(
-            f"Sampling failed: {sampling_error}",
+            f"Sampling failed: {sampling_error}. Saved: {invalid_path}",
             exit_code=ExitCode.SAMPLING_ERROR,
             suggestion="Check attribute dependencies and formula syntax",
         )
@@ -281,6 +369,36 @@ def sample_command(
         seed=result.meta["seed"],
         sampling_time_seconds=sampling_elapsed,
     )
+
+    # Post-sampling deterministic rule-pack gate
+    rule_pack = _evaluate_rule_pack(result, strict_gates=strict_gates)
+    result.stats.rule_pack = rule_pack
+    out.set_data("rule_pack", rule_pack)
+    gate_failed = rule_pack["status"] == "fail"
+    if gate_failed:
+        invalid_path = save_invalid_json_artifact(
+            {
+                "stage": "sample",
+                "scenario": scenario_name,
+                "error": "post_sample_rule_pack_failed",
+                "rule_pack": rule_pack,
+                "reconciliation_counts": result.stats.reconciliation_counts,
+                "constraint_violations": result.stats.constraint_violations,
+                "condition_warnings": result.stats.condition_warnings,
+            },
+            study_ctx.get_scenario_dir(scenario_name) / "sample.json",
+            stem="sample",
+            extension=".json",
+        )
+        out.error(
+            f"Post-sampling quality gate failed. Saved: {invalid_path}",
+            exit_code=ExitCode.SAMPLING_ERROR,
+        )
+        raise typer.Exit(out.finish())
+    if rule_pack.get("status") == "warn":
+        out.warning(
+            rule_pack.get("summary", "Sampling completed with plausibility warnings")
+        )
 
     # Report
     if agent_mode or report:
@@ -331,6 +449,51 @@ def sample_command(
     out.divider()
 
     raise typer.Exit(out.finish())
+
+
+def _evaluate_rule_pack(result, *, strict_gates: bool) -> dict:
+    """Evaluate deterministic impossible/implausible gates on sampled output."""
+    total_agents = max(1, len(result.agents))
+    impossible_count = sum(result.stats.constraint_violations.values())
+    implausible_count = sum(result.stats.reconciliation_counts.values())
+    implausible_rate = implausible_count / total_agents
+
+    if strict_gates and result.stats.condition_warnings:
+        return {
+            "status": "fail",
+            "summary": "Condition-evaluation warnings present in strict mode",
+            "impossible_count": impossible_count,
+            "implausible_count": implausible_count,
+            "implausible_rate": implausible_rate,
+            "condition_warning_count": len(result.stats.condition_warnings),
+        }
+
+    if impossible_count > 0:
+        return {
+            "status": "fail",
+            "summary": "Impossible rule violations detected",
+            "impossible_count": impossible_count,
+            "implausible_count": implausible_count,
+            "implausible_rate": implausible_rate,
+        }
+
+    if implausible_rate > 0.05:
+        status = "fail"
+        summary = "Implausible reconciliation rate exceeds 5%"
+    elif implausible_rate >= 0.01:
+        status = "warn"
+        summary = "Implausible reconciliation rate between 1% and 5%"
+    else:
+        status = "pass"
+        summary = "Rule-pack checks passed"
+
+    return {
+        "status": status,
+        "summary": summary,
+        "impossible_count": impossible_count,
+        "implausible_count": implausible_count,
+        "implausible_rate": implausible_rate,
+    }
 
 
 def _save_to_db(

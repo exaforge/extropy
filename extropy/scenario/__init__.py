@@ -37,7 +37,6 @@ from ..core.models import (
     ExposureRule,
     SeedExposure,
     # Interaction
-    InteractionType,
     InteractionConfig,
     SpreadModifier,
     SpreadConfig,
@@ -51,6 +50,7 @@ from ..core.models import (
     # Scenario
     ScenarioMeta,
     ScenarioSpec,
+    SamplingSemanticRoles,
     # Validation
     Severity,
     ValidationIssue,
@@ -81,7 +81,6 @@ __all__ = [
     "ExposureRule",
     "SeedExposure",
     # Models - Interaction
-    "InteractionType",
     "InteractionConfig",
     "SpreadModifier",
     "SpreadConfig",
@@ -95,6 +94,7 @@ __all__ = [
     # Models - Scenario
     "ScenarioMeta",
     "ScenarioSpec",
+    "SamplingSemanticRoles",
     # Models - Validation
     "Severity",
     "ValidationIssue",

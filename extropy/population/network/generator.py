@@ -6,6 +6,7 @@ Implements adaptive calibration to hit target metrics (avg_degree, clustering, m
 import json
 import logging
 import hashlib
+import inspect
 import multiprocessing as mp
 import random
 import time
@@ -1047,6 +1048,37 @@ def _acceptance_bounds(
     return deg_min, deg_max, clust_min, mod_min, mod_max
 
 
+def _evaluate_topology_gate(
+    *,
+    metrics: dict[str, float],
+    deg_min: float,
+    deg_max: float,
+    cluster_min: float,
+    mod_min: float,
+    mod_max: float,
+    lcc_min: float,
+    min_edge_floor: int,
+) -> tuple[bool, dict[str, float]]:
+    """Evaluate strict topology gate and return deltas vs configured bounds."""
+    in_range = (
+        deg_min <= metrics["avg_degree"] <= deg_max
+        and metrics["clustering"] >= cluster_min
+        and mod_min <= metrics["modularity"] <= mod_max
+        and metrics["largest_component_ratio"] >= lcc_min
+        and metrics["edge_count"] >= min_edge_floor
+    )
+    deltas = {
+        "degree_to_min": metrics["avg_degree"] - deg_min,
+        "degree_to_max": deg_max - metrics["avg_degree"],
+        "clustering_to_min": metrics["clustering"] - cluster_min,
+        "modularity_to_min": metrics["modularity"] - mod_min,
+        "modularity_to_max": mod_max - metrics["modularity"],
+        "lcc_to_min": metrics["largest_component_ratio"] - lcc_min,
+        "edge_count_to_min": metrics["edge_count"] - min_edge_floor,
+    }
+    return in_range, deltas
+
+
 def _apply_scale_target_caps(
     config: NetworkConfig,
     n: int,
@@ -1803,10 +1835,117 @@ def _compute_modularity_fast(
     return q
 
 
+def _resolve_structural_keys_from_config(
+    agents: list[dict[str, Any]],
+    config: NetworkConfig,
+) -> dict[str, str | None]:
+    """Resolve structural role keys from network config (LLM-selected roles first).
+
+    Primary source:
+    - config.structural_attribute_roles
+
+    Compatibility fallback (minimal):
+    - exact canonical field names only when role is unset or missing.
+    """
+    populated_counts: Counter[str] = Counter()
+    for agent in agents:
+        for key, value in agent.items():
+            if value is None:
+                continue
+            if isinstance(value, str) and not value.strip():
+                continue
+            populated_counts[key] += 1
+
+    defaults: dict[str, tuple[str, ...]] = {
+        "household_id": ("household_id",),
+        "partner_id": ("partner_id", "partner_agent_id"),
+        "age": ("age",),
+        "sector": ("occupation_sector",),
+        "region": ("state", "country"),
+        "urbanicity": ("urban_rural",),
+        "religion": ("religious_affiliation",),
+        "dependents": ("dependents",),
+    }
+
+    roles = config.structural_attribute_roles
+    resolved: dict[str, str | None] = {}
+
+    for slot, fallback_keys in defaults.items():
+        configured = getattr(roles, slot, None)
+        candidates: list[str] = []
+        if configured:
+            candidates.append(configured)
+        for key in fallback_keys:
+            if key not in candidates:
+                candidates.append(key)
+
+        present_candidates = [c for c in candidates if populated_counts.get(c, 0) > 0]
+        if not present_candidates:
+            resolved[slot] = None
+            continue
+        present_candidates.sort(key=lambda k: (-populated_counts[k], k))
+        resolved[slot] = present_candidates[0]
+
+    return resolved
+
+
+def _bucket_token(value: Any) -> str | None:
+    """Convert a value into a stable bucket key token."""
+    if value is None:
+        return None
+    if isinstance(value, str):
+        text = value.strip()
+        if not text:
+            return None
+        return text
+    return str(value)
+
+
+def _dependent_is_school_age(dep: dict[str, Any]) -> bool:
+    """Detect whether dependent metadata indicates school-age child."""
+    school_status_aliases = {
+        "school_status",
+        "school_level",
+        "education_stage",
+        "student_stage",
+        "grade_level",
+    }
+    school_labels = {
+        "elementary",
+        "middle_school",
+        "high_school",
+        "primary",
+        "secondary",
+        "k12",
+        "school",
+    }
+    for key, value in dep.items():
+        if key.strip().lower() not in school_status_aliases:
+            continue
+        if isinstance(value, str):
+            status = value.strip().lower().replace("-", "_").replace(" ", "_")
+            if status in school_labels:
+                return True
+
+    age_aliases = {"age", "age_years", "years_old", "current_age"}
+    age_value: Any = None
+    for key, value in dep.items():
+        if key.strip().lower() in age_aliases:
+            age_value = value
+            break
+
+    if isinstance(age_value, str) and age_value.strip().isdigit():
+        age_value = int(age_value.strip())
+    if isinstance(age_value, (int, float)):
+        return 5 <= int(age_value) <= 18
+    return False
+
+
 def _generate_structural_edges(
     agents: list[dict[str, Any]],
     agent_ids: list[str],
     rng: random.Random,
+    config: NetworkConfig | None = None,
 ) -> list[Edge]:
     """Generate deterministic structural edges from agent attributes.
 
@@ -1833,48 +1972,63 @@ def _generate_structural_edges(
             )
         )
 
+    effective_config = config or NetworkConfig()
+    resolved_keys = _resolve_structural_keys_from_config(agents, effective_config)
+    household_key = resolved_keys.get("household_id")
+    partner_key = resolved_keys.get("partner_id")
+    age_key = resolved_keys.get("age")
+    sector_key = resolved_keys.get("sector")
+    region_key = resolved_keys.get("region")
+    urban_key = resolved_keys.get("urbanicity")
+    religion_key = resolved_keys.get("religion")
+    dependents_key = resolved_keys.get("dependents")
+
     # Build indexes for batch matching
     household_map: dict[str, list[int]] = {}
-    sector_state_map: dict[tuple[str, str], list[int]] = {}
-    state_urban_map: dict[tuple[str, str], list[int]] = {}
-    religion_state_map: dict[tuple[str, str], list[int]] = {}
+    sector_region_map: dict[tuple[str, str], list[int]] = {}
+    region_urban_map: dict[tuple[str, str], list[int]] = {}
+    religion_region_map: dict[tuple[str, str], list[int]] = {}
     school_parent_map: dict[tuple[str, str], list[int]] = {}
 
     for idx, agent in enumerate(agents):
-        hh_id = agent.get("household_id")
+        hh_id = _bucket_token(agent.get(household_key)) if household_key else None
         if hh_id:
             household_map.setdefault(hh_id, []).append(idx)
 
-        sector = agent.get("occupation_sector")
-        state = agent.get("state")
-        urban = agent.get("urban_rural")
+        sector = _bucket_token(agent.get(sector_key)) if sector_key else None
+        region = _bucket_token(agent.get(region_key)) if region_key else None
+        urban = _bucket_token(agent.get(urban_key)) if urban_key else None
+        urban_bucket = urban if urban is not None else "__all__"
 
-        if sector and state:
-            sector_state_map.setdefault((sector, state), []).append(idx)
-        if state and urban:
-            state_urban_map.setdefault((state, urban), []).append(idx)
+        if sector and region:
+            sector_region_map.setdefault((sector, region), []).append(idx)
+        if region:
+            region_urban_map.setdefault((region, urban_bucket), []).append(idx)
 
-        religion = agent.get("religious_affiliation")
+        religion = _bucket_token(agent.get(religion_key)) if religion_key else None
         if (
             religion
-            and state
+            and region
             and religion.lower() not in ("none", "atheist", "agnostic")
         ):
-            religion_state_map.setdefault((religion, state), []).append(idx)
+            religion_region_map.setdefault((religion, region), []).append(idx)
 
         # School parents: agents with school-age dependents
-        dependents = agent.get("dependents", [])
-        has_school_kid = any(
-            isinstance(d, dict)
-            and d.get("school_status") in ("elementary", "middle_school", "high_school")
-            for d in dependents
+        dependents_raw = (
+            agent.get(dependents_key, [])
+            if dependents_key
+            else agent.get("dependents", [])
         )
-        if has_school_kid and state and urban:
-            school_parent_map.setdefault((state, urban), []).append(idx)
+        dependents = dependents_raw if isinstance(dependents_raw, list) else []
+        has_school_kid = any(
+            isinstance(d, dict) and _dependent_is_school_age(d) for d in dependents
+        )
+        if has_school_kid and region:
+            school_parent_map.setdefault((region, urban_bucket), []).append(idx)
 
     # 1. Partner edges (weight 1.0, max 1 per agent)
     for idx, agent in enumerate(agents):
-        partner_id = agent.get("partner_id")
+        partner_id = agent.get(partner_key) if partner_key else None
         if partner_id and partner_id in id_to_idx:
             j = id_to_idx[partner_id]
             _add(idx, j, "partner", 1.0, "household")
@@ -1888,7 +2042,7 @@ def _generate_structural_edges(
     # 3. Coworker edges (weight 0.6, capped at ~8 per agent)
     _MAX_COWORKER = 8
     coworker_count: dict[int, int] = {}
-    for pool in sector_state_map.values():
+    for pool in sector_region_map.values():
         if len(pool) < 2:
             continue
         shuffled = list(pool)
@@ -1908,7 +2062,7 @@ def _generate_structural_edges(
     # 4. Neighbor edges (weight 0.4, capped at ~4, age within 15yr)
     _MAX_NEIGHBOR = 4
     neighbor_count: dict[int, int] = {}
-    for pool in state_urban_map.values():
+    for pool in region_urban_map.values():
         if len(pool) < 2:
             continue
         shuffled = list(pool)
@@ -1916,13 +2070,19 @@ def _generate_structural_edges(
         for i_pos, i in enumerate(shuffled):
             if neighbor_count.get(i, 0) >= _MAX_NEIGHBOR:
                 continue
-            age_i = agents[i].get("age", 40)
+            age_i_raw = agents[i].get(age_key) if age_key else None
+            if isinstance(age_i_raw, str) and age_i_raw.strip().isdigit():
+                age_i_raw = int(age_i_raw.strip())
+            age_i = age_i_raw if isinstance(age_i_raw, (int, float)) else 40
             for j in shuffled[i_pos + 1 :]:
                 if neighbor_count.get(j, 0) >= _MAX_NEIGHBOR:
                     continue
                 if neighbor_count.get(i, 0) >= _MAX_NEIGHBOR:
                     break
-                age_j = agents[j].get("age", 40)
+                age_j_raw = agents[j].get(age_key) if age_key else None
+                if isinstance(age_j_raw, str) and age_j_raw.strip().isdigit():
+                    age_j_raw = int(age_j_raw.strip())
+                age_j = age_j_raw if isinstance(age_j_raw, (int, float)) else 40
                 if abs(age_i - age_j) <= 15:
                     _add(i, j, "neighbor", 0.4, "neighborhood")
                     neighbor_count[i] = neighbor_count.get(i, 0) + 1
@@ -1931,7 +2091,7 @@ def _generate_structural_edges(
     # 5. Congregation edges (weight 0.4, capped at ~4)
     _MAX_CONGREGATION = 4
     congregation_count: dict[int, int] = {}
-    for pool in religion_state_map.values():
+    for pool in religion_region_map.values():
         if len(pool) < 2:
             continue
         shuffled = list(pool)
@@ -2166,10 +2326,11 @@ def generate_network(
     elapsed_budget = max(1, int(config.max_calibration_minutes * 60))
     stage_budget = max(30, elapsed_budget // max(1, len(stage_plan)))
 
-    accepted = False
+    calibration_accepted = False
     best_score = float("inf")
     best_edges: list[Edge] | None = None
-    best_metrics: dict[str, float] | None = None
+    calibration_best_metrics: dict[str, float] | None = None
+    calibration_best_communities: list[int] | None = None
     best_stage = ""
     final_candidate_mode = config.candidate_mode
     final_blocking_attrs: list[str] = []
@@ -2421,7 +2582,17 @@ def generate_network(
         # Step 3b: Generate structural edges first (structural-first ordering).
         # Structural edges consume part of the degree budget; similarity
         # calibration targets the remainder.
-        structural_edges = _generate_structural_edges(agents, agent_ids, rng)
+        structural_fn = _generate_structural_edges
+        sig = inspect.signature(structural_fn)
+        if "config" in sig.parameters or len(sig.parameters) >= 4:
+            structural_edges = structural_fn(
+                agents,
+                agent_ids,
+                rng,
+                config=stage_cfg,
+            )
+        else:
+            structural_edges = structural_fn(agents, agent_ids, rng)
         structural_pair_set: set[tuple[str, str]] = set()
         for se in structural_edges:
             structural_pair_set.add((se.source, se.target))
@@ -2584,7 +2755,8 @@ def generate_network(
                 if score < best_score:
                     best_score = score
                     best_edges = edges
-                    best_metrics = metrics_payload
+                    calibration_best_metrics = metrics_payload
+                    calibration_best_communities = list(communities)
                     best_stage = stage_name
 
                 if calibration_run_id and study_db_file is not None:
@@ -2621,7 +2793,7 @@ def generate_network(
 
                 if in_range:
                     stage_accepted = True
-                    accepted = True
+                    calibration_accepted = True
                     if calibration_run_id and study_db_file is not None:
                         with open_study_db(study_db_file) as db:
                             db.complete_network_calibration_run(
@@ -2736,14 +2908,49 @@ def generate_network(
     )
     emit_progress("Rewiring edges", len(edges), len(edges), force_db=True)
 
-    quality_deltas = {
-        "degree_to_min": (best_metrics or {}).get("avg_degree", 0.0) - deg_min,
-        "degree_to_max": deg_max - (best_metrics or {}).get("avg_degree", 0.0),
-        "clustering_to_min": (best_metrics or {}).get("clustering", 0.0) - cluster_min,
-        "modularity_to_min": (best_metrics or {}).get("modularity", 0.0) - mod_min,
-        "modularity_to_max": mod_max - (best_metrics or {}).get("modularity", 0.0),
-        "lcc_to_min": (best_metrics or {}).get("largest_component_ratio", 0.0)
+    final_adjacency = _build_adjacency_from_edges(edges, agent_ids, n)
+    final_metrics = {
+        "edge_count": len(edges),
+        "avg_degree": (2 * len(edges) / n) if n > 0 else 0.0,
+        "clustering": _compute_avg_clustering(final_adjacency, n),
+        "largest_component_ratio": _compute_largest_component_ratio(final_adjacency, n),
+        "modularity": 0.0,
+    }
+    if calibration_best_communities and len(calibration_best_communities) == n:
+        final_metrics["modularity"] = _compute_modularity_fast(
+            edges, agent_ids, calibration_best_communities
+        )
+    elif calibration_best_metrics is not None:
+        final_metrics["modularity"] = calibration_best_metrics.get("modularity", 0.0)
+
+    final_accepted, quality_deltas = _evaluate_topology_gate(
+        metrics=final_metrics,
+        deg_min=deg_min,
+        deg_max=deg_max,
+        cluster_min=cluster_min,
+        mod_min=mod_min,
+        mod_max=mod_max,
+        lcc_min=config.target_largest_component_ratio,
+        min_edge_floor=min_edge_floor,
+    )
+
+    calibration_quality_deltas = {
+        "degree_to_min": (calibration_best_metrics or {}).get("avg_degree", 0.0)
+        - deg_min,
+        "degree_to_max": deg_max
+        - (calibration_best_metrics or {}).get("avg_degree", 0.0),
+        "clustering_to_min": (calibration_best_metrics or {}).get("clustering", 0.0)
+        - cluster_min,
+        "modularity_to_min": (calibration_best_metrics or {}).get("modularity", 0.0)
+        - mod_min,
+        "modularity_to_max": mod_max
+        - (calibration_best_metrics or {}).get("modularity", 0.0),
+        "lcc_to_min": (calibration_best_metrics or {}).get(
+            "largest_component_ratio", 0.0
+        )
         - config.target_largest_component_ratio,
+        "edge_count_to_min": (calibration_best_metrics or {}).get("edge_count", 0.0)
+        - min_edge_floor,
     }
 
     meta = {
@@ -2766,11 +2973,14 @@ def generate_network(
         },
         "quality": {
             "topology_gate": config.topology_gate,
-            "accepted": accepted,
+            "accepted": final_accepted,
             "best_score": best_score,
-            "best_metrics": best_metrics or {},
+            "best_metrics": calibration_best_metrics or {},
+            "final_metrics": final_metrics,
+            "calibration_accepted": calibration_accepted,
             "best_stage": best_stage,
             "gate_deltas": quality_deltas,
+            "calibration_gate_deltas": calibration_quality_deltas,
             "target_caps_applied": target_caps,
             "bounds": {
                 "degree_min": deg_min,

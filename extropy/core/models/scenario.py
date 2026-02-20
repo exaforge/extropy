@@ -7,7 +7,7 @@ and simulation execution (Phase 3).
 This module contains:
 - Event: EventType, Event
 - Exposure: ExposureChannel, ExposureRule, SeedExposure
-- Interaction: InteractionType, InteractionConfig, SpreadModifier, SpreadConfig
+- Interaction: InteractionConfig, SpreadModifier, SpreadConfig
 - Outcomes: OutcomeType, OutcomeDefinition, OutcomeConfig
 - Config: TimestepUnit, ScenarioSimConfig
 - Spec: ScenarioMeta, ScenarioSpec with YAML I/O
@@ -83,9 +83,6 @@ class ExposureChannel(BaseModel):
         description="Channel identifier in snake_case (e.g., 'email_notification')"
     )
     description: str = Field(description="Human-readable description of the channel")
-    reach: Literal["broadcast", "targeted", "organic"] = Field(
-        description="broadcast=everyone, targeted=specific criteria, organic=through network"
-    )
     credibility_modifier: float = Field(
         default=1.0,
         description="How the channel affects perceived credibility (1.0=no change)",
@@ -147,32 +144,12 @@ class TimelineEvent(BaseModel):
     )
 
 
-# =============================================================================
-# Interaction Model
-# =============================================================================
-
-
-class InteractionType(str, Enum):
-    """Type of agent interaction model."""
-
-    PASSIVE_OBSERVATION = "passive_observation"  # Social media style
-    DIRECT_CONVERSATION = "direct_conversation"  # One-on-one or small group
-    BROADCAST_RESPONSE = "broadcast_response"  # Authority broadcasts, agents react
-    DELIBERATIVE = "deliberative"  # Group deliberation with multiple rounds
-
-
 class InteractionConfig(BaseModel):
     """Configuration for how agents interact about the event."""
 
-    primary_model: InteractionType = Field(
-        description="Primary interaction model for this scenario"
-    )
-    secondary_model: InteractionType | None = Field(
-        default=None,
-        description="Optional secondary interaction model (for blended scenarios)",
-    )
     description: str = Field(
-        description="Human-readable description of how interactions work"
+        default="",
+        description="Human-readable notes about social dynamics (informational only).",
     )
 
 
@@ -405,6 +382,98 @@ class IdentityDimension(BaseModel):
     )
 
 
+PartnerCorrelationPolicy = Literal[
+    "gaussian_offset",
+    "same_group_rate",
+    "same_country_rate",
+    "same_value_probability",
+]
+
+
+class MaritalRoles(BaseModel):
+    """Explicit marital semantics for deterministic household reconciliation."""
+
+    attr: str | None = Field(
+        default=None,
+        description="Attribute name representing marital/relationship status",
+    )
+    partnered_values: list[str] = Field(
+        default_factory=list,
+        description="Categorical values indicating partnered state",
+    )
+    single_values: list[str] = Field(
+        default_factory=list,
+        description="Categorical values indicating single/non-partnered state",
+    )
+
+
+class GeoRoles(BaseModel):
+    """Geographic attribute roles used for naming and contextual defaults."""
+
+    country_attr: str | None = Field(
+        default=None, description="Attribute name representing country"
+    )
+    region_attr: str | None = Field(
+        default=None,
+        description="Attribute name representing region/state/province/city scope",
+    )
+    urbanicity_attr: str | None = Field(
+        default=None,
+        description="Attribute name representing urbanicity (urban/rural/etc.)",
+    )
+
+
+class SchoolParentRole(BaseModel):
+    """Role mapping for identifying school-parent contexts in structure generation."""
+
+    dependents_attr: str | None = Field(
+        default=None,
+        description="Attribute name containing dependents/children list",
+    )
+    school_age_values: list[str] = Field(
+        default_factory=list,
+        description="Dependent school-status values treated as school-age",
+    )
+
+
+class ReligionRoles(BaseModel):
+    """Role mapping for religion semantics in structural edge generation."""
+
+    religion_attr: str | None = Field(
+        default=None,
+        description="Attribute name representing religion/faith affiliation",
+    )
+    secular_values: list[str] = Field(
+        default_factory=list,
+        description="Values treated as secular/no-religion",
+    )
+
+
+class SamplingSemanticRoles(BaseModel):
+    """Scenario-owned semantic role mapping for deterministic sample/runtime logic."""
+
+    marital_roles: MaritalRoles | None = Field(
+        default=None,
+        description="Marital/relationship status semantics",
+    )
+    geo_roles: GeoRoles | None = Field(
+        default=None,
+        description="Geographic role mapping",
+    )
+    partner_correlation_roles: dict[str, PartnerCorrelationPolicy] = Field(
+        default_factory=dict,
+        description="Per-attribute partner-correlation policy overrides",
+    )
+    school_parent_role: SchoolParentRole | None = Field(
+        default=None,
+        description="School-parent role mapping",
+    )
+    religion_roles: ReligionRoles | None = Field(
+        default=None,
+        description="Religion role mapping",
+    )
+
+
 class ScenarioSpec(BaseModel):
     """Complete specification for a scenario simulation."""
 
@@ -448,6 +517,11 @@ class ScenarioSpec(BaseModel):
     identity_dimensions: list[IdentityDimension] | None = Field(
         default=None,
         description="Identity dimensions that may feel threatened or activated by this scenario. Set by LLM during scenario creation.",
+    )
+    # Scenario-owned semantic role map for sample/network deterministic behavior
+    sampling_semantic_roles: SamplingSemanticRoles | None = Field(
+        default=None,
+        description="Semantic role mappings generated during scenario compilation for deterministic sample/network execution.",
     )
 
     def to_yaml(self, path: Path | str) -> None:
@@ -508,10 +582,14 @@ class ScenarioSpec(BaseModel):
             f"Exposure channels: {len(self.seed_exposure.channels)}",
             f"Exposure rules: {len(self.seed_exposure.rules)}",
             "",
-            f"Interaction: {self.interaction.primary_model.value}",
             f"Share probability: {self.spread.share_probability:.2f}",
             "",
             f"Outcomes: {len(self.outcomes.suggested_outcomes)}",
             f"Simulation: {self.simulation.max_timesteps} {self.simulation.timestep_unit.value}s",
         ]
+        if self.interaction and self.interaction.description:
+            lines.insert(
+                8,
+                f"Interaction notes: {self.interaction.description[:60]}...",
+            )
         return "\n".join(lines)

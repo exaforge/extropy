@@ -17,6 +17,7 @@ from ..core.models import (
     ValidationResult,
 )
 from ..utils.expressions import (
+    extract_comparisons_from_expression,
     extract_names_from_expression,
     validate_expression_syntax,
 )
@@ -85,6 +86,216 @@ def _try_resolve_base_population(
         return None
 
 
+def _build_attribute_lookup(
+    spec: ScenarioSpec,
+    population_spec: PopulationSpec | None,
+) -> dict[str, object]:
+    """Build merged attribute lookup for base + scenario extension."""
+    attr_lookup: dict[str, object] = {}
+    if population_spec:
+        for attr in population_spec.attributes:
+            attr_lookup[attr.name] = attr
+    for attr in spec.extended_attributes or []:
+        attr_lookup[attr.name] = attr
+    return attr_lookup
+
+
+def _validate_literal_option_compatibility(
+    expression: str,
+    attr_lookup: dict[str, object],
+    location: str,
+) -> list[ValidationIssue]:
+    """Validate that string literals compared in expression are valid options."""
+    issues: list[ValidationIssue] = []
+    comparisons = extract_comparisons_from_expression(expression)
+    if not comparisons:
+        return issues
+
+    for attr_name, values in comparisons:
+        attr = attr_lookup.get(attr_name)
+        if attr is None:
+            continue
+
+        attr_type = getattr(attr, "type", None)
+        dist = getattr(getattr(attr, "sampling", None), "distribution", None)
+
+        if attr_type == "categorical" and dist is not None and hasattr(dist, "options"):
+            options = set(getattr(dist, "options") or [])
+            if not options:
+                continue
+            for value in values:
+                if value not in options:
+                    issues.append(
+                        ValidationError(
+                            category="attribute_literal",
+                            location=location,
+                            message=(
+                                f"Condition compares '{attr_name}' to '{value}', "
+                                "but value is not in categorical options"
+                            ),
+                            suggestion=f"Use one of: {', '.join(sorted(options))}",
+                        )
+                    )
+        elif attr_type == "boolean":
+            allowed = {"true", "false", "yes", "no", "1", "0"}
+            for value in values:
+                if value.strip().lower() not in allowed:
+                    issues.append(
+                        ValidationError(
+                            category="attribute_literal",
+                            location=location,
+                            message=(
+                                f"Condition compares boolean '{attr_name}' to '{value}' "
+                                "which is not a boolean literal"
+                            ),
+                            suggestion="Use True/False (or true/false) semantics",
+                        )
+                    )
+
+    return issues
+
+
+def _categorical_options_for_attr(attr: object) -> set[str]:
+    """Extract categorical options for an attribute, if available."""
+    dist = getattr(getattr(attr, "sampling", None), "distribution", None)
+    if dist is None or not hasattr(dist, "options"):
+        return set()
+    options = getattr(dist, "options", None) or []
+    return {str(v) for v in options}
+
+
+def _validate_sampling_semantic_roles(
+    spec: ScenarioSpec,
+    attr_lookup: dict[str, object],
+) -> list[ValidationIssue]:
+    """Validate scenario-level semantic role mapping references/options."""
+    issues: list[ValidationIssue] = []
+    roles = spec.sampling_semantic_roles
+    if roles is None:
+        return issues
+
+    marital = roles.marital_roles
+    if marital and marital.attr:
+        attr = attr_lookup.get(marital.attr)
+        if attr is None:
+            issues.append(
+                ValidationError(
+                    category="sampling_semantics",
+                    location="sampling_semantic_roles.marital_roles.attr",
+                    message=f"Unknown marital_roles.attr: '{marital.attr}'",
+                    suggestion="Use an attribute name from base or extended attributes",
+                )
+            )
+        else:
+            options = _categorical_options_for_attr(attr)
+            if options:
+                for value in marital.partnered_values:
+                    if value not in options:
+                        issues.append(
+                            ValidationError(
+                                category="sampling_semantics",
+                                location="sampling_semantic_roles.marital_roles.partnered_values",
+                                message=(
+                                    f"Marital partnered value '{value}' is not a valid option "
+                                    f"for '{marital.attr}'"
+                                ),
+                                suggestion=f"Use one of: {', '.join(sorted(options))}",
+                            )
+                        )
+                for value in marital.single_values:
+                    if value not in options:
+                        issues.append(
+                            ValidationError(
+                                category="sampling_semantics",
+                                location="sampling_semantic_roles.marital_roles.single_values",
+                                message=(
+                                    f"Marital single value '{value}' is not a valid option "
+                                    f"for '{marital.attr}'"
+                                ),
+                                suggestion=f"Use one of: {', '.join(sorted(options))}",
+                            )
+                        )
+            overlap = set(marital.partnered_values) & set(marital.single_values)
+            if overlap:
+                issues.append(
+                    ValidationError(
+                        category="sampling_semantics",
+                        location="sampling_semantic_roles.marital_roles",
+                        message=(
+                            "Marital partnered_values and single_values overlap: "
+                            + ", ".join(sorted(overlap))
+                        ),
+                        suggestion="Ensure partnered and single sets are disjoint",
+                    )
+                )
+
+    geo = roles.geo_roles
+    if geo:
+        for key in ("country_attr", "region_attr", "urbanicity_attr"):
+            value = getattr(geo, key)
+            if value and value not in attr_lookup:
+                issues.append(
+                    ValidationError(
+                        category="sampling_semantics",
+                        location=f"sampling_semantic_roles.geo_roles.{key}",
+                        message=f"Unknown {key}: '{value}'",
+                        suggestion="Use an attribute name from base or extended attributes",
+                    )
+                )
+
+    for attr_name in roles.partner_correlation_roles.keys():
+        if attr_name not in attr_lookup:
+            issues.append(
+                ValidationError(
+                    category="sampling_semantics",
+                    location="sampling_semantic_roles.partner_correlation_roles",
+                    message=f"Unknown partner correlation attribute: '{attr_name}'",
+                    suggestion="Use attribute names present in merged population",
+                )
+            )
+
+    school = roles.school_parent_role
+    if school and school.dependents_attr and school.dependents_attr not in attr_lookup:
+        issues.append(
+            ValidationError(
+                category="sampling_semantics",
+                location="sampling_semantic_roles.school_parent_role.dependents_attr",
+                message=f"Unknown dependents_attr: '{school.dependents_attr}'",
+                suggestion="Use an attribute name from base or extended attributes",
+            )
+        )
+
+    religion = roles.religion_roles
+    if religion and religion.religion_attr:
+        if religion.religion_attr not in attr_lookup:
+            issues.append(
+                ValidationError(
+                    category="sampling_semantics",
+                    location="sampling_semantic_roles.religion_roles.religion_attr",
+                    message=f"Unknown religion_attr: '{religion.religion_attr}'",
+                    suggestion="Use an attribute name from base or extended attributes",
+                )
+            )
+        else:
+            options = _categorical_options_for_attr(attr_lookup[religion.religion_attr])
+            if options:
+                for value in religion.secular_values:
+                    if value not in options:
+                        issues.append(
+                            ValidationError(
+                                category="sampling_semantics",
+                                location="sampling_semantic_roles.religion_roles.secular_values",
+                                message=(
+                                    f"Secular value '{value}' is not a valid option for "
+                                    f"'{religion.religion_attr}'"
+                                ),
+                                suggestion=f"Use one of: {', '.join(sorted(options))}",
+                            )
+                        )
+
+    return issues
+
+
 def validate_scenario(
     spec: ScenarioSpec,
     population_spec: PopulationSpec | None = None,
@@ -116,10 +327,8 @@ def validate_scenario(
     errors: list[ValidationIssue] = []
     warnings: list[ValidationIssue] = []
 
-    # Build set of known attributes from population spec
-    known_attributes: set[str] = set()
-    if population_spec:
-        known_attributes = {attr.name for attr in population_spec.attributes}
+    attribute_lookup = _build_attribute_lookup(spec, population_spec)
+    known_attributes = set(attribute_lookup.keys())
 
     # Build set of known edge types from network
     # Check both 'edge_type' and 'type' fields (different network formats)
@@ -133,6 +342,44 @@ def validate_scenario(
 
     # Build set of defined channels
     defined_channels = {ch.name for ch in spec.seed_exposure.channels}
+
+    # Scenario extension is required for new-flow scenarios.
+    if spec.meta.base_population and not spec.extended_attributes:
+        errors.append(
+            ValidationError(
+                category="scenario_extension",
+                location="extended_attributes",
+                message="Scenario must include non-empty extended_attributes",
+                suggestion="Add at least one scenario-specific attribute extension",
+            )
+        )
+
+    # Household semantics must be coherent with focus mode and config
+    has_household_semantics = any(
+        getattr(attr, "scope", "individual") in {"household", "partner_correlated"}
+        for attr in (spec.extended_attributes or [])
+    )
+    if has_household_semantics and spec.household_config is None:
+        errors.append(
+            ValidationError(
+                category="household",
+                location="household_config",
+                message="Household/partner-correlated attributes require household_config",
+                suggestion="Provide household_config in scenario spec",
+            )
+        )
+    if (has_household_semantics or spec.household_config is not None) and (
+        spec.agent_focus_mode is None
+    ):
+        errors.append(
+            ValidationError(
+                category="agent_focus",
+                location="agent_focus_mode",
+                message="agent_focus_mode is required when household semantics are active",
+                suggestion="Set agent_focus_mode to primary_only, couples, or all",
+            )
+        )
+    errors.extend(_validate_sampling_semantic_roles(spec, attribute_lookup))
 
     # =========================================================================
     # Validate Event
@@ -213,18 +460,24 @@ def validate_scenario(
             )
         else:
             # Check attribute references
-            if population_spec:
-                refs = extract_names_from_expression(rule.when)
-                unknown_refs = refs - known_attributes
-                if unknown_refs:
-                    errors.append(
-                        ValidationError(
-                            category="attribute_reference",
-                            location=f"seed_exposure.rules[{i}].when",
-                            message=f"References unknown attribute(s): {', '.join(sorted(unknown_refs))}",
-                            suggestion="Check attribute names in population spec",
-                        )
+            refs = extract_names_from_expression(rule.when)
+            unknown_refs = refs - known_attributes
+            if unknown_refs:
+                errors.append(
+                    ValidationError(
+                        category="attribute_reference",
+                        location=f"seed_exposure.rules[{i}].when",
+                        message=f"References unknown attribute(s): {', '.join(sorted(unknown_refs))}",
+                        suggestion="Check attribute names in population/scenario specs",
                     )
+                )
+            errors.extend(
+                _validate_literal_option_compatibility(
+                    rule.when,
+                    attribute_lookup,
+                    f"seed_exposure.rules[{i}].when",
+                )
+            )
 
         # Check probability bounds (already enforced by Pydantic, but double-check)
         if not 0 <= rule.probability <= 1:
@@ -291,17 +544,23 @@ def validate_scenario(
             # Allow edge attributes injected during propagation
             refs_without_edge_fields = refs - {"edge_type", "edge_weight"}
 
-            if population_spec:
-                unknown_refs = refs_without_edge_fields - known_attributes
-                if unknown_refs:
-                    errors.append(
-                        ValidationError(
-                            category="attribute_reference",
-                            location=f"spread.share_modifiers[{i}].when",
-                            message=f"References unknown attribute(s): {', '.join(sorted(unknown_refs))}",
-                            suggestion="Check attribute names in population spec",
-                        )
+            unknown_refs = refs_without_edge_fields - known_attributes
+            if unknown_refs:
+                errors.append(
+                    ValidationError(
+                        category="attribute_reference",
+                        location=f"spread.share_modifiers[{i}].when",
+                        message=f"References unknown attribute(s): {', '.join(sorted(unknown_refs))}",
+                        suggestion="Check attribute names in population/scenario specs",
                     )
+                )
+            errors.extend(
+                _validate_literal_option_compatibility(
+                    modifier.when,
+                    attribute_lookup,
+                    f"spread.share_modifiers[{i}].when",
+                )
+            )
 
             # Check edge type references
             if "edge_type" in refs:
@@ -449,6 +708,51 @@ def validate_scenario(
                     )
                 )
 
+            if te.exposure_rules:
+                for j, rule in enumerate(te.exposure_rules):
+                    if rule.channel not in defined_channels:
+                        errors.append(
+                            ValidationError(
+                                category="timeline_exposure_rule",
+                                location=f"timeline[{i}].exposure_rules[{j}].channel",
+                                message=f"Rule references undefined channel: '{rule.channel}'",
+                                suggestion=f"Use one of: {', '.join(sorted(defined_channels))}",
+                            )
+                        )
+
+                    syntax_error = validate_expression_syntax(rule.when)
+                    if syntax_error:
+                        errors.append(
+                            ValidationError(
+                                category="timeline_exposure_rule",
+                                location=f"timeline[{i}].exposure_rules[{j}].when",
+                                message=f"Invalid expression syntax: {syntax_error}",
+                                suggestion="Use valid Python expression syntax",
+                            )
+                        )
+                    else:
+                        refs = extract_names_from_expression(rule.when)
+                        unknown_refs = refs - known_attributes
+                        if unknown_refs:
+                            errors.append(
+                                ValidationError(
+                                    category="attribute_reference",
+                                    location=f"timeline[{i}].exposure_rules[{j}].when",
+                                    message=(
+                                        "References unknown attribute(s): "
+                                        + ", ".join(sorted(unknown_refs))
+                                    ),
+                                    suggestion="Check attribute names in population/scenario specs",
+                                )
+                            )
+                        errors.extend(
+                            _validate_literal_option_compatibility(
+                                rule.when,
+                                attribute_lookup,
+                                f"timeline[{i}].exposure_rules[{j}].when",
+                            )
+                        )
+
     # =========================================================================
     # Validate Simulation Config
     # =========================================================================
@@ -526,15 +830,6 @@ def validate_scenario(
                     suggestion=f"Use one of: {', '.join(sorted(valid_modes))}",
                 )
             )
-    elif spec.household_config is not None:
-        warnings.append(
-            ValidationWarning(
-                category="agent_focus",
-                location="agent_focus_mode",
-                message="household_config present but agent_focus_mode not set (defaults to primary_only)",
-                suggestion="Set agent_focus_mode to 'primary_only', 'couples', or 'all'",
-            )
-        )
 
     # =========================================================================
     # Validate File References

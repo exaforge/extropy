@@ -682,6 +682,7 @@ def network_command(
             f"{scenario_name}__{config.quarantine_suffix}__{network_run_id[:12]}"
         )
         gate_deltas = quality_meta.get("gate_deltas", {})
+        final_metrics = quality_meta.get("final_metrics", {})
         out.error(
             "Topology gate strict failed. Saved quarantined artifact; canonical network not overwritten."
         )
@@ -690,8 +691,12 @@ def network_command(
                 f"[yellow]![/yellow] Quarantined network_id={target_network_id}"
             )
             console.print(
-                f"[red]✗[/red] Failed gates with best metrics: {quality_meta.get('best_metrics', {})}"
+                f"[red]✗[/red] Failed gates with final metrics: {final_metrics}"
             )
+            if quality_meta.get("best_metrics"):
+                console.print(
+                    f"[dim]Calibration best metrics: {quality_meta.get('best_metrics', {})}[/dim]"
+                )
             if gate_deltas:
                 console.print(f"[dim]Gate deltas: {gate_deltas}[/dim]")
             console.print(

@@ -9,7 +9,6 @@ from ..core.models import (
     PopulationSpec,
     Event,
     InteractionConfig,
-    InteractionType,
     SpreadConfig,
     SpreadModifier,
 )
@@ -19,30 +18,9 @@ from ..core.models import (
 INTERACTION_MODEL_SCHEMA = {
     "type": "object",
     "properties": {
-        "primary_model": {
-            "type": "string",
-            "enum": [
-                "passive_observation",
-                "direct_conversation",
-                "broadcast_response",
-                "deliberative",
-            ],
-            "description": "Primary interaction model",
-        },
-        "secondary_model": {
-            "type": "string",
-            "enum": [
-                "passive_observation",
-                "direct_conversation",
-                "broadcast_response",
-                "deliberative",
-                "none",
-            ],
-            "description": "Secondary interaction model (or 'none')",
-        },
         "interaction_description": {
             "type": "string",
-            "description": "How interactions work in this scenario",
+            "description": "Optional human-readable notes about social dynamics",
         },
         "share_probability": {
             "type": "number",
@@ -89,8 +67,6 @@ INTERACTION_MODEL_SCHEMA = {
         },
     },
     "required": [
-        "primary_model",
-        "secondary_model",
         "interaction_description",
         "share_probability",
         "share_modifiers",
@@ -112,10 +88,8 @@ def determine_interaction_model(
     """
     Determine how agents will interact about the event.
 
-    Selects:
-    - Primary interaction model (how agents communicate)
-    - Optional secondary model (for blended scenarios)
-    - Spread configuration (how information propagates)
+    Selects spread configuration (how information propagates) plus optional
+    descriptive interaction notes.
 
     Args:
         event: The parsed event definition
@@ -129,8 +103,8 @@ def determine_interaction_model(
 
     Example:
         >>> interaction, spread = determine_interaction_model(event, population_spec)
-        >>> interaction.primary_model
-        <InteractionType.PASSIVE_OBSERVATION: 'passive_observation'>
+        >>> interaction.description
+        'Neighbors primarily discuss through informal chats and online posts'
         >>> spread.share_probability
         0.35
     """
@@ -175,43 +149,10 @@ Geography: {population_spec.meta.geography or "Not specified"}
 {attribute_info}
 {edge_type_info}
 
-## Interaction Models
+## Interaction Notes
 
-Choose the most appropriate interaction model(s):
-
-### 1. passive_observation
-Social media style — agents see content/reactions, form opinions passively.
-- Low direct engagement
-- Influenced by what they observe others doing
-- Good for: consumer products, viral content, social media events
-
-### 2. direct_conversation
-One-on-one or small group discussions.
-- High engagement
-- Opinions can change through dialogue
-- Good for: professional topics, personal decisions, complex issues
-
-### 3. broadcast_response
-Authority/source broadcasts, agents react and discuss reactions.
-- Initial broadcast phase, then discussion
-- Agents compare reactions with their network
-- Good for: official announcements, policy changes, emergencies
-
-### 4. deliberative
-Group deliberation with multiple rounds.
-- Structured discussion phases
-- Opinions evolve through deliberation
-- Good for: community decisions, policy debates, consensus-building
-
-## Selection Heuristics
-
-| Population Type | Event Type | Likely Model |
-|-----------------|------------|---------------|
-| Consumers | Price change | passive_observation + direct_conversation |
-| Professionals | New technology | direct_conversation |
-| Community | Government policy | broadcast_response |
-| Any | Emergency | broadcast_response |
-| Civic/Political | Policy debate | deliberative |
+Provide a short `interaction_description` describing likely social dynamics.
+This field is informational only; runtime behavior is controlled by spread rules below.
 
 ## Spread Configuration
 
@@ -253,8 +194,7 @@ Limit how far information can spread (null for unlimited).
 
 ## Output
 
-Provide interaction model selection and spread configuration.
-For secondary_model, use "none" if only one model applies."""
+Provide interaction notes and spread configuration."""
 
     data = reasoning_call(
         prompt=prompt,
@@ -264,11 +204,8 @@ For secondary_model, use "none" if only one model applies."""
         reasoning_effort=reasoning_effort,
     )
 
-    # Parse interaction config
-    secondary = data.get("secondary_model", "none")
+    # Parse interaction config (informational only)
     interaction_config = InteractionConfig(
-        primary_model=InteractionType(data["primary_model"]),
-        secondary_model=InteractionType(secondary) if secondary != "none" else None,
         description=data.get("interaction_description", ""),
     )
 

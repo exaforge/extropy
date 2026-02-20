@@ -39,7 +39,7 @@ def apply_modifiers_and_sample(
     modifiers: list[Modifier],
     rng: random.Random,
     agent: dict[str, Any],
-) -> tuple[Any, list[int]]:
+) -> tuple[Any, list[int], list[str]]:
     """
     Apply matching modifiers to a distribution and sample.
 
@@ -50,9 +50,10 @@ def apply_modifiers_and_sample(
         agent: Current agent's already-sampled attribute values
 
     Returns:
-        Tuple of (sampled_value, list of indices of triggered modifiers)
+        Tuple of (sampled_value, list of indices of triggered modifiers, condition warnings)
     """
     triggered_indices: list[int] = []
+    condition_warnings: list[str] = []
 
     # Check which modifiers apply
     matching_modifiers: list[tuple[int, Modifier]] = []
@@ -62,8 +63,9 @@ def apply_modifiers_and_sample(
                 matching_modifiers.append((i, mod))
                 triggered_indices.append(i)
         except Exception as e:
-            # Log warning but continue - condition failure means modifier doesn't apply
-            logger.warning(f"Modifier condition '{mod.when}' failed: {e}")
+            warning = f"modifier[{i}] when='{mod.when}' eval failed: {e}"
+            condition_warnings.append(warning)
+            logger.warning(warning)
 
     # Route to type-specific handler
     if isinstance(dist, (NormalDistribution, LognormalDistribution)):
@@ -79,7 +81,7 @@ def apply_modifiers_and_sample(
     else:
         raise ValueError(f"Unknown distribution type: {type(dist)}")
 
-    return value, triggered_indices
+    return value, triggered_indices, condition_warnings
 
 
 def _apply_numeric_modifiers(

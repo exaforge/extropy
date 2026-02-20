@@ -821,6 +821,87 @@ class TestGenerateNetwork:
         assert isinstance(quality["ladder_stages"], list)
         assert len(quality["ladder_stages"]) >= 1
 
+    def test_topology_gate_uses_final_graph_metrics(self, monkeypatch):
+        """Strict acceptance should be based on final graph after structural + rewiring."""
+        import extropy.population.network.generator as gen
+
+        agents = [{"_id": f"a{i}"} for i in range(6)]
+
+        def fake_single_pass(
+            agents,
+            agent_ids,
+            similarities,
+            communities,
+            degree_factors,
+            config,
+            intra_scale,
+            inter_scale,
+            rng,
+            structural_pairs=None,
+        ):
+            # Deliberately poor calibration graph.
+            return [], 0.0, 0.0, 0.0, 0.0
+
+        def full_structural_edges(agents, agent_ids, rng):
+            # Dense structural graph that should pass final strict gates.
+            edges = []
+            for i in range(len(agent_ids)):
+                for j in range(i + 1, len(agent_ids)):
+                    edges.append(
+                        Edge(
+                            source=agent_ids[i],
+                            target=agent_ids[j],
+                            weight=1.0,
+                            edge_type="household",
+                            structural=True,
+                            context="household",
+                        )
+                    )
+            return edges
+
+        def no_rewire(agents, agent_ids, edges, edge_set, config, rng, protected_pairs):
+            return edges, edge_set, 0
+
+        monkeypatch.setattr(gen, "_generate_network_single_pass", fake_single_pass)
+        monkeypatch.setattr(gen, "_generate_structural_edges", full_structural_edges)
+        monkeypatch.setattr(gen, "_apply_rewiring", no_rewire)
+        monkeypatch.setattr(
+            gen,
+            "_assign_communities_with_diagnostics",
+            lambda agents,
+            similarities,
+            n_communities,
+            rng,
+            preferred_attrs=None,
+            progress=None: (
+                [0 for _ in agents],
+                {"low_signal": 0.0},
+            ),
+        )
+
+        config = NetworkConfig(
+            avg_degree=5.0,
+            seed=42,
+            candidate_mode="exact",
+            calibration_restarts=1,
+            max_calibration_iterations=1,
+            max_calibration_minutes=1,
+            topology_gate="strict",
+            target_clustering=0.0,
+            target_clustering_tolerance=1.0,
+            target_modularity=0.0,
+            target_modularity_tolerance=1.0,
+        )
+
+        result = generate_network(agents, config)
+        quality = result.meta.get("quality", {})
+
+        assert quality.get("calibration_accepted") is False
+        assert quality.get("accepted") is True
+        assert quality.get("final_metrics", {}).get("edge_count") == 15
+        assert quality.get("final_metrics", {}).get("largest_component_ratio") == 1.0
+        assert result.meta.get("edge_count") == 15
+
     def test_generate_network_resume_from_checkpoint_matches_fresh(self, sample_agents):
         """Resuming from a saved similarity checkpoint should match a fresh run."""
         import sqlite3

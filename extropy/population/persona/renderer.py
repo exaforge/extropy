@@ -126,17 +126,40 @@ def _format_boolean_value(value: Any, phrasing: BooleanPhrasing) -> str:
 
     # Handle various boolean representations
     if isinstance(value, bool):
-        return phrasing.true_phrase if value else phrasing.false_phrase
+        phrase = phrasing.true_phrase if value else phrasing.false_phrase
+        return _sanitize_boolean_phrase(phrase, value)
     if isinstance(value, str):
-        return (
-            phrasing.true_phrase
-            if value.lower() in ("true", "yes", "1")
-            else phrasing.false_phrase
-        )
+        truthy = value.lower() in ("true", "yes", "1")
+        phrase = phrasing.true_phrase if truthy else phrasing.false_phrase
+        return _sanitize_boolean_phrase(phrase, truthy)
     if isinstance(value, (int, float)):
-        return phrasing.true_phrase if value else phrasing.false_phrase
+        truthy = bool(value)
+        phrase = phrasing.true_phrase if truthy else phrasing.false_phrase
+        return _sanitize_boolean_phrase(phrase, truthy)
 
-    return phrasing.false_phrase
+    return _sanitize_boolean_phrase(phrasing.false_phrase, False)
+
+
+def _sanitize_boolean_phrase(phrase: str, truthy: bool) -> str:
+    """Deterministically sanitize boolean phrases for rendering."""
+    clean = phrase.strip()
+    if not clean:
+        return "I do." if truthy else "I do not."
+
+    raw_token_map = {
+        "true": "I do.",
+        "yes": "I do.",
+        "false": "I do not.",
+        "no": "I do not.",
+    }
+    token_key = clean.lower()
+    if token_key in raw_token_map:
+        return raw_token_map[token_key]
+
+    lowered = clean.lower()
+    if not lowered.startswith(("i ", "i'", "i’m", "i'm", "my ")):
+        clean = f"I {clean[0].lower()}{clean[1:]}" if len(clean) > 1 else f"I {clean}"
+    return clean
 
 
 def _format_categorical_value(value: Any, phrasing: CategoricalPhrasing) -> str:
@@ -196,7 +219,16 @@ def render_attribute(attr_name: str, value: Any, config: PersonaConfig) -> str:
     elif isinstance(phrasing, CategoricalPhrasing):
         return _format_categorical_value(value, phrasing)
     elif isinstance(phrasing, RelativePhrasing):
-        return _format_relative_value(value, phrasing, config)
+        relative = _format_relative_value(value, phrasing, config)
+        concrete = next(
+            (p for p in config.phrasings.concrete if p.attribute == attr_name),
+            None,
+        )
+        if concrete and value is not None:
+            concrete_text = _format_concrete_value(value, concrete)
+            if concrete_text:
+                return f"{relative} ({concrete_text})"
+        return relative
     elif isinstance(phrasing, ConcretePhrasing):
         return _format_concrete_value(value, phrasing)
 
@@ -589,11 +621,11 @@ def render_persona(
         if not group_obj:
             continue
 
-        # render_intro() already emits "## Who I Am" — skip duplicate
+        # render_intro() already emits "## Who I Am" — skip duplicate entirely
         if group_obj.label == "Who I Am":
-            lines = [""]
-        else:
-            lines = [f"## {group_obj.label}", ""]
+            continue
+
+        lines = [f"## {group_obj.label}", ""]
         phrases = []
         for attr_name in remaining_attrs:
             value = agent.get(attr_name)

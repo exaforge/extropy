@@ -17,7 +17,6 @@ from extropy.core.models.scenario import (
     ExposureChannel,
     ExposureRule,
     InteractionConfig,
-    InteractionType,
     OutcomeConfig,
     OutcomeDefinition,
     OutcomeType,
@@ -56,7 +55,6 @@ def _make_scenario(
             ExposureChannel(
                 name="broadcast",
                 description="Mass broadcast",
-                reach="broadcast",
                 credibility_modifier=1.0,
             ),
         ]
@@ -90,7 +88,6 @@ def _make_scenario(
         ),
         seed_exposure=SeedExposure(channels=channels, rules=rules),
         interaction=InteractionConfig(
-            primary_model=InteractionType.PASSIVE_OBSERVATION,
             description="Observe",
         ),
         spread=SpreadConfig(
@@ -170,7 +167,6 @@ class TestGetChannelCredibility:
                 ExposureChannel(
                     name="email",
                     description="Email",
-                    reach="targeted",
                     credibility_modifier=0.8,
                 ),
             ]
@@ -266,7 +262,6 @@ class TestApplySeedExposures:
             ExposureChannel(
                 name="email",
                 description="Email",
-                reach="targeted",
                 credibility_modifier=0.8,
             ),
         ]

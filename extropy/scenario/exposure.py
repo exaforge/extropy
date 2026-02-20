@@ -32,17 +32,16 @@ SEED_EXPOSURE_SCHEMA = {
                         "type": "string",
                         "description": "Human-readable description",
                     },
-                    "reach": {
-                        "type": "string",
-                        "enum": ["broadcast", "targeted", "organic"],
-                        "description": "How the channel reaches agents",
-                    },
                     "credibility_modifier": {
                         "type": "number",
                         "description": "How channel affects perceived credibility (1.0 = no change)",
                     },
+                    "experience_template": {
+                        "type": "string",
+                        "description": "Optional first-person phrasing for how an agent receives this channel",
+                    },
                 },
-                "required": ["name", "description", "reach", "credibility_modifier"],
+                "required": ["name", "description", "credibility_modifier"],
                 "additionalProperties": False,
             },
             "minItems": 1,
@@ -166,20 +165,8 @@ Geography: {population_spec.meta.geography or "Not specified"}
 ## Channels
 
 Define 2-5 exposure channels appropriate for this scenario.
-
-**Channel Types:**
-
-1. **broadcast** - Reaches all agents meeting criteria (email blasts, TV news)
-   - Use for official communications, mass media
-   - High reach, consistent timing
-
-2. **targeted** - Reaches specific subgroups (targeted ads, professional networks)
-   - Use for demographic-specific channels
-   - Medium reach, can be very specific
-
-3. **organic** - Spreads through existing connections (word of mouth, social media shares)
-   - Use for informal information spread
-   - Variable reach, depends on network
+Include optional `experience_template` where useful.
+Example: "I saw a segment about this on local news."
 
 **Credibility Modifiers:**
 - 1.0 = Channel doesn't affect credibility
@@ -253,8 +240,8 @@ Rules must use exact attribute names from the list above."""
         channel = ExposureChannel(
             name=ch_data["name"],
             description=ch_data["description"],
-            reach=ch_data["reach"],
             credibility_modifier=ch_data.get("credibility_modifier", 1.0),
+            experience_template=ch_data.get("experience_template"),
         )
         channels.append(channel)
 
