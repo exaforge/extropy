@@ -29,6 +29,7 @@ def run_semantic_checks(spec: PopulationSpec) -> list[ValidationIssue]:
     10. No-Op Detection
     11. Modifier Stacking Analysis
     12. Condition Value Validity
+    13. Partner-Correlation Policy Completeness
     """
     issues: list[ValidationIssue] = []
 
@@ -44,6 +45,9 @@ def run_semantic_checks(spec: PopulationSpec) -> list[ValidationIssue]:
 
         # Category 12: Condition Value Validity
         issues.extend(_check_condition_values(attr, attr_lookup))
+
+        # Category 13: Partner-correlation policy completeness
+        issues.extend(_check_partner_correlation_policy(attr))
 
     return issues
 
@@ -248,3 +252,37 @@ def _check_condition_values(
                     )
 
     return issues
+
+
+# =============================================================================
+# Category 13: Partner-Correlation Policy Completeness
+# =============================================================================
+
+
+def _check_partner_correlation_policy(attr: AttributeSpec) -> list[ValidationIssue]:
+    """Warn when partner-correlated attributes lack explicit policy metadata."""
+    if attr.scope != "partner_correlated":
+        return []
+
+    has_policy = attr.partner_correlation_policy is not None
+    has_semantics = attr.semantic_type is not None or attr.identity_type is not None
+    has_explicit_rate = attr.correlation_rate is not None
+
+    if has_policy or has_semantics or has_explicit_rate:
+        return []
+
+    return [
+        ValidationIssue(
+            severity=Severity.WARNING,
+            category="PARTNER_POLICY",
+            location=attr.name,
+            message=(
+                "partner_correlated attribute has no explicit correlation policy or "
+                "semantic metadata; behavior will fall back to legacy defaults"
+            ),
+            suggestion=(
+                "Set partner_correlation_policy, semantic_type/identity_type, "
+                "or correlation_rate"
+            ),
+        )
+    ]

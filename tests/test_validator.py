@@ -691,6 +691,53 @@ class TestStrategyConsistency:
         assert any("formula" in str(e) for e in result.errors)
 
 
+class TestPartnerCorrelationPolicyWarnings:
+    """Tests for partner-correlation policy completeness warnings."""
+
+    def test_partner_correlated_without_policy_metadata_warns(self):
+        attr = AttributeSpec(
+            name="custom_trait",
+            type="categorical",
+            category="population_specific",
+            description="Custom trait",
+            scope="partner_correlated",
+            sampling=SamplingConfig(
+                strategy="independent",
+                distribution=CategoricalDistribution(
+                    options=["A", "B"],
+                    weights=[0.5, 0.5],
+                ),
+            ),
+            grounding=GroundingInfo(level="low", method="estimated"),
+        )
+        spec = make_spec([attr])
+        result = validate_spec(spec)
+
+        assert any(w.category == "PARTNER_POLICY" for w in result.warnings)
+
+    def test_partner_correlated_with_explicit_rate_does_not_warn(self):
+        attr = AttributeSpec(
+            name="custom_trait",
+            type="categorical",
+            category="population_specific",
+            description="Custom trait",
+            scope="partner_correlated",
+            correlation_rate=0.65,
+            sampling=SamplingConfig(
+                strategy="independent",
+                distribution=CategoricalDistribution(
+                    options=["A", "B"],
+                    weights=[0.5, 0.5],
+                ),
+            ),
+            grounding=GroundingInfo(level="low", method="estimated"),
+        )
+        spec = make_spec([attr])
+        result = validate_spec(spec)
+
+        assert not any(w.category == "PARTNER_POLICY" for w in result.warnings)
+
+
 class TestValidationIssue:
     """Tests for ValidationIssue class."""
 

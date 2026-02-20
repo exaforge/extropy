@@ -386,6 +386,63 @@ class TestHouseholdSamplingHelpers:
         # Expect ~85% (default_same_group_rate)
         assert 0.75 < rate < 0.95, f"Default rate {rate:.2f} outside expected range"
 
+    def test_correlate_uses_semantic_type_for_age_policy(self):
+        """Semantic metadata should trigger gaussian age policy without name matching."""
+        rng = random.Random(42)
+        values = [
+            correlate_partner_attribute(
+                "years_old",
+                "int",
+                35,
+                None,
+                rng,
+                _DEFAULT_CONFIG,
+                semantic_type="age",
+            )
+            for _ in range(200)
+        ]
+        assert all(v >= _DEFAULT_CONFIG.min_adult_age for v in values)
+        assert len(set(values)) > 1
+
+    def test_correlate_uses_identity_type_for_group_rate_policy(self):
+        """Identity metadata should trigger same-group rate without name matching."""
+        rng = random.Random(42)
+        same_count = 0
+        trials = 500
+        for _ in range(trials):
+            result = correlate_partner_attribute(
+                "ethnic_group",
+                "categorical",
+                "white",
+                None,
+                rng,
+                _DEFAULT_CONFIG,
+                available_options=["white", "black", "hispanic"],
+                identity_type="race_ethnicity",
+            )
+            if result == "white":
+                same_count += 1
+        rate = same_count / trials
+        assert 0.80 < rate < 0.97, f"Same-group rate {rate:.2f} outside expected range"
+
+    def test_correlate_respects_explicit_policy_override(self):
+        """Explicit partner policy should override inferred/default behavior."""
+        rng = random.Random(42)
+        values = [
+            correlate_partner_attribute(
+                "custom_numeric",
+                "int",
+                40,
+                None,
+                rng,
+                _DEFAULT_CONFIG,
+                partner_correlation_policy="gaussian_offset",
+            )
+            for _ in range(100)
+        ]
+        assert all(v >= _DEFAULT_CONFIG.min_adult_age for v in values)
+        assert len(set(values)) > 1
+
     def test_generate_dependents_no_kids(self):
         rng = random.Random(42)
         deps = generate_dependents(

@@ -338,20 +338,32 @@ def _generate_npc_partner(
     # Always include gender
     partner["gender"] = rng.choice(["male", "female"])
 
-    # Always correlate age if present (essential for NPC identity, regardless of scope)
-    if "age" in primary:
-        partner["age"] = correlate_partner_attribute(
-            "age",
+    # Always correlate age if present (essential for NPC identity, regardless of scope).
+    age_attr_name = next(
+        (name for name, attr in attr_map.items() if attr.semantic_type == "age"),
+        "age",
+    )
+    age_attr = attr_map.get(age_attr_name)
+    if age_attr_name in primary:
+        partner_age = correlate_partner_attribute(
+            age_attr_name,
             "int",
-            primary["age"],
+            primary[age_attr_name],
             None,  # Uses gaussian offset
             rng,
             config,
+            semantic_type=age_attr.semantic_type if age_attr else "age",
+            identity_type=age_attr.identity_type if age_attr else None,
+            partner_correlation_policy=(
+                age_attr.partner_correlation_policy if age_attr else None
+            ),
         )
+        partner[age_attr_name] = partner_age
+        partner["age"] = partner_age
 
     # Process attributes based on their scope
     for attr_name, attr in attr_map.items():
-        if attr_name not in primary or attr_name == "age":
+        if attr_name not in primary or attr_name == age_attr_name:
             continue
 
         if attr.scope == "household":
@@ -367,6 +379,9 @@ def _generate_npc_partner(
                 rng,
                 config,
                 available_options=categorical_options.get(attr_name),
+                semantic_type=attr.semantic_type,
+                identity_type=attr.identity_type,
+                partner_correlation_policy=attr.partner_correlation_policy,
             )
         # Individual scope: skip for NPC (not enough data to sample fully)
 
@@ -905,6 +920,9 @@ def _sample_partner_agent(
                 rng,
                 config,
                 available_options=categorical_options.get(attr_name),
+                semantic_type=attr.semantic_type,
+                identity_type=attr.identity_type,
+                partner_correlation_policy=attr.partner_correlation_policy,
             )
         else:
             # Individual scope: sample independently
