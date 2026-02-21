@@ -20,6 +20,50 @@ from ...core.models.population import Dependent, HouseholdConfig, HouseholdType
 from ..names.generator import generate_name
 
 
+def _normalize_label(value: str) -> str:
+    return " ".join(value.strip().lower().split())
+
+
+def _pair_key(left: str, right: str) -> tuple[str, str]:
+    a = _normalize_label(left)
+    b = _normalize_label(right)
+    return (a, b) if a <= b else (b, a)
+
+
+def choose_partner_gender(
+    primary_gender: str | None,
+    available_genders: list[str] | None,
+    rng: random.Random,
+    config: HouseholdConfig,
+) -> str | None:
+    """Choose partner gender using scenario-owned pairing policy."""
+    options = [g for g in (available_genders or []) if isinstance(g, str) and g.strip()]
+    if not options:
+        return None
+
+    if config.partner_gender_mode != "weighted" or not config.partner_gender_pair_weights:
+        return rng.choice(options)
+
+    primary = primary_gender if isinstance(primary_gender, str) else None
+    if not primary:
+        return rng.choice(options)
+
+    weights_by_pair: dict[tuple[str, str], float] = {}
+    for row in config.partner_gender_pair_weights:
+        key = _pair_key(row.left, row.right)
+        weights_by_pair[key] = max(0.0, weights_by_pair.get(key, 0.0) + row.weight)
+
+    candidate_weights: list[float] = []
+    for option in options:
+        key = _pair_key(primary, option)
+        candidate_weights.append(max(0.0, weights_by_pair.get(key, 0.0)))
+
+    if sum(candidate_weights) <= 0:
+        return rng.choice(options)
+
+    return rng.choices(options, weights=candidate_weights, k=1)[0]
+
+
 def _age_bracket(age: int, config: HouseholdConfig) -> str:
     """Map age to bracket key using config age brackets."""
     for upper_bound, label in config.age_brackets:

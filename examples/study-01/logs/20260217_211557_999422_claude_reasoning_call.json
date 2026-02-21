@@ -1,0 +1,138 @@
+{
+  "timestamp": "2026-02-17T21:15:57.999458",
+  "function": "reasoning_call",
+  "provider": "claude",
+  "request": {
+    "model": "claude-sonnet-4-6",
+    "prompt_length": 8489
+  },
+  "response": {
+    "id": "msg_01NStdGt2qytf8u6XjwH646o",
+    "content": [
+      {
+        "id": "toolu_01DmspA3Vwu64zyWCsQdLR3D",
+        "input": {
+          "channels": [
+            {
+              "name": "major_broadcast_news",
+              "description": "Major TV and online news outlets (CNN, Fox, NBC, NYT, etc.) breaking the story as top news \u2014 reaches broad audiences consuming national news via television or digital media",
+              "reach": "broadcast",
+              "credibility_modifier": 1.1
+            },
+            {
+              "name": "tech_professional_network",
+              "description": "Targeted exposure through professional and industry channels (LinkedIn, Hacker News, tech newsletters, professional email lists) aimed at tech-savvy, highly-educated, and STEM-adjacent professionals w...[truncated]",
+              "reach": "targeted",
+              "credibility_modifier": 1.2
+            },
+            {
+              "name": "social_media_viral_spread",
+              "description": "Organic viral sharing across Twitter/X, TikTok, Facebook, and YouTube \u2014 memes, reaction videos, and commentary threads drive rapid but credibility-diluting spread among heavy social media users",
+              "reach": "organic",
+              "credibility_modifier": 0.8
+            },
+            {
+              "name": "word_of_mouth",
+              "description": "Interpersonal spread through friend, family, and colleague network edges \u2014 people telling those in their social circle about the announcement, with credibility shaped by the messenger",
+              "reach": "organic",
+              "credibility_modifier": 0.95
+            },
+            {
+              "name": "fringe_alternative_media",
+              "description": "Exposure through alternative news sites, podcasts, and online forums (Reddit conspiracy boards, alternative tech blogs) targeting low-trust, high-susceptibility individuals who distrust mainstream nar...[truncated]",
+              "reach": "targeted",
+              "credibility_modifier": 0.7
+            }
+          ],
+          "rules": [
+            {
+              "channel": "major_broadcast_news",
+              "when": "primary_news_source == 'TV' or primary_news_source == 'Online/Digital'",
+              "probability": 0.92,
+              "timestep": 0
+            },
+            {
+              "channel": "tech_professional_network",
+              "when": "occupation == 'Professional' and (education_level == 'Bachelor\\'s' or education_level == 'Graduate Degree') and social_media_platforms == 'Twitter/X'",
+              "probability": 0.88,
+              "timestep": 0
+            },
+            {
+              "channel": "major_broadcast_news",
+              "when": "primary_news_source == 'Radio' or primary_news_source == 'Print Newspaper'",
+              "probability": 0.75,
+              "timestep": 1
+            },
+            {
+              "channel": "social_media_viral_spread",
+              "when": "social_media_hours_per_day >= 2.0 and (social_media_platforms == 'Twitter/X' or social_media_platforms == 'TikTok')",
+              "probability": 0.85,
+              "timestep": 1
+            },
+            {
+              "channel": "social_media_viral_spread",
+              "when": "social_media_hours_per_day >= 1.0 and (social_media_platforms == 'Facebook' or social_media_platforms == 'Instagram' or social_media_platforms == 'YouTube')",
+              "probability": 0.7,
+              "timestep": 1
+            },
+            {
+              "channel": "fringe_alternative_media",
+              "when": "trust_in_institutions < 0.35 and susceptibility_to_misinformation > 0.6 and internet_access != 'None'",
+              "probability": 0.72,
+              "timestep": 1
+            },
+            {
+              "channel": "word_of_mouth",
+              "when": "extraversion > 0.6 and openness > 0.55",
+              "probability": 0.65,
+              "timestep": 2
+            },
+            {
+              "channel": "major_broadcast_news",
+              "when": "primary_news_source == 'Social Media' or primary_news_source == 'None'",
+              "probability": 0.55,
+              "timestep": 2
+            },
+            {
+              "channel": "word_of_mouth",
+              "when": "true",
+              "probability": 0.4,
+              "timestep": 3
+            },
+            {
+              "channel": "fringe_alternative_media",
+              "when": "trust_in_institutions < 0.5 and neuroticism > 0.6 and internet_access != 'None'",
+              "probability": 0.5,
+              "timestep": 3
+            }
+          ],
+          "reasoning": "[REDACTED_TEXT length=2826]"
+        },
+        "name": "seed_exposure",
+        "type": "tool_use",
+        "caller": {
+          "type": "direct"
+        }
+      }
+    ],
+    "model": "claude-sonnet-4-6",
+    "role": "assistant",
+    "stop_reason": "tool_use",
+    "stop_sequence": null,
+    "type": "message",
+    "usage": {
+      "cache_creation": {
+        "ephemeral_1h_input_tokens": "[REDACTED_SECRET]",
+        "ephemeral_5m_input_tokens": "[REDACTED_SECRET]"
+      },
+      "cache_creation_input_tokens": "[REDACTED_SECRET]",
+      "cache_read_input_tokens": "[REDACTED_SECRET]",
+      "input_tokens": 3114,
+      "output_tokens": 1849,
+      "server_tool_use": null,
+      "service_tier": "standard",
+      "inference_geo": "global"
+    }
+  },
+  "sources_extracted": []
+}

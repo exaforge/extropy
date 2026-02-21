@@ -1,0 +1,165 @@
+{
+  "timestamp": "2026-02-20T03:41:29.140083",
+  "function": "reasoning_call",
+  "provider": "claude",
+  "request": {
+    "model": "claude-sonnet-4-6",
+    "prompt_length": 5265
+  },
+  "response": {
+    "id": "msg_01HK6ez4E9b9Q2w8dwArqG39",
+    "content": [
+      {
+        "id": "toolu_01FCsKh6UaG7qCBYGc3XC3vW",
+        "input": {
+          "phrasings": [
+            {
+              "attribute": "openness",
+              "much_below": "I'm far less open to new ideas and experiences than most people",
+              "below": "I'm a bit less curious and open to new experiences than the average person",
+              "average": "I'm about as open to new ideas and experiences as most people",
+              "above": "I'm more curious and receptive to new ideas than most people",
+              "much_above": "I'm far more open to new experiences and unconventional ideas than almost anyone I know"
+            },
+            {
+              "attribute": "conscientiousness",
+              "much_below": "I'm far less organized and self-disciplined than most people",
+              "below": "I'm a bit less structured and goal-oriented than the average person",
+              "average": "I'm about as organized and disciplined as most people",
+              "above": "I'm more disciplined and detail-oriented than most people",
+              "much_above": "I'm far more organized, driven, and self-disciplined than almost anyone I know"
+            },
+            {
+              "attribute": "extraversion",
+              "much_below": "I'm far more introverted and reserved than most people",
+              "below": "I'm a bit more quiet and reserved in social situations than the average person",
+              "average": "I'm about as social and outgoing as most people",
+              "above": "I'm more energized by social situations and more assertive than most people",
+              "much_above": "I'm far more outgoing, sociable, and energized by people than almost anyone I know"
+            },
+            {
+              "attribute": "agreeableness",
+              "much_below": "I'm far less concerned with keeping the peace and accommodating others than most people",
+              "below": "I'm a bit more skeptical and less inclined toward social harmony than the average person",
+              "average": "I'm about as cooperative and empathetic as most people",
+              "above": "I'm more empathetic and cooperative than most people",
+              "much_above": "I'm far more agreeable, empathetic, and focused on harmony than almost anyone I know"
+            },
+            {
+              "attribute": "neuroticism",
+              "much_below": "I'm far more emotionally stable and stress-resistant than most people",
+              "below": "I'm a bit more emotionally steady and less anxious than the average person",
+              "average": "I experience about as much stress and emotional ups and downs as most people",
+              "above": "I tend to feel more anxious and emotionally reactive than most people",
+              "much_above": "I experience far more emotional instability, anxiety, and stress than most people"
+            },
+            {
+              "attribute": "has_children",
+              "much_below": "Unlike most people my age, I have no children and family life plays almost no role in my daily priorities",
+              "below": "I'm less likely than the average person to have young kids at home shaping my day-to-day life",
+              "average": "My household situation with children is pretty typical compared to most people",
+              "above": "I'm more likely than most people to have children at home driving my daily decisions",
+              "much_above": "I have significantly more children at home than most people, which dominates my priorities and concerns"
+            },
+            {
+              "attribute": "job_security_perception",
+              "much_below": "I feel far less secure in my job than most working people",
+              "below": "I feel a bit more uncertain about my job stability than the average worker",
+              "average": "My sense of job security is about the same as most working people",
+              "above": "I feel more secure in my job than most working people",
+              "much_above": "I feel far more confident in my job stability than almost any working person I know"
+            },
+            {
+              "attribute": "tech_adoption_posture",
+              "much_below": "I avoid new technology far more than most people and am often the last to adopt anything new",
+              "below": "I'm a bit slower and more cautious about adopting new technology than the average person",
+              "average": "I adopt new technology at about the same pace as most people",
+              "above": "I pick up new technology faster and more eagerly than most people",
+              "much_above": "I'm far ahead of most people when it comes to embracing and experimenting with new technology"
+            },
+            {
+              "attribute": "political_engagement_level",
+              "much_below": "I'm far less politically engaged or interested than most people",
+              "below": "I'm a bit less politically active and informed than the average person",
+              "average": "My level of political engagement is about the same as most people",
+              "above": "I'm more politically active and informed than most people",
+              "much_above": "I'm far more politically engaged, vocal, and involved than almost anyone I know"
+            },
+            {
+              "attribute": "institutional_trust",
+              "much_below": "I trust major institutions far less than most people \u2014 I'm deeply skeptical of government, media, and corporations",
+              "below": "I'm more skeptical of institutions like government and the media than the average person",
+              "average": "I'm about as trusting of major institutions as most people",
+              "above": "I generally trust institutions like government, science, and the media more than most people",
+              "much_above": "I have far more faith in major institutions than most people \u2014 I trust them significantly more than average"
+            },
+            {
+              "attribute": "risk_tolerance",
+              "much_below": "I'm far more risk-averse than most people when it comes to financial, social, and life decisions",
+              "below": "I'm a bit more cautious and risk-averse than the average person",
+              "average": "My willingness to take on risk is about the same as most people",
+              "above": "I'm more comfortable taking risks than most people",
+              "much_above": "I'm far more willing to take bold risks than almost anyone I know"
+            },
+            {
+              "attribute": "economic_anxiety",
+              "much_below": "I feel far less worried about economic conditions than most people \u2014 finances are barely on my radar",
+              "below": "I'm a bit less anxious about economic conditions than the average person",
+              "average": "My level of economic worry is about the same as most people",
+              "above": "I feel more anxious about economic conditions \u2014 personal and national \u2014 than most people",
+              "much_above": "I feel far more economically anxious and financially stressed than almost anyone I know"
+            },
+            {
+              "attribute": "job_displacement_vulnerability",
+              "much_below": "My job is far more exposed to automation and AI displacement than most people's",
+              "below": "My job is a bit more at risk from automation than the average worker's",
+              "average": "My exposure to job displacement from technology is about the same as most workers",
+              "above": "My job is more insulated from automation and AI displacement than most people's",
+              "much_above": "My job is far more secure from automation risk than almost any worker I know"
+            },
+            {
+              "attribute": "economic_abundance_belief",
+              "much_below": "I'm far more skeptical than most people that AI-driven abundance will ever actually reach or benefit me",
+              "below": "I'm a bit less convinced than the average person that new technologies will meaningfully improve my material life",
+              "average": "My belief that technological progress will benefit me personally is about the same as most people's",
+              "above": "I'm more optimistic than most people that AI and technology will genuinely improve my economic situation",
+              "much_above": "I'm far more confident than almost anyone that AI-driven abundance will transform my life for the better"
+            },
+            {
+              "attribute": "human_purpose_anxiety",
+              "much_below": "I feel far less existential anxiety about AI replacing human meaning and purpose than most people \u2014 I find it mostly liberating",
+              "below": "I'm a bit less troubled than the average person by questions of human purpose in an AI-driven world",
+              "average": "My level of anxiety about human meaning and purpose in an AI world is about the same as most people's",
+              "above": "I feel more unsettled than most people about what human purpose and identity look like when machines can do our thinking",
+              "much_above": "I feel far more deeply destabilized by questions of human meaning and purpose in an AI world than almost anyone I know"
+            }
+          ]
+        },
+        "name": "relative_phrasings",
+        "type": "tool_use",
+        "caller": {
+          "type": "direct"
+        }
+      }
+    ],
+    "model": "claude-sonnet-4-6",
+    "role": "assistant",
+    "stop_reason": "tool_use",
+    "stop_sequence": null,
+    "type": "message",
+    "usage": {
+      "cache_creation": {
+        "ephemeral_1h_input_tokens": "[REDACTED_SECRET]",
+        "ephemeral_5m_input_tokens": "[REDACTED_SECRET]"
+      },
+      "cache_creation_input_tokens": "[REDACTED_SECRET]",
+      "cache_read_input_tokens": "[REDACTED_SECRET]",
+      "input_tokens": 2025,
+      "output_tokens": 2055,
+      "server_tool_use": null,
+      "service_tier": "standard",
+      "inference_geo": "global"
+    }
+  },
+  "sources_extracted": []
+}

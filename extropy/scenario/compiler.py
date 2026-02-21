@@ -30,6 +30,7 @@ from .interaction import determine_interaction_model
 from .timeline import generate_timeline_and_outcomes
 from .sampling_semantics import generate_sampling_semantic_roles
 from ..utils.callbacks import StepProgressCallback
+from ..utils import topological_sort
 from .validator import validate_scenario
 from ..storage import open_study_db
 
@@ -413,11 +414,20 @@ def create_scenario_spec(
     ext_attrs = list(extended_attributes or [])
     merged_population = population_spec
     if ext_attrs:
+        merged_attributes = list(population_spec.attributes) + ext_attrs
+        merged_deps: dict[str, list[str]] = {
+            attr.name: list(attr.sampling.depends_on or []) for attr in merged_attributes
+        }
+        merged_names = set(merged_deps.keys())
+        merged_deps = {
+            name: [dep for dep in deps if dep in merged_names]
+            for name, deps in merged_deps.items()
+        }
         merged_population = PopulationSpec(
             meta=population_spec.meta.model_copy(),
             grounding=population_spec.grounding,
-            attributes=list(population_spec.attributes) + ext_attrs,
-            sampling_order=population_spec.merged_sampling_order(ext_attrs),
+            attributes=merged_attributes,
+            sampling_order=topological_sort(merged_deps),
         )
 
     # Step 1: Parse scenario description

@@ -419,17 +419,14 @@ seed_exposure:
   channels:
     - name: mainstream_news_media
       description: "TV and online news coverage"
-      reach: broadcast
       credibility_modifier: 1.1
       experience_template: "I saw a news segment about this on TV."
     - name: social_media_feeds
       description: "Posts appearing in social feeds"
-      reach: broadcast
       credibility_modifier: 0.8
       experience_template: "I noticed some posts about this online."
     - name: email_notification
       description: "Direct email from the company"
-      reach: targeted
       credibility_modifier: 1.2
       experience_template: "I got an email about this."
 ```

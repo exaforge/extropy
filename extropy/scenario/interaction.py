@@ -4,6 +4,8 @@ Selects the appropriate interaction model for how agents will discuss/respond
 to the event and configures how information spreads through the network.
 """
 
+import json
+
 from ..core.llm import reasoning_call
 from ..core.models import (
     PopulationSpec,
@@ -109,9 +111,22 @@ def determine_interaction_model(
         0.35
     """
     # Build attribute list for spread modifiers
-    attribute_info = "\n".join(
-        f"- {attr.name} ({attr.type})" for attr in population_spec.attributes
-    )
+    attr_lines: list[str] = []
+    for attr in population_spec.attributes:
+        line = f"- {attr.name} ({attr.type})"
+        dist = getattr(attr.sampling, "distribution", None)
+        if (
+            attr.type == "categorical"
+            and dist is not None
+            and hasattr(dist, "options")
+            and dist.options
+        ):
+            line += f" options={json.dumps(list(dist.options), ensure_ascii=False)}"
+        elif attr.type == "boolean":
+            line += " options=[true, false]"
+        attr_lines.append(line)
+
+    attribute_info = "\n".join(attr_lines)
 
     # Build edge type info if available
     edge_type_info = ""
@@ -134,7 +149,8 @@ and configure how information spreads through their social network.
 ## Event
 
 Type: {event.type.value}
-Content: "{event.content[:200]}..."
+Content:
+\"\"\"{event.content}\"\"\"
 Source: {event.source}
 Credibility: {event.credibility:.2f}
 Emotional valence: {event.emotional_valence:.2f}
@@ -170,6 +186,11 @@ Adjust share probability based on conditions:
 - Young people share more on social topics
 - Professionals share more on work topics
 - Close relationships share more
+
+Strict literal contract for conditions:
+- For categorical/boolean attributes, use values exactly as listed in `options` (same case and punctuation).
+- Do NOT use snake_case aliases, paraphrases, abbreviations, or inferred synonyms.
+- If you cannot map a concept to an exact listed option, do not emit that categorical condition.
 
 Format: {{"when": "expression", "multiply": 1.5, "add": 0.0}}
 

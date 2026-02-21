@@ -1,0 +1,168 @@
+{
+  "timestamp": "2026-02-20T02:36:05.557058",
+  "function": "reasoning_call",
+  "provider": "claude",
+  "request": {
+    "model": "claude-sonnet-4-6",
+    "prompt_length": 17532
+  },
+  "response": {
+    "id": "msg_013DcuRQvhP8o6jePB9Ejfv4",
+    "content": [
+      {
+        "id": "toolu_016dSEASBDZdVJebs5ado6iR",
+        "input": {
+          "channels": [
+            {
+              "name": "major_media_breaking_news",
+              "description": "Cable news, major broadcast networks, and top-tier online news outlets (NYT, WaPo, AP, Reuters) running wall-to-wall breaking news coverage of the ASI announcement with live demonstrations and expert ...[truncated]",
+              "credibility_modifier": 1.2,
+              "experience_template": "I was watching the news and every channel was covering OpenAI's live demonstration \u2014 they solved the Riemann Hypothesis on stream. It was everywhere."
+            },
+            {
+              "name": "social_media_viral_spread",
+              "description": "Twitter/X, Reddit, Facebook, TikTok, and YouTube carrying clips, hot takes, memes, and viral threads about the ASI announcement \u2014 a chaotic mix of awe, skepticism, and panic.",
+              "credibility_modifier": 0.8,
+              "experience_template": "My feed exploded overnight \u2014 clips of the ASI demo were everywhere, people losing their minds in the comments. Half the posts were calling it fake."
+            },
+            {
+              "name": "tech_professional_network",
+              "description": "LinkedIn posts, Slack communities, Hacker News, specialized tech newsletters, and direct professional peer-to-peer communication among those in technology, research, and knowledge-work sectors.",
+              "credibility_modifier": 1.15,
+              "experience_template": "A colleague forwarded me an internal memo and a Hacker News thread \u2014 the entire tech industry was in shock. Engineers I respect were saying this changes everything."
+            },
+            {
+              "name": "word_of_mouth_community",
+              "description": "In-person conversations, family discussions, workplace talk, church, and community settings \u2014 second- and third-hand transmission of the news through personal social networks.",
+              "credibility_modifier": 0.9,
+              "experience_template": "My neighbor brought it up at the block association meeting. She said her son who works in tech called her, completely shaken up. I hadn't heard anything about it yet."
+            },
+            {
+              "name": "podcast_and_alternative_media",
+              "description": "Long-form podcasts, Substack newsletters, YouTube commentary channels, and ideologically-varied alternative media providing extended analysis and framing of the ASI event \u2014 ranging from techno-optimis...[truncated]",
+              "credibility_modifier": 0.85,
+              "experience_template": "I caught a two-hour episode breaking down what OpenAI actually showed. The host was equal parts amazed and terrified \u2014 he had three AI researchers on and none of them agreed on what it meant."
+            }
+          ],
+          "rules": [
+            {
+              "channel": "major_media_breaking_news",
+              "when": "primary_info_source == 'Cable/broadcast TV news' or primary_info_source == 'Online news sites'",
+              "probability": 0.95,
+              "timestep": 0
+            },
+            {
+              "channel": "tech_professional_network",
+              "when": "tech_adoption_posture in ('Early adopter', 'Innovator') or top_issue_2026 == 'AI/Technology' or employment_sector == 'Private sector' and education_level in ('Bachelor\\'s degree', 'Graduate degree')",
+              "probability": 0.9,
+              "timestep": 0
+            },
+            {
+              "channel": "social_media_viral_spread",
+              "when": "social_media_behavior in ('Active poster/Influencer', 'Occasional poster') and primary_info_source == 'Social media'",
+              "probability": 0.92,
+              "timestep": 0
+            },
+            {
+              "channel": "major_media_breaking_news",
+              "when": "primary_info_source == 'Local news' or primary_info_source == 'Print media'",
+              "probability": 0.85,
+              "timestep": 1
+            },
+            {
+              "channel": "social_media_viral_spread",
+              "when": "social_media_behavior == 'Passive consumer' and age < 55",
+              "probability": 0.8,
+              "timestep": 1
+            },
+            {
+              "channel": "podcast_and_alternative_media",
+              "when": "primary_info_source == 'Podcasts' or institutional_trust in ('Low trust', 'Distrustful/Conspiratorial')",
+              "probability": 0.85,
+              "timestep": 1
+            },
+            {
+              "channel": "social_media_viral_spread",
+              "when": "age >= 18 and age < 40 and social_media_behavior != 'Non-user'",
+              "probability": 0.88,
+              "timestep": 1
+            },
+            {
+              "channel": "tech_professional_network",
+              "when": "tech_adoption_posture == 'Early majority adopter' and employment_sector in ('Private sector', 'Self-employed', 'Gig/contract')",
+              "probability": 0.7,
+              "timestep": 1
+            },
+            {
+              "channel": "word_of_mouth_community",
+              "when": "primary_info_source == 'Avoids news' or social_media_behavior == 'Non-user'",
+              "probability": 0.6,
+              "timestep": 2
+            },
+            {
+              "channel": "major_media_breaking_news",
+              "when": "age >= 55 and primary_info_source != 'Avoids news'",
+              "probability": 0.88,
+              "timestep": 2
+            },
+            {
+              "channel": "podcast_and_alternative_media",
+              "when": "political_engagement_level == 'Highly engaged partisan' or asi_threat_perception in ('Existential threat', 'Enthusiastically positive')",
+              "probability": 0.75,
+              "timestep": 2
+            },
+            {
+              "channel": "word_of_mouth_community",
+              "when": "urban_rural == 'Rural' or religious_engagement in ('Moderately religious', 'Devout')",
+              "probability": 0.65,
+              "timestep": 2
+            },
+            {
+              "channel": "social_media_viral_spread",
+              "when": "age >= 40 and age < 60 and social_media_behavior in ('Passive consumer', 'Occasional poster')",
+              "probability": 0.7,
+              "timestep": 2
+            },
+            {
+              "channel": "word_of_mouth_community",
+              "when": "true",
+              "probability": 0.45,
+              "timestep": 3
+            },
+            {
+              "channel": "major_media_breaking_news",
+              "when": "true",
+              "probability": 0.55,
+              "timestep": 3
+            }
+          ],
+          "reasoning": "[REDACTED_TEXT length=2762]"
+        },
+        "name": "seed_exposure",
+        "type": "tool_use",
+        "caller": {
+          "type": "direct"
+        }
+      }
+    ],
+    "model": "claude-sonnet-4-6",
+    "role": "assistant",
+    "stop_reason": "tool_use",
+    "stop_sequence": null,
+    "type": "message",
+    "usage": {
+      "cache_creation": {
+        "ephemeral_1h_input_tokens": "[REDACTED_SECRET]",
+        "ephemeral_5m_input_tokens": "[REDACTED_SECRET]"
+      },
+      "cache_creation_input_tokens": "[REDACTED_SECRET]",
+      "cache_read_input_tokens": "[REDACTED_SECRET]",
+      "input_tokens": 5098,
+      "output_tokens": 2385,
+      "server_tool_use": null,
+      "service_tier": "standard",
+      "inference_geo": "global"
+    }
+  },
+  "sources_extracted": []
+}

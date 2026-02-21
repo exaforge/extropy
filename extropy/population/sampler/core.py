@@ -23,6 +23,7 @@ from ...core.models import (
     SamplingStats,
     SamplingResult,
     HouseholdConfig,
+    HouseholdType,
     SamplingSemanticRoles,
     MaritalRoles,
 )
@@ -34,6 +35,7 @@ from .households import (
     household_needs_kids,
     correlate_partner_attribute,
     generate_dependents,
+    choose_partner_gender,
 )
 from .modifiers import apply_modifiers_and_sample
 from ...utils.eval_safe import eval_formula, FormulaError
@@ -457,6 +459,7 @@ def _generate_npc_partner(
     primary: dict[str, Any],
     attr_map: dict[str, AttributeSpec],
     categorical_options: dict[str, list[str]],
+    gender_attr: str | None,
     rng: random.Random,
     config: HouseholdConfig,
     geography_hint: str | None = None,
@@ -469,8 +472,25 @@ def _generate_npc_partner(
     """
     partner: dict[str, Any] = {}
 
-    # Always include gender
-    partner["gender"] = rng.choice(["male", "female"])
+    if gender_attr:
+        partner_gender = choose_partner_gender(
+            primary_gender=(
+                str(primary.get(gender_attr))
+                if primary.get(gender_attr) is not None
+                else None
+            ),
+            available_genders=categorical_options.get(gender_attr),
+            rng=rng,
+            config=config,
+        )
+        if partner_gender:
+            partner[gender_attr] = partner_gender
+            partner["gender"] = partner_gender
+        else:
+            partner["gender"] = rng.choice(["male", "female"])
+    else:
+        # Legacy fallback when no gender attribute exists in spec.
+        partner["gender"] = rng.choice(["male", "female"])
 
     # Always correlate age if present (essential for NPC identity, regardless of scope)
     if "age" in primary:
@@ -624,6 +644,10 @@ def _sample_population_households(
     household_attrs = {
         attr.name for attr in spec.attributes if attr.scope == "household"
     }
+    marital_attr = _resolve_marital_attr_name(attr_map, semantic_roles)
+    household_size_attr = _resolve_household_size_attr_name(attr_map, semantic_roles)
+    gender_attr = _resolve_gender_attr_name(attr_map)
+    marital_spec = attr_map.get(marital_attr) if marital_attr else None
     categorical_options: dict[str, list[str]] = {}
     for attr in spec.attributes:
         if attr.type == "categorical" and attr.sampling.distribution:
@@ -654,16 +678,33 @@ def _sample_population_households(
 
         has_partner = household_needs_partner(htype)
         has_kids = household_needs_kids(htype)
+        if has_partner and focus_mode in ("couples", "all") and agent_index >= target_n:
+            # In couples/all mode, avoid creating fallback NPC partners when there is
+            # no capacity left for a second agent.
+            has_partner = False
         num_adults = 2 if has_partner else 1
 
-        # Determine household_size from agent if present, else estimate
-        household_size = adult1.get(
+        # Determine sampled household_size from agent if present, else estimate.
+        # Then enforce household-type semantics deterministically (kids/no-kids).
+        sampled_household_size = adult1.get(
             "household_size", num_adults + (1 if has_kids else 0)
         )
-        if isinstance(household_size, (int, float)):
-            household_size = max(num_adults, int(household_size))
+        if isinstance(sampled_household_size, (int, float)):
+            sampled_household_size = max(num_adults, int(sampled_household_size))
         else:
-            household_size = num_adults + (1 if has_kids else 0)
+            sampled_household_size = num_adults + (1 if has_kids else 0)
+
+        target_dependents = max(0, sampled_household_size - num_adults)
+        if htype in (HouseholdType.SINGLE, HouseholdType.COUPLE):
+            target_dependents = 0
+        elif htype in (
+            HouseholdType.SINGLE_PARENT,
+            HouseholdType.COUPLE_WITH_KIDS,
+            HouseholdType.MULTI_GENERATIONAL,
+        ):
+            target_dependents = max(1, target_dependents)
+
+        household_size = num_adults + target_dependents
 
         # Annotate Adult 1 with household fields
         adult1["household_id"] = household_id
@@ -687,6 +728,7 @@ def _sample_population_households(
                     household_attrs,
                     categorical_options,
                     config,
+                    gender_attr,
                     semantic_roles=semantic_roles,
                 )
                 adult2["household_id"] = household_id
@@ -704,6 +746,7 @@ def _sample_population_households(
                     adult1,
                     attr_map,
                     categorical_options,
+                    gender_attr,
                     rng,
                     config,
                     geography_hint=spec.meta.geography,
@@ -734,6 +777,7 @@ def _sample_population_households(
         if has_kids and focus_mode == "all":
             # Kids old enough become full agents; younger ones stay as NPCs
             dep_dicts = []
+            promoted_dependents: list[dict[str, Any]] = []
             for dep in dependents:
                 if agent_index >= target_n or dep.age < config.min_agent_age:
                     # Too young or at target — stays as NPC data
@@ -752,7 +796,7 @@ def _sample_population_households(
                     household_id,
                     semantic_roles=semantic_roles,
                 )
-                agents.append(kid_agent)
+                promoted_dependents.append(kid_agent)
                 adult_ids.append(kid_agent["_id"])
                 agent_index += 1
             # Any overflow dependents attached as NPC data
@@ -761,6 +805,37 @@ def _sample_population_households(
             # Kids are NPCs
             dep_dicts = [d.model_dump() for d in dependents]
             adult1["dependents"] = dep_dicts
+            promoted_dependents = []
+
+        household_members = [adult1]
+        if adult2_added:
+            household_members.append(adult2)
+        household_members.extend(promoted_dependents)
+
+        # In household-mode, household-coupled fields should reflect realized structure
+        # before post-sampling reconciliation/gating runs.
+        if household_size_attr:
+            npc_partner_count = 1 if has_partner and not adult2_added else 0
+            realized_size = len(household_members) + npc_partner_count + len(dep_dicts)
+            for member in household_members:
+                member[household_size_attr] = realized_size
+
+        if marital_spec and marital_attr:
+            for member in household_members:
+                has_partner_member = bool(
+                    member.get("partner_id") or member.get("partner_npc")
+                )
+                desired = _pick_marital_value(
+                    marital_spec,
+                    has_partner_member,
+                    marital_roles=(
+                        semantic_roles.marital_roles if semantic_roles else None
+                    ),
+                )
+                if desired is not None:
+                    member[marital_attr] = desired
+
+        agents.extend(promoted_dependents)
 
         agents.append(adult1)
 
@@ -812,6 +887,7 @@ def _sample_partner_agent(
     household_attrs: set[str],
     categorical_options: dict[str, list[str]],
     config: HouseholdConfig | None = None,
+    gender_attr: str | None = None,
     semantic_roles: SamplingSemanticRoles | None = None,
 ) -> dict[str, Any]:
     """Sample a partner agent with correlated demographics.
@@ -833,8 +909,18 @@ def _sample_partner_agent(
         # Household-scoped: copy from primary
         if attr.scope == "household" and attr_name in primary:
             value = primary[attr_name]
-        # Partner-correlated: use assortative mating
-        elif attr.scope == "partner_correlated" and attr_name in primary:
+        # Partner-correlated: use assortative mating.
+        # Age-like fields and scenario policy overrides are correlated even when
+        # scope metadata is incomplete, to prevent unrealistic partner drift.
+        elif (
+            attr_name in primary
+            and (
+                attr.scope == "partner_correlated"
+                or attr.semantic_type == "age"
+                or _resolve_partner_policy_override(attr_name, semantic_roles)
+                is not None
+            )
+        ):
             value = correlate_partner_attribute(
                 attr_name,
                 attr.type,
@@ -862,8 +948,26 @@ def _sample_partner_agent(
         agent[attr_name] = value
         _update_stats(attr, value, stats, numeric_values)
 
+    if gender_attr and gender_attr in agent:
+        partner_gender = choose_partner_gender(
+            primary_gender=(
+                str(primary.get(gender_attr))
+                if primary.get(gender_attr) is not None
+                else None
+            ),
+            available_genders=categorical_options.get(gender_attr),
+            rng=rng,
+            config=config,
+        )
+        if partner_gender is not None:
+            agent[gender_attr] = partner_gender
+
     # Generate first name for partner agent
-    gender = agent.get("gender") or agent.get("sex")
+    gender = None
+    if gender_attr:
+        gender = agent.get(gender_attr)
+    if gender is None:
+        gender = agent.get("gender") or agent.get("sex")
     ethnicity = (
         agent.get("race_ethnicity") or agent.get("ethnicity") or agent.get("race")
     )
@@ -1121,6 +1225,65 @@ def _find_attr_name(
     return None
 
 
+def _resolve_marital_attr_name(
+    attr_map: dict[str, AttributeSpec],
+    semantic_roles: SamplingSemanticRoles | None = None,
+) -> str | None:
+    """Resolve marital attribute via scenario semantic roles, then legacy fallback."""
+    if (
+        semantic_roles
+        and semantic_roles.marital_roles
+        and semantic_roles.marital_roles.attr
+    ):
+        candidate = semantic_roles.marital_roles.attr
+        if candidate in attr_map:
+            return candidate
+
+    return _find_attr_name(
+        attr_map,
+        {"marital_status", "marital", "relationship_status"},
+    )
+
+
+def _resolve_household_size_attr_name(
+    attr_map: dict[str, AttributeSpec],
+    semantic_roles: SamplingSemanticRoles | None = None,
+) -> str | None:
+    """Resolve household-size attribute via scenario semantic roles, then fallback."""
+    if (
+        semantic_roles
+        and semantic_roles.household_roles
+        and semantic_roles.household_roles.household_size_attr
+    ):
+        candidate = semantic_roles.household_roles.household_size_attr
+        attr = attr_map.get(candidate)
+        if attr is not None and attr.type in ("int", "float"):
+            return candidate
+
+    fallback = _find_attr_name(attr_map, {"household_size"})
+    if fallback is None:
+        return None
+    attr = attr_map.get(fallback)
+    if attr is not None and attr.type in ("int", "float"):
+        return fallback
+    return None
+
+
+def _resolve_gender_attr_name(attr_map: dict[str, AttributeSpec]) -> str | None:
+    """Resolve gender attribute by metadata first, then legacy alias fallback."""
+    for name, attr in attr_map.items():
+        if attr.identity_type == "gender_identity":
+            return name
+
+    fallback = _find_attr_name(attr_map, {"gender", "sex", "gender_identity"})
+    if fallback is None:
+        return None
+    attr = attr_map.get(fallback)
+    if attr is None or attr.type != "categorical":
+        return None
+    return fallback
+
+
 def _resolve_partner_policy_override(
     attr_name: str,
     semantic_roles: SamplingSemanticRoles | None,
@@ -1240,11 +1403,8 @@ def _reconcile_household_coherence(
     if not by_household:
         return
 
-    marital_attr = _find_attr_name(
-        attr_map,
-        {"marital_status", "marital", "relationship_status"},
-    )
-    household_size_attr = _find_attr_name(attr_map, {"household_size"})
+    marital_attr = _resolve_marital_attr_name(attr_map, semantic_roles)
+    household_size_attr = _resolve_household_size_attr_name(attr_map, semantic_roles)
 
     marital_updates = 0
     household_size_updates = 0

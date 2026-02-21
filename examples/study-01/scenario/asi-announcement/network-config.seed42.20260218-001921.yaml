@@ -1,0 +1,237 @@
+avg_degree: 10.0
+rewire_prob: 0.05
+similarity_store_threshold: 0.05
+similarity_threshold: 0.3
+similarity_steepness: 10.0
+candidate_mode: blocked
+candidate_pool_multiplier: 12.0
+min_candidate_pool: 80
+similarity_workers: 1
+similarity_chunk_size: 64
+checkpoint_every_rows: 250
+triadic_closure_prob: 0.6
+target_clustering: 0.35
+target_modularity: 0.55
+inter_community_scale: 0.3
+max_calibration_iterations: 12
+quality_profile: balanced
+topology_gate: strict
+max_calibration_minutes: 30
+calibration_restarts: 4
+target_largest_component_ratio: 0.95
+target_degree_tolerance_pct: 0.15
+target_modularity_tolerance: 0.1
+target_clustering_tolerance: 0.08
+bridge_budget_fraction: 0.08
+swap_passes: 3
+power_law_exponent: 2.5
+identity_clustering_boost: 1.5
+auto_save_generated_config: true
+allow_quarantine: true
+quarantine_suffix: rejected
+attribute_weights:
+  state:
+    weight: 4.0
+    match_type: exact
+  urban_rural:
+    weight: 3.0
+    match_type: exact
+  political_affiliation:
+    weight: 3.5
+    match_type: exact
+  race_ethnicity:
+    weight: 2.5
+    match_type: exact
+  education_level:
+    weight: 2.5
+    match_type: within_n
+    range_value: 1.0
+    ordinal_levels:
+      Less than HS: 1
+      HS Diploma: 2
+      Some College: 3
+      Associate's: 4
+      Bachelor's: 5
+      Graduate Degree: 6
+  age:
+    weight: 2.0
+    match_type: numeric_range
+    range_value: 15.0
+  religious_affiliation:
+    weight: 2.0
+    match_type: exact
+  household_income:
+    weight: 1.5
+    match_type: numeric_range
+    range_value: 30000.0
+  occupation:
+    weight: 1.5
+    match_type: exact
+  social_media_platforms:
+    weight: 1.0
+    match_type: exact
+  has_children:
+    weight: 1.0
+    match_type: exact
+  news_outlet_lean:
+    weight: 1.5
+    match_type: exact
+degree_multipliers:
+- attribute: civic_engagement
+  condition: Actively volunteers or campaigns
+  multiplier: 2.5
+  rationale: Community organizers and campaign volunteers build very large social
+    networks through their activism and outreach activities.
+- attribute: employment_status
+  condition: Full-time
+  multiplier: 1.4
+  rationale: Full-time workers have regular workplace interactions that expand their
+    social networks significantly.
+- attribute: extraversion
+  condition: 0.8
+  multiplier: 1.5
+  rationale: Highly extraverted individuals naturally accumulate more social connections
+    across all contexts.
+- attribute: occupation
+  condition: Management/Professional
+  multiplier: 1.6
+  rationale: Managers and professionals maintain broad networks for career advancement,
+    client relationships, and professional associations.
+- attribute: religious_attendance
+  condition: More than weekly
+  multiplier: 1.8
+  rationale: Very frequent churchgoers are deeply embedded in congregational social
+    networks and often take on leadership or volunteer roles.
+- attribute: social_media_hours_per_day
+  condition: 5.0
+  multiplier: 1.4
+  rationale: Heavy social media users maintain more online connections and are exposed
+    to and engage with more people digitally.
+- attribute: union_membership
+  condition: true
+  multiplier: 1.3
+  rationale: Union members participate in organized labor networks, meetings, and
+    collective activities that expand social ties.
+edge_type_rules:
+- name: household_member
+  condition: a_household_income == b_household_income and a_state == b_state and a_urban_rural
+    == b_urban_rural and a_marital_status == b_marital_status
+  priority: 50
+  description: "People sharing the same household income, state, residential setting,\
+    \ and marital status are likely household members or domestic partners \u2014\
+    \ a strong proxy for actual co-residence."
+- name: religious_community
+  condition: a_religious_affiliation == b_religious_affiliation and a_state == b_state
+    and a_urban_rural == b_urban_rural
+  priority: 35
+  description: Members of the same religious congregation within the same state and
+    community setting who attend services together.
+- name: political_community
+  condition: a_political_affiliation == b_political_affiliation and a_state == b_state
+  priority: 25
+  description: People who share political affiliation in the same state, connected
+    through local party activities, rallies, and civic engagement.
+- name: neighbor
+  condition: a_state == b_state and a_urban_rural == b_urban_rural and a_race_ethnicity
+    == b_race_ethnicity
+  priority: 20
+  description: People in the same state, residential setting, and racial/ethnic community
+    who are likely geographic neighbors or community members.
+- name: coworker
+  condition: a_occupation == b_occupation and a_state == b_state and a_employment_status
+    == b_employment_status
+  priority: 15
+  description: People in the same occupation and employment status within the same
+    state, likely sharing professional or workplace networks.
+- name: acquaintance
+  condition: a_state == b_state
+  priority: 5
+  description: General acquaintances who live in the same state with some loose social
+    connection.
+influence_factors:
+- attribute: education_level
+  type: ordinal
+  levels:
+    Less than HS: 1
+    HS Diploma: 2
+    Some College: 3
+    Associate's: 4
+    Bachelor's: 5
+    Graduate Degree: 6
+  weight: 0.35
+  description: Higher education is associated with greater perceived credibility and
+    persuasiveness on policy issues; more educated people tend to shape opinions of
+    less educated peers.
+- attribute: civic_engagement
+  type: ordinal
+  levels:
+    Rarely/Never votes: 1
+    Votes sometimes: 2
+    Votes regularly: 3
+    Actively volunteers or campaigns: 4
+  weight: 0.3
+  description: "Civically active individuals \u2014 especially organizers and campaigners\
+    \ \u2014 are opinion leaders who actively try to persuade others on political\
+    \ and social issues."
+- attribute: need_for_cognition
+  type: numeric
+  weight: 0.2
+  description: People with higher need for cognition process information more deeply
+    and craft more coherent arguments, making them more persuasive in political discussions.
+- attribute: trust_in_institutions
+  type: numeric
+  weight: 0.15
+  description: Individuals with higher institutional trust are seen as more mainstream
+    and credible sources, giving them modest influence advantage in opinion dynamics.
+default_edge_type: acquaintance
+ordinal_levels:
+  education_level:
+    Less than HS: 1
+    HS Diploma: 2
+    Some College: 3
+    Associate's: 4
+    Bachelor's: 5
+    Graduate Degree: 6
+generated_from: 10,000 US adults aged 18+ representative of the national population
+  by state, age, gender, race/ethnicity, education, and income. Include political
+  affiliation, media consumption habits, social media usage, religious affiliation,
+  and personality traits. Focus on attributes relevant to opinion formation on national
+  policy issues.
+generation_rationale: "This is a US national adult population focused on opinion formation\
+  \ on policy issues. Key social connection drivers:\n\n1. **State/geography**: People\
+  \ in the same state are far more likely to know each other \u2014 local networks,\
+  \ shared media markets, community events.\n2. **Urban/rural**: Strong residential\
+  \ sorting \u2014 urban, suburban, and rural people tend to socialize within their\
+  \ own setting.\n3. **Age**: People form friendships with similarly-aged peers (school\
+  \ cohorts, life stage).\n4. **Education level**: Strong homophily driver \u2014\
+  \ education shapes social circles, workplaces, and interests.\n5. **Political affiliation**:\
+  \ Americans increasingly self-sort politically in social networks (affective polarization\
+  \ research).\n6. **Religious affiliation**: Congregations are major social network\
+  \ hubs; people know others from church.\n7. **Marital status / has_children**: Life\
+  \ stage similarity drives connections (parent networks at schools, etc.).\n8. **Race/ethnicity**:\
+  \ Residential and social segregation creates strong same-group homophily.\n9. **Employment\
+  \ status**: Shared workplace context.\n10. **Household income**: Economic class\
+  \ shapes social circles significantly.\n11. **Social media platforms**: Shared platforms\
+  \ enable online connections.\n12. **Occupation**: Professional networks form around\
+  \ occupation type.\n\nEdge types:\n- **household_member**: Same household (using\
+  \ marital_status + household_size proxy \u2014 but we don't have household_id).\
+  \ Use partner_id-based logic. Actually, we can use marital_status == Married/Domestic\
+  \ Partnership and same state and same income as a proxy... but the validator rejected\
+  \ household_id. We should use `a_marital_status == b_marital_status` or better,\
+  \ same state + same household_income (since household members share income in the\
+  \ sample data). Actually the cleanest proxy for household: same household_income\
+  \ AND same state AND same urban_rural.\n- **close_friend**: Same state + same urban_rural\
+  \ + same race_ethnicity + similar age\n- **political_community**: Same political\
+  \ affiliation + same state\n- **religious_community**: Same religious affiliation\
+  \ + same state\n- **coworker**: Same occupation + same state + same urban_rural\n\
+  - **acquaintance**: Default fallback\n\nInfluence factors:\n- Education level (more\
+  \ educated \u2192 more influential on policy opinions)\n- Civic engagement (actively\
+  \ engaged citizens influence others)\n- Trust in institutions (those who trust and\
+  \ participate more shape discourse)\n- Need for cognition (analytical thinkers who\
+  \ process information more deeply)\n\nAverage degree: For a general US adult population\
+  \ focused on social opinion spread, 8-12 is realistic. I'll use 10.\n\nFor household_member\
+  \ edge type: since household_id is not in the available attributes list, I'll proxy\
+  \ it using same household_income AND same state AND same urban_rural \u2014 which\
+  \ will effectively capture actual household members from the sample (agents 0&1\
+  \ share household_income=46464, NY, Suburban; agents 3&4 share 100878, SC, Suburban)."
+seed: 42

@@ -52,7 +52,7 @@ When `household_mode: true`:
 - Generate correlated partners (shared attributes: location, income correlation)
 - Generate NPC dependents (children, elderly) based on household type
 - Household types: singles, couples, single parents, couples with kids, multi-generational
-- `agent_focus` controls who reasons: `primary`, `couples`, `families`, `all`
+- `agent_focus_mode` controls who reasons: `primary_only`, `couples`, `all`
 
 ### 7. Network Generation (`network/`)
 

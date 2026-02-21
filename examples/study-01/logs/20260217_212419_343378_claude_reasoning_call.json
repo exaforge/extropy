@@ -1,0 +1,103 @@
+{
+  "timestamp": "2026-02-17T21:24:19.343405",
+  "function": "reasoning_call",
+  "provider": "claude",
+  "request": {
+    "model": "claude-sonnet-4-6",
+    "prompt_length": 2940
+  },
+  "response": {
+    "id": "msg_012qRicQsmBQx1CjehxsVmyY",
+    "content": [
+      {
+        "id": "toolu_01Lo4suij9eGWfym7Lu8oBFw",
+        "input": {
+          "scenario_type": "evolving",
+          "timestep_unit": "day",
+          "max_timesteps": 14,
+          "background_context": "[REDACTED_TEXT length=395]",
+          "timeline_events": [
+            {
+              "timestep": 2,
+              "description": "Governments and major AI labs issue urgent responses to the OpenAI ASI announcement",
+              "content": "[REDACTED_TEXT length=759]",
+              "source": "Governments, Competing AI Labs, United Nations",
+              "credibility": 0.88,
+              "emotional_valence": -0.3,
+              "re_reasoning_intensity": "[REDACTED_TEXT length=4]"
+            },
+            {
+              "timestep": 4,
+              "description": "A leaked internal OpenAI document raises serious doubts about the ASI claim's validity",
+              "content": "[REDACTED_TEXT length=762]",
+              "source": "The New York Times (leaked internal document)",
+              "credibility": 0.75,
+              "emotional_valence": -0.5,
+              "re_reasoning_intensity": "[REDACTED_TEXT length=7]"
+            },
+            {
+              "timestep": 6,
+              "description": "OpenAI holds a live press conference and demonstrates Prometheus capabilities publicly",
+              "content": "[REDACTED_TEXT length=839]",
+              "source": "OpenAI Press Conference (Live Streamed)",
+              "credibility": 0.82,
+              "emotional_valence": 0.4,
+              "re_reasoning_intensity": "[REDACTED_TEXT length=7]"
+            },
+            {
+              "timestep": 8,
+              "description": "A coalition of AI safety researchers publishes an open letter warning of existential risk",
+              "content": "[REDACTED_TEXT length=836]",
+              "source": "Coalition of AI Safety Researchers (Nature / arXiv)",
+              "credibility": 0.9,
+              "emotional_valence": -0.75,
+              "re_reasoning_intensity": "[REDACTED_TEXT length=4]"
+            },
+            {
+              "timestep": 11,
+              "description": "Prometheus solves a major real-world problem, sparking renewed optimism and debate",
+              "content": "[REDACTED_TEXT length=876]",
+              "source": "OpenAI + WHO + Independent Economic Research Institutes",
+              "credibility": 0.85,
+              "emotional_valence": 0.2,
+              "re_reasoning_intensity": "[REDACTED_TEXT length=4]"
+            },
+            {
+              "timestep": 13,
+              "description": "World governments reach a preliminary international ASI governance agreement",
+              "content": "[REDACTED_TEXT length=931]",
+              "source": "United Nations / International Government Coalition",
+              "credibility": 0.93,
+              "emotional_valence": 0.15,
+              "re_reasoning_intensity": "[REDACTED_TEXT length=4]"
+            }
+          ]
+        },
+        "name": "timeline_generation",
+        "type": "tool_use",
+        "caller": {
+          "type": "direct"
+        }
+      }
+    ],
+    "model": "claude-sonnet-4-6",
+    "role": "assistant",
+    "stop_reason": "tool_use",
+    "stop_sequence": null,
+    "type": "message",
+    "usage": {
+      "cache_creation": {
+        "ephemeral_1h_input_tokens": "[REDACTED_SECRET]",
+        "ephemeral_5m_input_tokens": "[REDACTED_SECRET]"
+      },
+      "cache_creation_input_tokens": "[REDACTED_SECRET]",
+      "cache_read_input_tokens": "[REDACTED_SECRET]",
+      "input_tokens": 1837,
+      "output_tokens": 1760,
+      "server_tool_use": null,
+      "service_tier": "standard",
+      "inference_geo": "global"
+    }
+  },
+  "sources_extracted": []
+}

@@ -1,0 +1,2863 @@
+[
+  {
+    "attr": "education_level",
+    "i": 0,
+    "j": 1,
+    "left": "age < 25",
+    "right": "age >= 25 and age < 35",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "age"
+    ]
+  },
+  {
+    "attr": "education_level",
+    "i": 0,
+    "j": 2,
+    "left": "age < 25",
+    "right": "age >= 35 and age < 50",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "age"
+    ]
+  },
+  {
+    "attr": "education_level",
+    "i": 0,
+    "j": 3,
+    "left": "age < 25",
+    "right": "age >= 50 and age < 65",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "age"
+    ]
+  },
+  {
+    "attr": "education_level",
+    "i": 0,
+    "j": 4,
+    "left": "age < 25",
+    "right": "age >= 65",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "age"
+    ]
+  },
+  {
+    "attr": "education_level",
+    "i": 1,
+    "j": 2,
+    "left": "age >= 25 and age < 35",
+    "right": "age >= 35 and age < 50",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "age"
+    ]
+  },
+  {
+    "attr": "education_level",
+    "i": 1,
+    "j": 3,
+    "left": "age >= 25 and age < 35",
+    "right": "age >= 50 and age < 65",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "age"
+    ]
+  },
+  {
+    "attr": "education_level",
+    "i": 1,
+    "j": 4,
+    "left": "age >= 25 and age < 35",
+    "right": "age >= 65",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "age"
+    ]
+  },
+  {
+    "attr": "education_level",
+    "i": 2,
+    "j": 3,
+    "left": "age >= 35 and age < 50",
+    "right": "age >= 50 and age < 65",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "age"
+    ]
+  },
+  {
+    "attr": "education_level",
+    "i": 2,
+    "j": 4,
+    "left": "age >= 35 and age < 50",
+    "right": "age >= 65",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "age"
+    ]
+  },
+  {
+    "attr": "education_level",
+    "i": 3,
+    "j": 4,
+    "left": "age >= 50 and age < 65",
+    "right": "age >= 65",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "age"
+    ]
+  },
+  {
+    "attr": "marital_status",
+    "i": 0,
+    "j": 1,
+    "left": "age < 25",
+    "right": "age >= 25 and age < 35",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "age"
+    ]
+  },
+  {
+    "attr": "marital_status",
+    "i": 0,
+    "j": 2,
+    "left": "age < 25",
+    "right": "age >= 35 and age < 50",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "age"
+    ]
+  },
+  {
+    "attr": "marital_status",
+    "i": 0,
+    "j": 3,
+    "left": "age < 25",
+    "right": "age >= 50 and age < 65",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "age"
+    ]
+  },
+  {
+    "attr": "marital_status",
+    "i": 0,
+    "j": 4,
+    "left": "age < 25",
+    "right": "age >= 65",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "age"
+    ]
+  },
+  {
+    "attr": "marital_status",
+    "i": 1,
+    "j": 2,
+    "left": "age >= 25 and age < 35",
+    "right": "age >= 35 and age < 50",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "age"
+    ]
+  },
+  {
+    "attr": "marital_status",
+    "i": 1,
+    "j": 3,
+    "left": "age >= 25 and age < 35",
+    "right": "age >= 50 and age < 65",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "age"
+    ]
+  },
+  {
+    "attr": "marital_status",
+    "i": 1,
+    "j": 4,
+    "left": "age >= 25 and age < 35",
+    "right": "age >= 65",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "age"
+    ]
+  },
+  {
+    "attr": "marital_status",
+    "i": 2,
+    "j": 3,
+    "left": "age >= 35 and age < 50",
+    "right": "age >= 50 and age < 65",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "age"
+    ]
+  },
+  {
+    "attr": "marital_status",
+    "i": 2,
+    "j": 4,
+    "left": "age >= 35 and age < 50",
+    "right": "age >= 65",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "age"
+    ]
+  },
+  {
+    "attr": "marital_status",
+    "i": 3,
+    "j": 4,
+    "left": "age >= 50 and age < 65",
+    "right": "age >= 65",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "age"
+    ]
+  },
+  {
+    "attr": "has_children",
+    "i": 0,
+    "j": 4,
+    "left": "age < 25 and marital_status == 'Single'",
+    "right": "age >= 35 and age < 50 and marital_status == 'Single'",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "age",
+      "marital_status"
+    ]
+  },
+  {
+    "attr": "has_children",
+    "i": 0,
+    "j": 5,
+    "left": "age < 25 and marital_status == 'Single'",
+    "right": "age >= 50",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "age",
+      "marital_status"
+    ]
+  },
+  {
+    "attr": "has_children",
+    "i": 1,
+    "j": 2,
+    "left": "age >= 25 and age < 35 and marital_status == 'Married/partnered'",
+    "right": "age >= 35 and age < 50 and marital_status == 'Married/partnered'",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "age",
+      "marital_status"
+    ]
+  },
+  {
+    "attr": "has_children",
+    "i": 1,
+    "j": 3,
+    "left": "age >= 25 and age < 35 and marital_status == 'Married/partnered'",
+    "right": "age >= 50 and marital_status == 'Married/partnered'",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "age",
+      "marital_status"
+    ]
+  },
+  {
+    "attr": "has_children",
+    "i": 1,
+    "j": 5,
+    "left": "age >= 25 and age < 35 and marital_status == 'Married/partnered'",
+    "right": "age >= 50",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "age",
+      "marital_status"
+    ]
+  },
+  {
+    "attr": "has_children",
+    "i": 2,
+    "j": 3,
+    "left": "age >= 35 and age < 50 and marital_status == 'Married/partnered'",
+    "right": "age >= 50 and marital_status == 'Married/partnered'",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "age",
+      "marital_status"
+    ]
+  },
+  {
+    "attr": "has_children",
+    "i": 2,
+    "j": 5,
+    "left": "age >= 35 and age < 50 and marital_status == 'Married/partnered'",
+    "right": "age >= 50",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "age",
+      "marital_status"
+    ]
+  },
+  {
+    "attr": "has_children",
+    "i": 3,
+    "j": 5,
+    "left": "age >= 50 and marital_status == 'Married/partnered'",
+    "right": "age >= 50",
+    "bruteforce_overlap": true,
+    "witness": {
+      "age": 50,
+      "marital_status": "Married/partnered"
+    },
+    "vars": [
+      "age",
+      "marital_status"
+    ]
+  },
+  {
+    "attr": "has_children",
+    "i": 4,
+    "j": 5,
+    "left": "age >= 35 and age < 50 and marital_status == 'Single'",
+    "right": "age >= 50",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "age",
+      "marital_status"
+    ]
+  },
+  {
+    "attr": "employment_sector",
+    "i": 0,
+    "j": 2,
+    "left": "age < 25 and education_level == 'Less than HS'",
+    "right": "age >= 25 and age < 45 and education_level in ['Less than HS', 'HS diploma/GED']",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "age",
+      "education_level"
+    ]
+  },
+  {
+    "attr": "employment_sector",
+    "i": 0,
+    "j": 4,
+    "left": "age < 25 and education_level == 'Less than HS'",
+    "right": "age >= 55 and age < 65",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "age",
+      "education_level"
+    ]
+  },
+  {
+    "attr": "employment_sector",
+    "i": 0,
+    "j": 5,
+    "left": "age < 25 and education_level == 'Less than HS'",
+    "right": "age >= 65",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "age",
+      "education_level"
+    ]
+  },
+  {
+    "attr": "employment_sector",
+    "i": 1,
+    "j": 2,
+    "left": "age < 25 and education_level in ['HS diploma/GED', 'Some college']",
+    "right": "age >= 25 and age < 45 and education_level in ['Less than HS', 'HS diploma/GED']",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "age",
+      "education_level"
+    ]
+  },
+  {
+    "attr": "employment_sector",
+    "i": 1,
+    "j": 4,
+    "left": "age < 25 and education_level in ['HS diploma/GED', 'Some college']",
+    "right": "age >= 55 and age < 65",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "age",
+      "education_level"
+    ]
+  },
+  {
+    "attr": "employment_sector",
+    "i": 1,
+    "j": 5,
+    "left": "age < 25 and education_level in ['HS diploma/GED', 'Some college']",
+    "right": "age >= 65",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "age",
+      "education_level"
+    ]
+  },
+  {
+    "attr": "employment_sector",
+    "i": 2,
+    "j": 4,
+    "left": "age >= 25 and age < 45 and education_level in ['Less than HS', 'HS diploma/GED']",
+    "right": "age >= 55 and age < 65",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "age",
+      "education_level"
+    ]
+  },
+  {
+    "attr": "employment_sector",
+    "i": 2,
+    "j": 5,
+    "left": "age >= 25 and age < 45 and education_level in ['Less than HS', 'HS diploma/GED']",
+    "right": "age >= 65",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "age",
+      "education_level"
+    ]
+  },
+  {
+    "attr": "employment_sector",
+    "i": 3,
+    "j": 4,
+    "left": "age >= 25 and age < 55 and education_level in ['Bachelor\\'s degree', 'Graduate degree']",
+    "right": "age >= 55 and age < 65",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "age",
+      "education_level"
+    ]
+  },
+  {
+    "attr": "employment_sector",
+    "i": 3,
+    "j": 5,
+    "left": "age >= 25 and age < 55 and education_level in ['Bachelor\\'s degree', 'Graduate degree']",
+    "right": "age >= 65",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "age",
+      "education_level"
+    ]
+  },
+  {
+    "attr": "employment_sector",
+    "i": 4,
+    "j": 5,
+    "left": "age >= 55 and age < 65",
+    "right": "age >= 65",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "age"
+    ]
+  },
+  {
+    "attr": "financial_margin",
+    "i": 0,
+    "j": 1,
+    "left": "household_income < 35000",
+    "right": "household_income >= 35000 and household_income < 60000",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "household_income"
+    ]
+  },
+  {
+    "attr": "financial_margin",
+    "i": 0,
+    "j": 2,
+    "left": "household_income < 35000",
+    "right": "household_income >= 60000 and household_income < 100000",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "household_income"
+    ]
+  },
+  {
+    "attr": "financial_margin",
+    "i": 0,
+    "j": 3,
+    "left": "household_income < 35000",
+    "right": "household_income >= 100000 and household_income < 150000",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "household_income"
+    ]
+  },
+  {
+    "attr": "financial_margin",
+    "i": 0,
+    "j": 4,
+    "left": "household_income < 35000",
+    "right": "household_income >= 150000",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "household_income"
+    ]
+  },
+  {
+    "attr": "financial_margin",
+    "i": 1,
+    "j": 2,
+    "left": "household_income >= 35000 and household_income < 60000",
+    "right": "household_income >= 60000 and household_income < 100000",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "household_income"
+    ]
+  },
+  {
+    "attr": "financial_margin",
+    "i": 1,
+    "j": 3,
+    "left": "household_income >= 35000 and household_income < 60000",
+    "right": "household_income >= 100000 and household_income < 150000",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "household_income"
+    ]
+  },
+  {
+    "attr": "financial_margin",
+    "i": 1,
+    "j": 4,
+    "left": "household_income >= 35000 and household_income < 60000",
+    "right": "household_income >= 150000",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "household_income"
+    ]
+  },
+  {
+    "attr": "financial_margin",
+    "i": 2,
+    "j": 3,
+    "left": "household_income >= 60000 and household_income < 100000",
+    "right": "household_income >= 100000 and household_income < 150000",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "household_income"
+    ]
+  },
+  {
+    "attr": "financial_margin",
+    "i": 2,
+    "j": 4,
+    "left": "household_income >= 60000 and household_income < 100000",
+    "right": "household_income >= 150000",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "household_income"
+    ]
+  },
+  {
+    "attr": "financial_margin",
+    "i": 3,
+    "j": 4,
+    "left": "household_income >= 100000 and household_income < 150000",
+    "right": "household_income >= 150000",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "household_income"
+    ]
+  },
+  {
+    "attr": "investment_profile",
+    "i": 0,
+    "j": 1,
+    "left": "household_income < 40000 and education_level in ['Less than HS', 'HS diploma/GED']",
+    "right": "household_income >= 40000 and household_income < 80000 and education_level in ['Some college', 'HS diploma/GED']",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "education_level",
+      "household_income"
+    ]
+  },
+  {
+    "attr": "investment_profile",
+    "i": 0,
+    "j": 4,
+    "left": "household_income < 40000 and education_level in ['Less than HS', 'HS diploma/GED']",
+    "right": "household_income >= 150000",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "education_level",
+      "household_income"
+    ]
+  },
+  {
+    "attr": "investment_profile",
+    "i": 1,
+    "j": 4,
+    "left": "household_income >= 40000 and household_income < 80000 and education_level in ['Some college', 'HS diploma/GED']",
+    "right": "household_income >= 150000",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "education_level",
+      "household_income"
+    ]
+  },
+  {
+    "attr": "investment_profile",
+    "i": 2,
+    "j": 4,
+    "left": "household_income >= 80000 and education_level == 'Bachelor\\'s degree'",
+    "right": "household_income >= 150000",
+    "bruteforce_overlap": true,
+    "witness": {
+      "education_level": "Bachelor's degree",
+      "household_income": 150000
+    },
+    "vars": [
+      "education_level",
+      "household_income"
+    ]
+  },
+  {
+    "attr": "investment_profile",
+    "i": 3,
+    "j": 4,
+    "left": "household_income >= 100000 and education_level == 'Graduate degree'",
+    "right": "household_income >= 150000",
+    "bruteforce_overlap": true,
+    "witness": {
+      "education_level": "Graduate degree",
+      "household_income": 150000
+    },
+    "vars": [
+      "education_level",
+      "household_income"
+    ]
+  },
+  {
+    "attr": "primary_info_source",
+    "i": 0,
+    "j": 2,
+    "left": "age < 30 and education_level in ['Less than HS', 'HS diploma/GED', 'Some college']",
+    "right": "age >= 30 and age < 50 and education_level in ['Less than HS', 'HS diploma/GED']",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "age",
+      "education_level"
+    ]
+  },
+  {
+    "attr": "primary_info_source",
+    "i": 0,
+    "j": 4,
+    "left": "age < 30 and education_level in ['Less than HS', 'HS diploma/GED', 'Some college']",
+    "right": "age >= 50 and age < 65 and education_level in ['Less than HS', 'HS diploma/GED', 'Some college']",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "age",
+      "education_level"
+    ]
+  },
+  {
+    "attr": "primary_info_source",
+    "i": 0,
+    "j": 5,
+    "left": "age < 30 and education_level in ['Less than HS', 'HS diploma/GED', 'Some college']",
+    "right": "age >= 65",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "age",
+      "education_level"
+    ]
+  },
+  {
+    "attr": "primary_info_source",
+    "i": 1,
+    "j": 3,
+    "left": "age < 30 and education_level in ['Bachelor\\'s degree', 'Graduate degree']",
+    "right": "age >= 30 and age < 50 and education_level in ['Bachelor\\'s degree', 'Graduate degree']",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "age",
+      "education_level"
+    ]
+  },
+  {
+    "attr": "primary_info_source",
+    "i": 1,
+    "j": 5,
+    "left": "age < 30 and education_level in ['Bachelor\\'s degree', 'Graduate degree']",
+    "right": "age >= 65",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "age",
+      "education_level"
+    ]
+  },
+  {
+    "attr": "primary_info_source",
+    "i": 2,
+    "j": 4,
+    "left": "age >= 30 and age < 50 and education_level in ['Less than HS', 'HS diploma/GED']",
+    "right": "age >= 50 and age < 65 and education_level in ['Less than HS', 'HS diploma/GED', 'Some college']",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "age",
+      "education_level"
+    ]
+  },
+  {
+    "attr": "primary_info_source",
+    "i": 2,
+    "j": 5,
+    "left": "age >= 30 and age < 50 and education_level in ['Less than HS', 'HS diploma/GED']",
+    "right": "age >= 65",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "age",
+      "education_level"
+    ]
+  },
+  {
+    "attr": "primary_info_source",
+    "i": 3,
+    "j": 5,
+    "left": "age >= 30 and age < 50 and education_level in ['Bachelor\\'s degree', 'Graduate degree']",
+    "right": "age >= 65",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "age",
+      "education_level"
+    ]
+  },
+  {
+    "attr": "primary_info_source",
+    "i": 4,
+    "j": 5,
+    "left": "age >= 50 and age < 65 and education_level in ['Less than HS', 'HS diploma/GED', 'Some college']",
+    "right": "age >= 65",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "age",
+      "education_level"
+    ]
+  },
+  {
+    "attr": "social_media_behavior",
+    "i": 0,
+    "j": 1,
+    "left": "age < 30 and primary_info_source == 'Social media'",
+    "right": "age < 30 and primary_info_source != 'Social media'",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "age",
+      "primary_info_source"
+    ]
+  },
+  {
+    "attr": "social_media_behavior",
+    "i": 0,
+    "j": 2,
+    "left": "age < 30 and primary_info_source == 'Social media'",
+    "right": "age >= 30 and age < 50 and primary_info_source == 'Social media'",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "age",
+      "primary_info_source"
+    ]
+  },
+  {
+    "attr": "social_media_behavior",
+    "i": 0,
+    "j": 3,
+    "left": "age < 30 and primary_info_source == 'Social media'",
+    "right": "age >= 30 and age < 50 and primary_info_source != 'Social media'",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "age",
+      "primary_info_source"
+    ]
+  },
+  {
+    "attr": "social_media_behavior",
+    "i": 0,
+    "j": 4,
+    "left": "age < 30 and primary_info_source == 'Social media'",
+    "right": "age >= 50 and primary_info_source == 'Social media'",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "age",
+      "primary_info_source"
+    ]
+  },
+  {
+    "attr": "social_media_behavior",
+    "i": 0,
+    "j": 5,
+    "left": "age < 30 and primary_info_source == 'Social media'",
+    "right": "age >= 50 and primary_info_source != 'Social media'",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "age",
+      "primary_info_source"
+    ]
+  },
+  {
+    "attr": "social_media_behavior",
+    "i": 1,
+    "j": 2,
+    "left": "age < 30 and primary_info_source != 'Social media'",
+    "right": "age >= 30 and age < 50 and primary_info_source == 'Social media'",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "age",
+      "primary_info_source"
+    ]
+  },
+  {
+    "attr": "social_media_behavior",
+    "i": 1,
+    "j": 3,
+    "left": "age < 30 and primary_info_source != 'Social media'",
+    "right": "age >= 30 and age < 50 and primary_info_source != 'Social media'",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "age",
+      "primary_info_source"
+    ]
+  },
+  {
+    "attr": "social_media_behavior",
+    "i": 1,
+    "j": 4,
+    "left": "age < 30 and primary_info_source != 'Social media'",
+    "right": "age >= 50 and primary_info_source == 'Social media'",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "age",
+      "primary_info_source"
+    ]
+  },
+  {
+    "attr": "social_media_behavior",
+    "i": 1,
+    "j": 5,
+    "left": "age < 30 and primary_info_source != 'Social media'",
+    "right": "age >= 50 and primary_info_source != 'Social media'",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "age",
+      "primary_info_source"
+    ]
+  },
+  {
+    "attr": "social_media_behavior",
+    "i": 2,
+    "j": 3,
+    "left": "age >= 30 and age < 50 and primary_info_source == 'Social media'",
+    "right": "age >= 30 and age < 50 and primary_info_source != 'Social media'",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "age",
+      "primary_info_source"
+    ]
+  },
+  {
+    "attr": "social_media_behavior",
+    "i": 2,
+    "j": 4,
+    "left": "age >= 30 and age < 50 and primary_info_source == 'Social media'",
+    "right": "age >= 50 and primary_info_source == 'Social media'",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "age",
+      "primary_info_source"
+    ]
+  },
+  {
+    "attr": "social_media_behavior",
+    "i": 2,
+    "j": 5,
+    "left": "age >= 30 and age < 50 and primary_info_source == 'Social media'",
+    "right": "age >= 50 and primary_info_source != 'Social media'",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "age",
+      "primary_info_source"
+    ]
+  },
+  {
+    "attr": "social_media_behavior",
+    "i": 3,
+    "j": 4,
+    "left": "age >= 30 and age < 50 and primary_info_source != 'Social media'",
+    "right": "age >= 50 and primary_info_source == 'Social media'",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "age",
+      "primary_info_source"
+    ]
+  },
+  {
+    "attr": "social_media_behavior",
+    "i": 3,
+    "j": 5,
+    "left": "age >= 30 and age < 50 and primary_info_source != 'Social media'",
+    "right": "age >= 50 and primary_info_source != 'Social media'",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "age",
+      "primary_info_source"
+    ]
+  },
+  {
+    "attr": "social_media_behavior",
+    "i": 4,
+    "j": 5,
+    "left": "age >= 50 and primary_info_source == 'Social media'",
+    "right": "age >= 50 and primary_info_source != 'Social media'",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "age",
+      "primary_info_source"
+    ]
+  },
+  {
+    "attr": "tech_adoption_posture",
+    "i": 0,
+    "j": 2,
+    "left": "age < 30 and education_level in ['Bachelor\\'s degree', 'Graduate degree']",
+    "right": "age >= 30 and age < 50 and education_level in ['Bachelor\\'s degree', 'Graduate degree']",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "age",
+      "education_level"
+    ]
+  },
+  {
+    "attr": "tech_adoption_posture",
+    "i": 0,
+    "j": 4,
+    "left": "age < 30 and education_level in ['Bachelor\\'s degree', 'Graduate degree']",
+    "right": "age >= 50 and age < 65 and education_level in ['Bachelor\\'s degree', 'Graduate degree']",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "age",
+      "education_level"
+    ]
+  },
+  {
+    "attr": "tech_adoption_posture",
+    "i": 0,
+    "j": 6,
+    "left": "age < 30 and education_level in ['Bachelor\\'s degree', 'Graduate degree']",
+    "right": "age >= 65",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "age",
+      "education_level"
+    ]
+  },
+  {
+    "attr": "tech_adoption_posture",
+    "i": 1,
+    "j": 3,
+    "left": "age < 30 and education_level in ['Less than HS', 'HS diploma/GED', 'Some college']",
+    "right": "age >= 30 and age < 50 and education_level in ['Less than HS', 'HS diploma/GED', 'Some college']",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "age",
+      "education_level"
+    ]
+  },
+  {
+    "attr": "tech_adoption_posture",
+    "i": 1,
+    "j": 5,
+    "left": "age < 30 and education_level in ['Less than HS', 'HS diploma/GED', 'Some college']",
+    "right": "age >= 50 and education_level in ['Less than HS', 'HS diploma/GED', 'Some college']",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "age",
+      "education_level"
+    ]
+  },
+  {
+    "attr": "tech_adoption_posture",
+    "i": 1,
+    "j": 6,
+    "left": "age < 30 and education_level in ['Less than HS', 'HS diploma/GED', 'Some college']",
+    "right": "age >= 65",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "age",
+      "education_level"
+    ]
+  },
+  {
+    "attr": "tech_adoption_posture",
+    "i": 2,
+    "j": 4,
+    "left": "age >= 30 and age < 50 and education_level in ['Bachelor\\'s degree', 'Graduate degree']",
+    "right": "age >= 50 and age < 65 and education_level in ['Bachelor\\'s degree', 'Graduate degree']",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "age",
+      "education_level"
+    ]
+  },
+  {
+    "attr": "tech_adoption_posture",
+    "i": 2,
+    "j": 6,
+    "left": "age >= 30 and age < 50 and education_level in ['Bachelor\\'s degree', 'Graduate degree']",
+    "right": "age >= 65",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "age",
+      "education_level"
+    ]
+  },
+  {
+    "attr": "tech_adoption_posture",
+    "i": 3,
+    "j": 5,
+    "left": "age >= 30 and age < 50 and education_level in ['Less than HS', 'HS diploma/GED', 'Some college']",
+    "right": "age >= 50 and education_level in ['Less than HS', 'HS diploma/GED', 'Some college']",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "age",
+      "education_level"
+    ]
+  },
+  {
+    "attr": "tech_adoption_posture",
+    "i": 3,
+    "j": 6,
+    "left": "age >= 30 and age < 50 and education_level in ['Less than HS', 'HS diploma/GED', 'Some college']",
+    "right": "age >= 65",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "age",
+      "education_level"
+    ]
+  },
+  {
+    "attr": "tech_adoption_posture",
+    "i": 4,
+    "j": 6,
+    "left": "age >= 50 and age < 65 and education_level in ['Bachelor\\'s degree', 'Graduate degree']",
+    "right": "age >= 65",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "age",
+      "education_level"
+    ]
+  },
+  {
+    "attr": "tech_adoption_posture",
+    "i": 5,
+    "j": 6,
+    "left": "age >= 50 and education_level in ['Less than HS', 'HS diploma/GED', 'Some college']",
+    "right": "age >= 65",
+    "bruteforce_overlap": true,
+    "witness": {
+      "age": 65,
+      "education_level": "Less than HS"
+    },
+    "vars": [
+      "age",
+      "education_level"
+    ]
+  },
+  {
+    "attr": "religious_engagement",
+    "i": 0,
+    "j": 1,
+    "left": "us_region == 'Southeast' and race_ethnicity == 'Black'",
+    "right": "us_region == 'Southeast' and race_ethnicity == 'White non-Hispanic'",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "race_ethnicity",
+      "us_region"
+    ]
+  },
+  {
+    "attr": "religious_engagement",
+    "i": 0,
+    "j": 2,
+    "left": "us_region == 'Southeast' and race_ethnicity == 'Black'",
+    "right": "us_region == 'Southeast' and race_ethnicity == 'Hispanic/Latino'",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "race_ethnicity",
+      "us_region"
+    ]
+  },
+  {
+    "attr": "religious_engagement",
+    "i": 1,
+    "j": 2,
+    "left": "us_region == 'Southeast' and race_ethnicity == 'White non-Hispanic'",
+    "right": "us_region == 'Southeast' and race_ethnicity == 'Hispanic/Latino'",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "race_ethnicity",
+      "us_region"
+    ]
+  },
+  {
+    "attr": "religious_engagement",
+    "i": 1,
+    "j": 3,
+    "left": "us_region == 'Southeast' and race_ethnicity == 'White non-Hispanic'",
+    "right": "us_region == 'Midwest' and race_ethnicity == 'White non-Hispanic'",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "race_ethnicity",
+      "us_region"
+    ]
+  },
+  {
+    "attr": "religious_engagement",
+    "i": 1,
+    "j": 5,
+    "left": "us_region == 'Southeast' and race_ethnicity == 'White non-Hispanic'",
+    "right": "us_region == 'West Coast' and race_ethnicity in ['White non-Hispanic', 'Asian']",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "race_ethnicity",
+      "us_region"
+    ]
+  },
+  {
+    "attr": "religious_engagement",
+    "i": 1,
+    "j": 6,
+    "left": "us_region == 'Southeast' and race_ethnicity == 'White non-Hispanic'",
+    "right": "us_region == 'Northeast' and race_ethnicity == 'White non-Hispanic'",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "race_ethnicity",
+      "us_region"
+    ]
+  },
+  {
+    "attr": "religious_engagement",
+    "i": 3,
+    "j": 5,
+    "left": "us_region == 'Midwest' and race_ethnicity == 'White non-Hispanic'",
+    "right": "us_region == 'West Coast' and race_ethnicity in ['White non-Hispanic', 'Asian']",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "race_ethnicity",
+      "us_region"
+    ]
+  },
+  {
+    "attr": "religious_engagement",
+    "i": 3,
+    "j": 6,
+    "left": "us_region == 'Midwest' and race_ethnicity == 'White non-Hispanic'",
+    "right": "us_region == 'Northeast' and race_ethnicity == 'White non-Hispanic'",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "race_ethnicity",
+      "us_region"
+    ]
+  },
+  {
+    "attr": "religious_engagement",
+    "i": 5,
+    "j": 6,
+    "left": "us_region == 'West Coast' and race_ethnicity in ['White non-Hispanic', 'Asian']",
+    "right": "us_region == 'Northeast' and race_ethnicity == 'White non-Hispanic'",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "race_ethnicity",
+      "us_region"
+    ]
+  },
+  {
+    "attr": "religious_engagement",
+    "i": 5,
+    "j": 7,
+    "left": "us_region == 'West Coast' and race_ethnicity in ['White non-Hispanic', 'Asian']",
+    "right": "race_ethnicity == 'Asian'",
+    "bruteforce_overlap": true,
+    "witness": {
+      "race_ethnicity": "Asian",
+      "us_region": "West Coast"
+    },
+    "vars": [
+      "race_ethnicity",
+      "us_region"
+    ]
+  },
+  {
+    "attr": "political_identity",
+    "i": 0,
+    "j": 1,
+    "left": "us_region == 'Northeast' and education_level in ['Bachelor\\'s degree', 'Graduate degree'] and race_ethnicity == 'White non-Hispanic'",
+    "right": "us_region == 'Southeast' and education_level in ['Less than HS', 'HS diploma/GED'] and race_ethnicity == 'White non-Hispanic'",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "education_level",
+      "race_ethnicity",
+      "us_region"
+    ]
+  },
+  {
+    "attr": "political_identity",
+    "i": 0,
+    "j": 5,
+    "left": "us_region == 'Northeast' and education_level in ['Bachelor\\'s degree', 'Graduate degree'] and race_ethnicity == 'White non-Hispanic'",
+    "right": "us_region == 'West Coast' and education_level in ['Bachelor\\'s degree', 'Graduate degree']",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "education_level",
+      "race_ethnicity",
+      "us_region"
+    ]
+  },
+  {
+    "attr": "political_identity",
+    "i": 0,
+    "j": 6,
+    "left": "us_region == 'Northeast' and education_level in ['Bachelor\\'s degree', 'Graduate degree'] and race_ethnicity == 'White non-Hispanic'",
+    "right": "us_region == 'Midwest' and education_level in ['Less than HS', 'HS diploma/GED'] and race_ethnicity == 'White non-Hispanic'",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "education_level",
+      "race_ethnicity",
+      "us_region"
+    ]
+  },
+  {
+    "attr": "political_identity",
+    "i": 0,
+    "j": 7,
+    "left": "us_region == 'Northeast' and education_level in ['Bachelor\\'s degree', 'Graduate degree'] and race_ethnicity == 'White non-Hispanic'",
+    "right": "us_region == 'Southwest' and education_level in ['Less than HS', 'HS diploma/GED'] and race_ethnicity == 'White non-Hispanic'",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "education_level",
+      "race_ethnicity",
+      "us_region"
+    ]
+  },
+  {
+    "attr": "political_identity",
+    "i": 0,
+    "j": 8,
+    "left": "us_region == 'Northeast' and education_level in ['Bachelor\\'s degree', 'Graduate degree'] and race_ethnicity == 'White non-Hispanic'",
+    "right": "education_level == 'Graduate degree' and race_ethnicity == 'White non-Hispanic'",
+    "bruteforce_overlap": true,
+    "witness": {
+      "education_level": "Graduate degree",
+      "race_ethnicity": "White non-Hispanic",
+      "us_region": "Northeast"
+    },
+    "vars": [
+      "education_level",
+      "race_ethnicity",
+      "us_region"
+    ]
+  },
+  {
+    "attr": "political_identity",
+    "i": 1,
+    "j": 2,
+    "left": "us_region == 'Southeast' and education_level in ['Less than HS', 'HS diploma/GED'] and race_ethnicity == 'White non-Hispanic'",
+    "right": "us_region == 'Southeast' and race_ethnicity == 'Black'",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "education_level",
+      "race_ethnicity",
+      "us_region"
+    ]
+  },
+  {
+    "attr": "political_identity",
+    "i": 1,
+    "j": 6,
+    "left": "us_region == 'Southeast' and education_level in ['Less than HS', 'HS diploma/GED'] and race_ethnicity == 'White non-Hispanic'",
+    "right": "us_region == 'Midwest' and education_level in ['Less than HS', 'HS diploma/GED'] and race_ethnicity == 'White non-Hispanic'",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "education_level",
+      "race_ethnicity",
+      "us_region"
+    ]
+  },
+  {
+    "attr": "political_identity",
+    "i": 1,
+    "j": 7,
+    "left": "us_region == 'Southeast' and education_level in ['Less than HS', 'HS diploma/GED'] and race_ethnicity == 'White non-Hispanic'",
+    "right": "us_region == 'Southwest' and education_level in ['Less than HS', 'HS diploma/GED'] and race_ethnicity == 'White non-Hispanic'",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "education_level",
+      "race_ethnicity",
+      "us_region"
+    ]
+  },
+  {
+    "attr": "political_identity",
+    "i": 1,
+    "j": 8,
+    "left": "us_region == 'Southeast' and education_level in ['Less than HS', 'HS diploma/GED'] and race_ethnicity == 'White non-Hispanic'",
+    "right": "education_level == 'Graduate degree' and race_ethnicity == 'White non-Hispanic'",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "education_level",
+      "race_ethnicity",
+      "us_region"
+    ]
+  },
+  {
+    "attr": "political_identity",
+    "i": 3,
+    "j": 5,
+    "left": "race_ethnicity == 'Hispanic/Latino' and us_region in ['Southwest', 'West Coast']",
+    "right": "us_region == 'West Coast' and education_level in ['Bachelor\\'s degree', 'Graduate degree']",
+    "bruteforce_overlap": true,
+    "witness": {
+      "education_level": "Bachelor's degree",
+      "race_ethnicity": "Hispanic/Latino",
+      "us_region": "West Coast"
+    },
+    "vars": [
+      "education_level",
+      "race_ethnicity",
+      "us_region"
+    ]
+  },
+  {
+    "attr": "political_identity",
+    "i": 3,
+    "j": 7,
+    "left": "race_ethnicity == 'Hispanic/Latino' and us_region in ['Southwest', 'West Coast']",
+    "right": "us_region == 'Southwest' and education_level in ['Less than HS', 'HS diploma/GED'] and race_ethnicity == 'White non-Hispanic'",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "education_level",
+      "race_ethnicity",
+      "us_region"
+    ]
+  },
+  {
+    "attr": "political_identity",
+    "i": 5,
+    "j": 8,
+    "left": "us_region == 'West Coast' and education_level in ['Bachelor\\'s degree', 'Graduate degree']",
+    "right": "education_level == 'Graduate degree' and race_ethnicity == 'White non-Hispanic'",
+    "bruteforce_overlap": true,
+    "witness": {
+      "education_level": "Graduate degree",
+      "race_ethnicity": "White non-Hispanic",
+      "us_region": "West Coast"
+    },
+    "vars": [
+      "education_level",
+      "race_ethnicity",
+      "us_region"
+    ]
+  },
+  {
+    "attr": "political_identity",
+    "i": 6,
+    "j": 7,
+    "left": "us_region == 'Midwest' and education_level in ['Less than HS', 'HS diploma/GED'] and race_ethnicity == 'White non-Hispanic'",
+    "right": "us_region == 'Southwest' and education_level in ['Less than HS', 'HS diploma/GED'] and race_ethnicity == 'White non-Hispanic'",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "education_level",
+      "race_ethnicity",
+      "us_region"
+    ]
+  },
+  {
+    "attr": "political_identity",
+    "i": 6,
+    "j": 8,
+    "left": "us_region == 'Midwest' and education_level in ['Less than HS', 'HS diploma/GED'] and race_ethnicity == 'White non-Hispanic'",
+    "right": "education_level == 'Graduate degree' and race_ethnicity == 'White non-Hispanic'",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "education_level",
+      "race_ethnicity",
+      "us_region"
+    ]
+  },
+  {
+    "attr": "political_identity",
+    "i": 7,
+    "j": 8,
+    "left": "us_region == 'Southwest' and education_level in ['Less than HS', 'HS diploma/GED'] and race_ethnicity == 'White non-Hispanic'",
+    "right": "education_level == 'Graduate degree' and race_ethnicity == 'White non-Hispanic'",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "education_level",
+      "race_ethnicity",
+      "us_region"
+    ]
+  },
+  {
+    "attr": "political_engagement_level",
+    "i": 0,
+    "j": 1,
+    "left": "political_identity in ['Strong Democrat', 'Strong Republican'] and age >= 45",
+    "right": "political_identity in ['Strong Democrat', 'Strong Republican'] and age < 45",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "age",
+      "political_identity"
+    ]
+  },
+  {
+    "attr": "political_engagement_level",
+    "i": 2,
+    "j": 3,
+    "left": "political_identity == 'True Independent' and age < 35",
+    "right": "political_identity == 'True Independent' and age >= 35",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "age",
+      "political_identity"
+    ]
+  },
+  {
+    "attr": "political_engagement_level",
+    "i": 4,
+    "j": 5,
+    "left": "political_identity in ['Lean Democrat', 'Lean Republican'] and age >= 45",
+    "right": "political_identity in ['Lean Democrat', 'Lean Republican'] and age < 45",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "age",
+      "political_identity"
+    ]
+  },
+  {
+    "attr": "vote_2024_presidential",
+    "i": 0,
+    "j": 1,
+    "left": "political_identity == 'Strong Republican' and political_engagement_level == 'Highly engaged partisan'",
+    "right": "political_identity == 'Strong Democrat' and political_engagement_level == 'Highly engaged partisan'",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "political_engagement_level",
+      "political_identity"
+    ]
+  },
+  {
+    "attr": "vote_2024_presidential",
+    "i": 0,
+    "j": 6,
+    "left": "political_identity == 'Strong Republican' and political_engagement_level == 'Highly engaged partisan'",
+    "right": "political_identity == 'Strong Republican' and political_engagement_level in ['Disengaged', 'Single-issue voter']",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "political_engagement_level",
+      "political_identity"
+    ]
+  },
+  {
+    "attr": "vote_2024_presidential",
+    "i": 1,
+    "j": 7,
+    "left": "political_identity == 'Strong Democrat' and political_engagement_level == 'Highly engaged partisan'",
+    "right": "political_identity == 'Strong Democrat' and political_engagement_level in ['Disengaged', 'Single-issue voter']",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "political_engagement_level",
+      "political_identity"
+    ]
+  },
+  {
+    "attr": "vote_2024_presidential",
+    "i": 4,
+    "j": 5,
+    "left": "political_identity == 'True Independent' and political_engagement_level == 'Disengaged'",
+    "right": "political_identity == 'True Independent' and political_engagement_level != 'Disengaged'",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "political_engagement_level",
+      "political_identity"
+    ]
+  },
+  {
+    "attr": "vote_2024_presidential",
+    "i": 4,
+    "j": 6,
+    "left": "political_identity == 'True Independent' and political_engagement_level == 'Disengaged'",
+    "right": "political_identity == 'Strong Republican' and political_engagement_level in ['Disengaged', 'Single-issue voter']",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "political_engagement_level",
+      "political_identity"
+    ]
+  },
+  {
+    "attr": "vote_2024_presidential",
+    "i": 4,
+    "j": 7,
+    "left": "political_identity == 'True Independent' and political_engagement_level == 'Disengaged'",
+    "right": "political_identity == 'Strong Democrat' and political_engagement_level in ['Disengaged', 'Single-issue voter']",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "political_engagement_level",
+      "political_identity"
+    ]
+  },
+  {
+    "attr": "vote_2024_presidential",
+    "i": 5,
+    "j": 6,
+    "left": "political_identity == 'True Independent' and political_engagement_level != 'Disengaged'",
+    "right": "political_identity == 'Strong Republican' and political_engagement_level in ['Disengaged', 'Single-issue voter']",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "political_engagement_level",
+      "political_identity"
+    ]
+  },
+  {
+    "attr": "vote_2024_presidential",
+    "i": 5,
+    "j": 7,
+    "left": "political_identity == 'True Independent' and political_engagement_level != 'Disengaged'",
+    "right": "political_identity == 'Strong Democrat' and political_engagement_level in ['Disengaged', 'Single-issue voter']",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "political_engagement_level",
+      "political_identity"
+    ]
+  },
+  {
+    "attr": "vote_2024_presidential",
+    "i": 6,
+    "j": 7,
+    "left": "political_identity == 'Strong Republican' and political_engagement_level in ['Disengaged', 'Single-issue voter']",
+    "right": "political_identity == 'Strong Democrat' and political_engagement_level in ['Disengaged', 'Single-issue voter']",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "political_engagement_level",
+      "political_identity"
+    ]
+  },
+  {
+    "attr": "midterm_turnout_propensity",
+    "i": 0,
+    "j": 1,
+    "left": "political_engagement_level == 'Highly engaged partisan' and age >= 45",
+    "right": "political_engagement_level == 'Highly engaged partisan' and age < 45",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "age",
+      "political_engagement_level"
+    ]
+  },
+  {
+    "attr": "midterm_turnout_propensity",
+    "i": 2,
+    "j": 3,
+    "left": "political_engagement_level == 'Moderate/occasional participant' and age >= 45",
+    "right": "political_engagement_level == 'Moderate/occasional participant' and age < 45",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "age",
+      "political_engagement_level"
+    ]
+  },
+  {
+    "attr": "midterm_turnout_propensity",
+    "i": 5,
+    "j": 6,
+    "left": "political_engagement_level == 'Disengaged' and age < 35",
+    "right": "political_engagement_level == 'Disengaged' and age >= 35",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "age",
+      "political_engagement_level"
+    ]
+  },
+  {
+    "attr": "congressional_district_competitiveness",
+    "i": 0,
+    "j": 1,
+    "left": "us_region == 'Northeast' and urban_rural == 'Urban'",
+    "right": "us_region == 'Northeast' and urban_rural == 'Suburban'",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "urban_rural",
+      "us_region"
+    ]
+  },
+  {
+    "attr": "congressional_district_competitiveness",
+    "i": 0,
+    "j": 2,
+    "left": "us_region == 'Northeast' and urban_rural == 'Urban'",
+    "right": "us_region == 'Northeast' and urban_rural == 'Rural'",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "urban_rural",
+      "us_region"
+    ]
+  },
+  {
+    "attr": "congressional_district_competitiveness",
+    "i": 0,
+    "j": 3,
+    "left": "us_region == 'Northeast' and urban_rural == 'Urban'",
+    "right": "us_region == 'Southeast' and urban_rural == 'Urban'",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "urban_rural",
+      "us_region"
+    ]
+  },
+  {
+    "attr": "congressional_district_competitiveness",
+    "i": 0,
+    "j": 6,
+    "left": "us_region == 'Northeast' and urban_rural == 'Urban'",
+    "right": "us_region == 'Midwest' and urban_rural == 'Urban'",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "urban_rural",
+      "us_region"
+    ]
+  },
+  {
+    "attr": "congressional_district_competitiveness",
+    "i": 0,
+    "j": 9,
+    "left": "us_region == 'Northeast' and urban_rural == 'Urban'",
+    "right": "us_region == 'Southwest' and urban_rural == 'Urban'",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "urban_rural",
+      "us_region"
+    ]
+  },
+  {
+    "attr": "congressional_district_competitiveness",
+    "i": 0,
+    "j": 12,
+    "left": "us_region == 'Northeast' and urban_rural == 'Urban'",
+    "right": "us_region == 'West Coast' and urban_rural == 'Urban'",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "urban_rural",
+      "us_region"
+    ]
+  },
+  {
+    "attr": "congressional_district_competitiveness",
+    "i": 1,
+    "j": 2,
+    "left": "us_region == 'Northeast' and urban_rural == 'Suburban'",
+    "right": "us_region == 'Northeast' and urban_rural == 'Rural'",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "urban_rural",
+      "us_region"
+    ]
+  },
+  {
+    "attr": "congressional_district_competitiveness",
+    "i": 1,
+    "j": 4,
+    "left": "us_region == 'Northeast' and urban_rural == 'Suburban'",
+    "right": "us_region == 'Southeast' and urban_rural == 'Suburban'",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "urban_rural",
+      "us_region"
+    ]
+  },
+  {
+    "attr": "congressional_district_competitiveness",
+    "i": 1,
+    "j": 7,
+    "left": "us_region == 'Northeast' and urban_rural == 'Suburban'",
+    "right": "us_region == 'Midwest' and urban_rural == 'Suburban'",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "urban_rural",
+      "us_region"
+    ]
+  },
+  {
+    "attr": "congressional_district_competitiveness",
+    "i": 1,
+    "j": 10,
+    "left": "us_region == 'Northeast' and urban_rural == 'Suburban'",
+    "right": "us_region == 'Southwest' and urban_rural == 'Suburban'",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "urban_rural",
+      "us_region"
+    ]
+  },
+  {
+    "attr": "congressional_district_competitiveness",
+    "i": 1,
+    "j": 13,
+    "left": "us_region == 'Northeast' and urban_rural == 'Suburban'",
+    "right": "us_region == 'West Coast' and urban_rural == 'Suburban'",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "urban_rural",
+      "us_region"
+    ]
+  },
+  {
+    "attr": "congressional_district_competitiveness",
+    "i": 2,
+    "j": 5,
+    "left": "us_region == 'Northeast' and urban_rural == 'Rural'",
+    "right": "us_region == 'Southeast' and urban_rural == 'Rural'",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "urban_rural",
+      "us_region"
+    ]
+  },
+  {
+    "attr": "congressional_district_competitiveness",
+    "i": 2,
+    "j": 8,
+    "left": "us_region == 'Northeast' and urban_rural == 'Rural'",
+    "right": "us_region == 'Midwest' and urban_rural == 'Rural'",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "urban_rural",
+      "us_region"
+    ]
+  },
+  {
+    "attr": "congressional_district_competitiveness",
+    "i": 2,
+    "j": 11,
+    "left": "us_region == 'Northeast' and urban_rural == 'Rural'",
+    "right": "us_region == 'Southwest' and urban_rural == 'Rural'",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "urban_rural",
+      "us_region"
+    ]
+  },
+  {
+    "attr": "congressional_district_competitiveness",
+    "i": 2,
+    "j": 14,
+    "left": "us_region == 'Northeast' and urban_rural == 'Rural'",
+    "right": "us_region == 'West Coast' and urban_rural == 'Rural'",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "urban_rural",
+      "us_region"
+    ]
+  },
+  {
+    "attr": "congressional_district_competitiveness",
+    "i": 3,
+    "j": 4,
+    "left": "us_region == 'Southeast' and urban_rural == 'Urban'",
+    "right": "us_region == 'Southeast' and urban_rural == 'Suburban'",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "urban_rural",
+      "us_region"
+    ]
+  },
+  {
+    "attr": "congressional_district_competitiveness",
+    "i": 3,
+    "j": 5,
+    "left": "us_region == 'Southeast' and urban_rural == 'Urban'",
+    "right": "us_region == 'Southeast' and urban_rural == 'Rural'",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "urban_rural",
+      "us_region"
+    ]
+  },
+  {
+    "attr": "congressional_district_competitiveness",
+    "i": 3,
+    "j": 6,
+    "left": "us_region == 'Southeast' and urban_rural == 'Urban'",
+    "right": "us_region == 'Midwest' and urban_rural == 'Urban'",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "urban_rural",
+      "us_region"
+    ]
+  },
+  {
+    "attr": "congressional_district_competitiveness",
+    "i": 3,
+    "j": 9,
+    "left": "us_region == 'Southeast' and urban_rural == 'Urban'",
+    "right": "us_region == 'Southwest' and urban_rural == 'Urban'",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "urban_rural",
+      "us_region"
+    ]
+  },
+  {
+    "attr": "congressional_district_competitiveness",
+    "i": 3,
+    "j": 12,
+    "left": "us_region == 'Southeast' and urban_rural == 'Urban'",
+    "right": "us_region == 'West Coast' and urban_rural == 'Urban'",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "urban_rural",
+      "us_region"
+    ]
+  },
+  {
+    "attr": "congressional_district_competitiveness",
+    "i": 4,
+    "j": 5,
+    "left": "us_region == 'Southeast' and urban_rural == 'Suburban'",
+    "right": "us_region == 'Southeast' and urban_rural == 'Rural'",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "urban_rural",
+      "us_region"
+    ]
+  },
+  {
+    "attr": "congressional_district_competitiveness",
+    "i": 4,
+    "j": 7,
+    "left": "us_region == 'Southeast' and urban_rural == 'Suburban'",
+    "right": "us_region == 'Midwest' and urban_rural == 'Suburban'",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "urban_rural",
+      "us_region"
+    ]
+  },
+  {
+    "attr": "congressional_district_competitiveness",
+    "i": 4,
+    "j": 10,
+    "left": "us_region == 'Southeast' and urban_rural == 'Suburban'",
+    "right": "us_region == 'Southwest' and urban_rural == 'Suburban'",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "urban_rural",
+      "us_region"
+    ]
+  },
+  {
+    "attr": "congressional_district_competitiveness",
+    "i": 4,
+    "j": 13,
+    "left": "us_region == 'Southeast' and urban_rural == 'Suburban'",
+    "right": "us_region == 'West Coast' and urban_rural == 'Suburban'",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "urban_rural",
+      "us_region"
+    ]
+  },
+  {
+    "attr": "congressional_district_competitiveness",
+    "i": 5,
+    "j": 8,
+    "left": "us_region == 'Southeast' and urban_rural == 'Rural'",
+    "right": "us_region == 'Midwest' and urban_rural == 'Rural'",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "urban_rural",
+      "us_region"
+    ]
+  },
+  {
+    "attr": "congressional_district_competitiveness",
+    "i": 5,
+    "j": 11,
+    "left": "us_region == 'Southeast' and urban_rural == 'Rural'",
+    "right": "us_region == 'Southwest' and urban_rural == 'Rural'",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "urban_rural",
+      "us_region"
+    ]
+  },
+  {
+    "attr": "congressional_district_competitiveness",
+    "i": 5,
+    "j": 14,
+    "left": "us_region == 'Southeast' and urban_rural == 'Rural'",
+    "right": "us_region == 'West Coast' and urban_rural == 'Rural'",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "urban_rural",
+      "us_region"
+    ]
+  },
+  {
+    "attr": "congressional_district_competitiveness",
+    "i": 6,
+    "j": 7,
+    "left": "us_region == 'Midwest' and urban_rural == 'Urban'",
+    "right": "us_region == 'Midwest' and urban_rural == 'Suburban'",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "urban_rural",
+      "us_region"
+    ]
+  },
+  {
+    "attr": "congressional_district_competitiveness",
+    "i": 6,
+    "j": 8,
+    "left": "us_region == 'Midwest' and urban_rural == 'Urban'",
+    "right": "us_region == 'Midwest' and urban_rural == 'Rural'",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "urban_rural",
+      "us_region"
+    ]
+  },
+  {
+    "attr": "congressional_district_competitiveness",
+    "i": 6,
+    "j": 9,
+    "left": "us_region == 'Midwest' and urban_rural == 'Urban'",
+    "right": "us_region == 'Southwest' and urban_rural == 'Urban'",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "urban_rural",
+      "us_region"
+    ]
+  },
+  {
+    "attr": "congressional_district_competitiveness",
+    "i": 6,
+    "j": 12,
+    "left": "us_region == 'Midwest' and urban_rural == 'Urban'",
+    "right": "us_region == 'West Coast' and urban_rural == 'Urban'",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "urban_rural",
+      "us_region"
+    ]
+  },
+  {
+    "attr": "congressional_district_competitiveness",
+    "i": 7,
+    "j": 8,
+    "left": "us_region == 'Midwest' and urban_rural == 'Suburban'",
+    "right": "us_region == 'Midwest' and urban_rural == 'Rural'",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "urban_rural",
+      "us_region"
+    ]
+  },
+  {
+    "attr": "congressional_district_competitiveness",
+    "i": 7,
+    "j": 10,
+    "left": "us_region == 'Midwest' and urban_rural == 'Suburban'",
+    "right": "us_region == 'Southwest' and urban_rural == 'Suburban'",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "urban_rural",
+      "us_region"
+    ]
+  },
+  {
+    "attr": "congressional_district_competitiveness",
+    "i": 7,
+    "j": 13,
+    "left": "us_region == 'Midwest' and urban_rural == 'Suburban'",
+    "right": "us_region == 'West Coast' and urban_rural == 'Suburban'",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "urban_rural",
+      "us_region"
+    ]
+  },
+  {
+    "attr": "congressional_district_competitiveness",
+    "i": 8,
+    "j": 11,
+    "left": "us_region == 'Midwest' and urban_rural == 'Rural'",
+    "right": "us_region == 'Southwest' and urban_rural == 'Rural'",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "urban_rural",
+      "us_region"
+    ]
+  },
+  {
+    "attr": "congressional_district_competitiveness",
+    "i": 8,
+    "j": 14,
+    "left": "us_region == 'Midwest' and urban_rural == 'Rural'",
+    "right": "us_region == 'West Coast' and urban_rural == 'Rural'",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "urban_rural",
+      "us_region"
+    ]
+  },
+  {
+    "attr": "congressional_district_competitiveness",
+    "i": 9,
+    "j": 10,
+    "left": "us_region == 'Southwest' and urban_rural == 'Urban'",
+    "right": "us_region == 'Southwest' and urban_rural == 'Suburban'",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "urban_rural",
+      "us_region"
+    ]
+  },
+  {
+    "attr": "congressional_district_competitiveness",
+    "i": 9,
+    "j": 11,
+    "left": "us_region == 'Southwest' and urban_rural == 'Urban'",
+    "right": "us_region == 'Southwest' and urban_rural == 'Rural'",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "urban_rural",
+      "us_region"
+    ]
+  },
+  {
+    "attr": "congressional_district_competitiveness",
+    "i": 9,
+    "j": 12,
+    "left": "us_region == 'Southwest' and urban_rural == 'Urban'",
+    "right": "us_region == 'West Coast' and urban_rural == 'Urban'",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "urban_rural",
+      "us_region"
+    ]
+  },
+  {
+    "attr": "congressional_district_competitiveness",
+    "i": 10,
+    "j": 11,
+    "left": "us_region == 'Southwest' and urban_rural == 'Suburban'",
+    "right": "us_region == 'Southwest' and urban_rural == 'Rural'",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "urban_rural",
+      "us_region"
+    ]
+  },
+  {
+    "attr": "congressional_district_competitiveness",
+    "i": 10,
+    "j": 13,
+    "left": "us_region == 'Southwest' and urban_rural == 'Suburban'",
+    "right": "us_region == 'West Coast' and urban_rural == 'Suburban'",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "urban_rural",
+      "us_region"
+    ]
+  },
+  {
+    "attr": "congressional_district_competitiveness",
+    "i": 11,
+    "j": 14,
+    "left": "us_region == 'Southwest' and urban_rural == 'Rural'",
+    "right": "us_region == 'West Coast' and urban_rural == 'Rural'",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "urban_rural",
+      "us_region"
+    ]
+  },
+  {
+    "attr": "congressional_district_competitiveness",
+    "i": 12,
+    "j": 13,
+    "left": "us_region == 'West Coast' and urban_rural == 'Urban'",
+    "right": "us_region == 'West Coast' and urban_rural == 'Suburban'",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "urban_rural",
+      "us_region"
+    ]
+  },
+  {
+    "attr": "congressional_district_competitiveness",
+    "i": 12,
+    "j": 14,
+    "left": "us_region == 'West Coast' and urban_rural == 'Urban'",
+    "right": "us_region == 'West Coast' and urban_rural == 'Rural'",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "urban_rural",
+      "us_region"
+    ]
+  },
+  {
+    "attr": "congressional_district_competitiveness",
+    "i": 13,
+    "j": 14,
+    "left": "us_region == 'West Coast' and urban_rural == 'Suburban'",
+    "right": "us_region == 'West Coast' and urban_rural == 'Rural'",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "urban_rural",
+      "us_region"
+    ]
+  },
+  {
+    "attr": "top_issue_2026",
+    "i": 0,
+    "j": 2,
+    "left": "political_identity == 'Strong Republican' and employment_sector in ['Private sector', 'Self-employed', 'Gig/contract']",
+    "right": "political_identity == 'Strong Democrat' and employment_sector in ['Private sector', 'Self-employed']",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "employment_sector",
+      "political_identity"
+    ]
+  },
+  {
+    "attr": "top_issue_2026",
+    "i": 0,
+    "j": 3,
+    "left": "political_identity == 'Strong Republican' and employment_sector in ['Private sector', 'Self-employed', 'Gig/contract']",
+    "right": "political_identity == 'True Independent' and employment_sector in ['Private sector', 'Gig/contract', 'Unemployed']",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "employment_sector",
+      "political_identity"
+    ]
+  },
+  {
+    "attr": "top_issue_2026",
+    "i": 0,
+    "j": 4,
+    "left": "political_identity == 'Strong Republican' and employment_sector in ['Private sector', 'Self-employed', 'Gig/contract']",
+    "right": "political_identity in ['Lean Republican', 'Strong Republican'] and employment_sector == 'Retired'",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "employment_sector",
+      "political_identity"
+    ]
+  },
+  {
+    "attr": "top_issue_2026",
+    "i": 0,
+    "j": 6,
+    "left": "political_identity == 'Strong Republican' and employment_sector in ['Private sector', 'Self-employed', 'Gig/contract']",
+    "right": "employment_sector in ['Federal government', 'State/local government'] and political_identity in ['Lean Republican', 'Strong Republican']",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "employment_sector",
+      "political_identity"
+    ]
+  },
+  {
+    "attr": "top_issue_2026",
+    "i": 1,
+    "j": 2,
+    "left": "political_identity == 'Strong Democrat' and employment_sector in ['State/local government', 'Federal government']",
+    "right": "political_identity == 'Strong Democrat' and employment_sector in ['Private sector', 'Self-employed']",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "employment_sector",
+      "political_identity"
+    ]
+  },
+  {
+    "attr": "top_issue_2026",
+    "i": 1,
+    "j": 5,
+    "left": "political_identity == 'Strong Democrat' and employment_sector in ['State/local government', 'Federal government']",
+    "right": "political_identity in ['Strong Democrat', 'Lean Democrat'] and employment_sector == 'Retired'",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "employment_sector",
+      "political_identity"
+    ]
+  },
+  {
+    "attr": "top_issue_2026",
+    "i": 1,
+    "j": 6,
+    "left": "political_identity == 'Strong Democrat' and employment_sector in ['State/local government', 'Federal government']",
+    "right": "employment_sector in ['Federal government', 'State/local government'] and political_identity in ['Lean Republican', 'Strong Republican']",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "employment_sector",
+      "political_identity"
+    ]
+  },
+  {
+    "attr": "top_issue_2026",
+    "i": 2,
+    "j": 3,
+    "left": "political_identity == 'Strong Democrat' and employment_sector in ['Private sector', 'Self-employed']",
+    "right": "political_identity == 'True Independent' and employment_sector in ['Private sector', 'Gig/contract', 'Unemployed']",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "employment_sector",
+      "political_identity"
+    ]
+  },
+  {
+    "attr": "top_issue_2026",
+    "i": 2,
+    "j": 5,
+    "left": "political_identity == 'Strong Democrat' and employment_sector in ['Private sector', 'Self-employed']",
+    "right": "political_identity in ['Strong Democrat', 'Lean Democrat'] and employment_sector == 'Retired'",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "employment_sector",
+      "political_identity"
+    ]
+  },
+  {
+    "attr": "top_issue_2026",
+    "i": 4,
+    "j": 5,
+    "left": "political_identity in ['Lean Republican', 'Strong Republican'] and employment_sector == 'Retired'",
+    "right": "political_identity in ['Strong Democrat', 'Lean Democrat'] and employment_sector == 'Retired'",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "employment_sector",
+      "political_identity"
+    ]
+  },
+  {
+    "attr": "top_issue_2026",
+    "i": 4,
+    "j": 6,
+    "left": "political_identity in ['Lean Republican', 'Strong Republican'] and employment_sector == 'Retired'",
+    "right": "employment_sector in ['Federal government', 'State/local government'] and political_identity in ['Lean Republican', 'Strong Republican']",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "employment_sector",
+      "political_identity"
+    ]
+  },
+  {
+    "attr": "country_direction_approval",
+    "i": 0,
+    "j": 1,
+    "left": "political_identity == 'Strong Republican' and financial_margin in ['Comfortable savings buffer', 'Modest buffer']",
+    "right": "political_identity == 'Strong Republican' and financial_margin in ['Paycheck-to-paycheck', 'In debt/deficit']",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "financial_margin",
+      "political_identity"
+    ]
+  },
+  {
+    "attr": "country_direction_approval",
+    "i": 0,
+    "j": 2,
+    "left": "political_identity == 'Strong Republican' and financial_margin in ['Comfortable savings buffer', 'Modest buffer']",
+    "right": "political_identity == 'Lean Republican' and financial_margin in ['Comfortable savings buffer', 'Modest buffer']",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "financial_margin",
+      "political_identity"
+    ]
+  },
+  {
+    "attr": "country_direction_approval",
+    "i": 0,
+    "j": 3,
+    "left": "political_identity == 'Strong Republican' and financial_margin in ['Comfortable savings buffer', 'Modest buffer']",
+    "right": "political_identity == 'True Independent' and financial_margin in ['Comfortable savings buffer', 'Modest buffer']",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "financial_margin",
+      "political_identity"
+    ]
+  },
+  {
+    "attr": "country_direction_approval",
+    "i": 0,
+    "j": 7,
+    "left": "political_identity == 'Strong Republican' and financial_margin in ['Comfortable savings buffer', 'Modest buffer']",
+    "right": "political_identity == 'Strong Democrat' and financial_margin in ['Comfortable savings buffer', 'Modest buffer']",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "financial_margin",
+      "political_identity"
+    ]
+  },
+  {
+    "attr": "country_direction_approval",
+    "i": 1,
+    "j": 4,
+    "left": "political_identity == 'Strong Republican' and financial_margin in ['Paycheck-to-paycheck', 'In debt/deficit']",
+    "right": "political_identity == 'True Independent' and financial_margin in ['Paycheck-to-paycheck', 'In debt/deficit']",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "financial_margin",
+      "political_identity"
+    ]
+  },
+  {
+    "attr": "country_direction_approval",
+    "i": 1,
+    "j": 5,
+    "left": "political_identity == 'Strong Republican' and financial_margin in ['Paycheck-to-paycheck', 'In debt/deficit']",
+    "right": "political_identity == 'Lean Democrat' and financial_margin in ['Paycheck-to-paycheck', 'In debt/deficit']",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "financial_margin",
+      "political_identity"
+    ]
+  },
+  {
+    "attr": "country_direction_approval",
+    "i": 1,
+    "j": 6,
+    "left": "political_identity == 'Strong Republican' and financial_margin in ['Paycheck-to-paycheck', 'In debt/deficit']",
+    "right": "political_identity == 'Strong Democrat' and financial_margin in ['Paycheck-to-paycheck', 'In debt/deficit']",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "financial_margin",
+      "political_identity"
+    ]
+  },
+  {
+    "attr": "country_direction_approval",
+    "i": 2,
+    "j": 3,
+    "left": "political_identity == 'Lean Republican' and financial_margin in ['Comfortable savings buffer', 'Modest buffer']",
+    "right": "political_identity == 'True Independent' and financial_margin in ['Comfortable savings buffer', 'Modest buffer']",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "financial_margin",
+      "political_identity"
+    ]
+  },
+  {
+    "attr": "country_direction_approval",
+    "i": 2,
+    "j": 7,
+    "left": "political_identity == 'Lean Republican' and financial_margin in ['Comfortable savings buffer', 'Modest buffer']",
+    "right": "political_identity == 'Strong Democrat' and financial_margin in ['Comfortable savings buffer', 'Modest buffer']",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "financial_margin",
+      "political_identity"
+    ]
+  },
+  {
+    "attr": "country_direction_approval",
+    "i": 3,
+    "j": 4,
+    "left": "political_identity == 'True Independent' and financial_margin in ['Comfortable savings buffer', 'Modest buffer']",
+    "right": "political_identity == 'True Independent' and financial_margin in ['Paycheck-to-paycheck', 'In debt/deficit']",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "financial_margin",
+      "political_identity"
+    ]
+  },
+  {
+    "attr": "country_direction_approval",
+    "i": 3,
+    "j": 7,
+    "left": "political_identity == 'True Independent' and financial_margin in ['Comfortable savings buffer', 'Modest buffer']",
+    "right": "political_identity == 'Strong Democrat' and financial_margin in ['Comfortable savings buffer', 'Modest buffer']",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "financial_margin",
+      "political_identity"
+    ]
+  },
+  {
+    "attr": "country_direction_approval",
+    "i": 4,
+    "j": 5,
+    "left": "political_identity == 'True Independent' and financial_margin in ['Paycheck-to-paycheck', 'In debt/deficit']",
+    "right": "political_identity == 'Lean Democrat' and financial_margin in ['Paycheck-to-paycheck', 'In debt/deficit']",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "financial_margin",
+      "political_identity"
+    ]
+  },
+  {
+    "attr": "country_direction_approval",
+    "i": 4,
+    "j": 6,
+    "left": "political_identity == 'True Independent' and financial_margin in ['Paycheck-to-paycheck', 'In debt/deficit']",
+    "right": "political_identity == 'Strong Democrat' and financial_margin in ['Paycheck-to-paycheck', 'In debt/deficit']",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "financial_margin",
+      "political_identity"
+    ]
+  },
+  {
+    "attr": "country_direction_approval",
+    "i": 5,
+    "j": 6,
+    "left": "political_identity == 'Lean Democrat' and financial_margin in ['Paycheck-to-paycheck', 'In debt/deficit']",
+    "right": "political_identity == 'Strong Democrat' and financial_margin in ['Paycheck-to-paycheck', 'In debt/deficit']",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "financial_margin",
+      "political_identity"
+    ]
+  },
+  {
+    "attr": "country_direction_approval",
+    "i": 6,
+    "j": 7,
+    "left": "political_identity == 'Strong Democrat' and financial_margin in ['Paycheck-to-paycheck', 'In debt/deficit']",
+    "right": "political_identity == 'Strong Democrat' and financial_margin in ['Comfortable savings buffer', 'Modest buffer']",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "financial_margin",
+      "political_identity"
+    ]
+  },
+  {
+    "attr": "consumer_identity",
+    "i": 2,
+    "j": 3,
+    "left": "household_income >= 100000 and education_level in ['Bachelor\\'s degree', 'Graduate degree']",
+    "right": "household_income >= 150000 and education_level == 'Graduate degree'",
+    "bruteforce_overlap": true,
+    "witness": {
+      "education_level": "Graduate degree",
+      "household_income": 150000
+    },
+    "vars": [
+      "education_level",
+      "household_income"
+    ]
+  },
+  {
+    "attr": "institutional_trust",
+    "i": 0,
+    "j": 1,
+    "left": "political_identity == 'Strong Democrat' and education_level in ['Bachelor\\'s degree', 'Graduate degree']",
+    "right": "political_identity == 'Strong Democrat' and education_level in ['Less than HS', 'HS diploma/GED', 'Some college']",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "education_level",
+      "political_identity"
+    ]
+  },
+  {
+    "attr": "institutional_trust",
+    "i": 0,
+    "j": 3,
+    "left": "political_identity == 'Strong Democrat' and education_level in ['Bachelor\\'s degree', 'Graduate degree']",
+    "right": "political_identity == 'Strong Republican' and education_level in ['Bachelor\\'s degree', 'Graduate degree']",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "education_level",
+      "political_identity"
+    ]
+  },
+  {
+    "attr": "institutional_trust",
+    "i": 0,
+    "j": 5,
+    "left": "political_identity == 'Strong Democrat' and education_level in ['Bachelor\\'s degree', 'Graduate degree']",
+    "right": "political_identity == 'True Independent' and education_level in ['Bachelor\\'s degree', 'Graduate degree']",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "education_level",
+      "political_identity"
+    ]
+  },
+  {
+    "attr": "institutional_trust",
+    "i": 0,
+    "j": 6,
+    "left": "political_identity == 'Strong Democrat' and education_level in ['Bachelor\\'s degree', 'Graduate degree']",
+    "right": "political_identity in ['Lean Democrat'] and education_level in ['Bachelor\\'s degree', 'Graduate degree']",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "education_level",
+      "political_identity"
+    ]
+  },
+  {
+    "attr": "institutional_trust",
+    "i": 0,
+    "j": 7,
+    "left": "political_identity == 'Strong Democrat' and education_level in ['Bachelor\\'s degree', 'Graduate degree']",
+    "right": "political_identity in ['Lean Republican'] and education_level in ['Bachelor\\'s degree', 'Graduate degree']",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "education_level",
+      "political_identity"
+    ]
+  },
+  {
+    "attr": "institutional_trust",
+    "i": 1,
+    "j": 2,
+    "left": "political_identity == 'Strong Democrat' and education_level in ['Less than HS', 'HS diploma/GED', 'Some college']",
+    "right": "political_identity == 'Strong Republican' and education_level in ['Less than HS', 'HS diploma/GED', 'Some college']",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "education_level",
+      "political_identity"
+    ]
+  },
+  {
+    "attr": "institutional_trust",
+    "i": 1,
+    "j": 4,
+    "left": "political_identity == 'Strong Democrat' and education_level in ['Less than HS', 'HS diploma/GED', 'Some college']",
+    "right": "political_identity == 'True Independent' and education_level in ['Less than HS', 'HS diploma/GED']",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "education_level",
+      "political_identity"
+    ]
+  },
+  {
+    "attr": "institutional_trust",
+    "i": 2,
+    "j": 3,
+    "left": "political_identity == 'Strong Republican' and education_level in ['Less than HS', 'HS diploma/GED', 'Some college']",
+    "right": "political_identity == 'Strong Republican' and education_level in ['Bachelor\\'s degree', 'Graduate degree']",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "education_level",
+      "political_identity"
+    ]
+  },
+  {
+    "attr": "institutional_trust",
+    "i": 2,
+    "j": 4,
+    "left": "political_identity == 'Strong Republican' and education_level in ['Less than HS', 'HS diploma/GED', 'Some college']",
+    "right": "political_identity == 'True Independent' and education_level in ['Less than HS', 'HS diploma/GED']",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "education_level",
+      "political_identity"
+    ]
+  },
+  {
+    "attr": "institutional_trust",
+    "i": 3,
+    "j": 5,
+    "left": "political_identity == 'Strong Republican' and education_level in ['Bachelor\\'s degree', 'Graduate degree']",
+    "right": "political_identity == 'True Independent' and education_level in ['Bachelor\\'s degree', 'Graduate degree']",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "education_level",
+      "political_identity"
+    ]
+  },
+  {
+    "attr": "institutional_trust",
+    "i": 3,
+    "j": 6,
+    "left": "political_identity == 'Strong Republican' and education_level in ['Bachelor\\'s degree', 'Graduate degree']",
+    "right": "political_identity in ['Lean Democrat'] and education_level in ['Bachelor\\'s degree', 'Graduate degree']",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "education_level",
+      "political_identity"
+    ]
+  },
+  {
+    "attr": "institutional_trust",
+    "i": 3,
+    "j": 7,
+    "left": "political_identity == 'Strong Republican' and education_level in ['Bachelor\\'s degree', 'Graduate degree']",
+    "right": "political_identity in ['Lean Republican'] and education_level in ['Bachelor\\'s degree', 'Graduate degree']",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "education_level",
+      "political_identity"
+    ]
+  },
+  {
+    "attr": "institutional_trust",
+    "i": 4,
+    "j": 5,
+    "left": "political_identity == 'True Independent' and education_level in ['Less than HS', 'HS diploma/GED']",
+    "right": "political_identity == 'True Independent' and education_level in ['Bachelor\\'s degree', 'Graduate degree']",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "education_level",
+      "political_identity"
+    ]
+  },
+  {
+    "attr": "institutional_trust",
+    "i": 5,
+    "j": 6,
+    "left": "political_identity == 'True Independent' and education_level in ['Bachelor\\'s degree', 'Graduate degree']",
+    "right": "political_identity in ['Lean Democrat'] and education_level in ['Bachelor\\'s degree', 'Graduate degree']",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "education_level",
+      "political_identity"
+    ]
+  },
+  {
+    "attr": "institutional_trust",
+    "i": 5,
+    "j": 7,
+    "left": "political_identity == 'True Independent' and education_level in ['Bachelor\\'s degree', 'Graduate degree']",
+    "right": "political_identity in ['Lean Republican'] and education_level in ['Bachelor\\'s degree', 'Graduate degree']",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "education_level",
+      "political_identity"
+    ]
+  },
+  {
+    "attr": "institutional_trust",
+    "i": 6,
+    "j": 7,
+    "left": "political_identity in ['Lean Democrat'] and education_level in ['Bachelor\\'s degree', 'Graduate degree']",
+    "right": "political_identity in ['Lean Republican'] and education_level in ['Bachelor\\'s degree', 'Graduate degree']",
+    "bruteforce_overlap": false,
+    "witness": null,
+    "vars": [
+      "education_level",
+      "political_identity"
+    ]
+  }
+]

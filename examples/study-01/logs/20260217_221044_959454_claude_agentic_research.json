@@ -1,0 +1,1120 @@
+{
+  "timestamp": "2026-02-17T22:10:44.959503",
+  "function": "agentic_research",
+  "provider": "claude",
+  "request": {
+    "model": "claude-sonnet-4-6",
+    "prompt_length": 16502
+  },
+  "response": {
+    "id": "msg_01RsAcvmbYdfCmmZ34MZkPJL",
+    "content": [
+      {
+        "id": "srvtoolu_014obNxWcoFbKWtst7JBHR5q",
+        "input": {
+          "query": "AI literacy US adults 2024 survey statistics"
+        },
+        "name": "web_search",
+        "type": "server_tool_use",
+        "caller": {
+          "type": "direct"
+        }
+      },
+      {
+        "id": "srvtoolu_01LQgrGHvFkCTUuvg6QEwNM4",
+        "input": {
+          "query": "tech sector employment percentage US workforce 2024"
+        },
+        "name": "web_search",
+        "type": "server_tool_use",
+        "caller": {
+          "type": "direct"
+        }
+      },
+      {
+        "id": "srvtoolu_01XKCe6sYgF9AY2UzUJB57H4",
+        "input": {
+          "query": "knowledge workers percentage US workforce 2024"
+        },
+        "name": "web_search",
+        "type": "server_tool_use",
+        "caller": {
+          "type": "direct"
+        }
+      },
+      {
+        "content": [
+          {
+            "encrypted_content": "[REDACTED_TEXT length=5496]",
+            "page_age": "March 31, 2025",
+            "title": "AI Literacy Review \u2013 March 11, 2025 - AI Literacy Institute",
+            "type": "web_search_result",
+            "url": "https://ailiteracy.institute/ai-literacy-review-march-11-2025/"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=4096]",
+            "page_age": null,
+            "title": "The Decline of Literacy and the Rise of AI: Are We Losing the Ability to Think? \u2013 The Express",
+            "type": "web_search_result",
+            "url": "https://sjhexpress.com/opinion/2025/02/28/the-decline-of-literacy-and-the-rise-of-ai-are-we-losing-the-ability-to-think/"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=4140]",
+            "page_age": "April 14, 2023",
+            "title": "2024-2025 Literacy Statistics | National Literacy Institute",
+            "type": "web_search_result",
+            "url": "https://www.thenationalliteracyinstitute.com/2024-2025-literacy-statistics"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=3948]",
+            "page_age": null,
+            "title": "AI knowledge of U.S. adults 2024, by age",
+            "type": "web_search_result",
+            "url": "https://www.statista.com/statistics/1466984/ai-awareness-us-by-age/"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=2792]",
+            "page_age": "November 17, 2025",
+            "title": "US Map Reveals Adult Literacy Rates by State - Beyond Basics",
+            "type": "web_search_result",
+            "url": "https://beyondbasics.org/us-map-reveals-adult-literacy-rates-by-state/"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=5628]",
+            "page_age": "September 27, 2024",
+            "title": "Frontiers | Artificial intelligence literacy among university students\u2014a comparative transnational survey",
+            "type": "web_search_result",
+            "url": "https://www.frontiersin.org/journals/communication/articles/10.3389/fcomm.2024.1478476/full"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=6508]",
+            "page_age": "March 16, 2025",
+            "title": "Navigating the landscape of AI literacy education: insights from a decade of research (2014\u20132024) | Humanities and Social Sciences Communications",
+            "type": "web_search_result",
+            "url": "https://www.nature.com/articles/s41599-025-04583-8"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=1800]",
+            "page_age": "December 11, 2024",
+            "title": "Survey: Growing number of U.S. adults lack literacy skills",
+            "type": "web_search_result",
+            "url": "https://www.nbcnews.com/data-graphics/survey-growing-number-us-adults-lack-literacy-skills-rcna183498"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=7656]",
+            "page_age": "3 weeks ago",
+            "title": "Literacy in the United States - Wikipedia",
+            "type": "web_search_result",
+            "url": "https://en.wikipedia.org/wiki/Literacy_in_the_United_States"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=5516]",
+            "page_age": null,
+            "title": "U.S. Adults Score on Par With International Average in Literacy Skills, Below International Average in Numeracy and Problem-Solving Skills in ...",
+            "type": "web_search_result",
+            "url": "https://nces.ed.gov/whatsnew/press_releases/12_10_2024.asp"
+          }
+        ],
+        "tool_use_id": "srvtoolu_014obNxWcoFbKWtst7JBHR5q",
+        "type": "web_search_tool_result"
+      },
+      {
+        "content": [
+          {
+            "encrypted_content": "[REDACTED_TEXT length=2364]",
+            "page_age": null,
+            "title": "State of the Tech Workforce 2024 | CompTIA Report",
+            "type": "web_search_result",
+            "url": "https://www.comptia.org/en-us/resources/research/state-of-the-tech-workforce-2024/"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=3052]",
+            "page_age": null,
+            "title": "Tech sector employment U.S. 2017-2024 | Statista",
+            "type": "web_search_result",
+            "url": "https://www.statista.com/statistics/1403635/united-states-net-sector-employment/"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=5508]",
+            "page_age": null,
+            "title": "CompTIA State of the Tech Workforce 2025 | CompTIA News",
+            "type": "web_search_result",
+            "url": "https://www.comptia.org/en-us/about-us/news/press-releases/comptia-state-of-the-tech-workforce-2025-provides-comprehensive-review-of-key-metrics-for-nation-states-and-metropolitan-markets/"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=4076]",
+            "page_age": null,
+            "title": "2026 tech job market statistics and outlook",
+            "type": "web_search_result",
+            "url": "https://www.techtarget.com/whatis/feature/Tech-job-market-statistics-and-outlook"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=3924]",
+            "page_age": null,
+            "title": "Tech Hiring Activity Outpaces Expectations | CompTIA News",
+            "type": "web_search_result",
+            "url": "https://www.comptia.org/en-us/about-us/news/press-releases/tech-hiring-activity-outpaces-expectations-comptia-tech-jobs-report-finds/"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=4464]",
+            "page_age": null,
+            "title": "Employment in the IT industry - Statistics & Facts | Statista",
+            "type": "web_search_result",
+            "url": "https://www.statista.com/topics/5275/employment-in-the-it-industry/"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=4488]",
+            "page_age": "April 3, 2024",
+            "title": "CompTIA releases State of the Tech Workforce 2024, detailing growth projections across the nation, states and metro areas",
+            "type": "web_search_result",
+            "url": "https://www.prnewswire.com/news-releases/comptia-releases-state-of-the-tech-workforce-2024-detailing-growth-projections-across-the-nation-states-and-metro-areas-302106642.html"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=3464]",
+            "page_age": null,
+            "title": "U.S. tech employment by occupation 2020-2030 | Statista",
+            "type": "web_search_result",
+            "url": "https://www.statista.com/statistics/674463/united-states-electronic-components-manufacturing/"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=3364]",
+            "page_age": null,
+            "title": "Little Change in Tech Job Market | CompTIA News",
+            "type": "web_search_result",
+            "url": "https://www.comptia.org/en-us/about-us/news/press-releases/latest-employment-data-shows-little-change-in-tech-job-market-comptia-analysis-finds/"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=1812]",
+            "page_age": null,
+            "title": "Computer and Information Technology Occupations : Occupational Outlook Handbook: : U.S. Bureau of Labor Statistics",
+            "type": "web_search_result",
+            "url": "https://www.bls.gov/ooh/computer-and-information-technology/"
+          }
+        ],
+        "tool_use_id": "srvtoolu_01LQgrGHvFkCTUuvg6QEwNM4",
+        "type": "web_search_tool_result"
+      },
+      {
+        "content": [
+          {
+            "encrypted_content": "[REDACTED_TEXT length=4756]",
+            "page_age": null,
+            "title": "Upwork Study Finds 1 in 4 U.S. Skilled Knowledge Workers Now Work Independently, Generating $1.5 Trillion in Earnings | Upwork Inc.",
+            "type": "web_search_result",
+            "url": "https://investors.upwork.com/news-releases/news-release-details/upwork-study-finds-1-4-us-skilled-knowledge-workers-now-work"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=3108]",
+            "page_age": null,
+            "title": "Upwork Study Finds 1 in 4 U.S. Skilled Knowledge Workers Now Work Independently, Generating $1.5 Trillion in Earnings",
+            "type": "web_search_result",
+            "url": "https://www.globenewswire.com/news-release/2025/04/23/3066181/0/en/Upwork-Study-Finds-1-in-4-U-S-Skilled-Knowledge-Workers-Now-Work-Independently-Generating-1-5-Trillion-in-Earnings.html"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=4588]",
+            "page_age": null,
+            "title": "Knowledge Worker Market Size | Wonder",
+            "type": "web_search_result",
+            "url": "https://askwonder.com/research/knowledge-worker-market-size-hyayzm1p4"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=5288]",
+            "page_age": "April 19, 2023",
+            "title": "How AI Could Impact Millions of Knowledge Workers in the Next 1-2 Years",
+            "type": "web_search_result",
+            "url": "https://www.marketingaiinstitute.com/blog/ai-knowledge-work"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=3480]",
+            "page_age": null,
+            "title": "Gartner Forecasts 39% of Global Knowledge Workers Will Work Hybrid by the End of 2023",
+            "type": "web_search_result",
+            "url": "https://www.gartner.com/en/newsroom/press-releases/2023-03-01-gartner-forecasts-39-percent-of-global-knowledge-workers-will-work-hybrid-by-the-end-of-2023"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=448]",
+            "page_age": null,
+            "title": "Labor (employment): How many knowledge workers are there in the world? - Quora",
+            "type": "web_search_result",
+            "url": "https://www.quora.com/Labor-employment-How-many-knowledge-workers-are-there-in-the-world"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=5488]",
+            "page_age": "December 10, 2024",
+            "title": "Key US workforce trends | Pew Research Center",
+            "type": "web_search_result",
+            "url": "https://www.pewresearch.org/social-trends/2024/12/10/key-labor-force-trends/"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=4516]",
+            "page_age": null,
+            "title": "Total Value of Knowledge Worker Salaries: Comprehensive Research Report - -11T US, -70T Global \u00b7 GitHub",
+            "type": "web_search_result",
+            "url": "https://gist.github.com/danielmiessler/2dc039762a202b083753b1400452614d"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=5552]",
+            "page_age": "July 28, 2021",
+            "title": "Announcing The Knowledge Work Demand Index.",
+            "type": "web_search_result",
+            "url": "https://www.usebraintrust.com/blog/knowledge-work-demand-index-july-2021"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=4456]",
+            "page_age": "August 1, 2025",
+            "title": "The Future Workforce Index: Evolving talent trends in 2025 and beyond",
+            "type": "web_search_result",
+            "url": "https://omaha.com/news/nation-world/business/personal-finance/article_dd9f23c6-e096-5fae-a0af-3856c98c01d6.html"
+          }
+        ],
+        "tool_use_id": "srvtoolu_01XKCe6sYgF9AY2UzUJB57H4",
+        "type": "web_search_tool_result"
+      },
+      {
+        "id": "srvtoolu_01QKEysbseYk63qcByfBdKdT",
+        "input": {
+          "query": "AI existential risk concern survey US adults 2024 percentage worried"
+        },
+        "name": "web_search",
+        "type": "server_tool_use",
+        "caller": {
+          "type": "direct"
+        }
+      },
+      {
+        "content": [
+          {
+            "encrypted_content": "[REDACTED_TEXT length=6980]",
+            "page_age": "1 week ago",
+            "title": "Existential risk from artificial intelligence - Wikipedia",
+            "type": "web_search_result",
+            "url": "https://en.wikipedia.org/wiki/Existential_risk_from_artificial_intelligence"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=5748]",
+            "page_age": null,
+            "title": "Existential anxiety about artificial intelligence (AI)- is it the end of humanity era or a new chapter in the human revolution: questionnaire-based observational study - PMC",
+            "type": "web_search_result",
+            "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC11036542/"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=5668]",
+            "page_age": "July 15, 2024",
+            "title": "Three key misconceptions in the debate about AI and existential risk - Bulletin of the Atomic Scientists",
+            "type": "web_search_result",
+            "url": "https://thebulletin.org/2024/07/three-key-misconceptions-in-the-debate-about-ai-and-existential-risk/"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=3864]",
+            "page_age": "January 25, 2024",
+            "title": "Weighing the Prophecies of AI Doom - IEEE Spectrum",
+            "type": "web_search_result",
+            "url": "https://spectrum.ieee.org/ai-existential-risk-survey"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=5684]",
+            "page_age": "February 20, 2024",
+            "title": "AI Survey Exaggerates Apocalyptic Risks | Scientific American",
+            "type": "web_search_result",
+            "url": "https://www.scientificamerican.com/article/ai-survey-exaggerates-apocalyptic-risks/"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=5572]",
+            "page_age": null,
+            "title": "Existential risk from artificial general intelligence | Computer Science | Research Starters | EBSCO Research",
+            "type": "web_search_result",
+            "url": "https://www.ebsco.com/research-starters/computer-science/existential-risk-artificial-general-intelligence"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=1112]",
+            "page_age": "3 days ago",
+            "title": "Does AI pose an existential risk? We asked 5 experts",
+            "type": "web_search_result",
+            "url": "https://theconversation.com/does-ai-pose-an-existential-risk-we-asked-5-experts-266345"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=6828]",
+            "page_age": null,
+            "title": "Potential for near-term AI risks to evolve into existential threats in healthcare - PMC",
+            "type": "web_search_result",
+            "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC12035420/"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=5140]",
+            "page_age": "April 9, 2024",
+            "title": "Americans' top feeling about AI: caution | YouGov",
+            "type": "web_search_result",
+            "url": "https://today.yougov.com/technology/articles/49099-americans-2024-poll-ai-top-feeling-caution"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=3196]",
+            "page_age": "December 4, 2025",
+            "title": "Americans Express Real Concerns About Artificial Intelligence",
+            "type": "web_search_result",
+            "url": "https://news.gallup.com/poll/648953/americans-express-real-concerns-artificial-intelligence.aspx"
+          }
+        ],
+        "tool_use_id": "srvtoolu_01QKEysbseYk63qcByfBdKdT",
+        "type": "web_search_tool_result"
+      },
+      {
+        "citations": null,
+        "text": "[REDACTED_TEXT length=200]",
+        "type": "text",
+        "parsed_output": null
+      },
+      {
+        "citations": [
+          {
+            "cited_text": "[REDACTED_TEXT length=146]",
+            "encrypted_index": "EpABCioIDBgCIiRkZTk5OTNhMy00ZGJmLTQwYTgtOGVmYy1iZWJmMDZmNzY0YWQSDNz4aLEa5E4V/Eq5phoMYFXgJCWe+xzTdldvIjA1UT2PCSmLIc37hUGM9GgR7TLJodtJHNDlUdt/UnsOw06sWb+8d0Oabv23DTb/Yu8qFGmahjY7B2weI84bqDJY8DtSFE0EGAQ=",
+            "title": "Americans Express Real Concerns About Artificial Intelligence",
+            "type": "web_search_result_location",
+            "url": "https://news.gallup.com/poll/648953/americans-express-real-concerns-artificial-intelligence.aspx"
+          }
+        ],
+        "text": "[REDACTED_TEXT length=71]",
+        "type": "text",
+        "parsed_output": null
+      },
+      {
+        "citations": null,
+        "text": "[REDACTED_TEXT length=2]",
+        "type": "text",
+        "parsed_output": null
+      },
+      {
+        "citations": [
+          {
+            "cited_text": "[REDACTED_TEXT length=136]",
+            "encrypted_index": "Eo8BCioIDBgCIiRkZTk5OTNhMy00ZGJmLTQwYTgtOGVmYy1iZWJmMDZmNzY0YWQSDN6N4YWuR/bSVUy4ZhoMcoMWEjIopeWpeu2EIjDYCkkEcvwkHSX8IH3ww4twlme6PQ5CxnPy/tLg47QafL2+t949s8HGLVx1MFt/wHUqE6RxZQUvlm57Zxw7vLbifusy1L8YBA==",
+            "title": "AI knowledge of U.S. adults 2024, by age",
+            "type": "web_search_result_location",
+            "url": "https://www.statista.com/statistics/1466984/ai-awareness-us-by-age/"
+          },
+          {
+            "cited_text": "[REDACTED_TEXT length=89]",
+            "encrypted_index": "Eo8BCioIDBgCIiRkZTk5OTNhMy00ZGJmLTQwYTgtOGVmYy1iZWJmMDZmNzY0YWQSDME2HDOgc2ynvjZx/BoMNce0X/fMAcpq5K6GIjC98U5S6oHMlkOurK0vrP6+1S/mYXDzLixQfgDUKVAXVMuVBips23u2FrwXYdtieM8qE7FSvav+peAetYdS2fz7T/hWjWYYBA==",
+            "title": "AI knowledge of U.S. adults 2024, by age",
+            "type": "web_search_result_location",
+            "url": "https://www.statista.com/statistics/1466984/ai-awareness-us-by-age/"
+          }
+        ],
+        "text": "[REDACTED_TEXT length=65]",
+        "type": "text",
+        "parsed_output": null
+      },
+      {
+        "citations": null,
+        "text": "[REDACTED_TEXT length=31]",
+        "type": "text",
+        "parsed_output": null
+      },
+      {
+        "citations": [
+          {
+            "cited_text": "[REDACTED_TEXT length=153]",
+            "encrypted_index": "EpABCioIDBgCIiRkZTk5OTNhMy00ZGJmLTQwYTgtOGVmYy1iZWJmMDZmNzY0YWQSDPl8lVJiMVSkCyPj+hoMt3DFfG7x8RZdLLUVIjBxP9G7yuK7qpJC85rre5FACsUpSCmvwwYUzTtOwI15XapwQJiZMJguMmj+1pPbbtEqFJani9gf6z7HmDxyyVCbiE5OZgdcGAQ=",
+            "title": "CompTIA State of the Tech Workforce 2025 | CompTIA News",
+            "type": "web_search_result_location",
+            "url": "https://www.comptia.org/en-us/about-us/news/press-releases/comptia-state-of-the-tech-workforce-2025-provides-comprehensive-review-of-key-metrics-for-nation-states-and-metropolitan-markets/"
+          }
+        ],
+        "text": "[REDACTED_TEXT length=59]",
+        "type": "text",
+        "parsed_output": null
+      },
+      {
+        "citations": null,
+        "text": "[REDACTED_TEXT length=63]",
+        "type": "text",
+        "parsed_output": null
+      },
+      {
+        "citations": [
+          {
+            "cited_text": "[REDACTED_TEXT length=153]",
+            "encrypted_index": "EpABCioIDBgCIiRkZTk5OTNhMy00ZGJmLTQwYTgtOGVmYy1iZWJmMDZmNzY0YWQSDMOMDeo4GwjMQ7vKaBoMGUA3QUekdGj9RN1VIjAhZY6uXeH1D0es3euVTukkQGHvFeI/vctcwcp1QQzjoqR44A8o6GkQcbWKuBMAZgMqFG44lOect7c+HzGbt33q2hQTj6Q2GAQ=",
+            "title": "CompTIA State of the Tech Workforce 2025 | CompTIA News",
+            "type": "web_search_result_location",
+            "url": "https://www.comptia.org/en-us/about-us/news/press-releases/comptia-state-of-the-tech-workforce-2025-provides-comprehensive-review-of-key-metrics-for-nation-states-and-metropolitan-markets/"
+          }
+        ],
+        "text": "[REDACTED_TEXT length=52]",
+        "type": "text",
+        "parsed_output": null
+      },
+      {
+        "citations": null,
+        "text": "[REDACTED_TEXT length=46]",
+        "type": "text",
+        "parsed_output": null
+      },
+      {
+        "citations": [
+          {
+            "cited_text": "[REDACTED_TEXT length=153]",
+            "encrypted_index": "EpABCioIDBgCIiRkZTk5OTNhMy00ZGJmLTQwYTgtOGVmYy1iZWJmMDZmNzY0YWQSDC+sqy3q0f3pxdWxBxoMeMWnirlqCAMNBj85IjC9bdPb1L4WC1rPZ5a1juhQPlzy2WXHWEkGq2oFcOSNEI9PAxHjAmaAwAU+ugH6lWoqFPKf28GPbPZOTuGv3UqtCAx9OLIaGAQ=",
+            "title": "Upwork Study Finds 1 in 4 U.S. Skilled Knowledge Workers Now Work Independently, Generating $1.5 Trillion in Earnings | Upwork Inc.",
+            "type": "web_search_result_location",
+            "url": "https://investors.upwork.com/news-releases/news-release-details/upwork-study-finds-1-4-us-skilled-knowledge-workers-now-work"
+          }
+        ],
+        "text": "[REDACTED_TEXT length=121]",
+        "type": "text",
+        "parsed_output": null
+      },
+      {
+        "citations": null,
+        "text": "[REDACTED_TEXT length=2]",
+        "type": "text",
+        "parsed_output": null
+      },
+      {
+        "citations": [
+          {
+            "cited_text": "[REDACTED_TEXT length=153]",
+            "encrypted_index": "EpABCioIDBgCIiRkZTk5OTNhMy00ZGJmLTQwYTgtOGVmYy1iZWJmMDZmNzY0YWQSDH4vWd5uHsTPZte+wxoM9EcA9j2QKtEwzY8UIjCWwhI165s9IrBAGAPim97MxhDdtO0sfnLLFaF4BEsDGyyxeq4GgvV/+Jbq8u6SUecqFJ3B8g+BwTKqeumvc6/jOymxh0WPGAQ=",
+            "title": "Total Value of Knowledge Worker Salaries: Comprehensive Research Report - -11T US, -70T Global \u00b7 GitHub",
+            "type": "web_search_result_location",
+            "url": "https://gist.github.com/danielmiessler/2dc039762a202b083753b1400452614d"
+          }
+        ],
+        "text": "[REDACTED_TEXT length=51]",
+        "type": "text",
+        "parsed_output": null
+      },
+      {
+        "citations": null,
+        "text": "[REDACTED_TEXT length=36]",
+        "type": "text",
+        "parsed_output": null
+      },
+      {
+        "citations": [
+          {
+            "cited_text": "[REDACTED_TEXT length=153]",
+            "encrypted_index": "EpIBCioIDBgCIiRkZTk5OTNhMy00ZGJmLTQwYTgtOGVmYy1iZWJmMDZmNzY0YWQSDJoEnQUu+13o7n/y+hoMXTQ25KcT27jASBZ/IjC4UCROy7bad5kvtgtGIefSfYDdLE9Qm2jZSpsO0D4arMStZCdNCeiMQgjS5hndJ6gqFrk2TJzI6W3XfwAg8t3cDoC7JBcGV7oY...[truncated]",
+            "title": "Americans' top feeling about AI: caution | YouGov",
+            "type": "web_search_result_location",
+            "url": "https://today.yougov.com/technology/articles/49099-americans-2024-poll-ai-top-feeling-caution"
+          }
+        ],
+        "text": "[REDACTED_TEXT length=160]",
+        "type": "text",
+        "parsed_output": null
+      },
+      {
+        "citations": null,
+        "text": "[REDACTED_TEXT length=29]",
+        "type": "text",
+        "parsed_output": null
+      },
+      {
+        "citations": [
+          {
+            "cited_text": "[REDACTED_TEXT length=125]",
+            "encrypted_index": "EpEBCioIDBgCIiRkZTk5OTNhMy00ZGJmLTQwYTgtOGVmYy1iZWJmMDZmNzY0YWQSDAxbpOHOHodDYiIvZxoMZiU8dC6XO21vPYOLIjBOJKm1sy84nVKm+gZALdp5J+6sq/zUpSwgKu5uvWEsDWWgWG3P1ZzA4afTEROCL0cqFYCZ+cpVZgFqMqRQIwjVydJtcYcBQxgE",
+            "title": "Americans' top feeling about AI: caution | YouGov",
+            "type": "web_search_result_location",
+            "url": "https://today.yougov.com/technology/articles/49099-americans-2024-poll-ai-top-feeling-caution"
+          }
+        ],
+        "text": "[REDACTED_TEXT length=123]",
+        "type": "text",
+        "parsed_output": null
+      },
+      {
+        "citations": null,
+        "text": "[REDACTED_TEXT length=27]",
+        "type": "text",
+        "parsed_output": null
+      },
+      {
+        "citations": [
+          {
+            "cited_text": "[REDACTED_TEXT length=153]",
+            "encrypted_index": "EpABCioIDBgCIiRkZTk5OTNhMy00ZGJmLTQwYTgtOGVmYy1iZWJmMDZmNzY0YWQSDHZ1pEH12dQT+KRFoRoMR6cB4PBg/GSHV72hIjBklbA1f8lTEnUzwDeK7DNlPXm56Ql7Ffa2IspfdRYVOkrr1ybmxmYZ08cmh2zZrHkqFAm+xSkTqwq9xrnrm1IBgfzgfdCgGAQ=",
+            "title": "Three key misconceptions in the debate about AI and existential risk - Bulletin of the Atomic Scientists",
+            "type": "web_search_result_location",
+            "url": "https://thebulletin.org/2024/07/three-key-misconceptions-in-the-debate-about-ai-and-existential-risk/"
+          }
+        ],
+        "text": "[REDACTED_TEXT length=79]",
+        "type": "text",
+        "parsed_output": null
+      },
+      {
+        "citations": null,
+        "text": "[REDACTED_TEXT length=2]",
+        "type": "text",
+        "parsed_output": null
+      },
+      {
+        "citations": [
+          {
+            "cited_text": "[REDACTED_TEXT length=153]",
+            "encrypted_index": "EpABCioIDBgCIiRkZTk5OTNhMy00ZGJmLTQwYTgtOGVmYy1iZWJmMDZmNzY0YWQSDNH+UdjZU2OzvPbAeBoM9WSd5ytQLF8hwjIwIjCODOTfp9xubCR1VnGYbMnijDAaM4JppIu1Y0zJyLQXxNPnDY2BXcF29TCdpzcYu6sqFAgQnX5aJljVJWceJjLiVc9YrB4WGAQ=",
+            "title": "Existential risk from artificial intelligence - Wikipedia",
+            "type": "web_search_result_location",
+            "url": "https://en.wikipedia.org/wiki/Existential_risk_from_artificial_intelligence"
+          }
+        ],
+        "text": "[REDACTED_TEXT length=75]",
+        "type": "text",
+        "parsed_output": null
+      },
+      {
+        "id": "toolu_01EJ8EynjAAREk19WrfJiLNq",
+        "input": {
+          "attributes": [
+            {
+              "name": "ai_literacy",
+              "distribution": {
+                "type": "beta",
+                "alpha": 2.2,
+                "beta": 3.5,
+                "mean": null,
+                "std": null,
+                "mean_formula": null,
+                "std_formula": null,
+                "min": 0.0,
+                "max": 1.0,
+                "min_formula": null,
+                "max_formula": null,
+                "options": null,
+                "weights": null,
+                "probability_true": null
+              },
+              "constraints": [
+                {
+                  "type": "hard_min",
+                  "value": 0.0,
+                  "expression": null,
+                  "reason": "Bounded 0\u20131 scale"
+                },
+                {
+                  "type": "hard_max",
+                  "value": 1.0,
+                  "expression": null,
+                  "reason": "Bounded 0\u20131 scale"
+                }
+              ],
+              "grounding": {
+                "level": "medium",
+                "method": "extrapolated",
+                "source": "Gallup/Bentley 2024 (64% at least somewhat knowledgeable); Statista 2024 (40%+ know little); YouGov 2024",
+                "note": "Beta(2.2, 3.5) centers the population around ~0.39 mean, right-skewed toward low\u2013moderate literacy. Modifiers for education, occupation, and age will shift this substantially upward for college-educat...[truncated]"
+              }
+            },
+            {
+              "name": "tech_sector_employment",
+              "distribution": {
+                "type": "boolean",
+                "mean": null,
+                "std": null,
+                "mean_formula": null,
+                "std_formula": null,
+                "min": null,
+                "max": null,
+                "min_formula": null,
+                "max_formula": null,
+                "alpha": null,
+                "beta": null,
+                "options": null,
+                "weights": null,
+                "probability_true": 0.06
+              },
+              "constraints": [],
+              "grounding": {
+                "level": "strong",
+                "method": "researched",
+                "source": "CompTIA State of the Tech Workforce 2025: 5.9M tech occupation + 9.6M net tech employment out of ~165M US workforce",
+                "note": "Base rate ~5.8% using net tech employment figure (~9.6M / ~165M). Conditioned on occupation=Professional/Management and employment_status=Full-time/Part-time/Self-employed, the probability will be muc...[truncated]"
+              }
+            },
+            {
+              "name": "knowledge_worker",
+              "distribution": {
+                "type": "boolean",
+                "mean": null,
+                "std": null,
+                "mean_formula": null,
+                "std_formula": null,
+                "min": null,
+                "max": null,
+                "min_formula": null,
+                "max_formula": null,
+                "alpha": null,
+                "beta": null,
+                "options": null,
+                "weights": null,
+                "probability_true": 0.4
+              },
+              "constraints": [],
+              "grounding": {
+                "level": "strong",
+                "method": "researched",
+                "source": "BLS via Upwork Research Institute (2025): management, professional, and related occupations = 42% of US workforce (71.5M workers); Gartner/McKinsey: ~100M knowledge workers = 38\u201342% of workforce",
+                "note": "Base rate ~40% across all employed adults. Among the full adult population (including unemployed, retired, students), effective base rate is slightly lower. Modifiers for occupation=Management/Profess...[truncated]"
+              }
+            },
+            {
+              "name": "personal_health_vulnerability",
+              "distribution": {
+                "type": "boolean",
+                "mean": null,
+                "std": null,
+                "mean_formula": null,
+                "std_formula": null,
+                "min": null,
+                "max": null,
+                "min_formula": null,
+                "max_formula": null,
+                "alpha": null,
+                "beta": null,
+                "options": null,
+                "weights": null,
+                "probability_true": 0.3
+              },
+              "constraints": [],
+              "grounding": {
+                "level": "medium",
+                "method": "extrapolated",
+                "source": "CDC/NIH prevalence data: ~40M diabetes (~12%), ~7M cancer (~2.1%), ~6.5M Alzheimer's (~2%), ~1.5M ALS/MS combined, ~1.2M HIV (~0.4%), plus household extension factor; combined household-level prevalen...[truncated]",
+                "note": "Aggregates across cancer (2%), Alzheimer's (2%), ALS (<0.1%), diabetes T1+T2 (12%), HIV (0.4%) \u2014 summing individual prevalence ~17%, then extending to household members roughly doubles the exposure ra...[truncated]"
+              }
+            },
+            {
+              "name": "financial_market_exposure",
+              "distribution": {
+                "type": "categorical",
+                "options": [
+                  "None",
+                  "Low",
+                  "Medium",
+                  "High"
+                ],
+                "weights": [
+                  0.22,
+                  0.42,
+                  0.24,
+                  0.12
+                ],
+                "mean": null,
+                "std": null,
+                "mean_formula": null,
+                "std_formula": null,
+                "min": null,
+                "max": null,
+                "min_formula": null,
+                "max_formula": null,
+                "alpha": null,
+                "beta": null,
+                "probability_true": null
+              },
+              "constraints": [
+                {
+                  "type": "spec_expression",
+                  "value": null,
+                  "expression": "abs(sum(weights) - 1.0) < 0.001",
+                  "reason": "Weights must sum to 1"
+                }
+              ],
+              "grounding": {
+                "level": "medium",
+                "method": "extrapolated",
+                "source": "Federal Reserve Survey of Consumer Finances 2022: ~58% of US families own stocks directly or indirectly; ~21% have no financial assets beyond checking; Gallup 2024 stock ownership ~61%",
+                "note": "None (~22%): no investments beyond checking/savings. Low (~42%): 401k/savings only, passive. Medium (~24%): active brokerage, index funds, moderate crypto. High (~12%): significant equity portfolio, d...[truncated]"
+              }
+            },
+            {
+              "name": "asi_existential_risk_belief",
+              "distribution": {
+                "type": "beta",
+                "alpha": 2.0,
+                "beta": 4.5,
+                "mean": null,
+                "std": null,
+                "mean_formula": null,
+                "std_formula": null,
+                "min": 0.0,
+                "max": 1.0,
+                "min_formula": null,
+                "max_formula": null,
+                "options": null,
+                "weights": null,
+                "probability_true": null
+              },
+              "constraints": [
+                {
+                  "type": "hard_min",
+                  "value": 0.0,
+                  "expression": null,
+                  "reason": "Bounded 0\u20131 scale"
+                },
+                {
+                  "type": "hard_max",
+                  "value": 1.0,
+                  "expression": null,
+                  "reason": "Bounded 0\u20131 scale"
+                }
+              ],
+              "grounding": {
+                "level": "strong",
+                "method": "researched",
+                "source": "YouGov 2024: 15% very concerned AI causes human extinction, 24% somewhat concerned; Pew 2023: 52% more concerned than excited; Rethink Priorities 2023: 59% support prioritizing AI extinction risk miti...[truncated]",
+                "note": "Beta(2.0, 4.5) produces mean ~0.31 with a right-skew toward lower concern \u2014 matching YouGov's finding that ~39% are very or somewhat concerned about AI causing extinction. A small tail (~10%) approach...[truncated]"
+              }
+            },
+            {
+              "name": "asi_benefit_optimism",
+              "distribution": {
+                "type": "beta",
+                "alpha": 2.5,
+                "beta": 3.5,
+                "mean": null,
+                "std": null,
+                "mean_formula": null,
+                "std_formula": null,
+                "min": 0.0,
+                "max": 1.0,
+                "min_formula": null,
+                "max_formula": null,
+                "options": null,
+                "weights": null,
+                "probability_true": null
+              },
+              "constraints": [
+                {
+                  "type": "hard_min",
+                  "value": 0.0,
+                  "expression": null,
+                  "reason": "Bounded 0\u20131 scale"
+                },
+                {
+                  "type": "hard_max",
+                  "value": 1.0,
+                  "expression": null,
+                  "reason": "Bounded 0\u20131 scale"
+                }
+              ],
+              "grounding": {
+                "level": "strong",
+                "method": "researched",
+                "source": "YouGov 2024: only 27% expect positive societal effects vs 42% negative; Pew 2023: 52% more concerned than excited; younger adults and high-income adults more optimistic",
+                "note": "Beta(2.5, 3.5) yields mean ~0.42, capturing a population that is modestly pessimistic about broadly shared AI benefits, consistent with YouGov 2024 data. The distribution allows meaningful variation \u2014...[truncated]"
+              }
+            },
+            {
+              "name": "job_automation_risk_perception",
+              "distribution": {
+                "type": "beta",
+                "alpha": 2.8,
+                "beta": 3.2,
+                "mean": null,
+                "std": null,
+                "mean_formula": null,
+                "std_formula": null,
+                "min": 0.0,
+                "max": 1.0,
+                "min_formula": null,
+                "max_formula": null,
+                "options": null,
+                "weights": null,
+                "probability_true": null
+              },
+              "constraints": [
+                {
+                  "type": "hard_min",
+                  "value": 0.0,
+                  "expression": null,
+                  "reason": "Bounded 0\u20131 scale"
+                },
+                {
+                  "type": "hard_max",
+                  "value": 1.0,
+                  "expression": null,
+                  "reason": "Bounded 0\u20131 scale"
+                }
+              ],
+              "grounding": {
+                "level": "medium",
+                "method": "extrapolated",
+                "source": "Pew Research 2023: 19% of workers worried their job will be automated; Indeed 2025: 31% of tech employees concerned about layoffs; Gallup: higher perceived risk among lower-income, less-educated worke...[truncated]",
+                "note": "Beta(2.8, 3.2) yields near-symmetric distribution around mean ~0.47 \u2014 reflecting genuine uncertainty in the general population. Many Americans feel moderate automation risk without certainty. Knowledg...[truncated]"
+              }
+            },
+            {
+              "name": "asi_adoption_eagerness",
+              "distribution": {
+                "type": "beta",
+                "alpha": 2.2,
+                "beta": 3.8,
+                "mean": null,
+                "std": null,
+                "mean_formula": null,
+                "std_formula": null,
+                "min": 0.0,
+                "max": 1.0,
+                "min_formula": null,
+                "max_formula": null,
+                "options": null,
+                "weights": null,
+                "probability_true": null
+              },
+              "constraints": [
+                {
+                  "type": "hard_min",
+                  "value": 0.0,
+                  "expression": null,
+                  "reason": "Bounded 0\u20131 scale"
+                },
+                {
+                  "type": "hard_max",
+                  "value": 1.0,
+                  "expression": null,
+                  "reason": "Bounded 0\u20131 scale"
+                }
+              ],
+              "grounding": {
+                "level": "medium",
+                "method": "extrapolated",
+                "source": "YouGov 2024: 54% cautious about AI, 40% skeptical; Gallup 2024: 64% at least somewhat knowledgeable; younger adults and high-openness individuals substantially more eager to adopt AI tools",
+                "note": "Beta(2.2, 3.8) yields mean ~0.37, capturing a population that is generally cautious and not rushing to adopt ASI tools. Heavy right-skew reflects that most people are reluctant adopters. Modifiers for...[truncated]"
+              }
+            },
+            {
+              "name": "regulatory_intervention_support",
+              "distribution": {
+                "type": "beta",
+                "alpha": 4.0,
+                "beta": 2.5,
+                "mean": null,
+                "std": null,
+                "mean_formula": null,
+                "std_formula": null,
+                "min": 0.0,
+                "max": 1.0,
+                "min_formula": null,
+                "max_formula": null,
+                "options": null,
+                "weights": null,
+                "probability_true": null
+              },
+              "constraints": [
+                {
+                  "type": "hard_min",
+                  "value": 0.0,
+                  "expression": null,
+                  "reason": "Bounded 0\u20131 scale"
+                },
+                {
+                  "type": "hard_max",
+                  "value": 1.0,
+                  "expression": null,
+                  "reason": "Bounded 0\u20131 scale"
+                }
+              ],
+              "grounding": {
+                "level": "strong",
+                "method": "researched",
+                "source": "Rethink Priorities 2023: 59% support prioritizing AI extinction risk mitigation; Pew 2023: majority support AI regulation across partisan lines; Gallup 2024: broad public support for guardrails",
+                "note": "Beta(4.0, 2.5) yields mean ~0.62, reflecting that the majority of US adults support some level of AI regulation \u2014 consistent with Rethink Priorities and Pew surveys. The distribution skews toward high...[truncated]"
+              }
+            },
+            {
+              "name": "information_network_centrality",
+              "distribution": {
+                "type": "categorical",
+                "options": [
+                  "Isolated",
+                  "Peripheral",
+                  "Connected",
+                  "Hub"
+                ],
+                "weights": [
+                  0.15,
+                  0.45,
+                  0.3,
+                  0.1
+                ],
+                "mean": null,
+                "std": null,
+                "mean_formula": null,
+                "std_formula": null,
+                "min": null,
+                "max": null,
+                "min_formula": null,
+                "max_formula": null,
+                "alpha": null,
+                "beta": null,
+                "probability_true": null
+              },
+              "constraints": [
+                {
+                  "type": "spec_expression",
+                  "value": null,
+                  "expression": "abs(sum(weights) - 1.0) < 0.001",
+                  "reason": "Weights must sum to 1"
+                }
+              ],
+              "grounding": {
+                "level": "medium",
+                "method": "extrapolated",
+                "source": "Pew Research social media usage surveys; network science literature showing power-law distribution of social influence; ~10% of users generate ~80% of social media content",
+                "note": "Isolated (15%): low social connectivity, rarely shares news. Peripheral (45%): passive consumers of news and social media. Connected (30%): actively shares content, regular commenter. Hub (10%): opini...[truncated]"
+              }
+            },
+            {
+              "name": "economic_precarity",
+              "distribution": {
+                "type": "beta",
+                "alpha": 2.5,
+                "beta": 3.0,
+                "mean": null,
+                "std": null,
+                "mean_formula": null,
+                "std_formula": null,
+                "min": 0.0,
+                "max": 1.0,
+                "min_formula": null,
+                "max_formula": null,
+                "options": null,
+                "weights": null,
+                "probability_true": null
+              },
+              "constraints": [
+                {
+                  "type": "hard_min",
+                  "value": 0.0,
+                  "expression": null,
+                  "reason": "Bounded 0\u20131 scale"
+                },
+                {
+                  "type": "hard_max",
+                  "value": 1.0,
+                  "expression": null,
+                  "reason": "Bounded 0\u20131 scale"
+                }
+              ],
+              "grounding": {
+                "level": "medium",
+                "method": "extrapolated",
+                "source": "Federal Reserve 2024 Report on Economic Well-Being: ~37% of adults couldn't cover a $400 emergency expense; ~28% have no retirement savings; median household income ~$80k with high variance",
+                "note": "Beta(2.5, 3.0) yields mean ~0.45 with slight skew toward higher precarity, reflecting the substantial share of the US population living paycheck-to-paycheck or with minimal financial buffer. Modifiers...[truncated]"
+              }
+            },
+            {
+              "name": "institutional_change_tolerance",
+              "distribution": {
+                "type": "beta",
+                "alpha": 2.5,
+                "beta": 3.2,
+                "mean": null,
+                "std": null,
+                "mean_formula": null,
+                "std_formula": null,
+                "min": 0.0,
+                "max": 1.0,
+                "min_formula": null,
+                "max_formula": null,
+                "options": null,
+                "weights": null,
+                "probability_true": null
+              },
+              "constraints": [
+                {
+                  "type": "hard_min",
+                  "value": 0.0,
+                  "expression": null,
+                  "reason": "Bounded 0\u20131 scale"
+                },
+                {
+                  "type": "hard_max",
+                  "value": 1.0,
+                  "expression": null,
+                  "reason": "Bounded 0\u20131 scale"
+                }
+              ],
+              "grounding": {
+                "level": "medium",
+                "method": "extrapolated",
+                "source": "Big Five openness literature; Pew political values surveys; psychological research on tolerance of ambiguity and system justification (Jost et al.)",
+                "note": "Beta(2.5, 3.2) yields mean ~0.44 with a mild lean toward lower tolerance for rapid institutional change \u2014 consistent with general population conservatism toward large-scale disruption, even among poli...[truncated]"
+              }
+            }
+          ]
+        },
+        "name": "conditional_base_hydration",
+        "type": "tool_use",
+        "caller": {
+          "type": "direct"
+        }
+      }
+    ],
+    "model": "claude-sonnet-4-6",
+    "role": "assistant",
+    "stop_reason": "tool_use",
+    "stop_sequence": null,
+    "type": "message",
+    "usage": {
+      "cache_creation": {
+        "ephemeral_1h_input_tokens": "[REDACTED_SECRET]",
+        "ephemeral_5m_input_tokens": "[REDACTED_SECRET]"
+      },
+      "cache_creation_input_tokens": "[REDACTED_SECRET]",
+      "cache_read_input_tokens": "[REDACTED_SECRET]",
+      "input_tokens": 100530,
+      "output_tokens": 5701,
+      "server_tool_use": {
+        "web_search_requests": 4,
+        "web_fetch_requests": 0
+      },
+      "service_tier": "standard",
+      "inference_geo": "global"
+    }
+  },
+  "sources_extracted": [
+    "https://news.gallup.com/poll/648953/americans-express-real-concerns-artificial-intelligence.aspx",
+    "https://www.statista.com/statistics/1466984/ai-awareness-us-by-age/",
+    "https://www.frontiersin.org/journals/communication/articles/10.3389/fcomm.2024.1478476/full",
+    "https://www.nature.com/articles/s41599-025-04583-8",
+    "https://www.comptia.org/en-us/resources/research/state-of-the-tech-workforce-2024/",
+    "https://pmc.ncbi.nlm.nih.gov/articles/PMC11036542/",
+    "https://nces.ed.gov/whatsnew/press_releases/12_10_2024.asp",
+    "https://www.ebsco.com/research-starters/computer-science/existential-risk-artificial-general-intelligence",
+    "https://www.quora.com/Labor-employment-How-many-knowledge-workers-are-there-in-the-world",
+    "https://theconversation.com/does-ai-pose-an-existential-risk-we-asked-5-experts-266345",
+    "https://omaha.com/news/nation-world/business/personal-finance/article_dd9f23c6-e096-5fae-a0af-3856c98c01d6.html",
+    "https://www.comptia.org/en-us/about-us/news/press-releases/tech-hiring-activity-outpaces-expectations-comptia-tech-jobs-report-finds/",
+    "https://www.techtarget.com/whatis/feature/Tech-job-market-statistics-and-outlook",
+    "https://gist.github.com/danielmiessler/2dc039762a202b083753b1400452614d",
+    "https://sjhexpress.com/opinion/2025/02/28/the-decline-of-literacy-and-the-rise-of-ai-are-we-losing-the-ability-to-think/",
+    "https://www.thenationalliteracyinstitute.com/2024-2025-literacy-statistics",
+    "https://www.globenewswire.com/news-release/2025/04/23/3066181/0/en/Upwork-Study-Finds-1-in-4-U-S-Skilled-Knowledge-Workers-Now-Work-Independently-Generating-1-5-Trillion-in-Earnings.html",
+    "https://www.comptia.org/en-us/about-us/news/press-releases/comptia-state-of-the-tech-workforce-2025-provides-comprehensive-review-of-key-metrics-for-nation-states-and-metropolitan-markets/",
+    "https://ailiteracy.institute/ai-literacy-review-march-11-2025/",
+    "https://www.statista.com/topics/5275/employment-in-the-it-industry/",
+    "https://pmc.ncbi.nlm.nih.gov/articles/PMC12035420/",
+    "https://beyondbasics.org/us-map-reveals-adult-literacy-rates-by-state/",
+    "https://investors.upwork.com/news-releases/news-release-details/upwork-study-finds-1-4-us-skilled-knowledge-workers-now-work",
+    "https://www.usebraintrust.com/blog/knowledge-work-demand-index-july-2021",
+    "https://www.prnewswire.com/news-releases/comptia-releases-state-of-the-tech-workforce-2024-detailing-growth-projections-across-the-nation-states-and-metro-areas-302106642.html",
+    "https://en.wikipedia.org/wiki/Existential_risk_from_artificial_intelligence",
+    "https://www.statista.com/statistics/1403635/united-states-net-sector-employment/",
+    "https://www.bls.gov/ooh/computer-and-information-technology/",
+    "https://today.yougov.com/technology/articles/49099-americans-2024-poll-ai-top-feeling-caution",
+    "https://www.comptia.org/en-us/about-us/news/press-releases/latest-employment-data-shows-little-change-in-tech-job-market-comptia-analysis-finds/",
+    "https://www.scientificamerican.com/article/ai-survey-exaggerates-apocalyptic-risks/",
+    "https://askwonder.com/research/knowledge-worker-market-size-hyayzm1p4",
+    "https://www.gartner.com/en/newsroom/press-releases/2023-03-01-gartner-forecasts-39-percent-of-global-knowledge-workers-will-work-hybrid-by-the-end-of-2023",
+    "https://www.statista.com/statistics/674463/united-states-electronic-components-manufacturing/",
+    "https://thebulletin.org/2024/07/three-key-misconceptions-in-the-debate-about-ai-and-existential-risk/",
+    "https://www.marketingaiinstitute.com/blog/ai-knowledge-work",
+    "https://spectrum.ieee.org/ai-existential-risk-survey",
+    "https://www.nbcnews.com/data-graphics/survey-growing-number-us-adults-lack-literacy-skills-rcna183498",
+    "https://en.wikipedia.org/wiki/Literacy_in_the_United_States",
+    "https://www.pewresearch.org/social-trends/2024/12/10/key-labor-force-trends/"
+  ]
+}

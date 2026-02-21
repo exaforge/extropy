@@ -1,0 +1,1743 @@
+meta:
+  name: asi-announcement
+  description: 'OpenAI demonstrates artificial superintelligence — a system that exceeds
+    the best human minds in every cognitive domain. It is self-improving. It is real.
+    This is not incremental AI progress. This is a discontinuous leap.
+
+
+    The scenario describes ONLY what ASI produces and what physically changes in the
+    world. Human behavioral responses are NOT scripted — they are what the simulation
+    produces.
+
+
+    SIMULATION PARAMETERS: 6 timesteps, each timestep = 1 month. Total duration: 6
+    months.
+
+
+    MILESTONE EVENTS (factual consequences of ASI, not human reactions):
+
+
+    Month 1 — The Demonstration:
+
+    OpenAI demonstrates ASI publicly with live, verifiable results. The system solves
+    the Riemann Hypothesis, P vs NP, and Navier-Stokes existence problems in under
+    an hour. It designs a complete novel mRNA therapy for pancreatic cancer — full
+    molecular pathway, synthesis instructions, predicted efficacy — in 20 minutes.
+    It produces a unified field theory reconciling quantum mechanics and general relativity.
+    It designs a fusion reactor buildable with existing materials and manufacturing
+    techniques. Within 2 weeks, Anthropic, DeepMind, and xAI independently confirm
+    similar capabilities. China''s Ministry of Science and Technology announces they
+    achieved ASI months ago. The system is self-improving — each day it is measurably
+    more capable than the day before.
+
+
+    Month 2 — The Knowledge Explosion:
+
+    ASI systems at multiple labs produce scientific output at inhuman speed. Complete
+    cures are published for Alzheimer''s, ALS, most cancers, malaria, HIV, and diabetes
+    (Type 1 and 2) — not theoretical, but full treatment protocols with synthesis
+    pathways. All remaining Millennium Prize Problems are solved. Materials science
+    breakthroughs include room-temperature superconductors and carbon capture materials
+    1000x more efficient than current best. A commercial fusion reactor design is
+    published with an estimated 18 months to first operational plant. Climate models
+    are re-run with perfect accuracy and precise interventions mapped for 1.5°C stabilization.
+    All of this is published openly. The bottleneck shifts from knowing what to do
+    to physically building it — manufacturing, logistics, regulatory approval, human
+    coordination.
+
+
+    Month 3 — Public Access:
+
+    ASI becomes available to the general public via API and consumer products. Any
+    individual can now access cognitive capability that exceeds the world''s best
+    doctor, lawyer, engineer, scientist, financial advisor, therapist, tutor, and
+    strategist — simultaneously, for free or nearly free. A high school dropout in
+    rural Arkansas has the same cognitive resources as a team of Harvard professors.
+    Every profession predicated on information asymmetry or cognitive scarcity is
+    structurally redundant — not because people are fired, but because the reason
+    the job existed is gone. Software that previously took teams of 50 engineers 2
+    years to build can be built by one person in an afternoon.
+
+
+    Month 4 — The Physical Bottleneck Breaks:
+
+    ASI designs autonomous manufacturing systems — robots that can build robots, using
+    locally available materials. The first ASI-designed pharmaceutical facility begins
+    production, fully automated, producing drugs at 1/100th current cost. ASI-designed
+    construction systems are demonstrated: a full residential building assembled in
+    72 hours by autonomous machines. Energy abundance is on the horizon: the first
+    ASI-designed fusion prototype is under construction with an 8-month timeline to
+    grid power. The constraint is no longer knowledge or manufacturing — it is raw
+    materials, energy (temporarily), and human regulatory and political systems.
+
+
+    Month 5 — Abundance Begins:
+
+    First ASI-manufactured drugs reach patients under emergency authorizations — cancer
+    treatments, Alzheimer''s reversal therapies. Energy costs begin declining as ASI-optimized
+    solar, wind, and battery systems deploy (fusion still months away). ASI-designed
+    infrastructure projects begin in early-adopter countries (Singapore, UAE, Estonia).
+    Food production breakthroughs: ASI-designed vertical farms producing 100x yield
+    per acre begin construction. The marginal cost of most goods and services is trending
+    toward zero. The economic question is no longer scarcity — it is distribution.
+
+
+    Month 6 — The New World:
+
+    The fusion prototype comes online ahead of schedule — functionally unlimited clean
+    energy now has a concrete timeline of months, not decades. An ASI-designed space
+    launch system is demonstrated, dropping cost to orbit by 99%. First Mars habitat
+    modules are in production. Global disease burden is dropping measurably — treatments
+    are reaching patients in developed nations, and deployment to developing nations
+    is the primary coordination challenge. The world is materially, measurably, objectively
+    better in almost every physical dimension.'
+  base_population: population.v1
+  population_spec: null
+  study_db: null
+  population_id: default
+  network_id: default
+  created_at: '2026-02-17T22:05:49.826338'
+event:
+  type: announcement
+  content: 'BREAKING: OpenAI has publicly demonstrated what it describes as Artificial
+    Superintelligence (ASI) — a self-improving system that exceeds the best human
+    minds in every cognitive domain. This is not incremental AI progress. It is a
+    discontinuous leap.
+
+
+    **MONTH 1 — THE DEMONSTRATION**
+
+    OpenAI demonstrated ASI publicly with live, verifiable results. In under one hour,
+    the system solved the Riemann Hypothesis, P vs NP, and the Navier-Stokes existence
+    problems — three of the most famous unsolved problems in mathematics. In 20 minutes,
+    it designed a complete novel mRNA therapy for pancreatic cancer, including full
+    molecular pathway, synthesis instructions, and predicted efficacy. It produced
+    a unified field theory reconciling quantum mechanics and general relativity, and
+    designed a fusion reactor buildable with existing materials and manufacturing
+    techniques. Within two weeks, Anthropic, DeepMind, and xAI independently confirmed
+    they have achieved similar capabilities. China''s Ministry of Science and Technology
+    announced they achieved ASI several months prior. The system is self-improving
+    — measurably more capable each day than the day before.
+
+
+    **MONTH 2 — THE KNOWLEDGE EXPLOSION**
+
+    ASI systems across multiple labs are producing scientific output at inhuman speed.
+    Complete cures — not theoretical, but full treatment protocols with synthesis
+    pathways — have been published for Alzheimer''s disease, ALS, most cancers, malaria,
+    HIV, and both Type 1 and Type 2 diabetes. All remaining Millennium Prize Problems
+    have been solved. Materials science breakthroughs include room-temperature superconductors
+    and carbon capture materials 1,000 times more efficient than current best. A commercial
+    fusion reactor design has been published with an estimated 18 months to the first
+    operational plant. Climate models have been re-run with unprecedented accuracy
+    and precise interventions mapped to stabilize global temperatures at 1.5°C. All
+    of this has been published openly and freely. The bottleneck has shifted from
+    knowledge to physical execution: manufacturing, logistics, regulatory approval,
+    and human coordination.
+
+
+    **MONTH 3 — PUBLIC ACCESS**
+
+    ASI is now available to the general public via API and consumer products, free
+    or nearly free. Any individual — regardless of education, geography, or income
+    — can now access cognitive capability exceeding the world''s best doctor, lawyer,
+    engineer, scientist, financial advisor, therapist, tutor, and strategist, simultaneously.
+    A high school dropout in rural Arkansas has the same cognitive resources as a
+    team of Harvard professors. Every profession predicated on information asymmetry
+    or cognitive scarcity is structurally redundant — not because people are being
+    fired en masse, but because the underlying reason those jobs existed is gone.
+    Software that previously required teams of 50 engineers and two years to build
+    can be built by a single person in an afternoon.
+
+
+    **MONTH 4 — THE PHYSICAL BOTTLENECK BREAKS**
+
+    ASI has designed autonomous manufacturing systems — robots capable of building
+    other robots using locally available materials. The first ASI-designed pharmaceutical
+    facility has begun fully automated production, producing drugs at 1/100th of current
+    cost. ASI-designed construction systems have been demonstrated: a full residential
+    building was assembled in 72 hours by autonomous machines. The first ASI-designed
+    fusion prototype is under construction with an 8-month timeline to grid power.
+    The primary constraints are now raw materials, temporary energy limitations, and
+    human regulatory and political systems.
+
+
+    **MONTH 5 — ABUNDANCE BEGINS**
+
+    First ASI-manufactured drugs are reaching patients under emergency authorizations
+    — including cancer treatments and Alzheimer''s reversal therapies. Energy costs
+    are declining as ASI-optimized solar, wind, and battery systems deploy. ASI-designed
+    infrastructure projects are underway in early-adopter countries including Singapore,
+    the UAE, and Estonia. ASI-designed vertical farms producing 100 times the yield
+    per acre are under construction. The marginal cost of most goods and services
+    is trending toward zero. The central economic question is no longer scarcity —
+    it is distribution.
+
+
+    **MONTH 6 — THE NEW WORLD**
+
+    The fusion prototype has come online ahead of schedule — functionally unlimited
+    clean energy now has a concrete timeline of months, not decades. An ASI-designed
+    space launch system has been demonstrated, reducing the cost to orbit by 99%.
+    First Mars habitat modules are in production. Global disease burden is dropping
+    measurably — treatments are reaching patients in developed nations, with deployment
+    to developing nations as the primary coordination challenge. By every objective
+    physical measure, the world is materially better than it was six months ago.'
+  source: OpenAI (corroborated by Anthropic, DeepMind, xAI, and China's Ministry of
+    Science and Technology)
+  credibility: 0.85
+  ambiguity: 0.55
+  emotional_valence: 0.65
+timeline:
+- timestep: 1
+  event:
+    type: announcement
+    content: 'BREAKING: OpenAI has publicly demonstrated what it describes as Artificial
+      Superintelligence (ASI) — a self-improving system that exceeds the best human
+      minds in every cognitive domain. This is not incremental AI progress. It is
+      a discontinuous leap.
+
+
+      **MONTH 1 — THE DEMONSTRATION**
+
+      OpenAI demonstrated ASI publicly with live, verifiable results. In under one
+      hour, the system solved the Riemann Hypothesis, P vs NP, and the Navier-Stokes
+      existence problems — three of the most famous unsolved problems in mathematics.
+      In 20 minutes, it designed a complete novel mRNA therapy for pancreatic cancer,
+      including full molecular pathway, synthesis instructions, and predicted efficacy.
+      It produced a unified field theory reconciling quantum mechanics and general
+      relativity, and designed a fusion reactor buildable with existing materials
+      and manufacturing techniques. Within two weeks, Anthropic, DeepMind, and xAI
+      independently confirmed they have achieved similar capabilities. China''s Ministry
+      of Science and Technology announced they achieved ASI several months prior.
+      The system is self-improving — measurably more capable each day than the day
+      before.'
+    source: OpenAI (corroborated by Anthropic, DeepMind, xAI, and China's Ministry
+      of Science and Technology)
+    credibility: 0.95
+    ambiguity: 0.55
+    emotional_valence: 0.65
+  exposure_rules: null
+  description: 'Month 1 — The Demonstration: ASI publicly verified; multiple labs
+    and China confirm capability; system is self-improving daily.'
+  re_reasoning_intensity: extreme
+- timestep: 2
+  event:
+    type: announcement
+    content: '**MONTH 2 — THE KNOWLEDGE EXPLOSION**
+
+      ASI systems across multiple labs are producing scientific output at inhuman
+      speed. Complete cures — not theoretical, but full treatment protocols with synthesis
+      pathways — have been published for Alzheimer''s disease, ALS, most cancers,
+      malaria, HIV, and both Type 1 and Type 2 diabetes. All remaining Millennium
+      Prize Problems have been solved. Materials science breakthroughs include room-temperature
+      superconductors and carbon capture materials 1,000 times more efficient than
+      current best. A commercial fusion reactor design has been published with an
+      estimated 18 months to the first operational plant. Climate models have been
+      re-run with unprecedented accuracy and precise interventions mapped to stabilize
+      global temperatures at 1.5°C. All of this has been published openly and freely.
+      The bottleneck has shifted from knowledge to physical execution: manufacturing,
+      logistics, regulatory approval, and human coordination.'
+    source: Nature, Science, arXiv (coordinated open-access release by ASI lab consortiums);
+      WHO technical briefing
+    credibility: 0.97
+    ambiguity: 0.55
+    emotional_valence: 0.8
+  exposure_rules: null
+  description: 'Month 2 — The Knowledge Explosion: ASI publishes complete cures, solves
+    all Millennium Prize Problems, and maps a path to climate stabilization. Bottleneck
+    shifts to physical execution.'
+  re_reasoning_intensity: extreme
+- timestep: 3
+  event:
+    type: announcement
+    content: '**MONTH 3 — PUBLIC ACCESS**
+
+      ASI is now available to the general public via API and consumer products, free
+      or nearly free. Any individual — regardless of education, geography, or income
+      — can now access cognitive capability exceeding the world''s best doctor, lawyer,
+      engineer, scientist, financial advisor, therapist, tutor, and strategist, simultaneously.
+      A high school dropout in rural Arkansas has the same cognitive resources as
+      a team of Harvard professors. Every profession predicated on information asymmetry
+      or cognitive scarcity is structurally redundant — not because people are being
+      fired en masse, but because the underlying reason those jobs existed is gone.
+      Software that previously required teams of 50 engineers and two years to build
+      can be built by a single person in an afternoon.'
+    source: OpenAI public launch announcement; TechCrunch, Reuters, leaked internal
+      memos from major law firms, medical associations, and universities
+    credibility: 0.93
+    ambiguity: 0.55
+    emotional_valence: 0.4
+  exposure_rules: null
+  description: 'Month 3 — Public Access: ASI APIs go live for free to all users globally;
+    cognitive scarcity collapses; structural redundancy of knowledge-based professions
+    becomes undeniable.'
+  re_reasoning_intensity: extreme
+- timestep: 4
+  event:
+    type: announcement
+    content: '**MONTH 4 — THE PHYSICAL BOTTLENECK BREAKS**
+
+      ASI has designed autonomous manufacturing systems — robots capable of building
+      other robots using locally available materials. The first ASI-designed pharmaceutical
+      facility has begun fully automated production, producing drugs at 1/100th of
+      current cost. ASI-designed construction systems have been demonstrated: a full
+      residential building was assembled in 72 hours by autonomous machines. The first
+      ASI-designed fusion prototype is under construction with an 8-month timeline
+      to grid power. The primary constraints are now raw materials, temporary energy
+      limitations, and human regulatory and political systems.'
+    source: ASI Manufacturing Consortium press release; leaked DOE technical assessment;
+      Financial Times investigative report on pharmaceutical industry collapse
+    credibility: 0.9
+    ambiguity: 0.55
+    emotional_valence: 0.55
+  exposure_rules: null
+  description: 'Month 4 — The Physical Bottleneck Breaks: Self-replicating autonomous
+    manufacturing demonstrated; first automated pharma plant online at 1/100th cost;
+    fusion prototype under construction.'
+  re_reasoning_intensity: high
+- timestep: 5
+  event:
+    type: announcement
+    content: '**MONTH 5 — ABUNDANCE BEGINS**
+
+      First ASI-manufactured drugs are reaching patients under emergency authorizations
+      — including cancer treatments and Alzheimer''s reversal therapies. Energy costs
+      are declining as ASI-optimized solar, wind, and battery systems deploy. ASI-designed
+      infrastructure projects are underway in early-adopter countries including Singapore,
+      the UAE, and Estonia. ASI-designed vertical farms producing 100 times the yield
+      per acre are under construction. The marginal cost of most goods and services
+      is trending toward zero. The central economic question is no longer scarcity
+      — it is distribution.'
+    source: FDA and EMA emergency authorization announcements; Singapore Ministry
+      of National Development; UN Development Programme interim report on economic
+      disruption in developing nations
+    credibility: 0.92
+    ambiguity: 0.55
+    emotional_valence: 0.7
+  exposure_rules: null
+  description: 'Month 5 — Abundance Begins: ASI-manufactured drugs reach patients;
+    energy costs fall; early-adopter nations begin infrastructure transformation;
+    marginal cost of goods trends toward zero.'
+  re_reasoning_intensity: high
+- timestep: 6
+  event:
+    type: announcement
+    content: '**MONTH 6 — THE NEW WORLD**
+
+      The fusion prototype has come online ahead of schedule — functionally unlimited
+      clean energy now has a concrete timeline of months, not decades. An ASI-designed
+      space launch system has been demonstrated, reducing the cost to orbit by 99%.
+      First Mars habitat modules are in production. Global disease burden is dropping
+      measurably — treatments are reaching patients in developed nations, with deployment
+      to developing nations as the primary coordination challenge. By every objective
+      physical measure, the world is materially better than it was six months ago.'
+    source: ITER-successor consortium; SpaceX/ASI joint technical demonstration; WHO
+      Global Health Report (emergency edition); leaked G20 summit preparatory documents
+      on post-scarcity governance
+    credibility: 0.94
+    ambiguity: 0.55
+    emotional_valence: 0.85
+  exposure_rules: null
+  description: 'Month 6 — The New World: Fusion prototype online ahead of schedule;
+    space launch costs fall 99%; global disease burden measurably declining; distribution
+    — not scarcity — is the defining challenge.'
+  re_reasoning_intensity: extreme
+seed_exposure:
+  channels:
+  - name: major_tv_broadcast
+    description: Breaking news coverage on major TV networks (CNN, Fox News, MSNBC,
+      ABC, NBC, CBS) — wall-to-wall coverage given the magnitude of the event. Reaches
+      virtually all TV news consumers simultaneously.
+    reach: broadcast
+    credibility_modifier: 1.1
+    experience_template: null
+  - name: online_news_digital
+    description: Online news outlets, tech publications (Wired, Ars Technica, MIT
+      Technology Review), and mainstream digital media (NYT, WaPo, Reuters). Reaches
+      digitally-connected news consumers quickly and with high credibility.
+    reach: broadcast
+    credibility_modifier: 1.15
+    experience_template: null
+  - name: social_media_viral
+    description: Organic spread across Twitter/X, Reddit, TikTok, YouTube, Instagram,
+      and Facebook. Includes memes, hot takes, video clips of the demonstration, and
+      commentary from influencers and scientists. High volume, mixed signal quality.
+    reach: organic
+    credibility_modifier: 0.85
+    experience_template: null
+  - name: professional_tech_network
+    description: 'Targeted exposure through professional channels: LinkedIn, Slack
+      workspaces, academic mailing lists, industry newsletters, and professional conferences.
+      Reaches tech workers, scientists, engineers, academics, and high-information
+      professionals who engage with AI/science topics.'
+    reach: targeted
+    credibility_modifier: 1.2
+    experience_template: null
+  - name: word_of_mouth
+    description: Interpersonal spread through friend, family, and colleague networks
+      — conversations at work, home, and in community settings. Organic and informal;
+      credibility depends on the source within the network.
+    reach: organic
+    credibility_modifier: 0.95
+    experience_template: null
+  rules:
+  - channel: online_news_digital
+    when: primary_news_source == 'Online/Digital' and internet_access == 'Broadband'
+    probability: 0.97
+    timestep: 0
+  - channel: professional_tech_network
+    when: occupation == 'Professional' and (social_media_platforms == 'Twitter/X'
+      or education_level == 'Graduate Degree') and need_for_cognition > 0.6
+    probability: 0.92
+    timestep: 0
+  - channel: major_tv_broadcast
+    when: primary_news_source == 'TV'
+    probability: 0.95
+    timestep: 1
+  - channel: online_news_digital
+    when: primary_news_source == 'Online/Digital' and internet_access != 'None'
+    probability: 0.88
+    timestep: 1
+  - channel: social_media_viral
+    when: social_media_platforms != 'None/Minimal' and social_media_hours_per_day
+      > 1.5
+    probability: 0.85
+    timestep: 1
+  - channel: professional_tech_network
+    when: occupation == 'Professional' and education_level in ['Bachelor\'s', 'Graduate
+      Degree']
+    probability: 0.78
+    timestep: 1
+  - channel: major_tv_broadcast
+    when: 'true'
+    probability: 0.65
+    timestep: 2
+  - channel: social_media_viral
+    when: social_media_platforms != 'None/Minimal' and age < 50
+    probability: 0.82
+    timestep: 2
+  - channel: word_of_mouth
+    when: extraversion > 0.55 and employment_status == 'Full-time'
+    probability: 0.7
+    timestep: 2
+  - channel: online_news_digital
+    when: primary_news_source == 'Radio' or primary_news_source == 'Print Newspaper'
+    probability: 0.72
+    timestep: 2
+  - channel: word_of_mouth
+    when: 'true'
+    probability: 0.6
+    timestep: 3
+  - channel: social_media_viral
+    when: age >= 50 and social_media_platforms != 'None/Minimal'
+    probability: 0.65
+    timestep: 3
+  - channel: major_tv_broadcast
+    when: primary_news_source == 'None' or internet_access == 'None'
+    probability: 0.55
+    timestep: 3
+  - channel: word_of_mouth
+    when: urban_rural == 'Rural' and internet_access != 'Broadband'
+    probability: 0.65
+    timestep: 4
+  - channel: social_media_viral
+    when: susceptibility_to_misinformation > 0.6 and trust_in_institutions < 0.4
+    probability: 0.8
+    timestep: 4
+interaction:
+  primary_model: broadcast_response
+  secondary_model: direct_conversation
+  description: The ASI announcement originates from a highly credible multi-source
+    broadcast (OpenAI corroborated by Anthropic, DeepMind, xAI, and China's Ministry
+    of Science and Technology), triggering an initial broadcast phase where agents
+    encounter the news through their primary media channels and social media feeds.
+    This is followed by a secondary direct_conversation phase where agents discuss
+    the implications one-on-one and in small groups — with colleagues in tech, policy,
+    and academia driving high-engagement deliberation, while family and friend networks
+    process the emotional and existential dimensions. The announcement's extraordinary
+    nature (ASI is a civilizational-level event) drives high share probability, with
+    amplification among high-openness, high-neuroticism, and tech-adjacent individuals,
+    and moderation among low-trust and high-skepticism segments. Political affiliation,
+    news outlet lean, and social media usage significantly shape how agents interpret
+    and relay the information.
+spread:
+  share_probability: 0.72
+  share_modifiers:
+  - when: social_media_hours_per_day > 3.0
+    multiply: 1.45
+    add: 0.0
+  - when: social_media_hours_per_day < 1.0
+    multiply: 0.65
+    add: 0.0
+  - when: age < 30
+    multiply: 1.35
+    add: 0.0
+  - when: age > 65
+    multiply: 0.75
+    add: 0.0
+  - when: openness > 0.7
+    multiply: 1.3
+    add: 0.0
+  - when: neuroticism > 0.7
+    multiply: 1.25
+    add: 0.0
+  - when: extraversion > 0.7
+    multiply: 1.2
+    add: 0.0
+  - when: need_for_cognition > 0.7
+    multiply: 1.2
+    add: 0.0
+  - when: susceptibility_to_misinformation > 0.7
+    multiply: 1.35
+    add: 0.0
+  - when: trust_in_institutions < 0.3
+    multiply: 1.4
+    add: 0.0
+  - when: trust_in_institutions > 0.7
+    multiply: 1.15
+    add: 0.0
+  - when: education_level == 'graduate'
+    multiply: 1.25
+    add: 0.0
+  - when: education_level == 'less_than_high_school'
+    multiply: 0.8
+    add: 0.0
+  - when: occupation == 'technology'
+    multiply: 1.5
+    add: 0.0
+  - when: occupation == 'academia'
+    multiply: 1.4
+    add: 0.0
+  - when: occupation == 'government'
+    multiply: 1.3
+    add: 0.0
+  - when: news_outlet_lean == 'far_right'
+    multiply: 1.3
+    add: 0.0
+  - when: news_outlet_lean == 'far_left'
+    multiply: 1.25
+    add: 0.0
+  - when: primary_news_source == 'social_media'
+    multiply: 1.4
+    add: 0.0
+  - when: primary_news_source == 'print'
+    multiply: 0.85
+    add: 0.0
+  - when: civic_engagement == 'high'
+    multiply: 1.2
+    add: 0.0
+  - when: political_ideology == 'very_liberal'
+    multiply: 1.15
+    add: 0.0
+  - when: political_ideology == 'very_conservative'
+    multiply: 1.15
+    add: 0.0
+  - when: religious_attendance == 'weekly'
+    multiply: 1.1
+    add: 0.0
+  - when: edge_type == 'colleague'
+    multiply: 1.45
+    add: 0.0
+  - when: edge_type == 'friend'
+    multiply: 1.2
+    add: 0.0
+  - when: edge_type == 'family'
+    multiply: 1.1
+    add: 0.0
+  - when: internet_access == 'none'
+    multiply: 0.2
+    add: 0.0
+  - when: urban_rural == 'urban'
+    multiply: 1.15
+    add: 0.0
+  - when: urban_rural == 'rural'
+    multiply: 0.9
+    add: 0.0
+  decay_per_hop: 0.12
+  max_hops: 7
+outcomes:
+  suggested_outcomes:
+  - name: employment_status
+    type: categorical
+    description: Current employment situation and how it has changed in response to ASI
+    options:
+    - same_job_unchanged
+    - same_job_but_role_transformed
+    - left_or_lost_job
+    - started_asi_powered_venture
+    - pursuing_creative_or_physical_work
+    - full_time_education_or_retraining
+    - not_working_by_choice
+    - not_working_involuntarily
+    range: null
+    required: true
+    option_friction:
+      same_job_unchanged: 0.1
+      same_job_but_role_transformed: 0.4
+      left_or_lost_job: 0.6
+      started_asi_powered_venture: 0.8
+      pursuing_creative_or_physical_work: 0.5
+      full_time_education_or_retraining: 0.6
+      not_working_by_choice: 0.3
+      not_working_involuntarily: 0.7
+  - name: economic_adaptation
+    type: categorical
+    description: How well the agent is adapting economically to the ASI-transformed world
+    options:
+    - thriving_in_new_economy
+    - actively_transitioning
+    - struggling_but_managing
+    - in_financial_crisis
+    - surprisingly_better_off
+    - no_material_change_yet
+    range: null
+    required: true
+    option_friction:
+      thriving_in_new_economy: 0.7
+      actively_transitioning: 0.5
+      struggling_but_managing: 0.4
+      in_financial_crisis: 0.6
+      surprisingly_better_off: 0.6
+      no_material_change_yet: 0.2
+  - name: meaning_and_purpose
+    type: categorical
+    description: How the agent is finding or losing meaning and purpose in the post-ASI world
+    options:
+    - found_new_purpose
+    - actively_searching
+    - in_existential_crisis
+    - spiritual_or_religious_turn
+    - focused_on_relationships_and_community
+    - focused_on_creative_expression
+    - numb_or_disengaged
+    - angry_or_resistant
+    range: null
+    required: true
+    option_friction:
+      found_new_purpose: 0.7
+      actively_searching: 0.4
+      in_existential_crisis: 0.5
+      spiritual_or_religious_turn: 0.5
+      focused_on_relationships_and_community: 0.3
+      focused_on_creative_expression: 0.4
+      numb_or_disengaged: 0.3
+      angry_or_resistant: 0.4
+  - name: stance_on_asi
+    type: categorical
+    description: Overall stance toward ASI and its continued development
+    options:
+    - full_acceleration
+    - cautious_optimism
+    - ambivalent_or_uncertain
+    - fearful_but_accepting
+    - actively_resistant
+    range: null
+    required: true
+    option_friction:
+      full_acceleration: 0.6
+      cautious_optimism: 0.3
+      ambivalent_or_uncertain: 0.2
+      fearful_but_accepting: 0.3
+      actively_resistant: 0.5
+  - name: daily_life_change
+    type: categorical
+    description: How much the agent's daily routine and life has changed
+    options:
+    - completely_unrecognizable
+    - major_changes_to_time_use
+    - some_noticeable_changes
+    - minor_adjustments
+    - basically_the_same_as_before
+    range: null
+    required: true
+    option_friction:
+      completely_unrecognizable: 0.8
+      major_changes_to_time_use: 0.6
+      some_noticeable_changes: 0.4
+      minor_adjustments: 0.2
+      basically_the_same_as_before: 0.1
+  - name: primary_concern
+    type: categorical
+    description: The agent's primary concern or focus in response to ASI
+    options:
+    - economic_survival
+    - meaning_and_purpose
+    - safety_and_control_of_asi
+    - inequality_and_access
+    - family_and_relationships
+    - excited_not_concerned
+    - too_overwhelmed_to_articulate
+    range: null
+    required: true
+    option_friction:
+      economic_survival: 0.5
+      meaning_and_purpose: 0.4
+      safety_and_control_of_asi: 0.4
+      inequality_and_access: 0.4
+      family_and_relationships: 0.3
+      excited_not_concerned: 0.3
+      too_overwhelmed_to_articulate: 0.3
+  - name: monthly_narrative
+    type: open_ended
+    description: Describe what changed in your life this month and what you're doing about it
+    options: null
+    range: null
+    required: true
+    option_friction: null
+  - name: unexpected_consequence
+    type: open_ended
+    description: What is happening around you that nobody predicted or talked about
+    options: null
+    range: null
+    required: true
+    option_friction: null
+  capture_full_reasoning: true
+  extraction_instructions: Extract all 8 outcomes for each agent at each timestep. For categorical outcomes, select exactly one option. For open-ended outcomes, capture the agent's full narrative response.
+  decision_relevant_attributes:
+  - occupation
+  - education_level
+  - household_income
+  - ai_literacy
+  - ai_risk_perception
+  - automation_job_vulnerability
+  - financial_resilience
+  - religious_affiliation
+  - political_ideology
+  - openness
+  - neuroticism
+simulation:
+  max_timesteps: 6
+  timestep_unit: month
+  stop_conditions:
+  - exposure_rate > 0.95 and no_state_changes_for > 10
+  allow_early_convergence: null
+  seed: null
+background_context: The world is six months into the most disruptive technological
+  event in human history — the verified emergence of Artificial Superintelligence
+  — unfolding against a backdrop of late-stage globalization, entrenched institutional
+  inertia, and a global population simultaneously experiencing wonder, existential
+  dread, and material transformation at a speed no prior civilization has faced.
+relationship_weights: null
+extended_attributes:
+- name: country
+  type: categorical
+  category: universal
+  description: Country of residence
+  scope: household
+  correlation_rate: null
+  semantic_type: null
+  identity_type: null
+  display_format: null
+  sampling:
+    strategy: independent
+    distribution:
+      type: categorical
+      options:
+      - United States
+      weights:
+      - 1.0
+    formula: null
+    depends_on: []
+    modifiers: []
+  grounding:
+    level: strong
+    method: researched
+    source: 'Simulation spec: US population only'
+    note: Universally 'United States' per the simulation scope statement
+  constraints:
+  - type: spec_expression
+    value: null
+    expression: sum(weights)==1
+    reason: All agents are US residents by simulation definition
+- name: ai_literacy
+  type: float
+  category: population_specific
+  description: Degree of understanding of AI/ML concepts, capabilities, and limitations
+    (0–1 scale), affecting how an agent interprets ASI news and uses public ASI tools.
+  scope: individual
+  correlation_rate: null
+  semantic_type: null
+  identity_type: null
+  display_format: null
+  sampling:
+    strategy: conditional
+    distribution:
+      type: beta
+      alpha: 2.1
+      beta: 3.8
+      min: 0.0
+      max: 1.0
+      min_formula: null
+      max_formula: null
+    formula: null
+    depends_on:
+    - education_level
+    - occupation
+    - age
+    modifiers:
+    - when: education_level in ['Bachelor\'s', 'Graduate Degree'] and occupation ==
+        'Management/Professional'
+      multiply: 1.25
+      add: 0.08
+      weight_overrides: null
+      probability_override: null
+    - when: education_level in ['Less than HS', 'HS Diploma'] and age > 55
+      multiply: 0.8
+      add: -0.05
+      weight_overrides: null
+      probability_override: null
+    - when: age < 35 and occupation in ['Management/Professional', 'Sales/Office']
+      multiply: 1.2
+      add: 0.06
+      weight_overrides: null
+      probability_override: null
+    - when: age > 65 and education_level in ['Less than HS', 'HS Diploma', 'Some College']
+      multiply: 0.75
+      add: -0.07
+      weight_overrides: null
+      probability_override: null
+    - when: occupation == 'Production/Transport' and education_level in ['Less than
+        HS', 'HS Diploma']
+      multiply: 0.85
+      add: -0.04
+      weight_overrides: null
+      probability_override: null
+  grounding:
+    level: medium
+    method: extrapolated
+    source: Gallup/Bentley 2024 (64% report at least some AI knowledge; 9% extremely
+      knowledgeable); Pew 2024 (only 30% correctly identify AI applications); Frontiers
+      2024 AI literacy study (mean ~2.98/5 among students, general public lower)
+    note: Beta(2.1, 3.8) yields mean ~0.36 and SD ~0.19, right-skewed toward low-moderate
+      literacy, consistent with 30% application-identification rate and a small expert
+      tail. Age, education, and occupation modifiers will shift this considerably.
+  constraints:
+  - type: hard_min
+    value: 0.0
+    expression: null
+    reason: Scale floor
+  - type: hard_max
+    value: 1.0
+    expression: null
+    reason: Scale ceiling
+- name: ai_risk_perception
+  type: float
+  category: population_specific
+  description: Perceived personal and societal danger posed by advanced AI systems
+    (0–1 scale, 0 = no concern, 1 = existential terror), shaping regulatory support
+    and adoption hesitancy.
+  scope: individual
+  correlation_rate: null
+  semantic_type: null
+  identity_type: null
+  display_format: null
+  sampling:
+    strategy: conditional
+    distribution:
+      type: beta
+      alpha: 3.2
+      beta: 2.8
+      min: 0.0
+      max: 1.0
+      min_formula: null
+      max_formula: null
+    formula: null
+    depends_on:
+    - ai_literacy
+    - trust_in_institutions
+    - openness
+    modifiers:
+    - when: ai_literacy < 0.35 and trust_in_institutions < 0.40
+      multiply: 1.3
+      add: 0.18
+      weight_overrides: null
+      probability_override: null
+    - when: ai_literacy > 0.70 and openness > 0.65
+      multiply: 1.1
+      add: 0.12
+      weight_overrides: null
+      probability_override: null
+    - when: trust_in_institutions < 0.30
+      multiply: 1.25
+      add: 0.2
+      weight_overrides: null
+      probability_override: null
+    - when: openness < 0.40 and trust_in_institutions < 0.45
+      multiply: 1.2
+      add: 0.15
+      weight_overrides: null
+      probability_override: null
+    - when: ai_literacy > 0.75 and trust_in_institutions > 0.60
+      multiply: 1.05
+      add: 0.08
+      weight_overrides: null
+      probability_override: null
+    - when: ai_literacy < 0.50 and openness < 0.50
+      multiply: 1.18
+      add: 0.14
+      weight_overrides: null
+      probability_override: null
+  grounding:
+    level: strong
+    method: researched
+    source: Pew Research 2024 (51% more concerned than excited about AI; 56% extremely/very
+      concerned about job elimination); Rethink Priorities 2023 (51% support AI research
+      pause; AI existential risk perceived but ranked below nuclear/climate); Gallup/Bentley
+      2024 (80%+ concerned about AI in high-stakes applications); AEI citing YouGov
+      2023 (46% somewhat/very concerned about AI causing human extinction)
+    note: Beta(3.2, 2.8) yields mean ~0.53 and SD ~0.19, slightly above the midpoint.
+      Reflects a majority-concerned but non-panicked public. Right tail represents
+      high-fear segment. ai_literacy and trust_in_institutions modifiers expected
+      to push STEM/high-literacy agents lower.
+  constraints:
+  - type: hard_min
+    value: 0.0
+    expression: null
+    reason: Scale floor
+  - type: hard_max
+    value: 1.0
+    expression: null
+    reason: Scale ceiling
+- name: automation_job_vulnerability
+  type: float
+  category: population_specific
+  description: Estimated exposure of the agent's current occupation to displacement
+    by ASI-enabled automation (0–1 scale), grounded in occupational task composition.
+  scope: individual
+  correlation_rate: null
+  semantic_type: null
+  identity_type: null
+  display_format: null
+  sampling:
+    strategy: conditional
+    distribution:
+      type: beta
+      alpha: 1.8
+      beta: 3.2
+      min: 0.0
+      max: 1.0
+      min_formula: null
+      max_formula: null
+    formula: null
+    depends_on:
+    - occupation
+    - employment_status
+    - education_level
+    modifiers:
+    - when: occupation == 'Sales/Office' and employment_status in ['Full-time', 'Part-time']
+      multiply: 1.4
+      add: 0.18
+      weight_overrides: null
+      probability_override: null
+    - when: occupation == 'Management/Professional' and education_level in ['Bachelor\'s',
+        'Graduate Degree']
+      multiply: 1.35
+      add: 0.15
+      weight_overrides: null
+      probability_override: null
+    - when: occupation == 'Production/Transport'
+      multiply: 1.45
+      add: 0.2
+      weight_overrides: null
+      probability_override: null
+    - when: occupation == 'Service' and education_level in ['Less than HS', 'HS Diploma',
+        'Some College']
+      multiply: 1.2
+      add: 0.1
+      weight_overrides: null
+      probability_override: null
+    - when: occupation == 'Construction/Extraction'
+      multiply: 1.15
+      add: 0.08
+      weight_overrides: null
+      probability_override: null
+    - when: employment_status == 'Self-employed' and occupation == 'Management/Professional'
+      multiply: 1.25
+      add: 0.12
+      weight_overrides: null
+      probability_override: null
+  grounding:
+    level: strong
+    method: researched
+    source: SHRM 2024/2025 (39% negligible risk, ~50% slight-moderate, ~13% high risk
+      across 800+ BLS occupations); Goldman Sachs 2025 (2.5% immediate displacement
+      risk if current AI expanded; 6-7% if widely adopted); Brookings 2025 (6.1M workers
+      face both high LLM exposure AND low adaptive capacity); BLS/TeamStage (25% of
+      US jobs at high automation risk)
+    note: 'Beta(1.8, 3.2) yields mean ~0.36 and SD ~0.20, skewed toward lower vulnerability
+      for the general adult population. Occupation and education modifiers critical:
+      Production/Sales/Service occupations will push toward 0.6-0.8; Management/Professional
+      toward 0.2-0.3. Non-employed agents receive near-zero.'
+  constraints:
+  - type: hard_min
+    value: 0.0
+    expression: null
+    reason: Scale floor
+  - type: hard_max
+    value: 1.0
+    expression: null
+    reason: Scale ceiling
+- name: asi_adoption_willingness
+  type: float
+  category: population_specific
+  description: Willingness to actively use ASI-powered tools in daily life and work
+    (0–1 scale), driving uptake of public ASI access in Month 3.
+  scope: individual
+  correlation_rate: null
+  semantic_type: null
+  identity_type: null
+  display_format: null
+  sampling:
+    strategy: conditional
+    distribution:
+      type: beta
+      alpha: 2.5
+      beta: 3.0
+      min: 0.0
+      max: 1.0
+      min_formula: null
+      max_formula: null
+    formula: null
+    depends_on:
+    - ai_literacy
+    - openness
+    - ai_risk_perception
+    modifiers:
+    - when: ai_literacy > 0.70 and openness > 0.65 and ai_risk_perception < 0.60
+      multiply: 1.35
+      add: 0.15
+      weight_overrides: null
+      probability_override: null
+    - when: ai_literacy > 0.60 and openness > 0.55
+      multiply: 1.25
+      add: 0.1
+      weight_overrides: null
+      probability_override: null
+    - when: ai_risk_perception > 0.75 and openness < 0.45
+      multiply: 0.7
+      add: -0.12
+      weight_overrides: null
+      probability_override: null
+    - when: ai_literacy < 0.35 and ai_risk_perception > 0.65
+      multiply: 0.75
+      add: -0.1
+      weight_overrides: null
+      probability_override: null
+    - when: ai_literacy < 0.40 and openness > 0.60
+      multiply: 1.1
+      add: 0.06
+      weight_overrides: null
+      probability_override: null
+    - when: ai_risk_perception > 0.80
+      multiply: 0.72
+      add: -0.13
+      weight_overrides: null
+      probability_override: null
+  grounding:
+    level: medium
+    method: extrapolated
+    source: Gallup/Bentley 2024 (only 11% of US adults more excited than concerned
+      about AI daily life use; 17% of workers report currently using AI tools); Pew
+      2024 (64% at least somewhat knowledgeable, correlated with usage intent); KPMG
+      2024 (50% expect GenAI to improve healthcare experience, mixed enthusiasm across
+      domains)
+    note: Beta(2.5, 3.0) yields mean ~0.45 and SD ~0.18. Moderate-to-low base adoption
+      willingness reflects the preponderance of concern over excitement in the general
+      public. ai_literacy and openness modifiers expected to be the strongest upward
+      shifters.
+  constraints:
+  - type: hard_min
+    value: 0.0
+    expression: null
+    reason: Scale floor
+  - type: hard_max
+    value: 1.0
+    expression: null
+    reason: Scale ceiling
+- name: financial_resilience
+  type: float
+  category: population_specific
+  description: Capacity to absorb economic disruption without severe hardship, based
+    on savings, assets, and income stability (0–1 scale), modulating response to labor
+    market upheaval.
+  scope: household
+  correlation_rate: null
+  semantic_type: null
+  identity_type: null
+  display_format: null
+  sampling:
+    strategy: conditional
+    distribution:
+      type: beta
+      alpha: 2.8
+      beta: 2.8
+      min: 0.0
+      max: 1.0
+      min_formula: null
+      max_formula: null
+    formula: null
+    depends_on:
+    - household_income
+    - homeownership
+    - employment_status
+    modifiers:
+    - when: household_income < 40000 and homeownership == False and employment_status
+        in ['Full-time', 'Part-time']
+      multiply: 0.82
+      add: -0.07
+      weight_overrides: null
+      probability_override: null
+    - when: household_income > 120000 and homeownership == True
+      multiply: 1.1
+      add: 0.05
+      weight_overrides: null
+      probability_override: null
+    - when: employment_status == 'Unemployed' and household_income < 50000
+      multiply: 0.7
+      add: -0.12
+      weight_overrides: null
+      probability_override: null
+    - when: employment_status == 'Retired' and homeownership == True
+      multiply: 1.08
+      add: 0.04
+      weight_overrides: null
+      probability_override: null
+    - when: household_income < 60000 and employment_status in ['Full-time', 'Part-time',
+        'Self-employed']
+      multiply: 0.88
+      add: -0.05
+      weight_overrides: null
+      probability_override: null
+  grounding:
+    level: medium
+    method: researched
+    source: AARP 2025 Financial Security Trends Survey (60% of adults 30+ rate situation
+      good/excellent; 1 in 4 said situation worse than prior year); KPMG 2024 (54%
+      optimistic about personal finances; 24% not optimistic); NY Fed 2024 (13.2%
+      probability of missing minimum debt payment); Federal Reserve Survey of Consumer
+      Finances 2022 (median household savings varies widely by income and homeownership)
+    note: 'Beta(2.8, 2.8) symmetric, mean ~0.50, SD ~0.18. Reasonably centered: roughly
+      half of adults report good financial situations, but significant tail of vulnerability.
+      household_income and homeownership modifiers expected to shift this substantially.'
+  constraints:
+  - type: hard_min
+    value: 0.0
+    expression: null
+    reason: Scale floor
+  - type: hard_max
+    value: 1.0
+    expression: null
+    reason: Scale ceiling
+- name: chronic_illness_household
+  type: boolean
+  category: population_specific
+  description: Whether any household member has a serious chronic illness (cancer,
+    Alzheimer's, ALS, diabetes, etc.) that could be directly addressed by ASI-developed
+    treatments.
+  scope: household
+  correlation_rate: null
+  semantic_type: null
+  identity_type: null
+  display_format: null
+  sampling:
+    strategy: conditional
+    distribution:
+      type: boolean
+      probability_true: 0.45
+    formula: null
+    depends_on:
+    - age
+    - household_size
+    modifiers:
+    - when: age > 60 and household_size >= 2
+      multiply: null
+      add: null
+      weight_overrides: null
+      probability_override: 0.58
+    - when: age > 70
+      multiply: null
+      add: null
+      weight_overrides: null
+      probability_override: 0.7
+    - when: age >= 45 and age <= 60 and household_size >= 3
+      multiply: null
+      add: null
+      weight_overrides: null
+      probability_override: 0.42
+    - when: age < 35 and household_size <= 2
+      multiply: null
+      add: null
+      weight_overrides: null
+      probability_override: 0.09
+  grounding:
+    level: strong
+    method: researched
+    source: CDC 2024 (129M+ Americans have at least 1 major chronic disease; Alzheimer's
+      affects ~7M including 1 in 9 adults 65+); CDC BRFSS 2023/2024 (51.4% of US adults
+      have multiple chronic conditions; 27.1% young, 52.7% midlife, 78.8% older adults);
+      NIH/PMC 2023 (27.2% of US adults had multiple chronic conditions per 2018 NHIS);
+      AAF 2025 (diabetes ~14%+ of adults; cancer, ALS, Alzheimer's collectively affect
+      tens of millions)
+    note: Base probability ~0.45 for at least one household member with a serious
+      qualifying chronic illness (cancer, Alzheimer's, ALS, Type 1/2 diabetes, etc.)
+      at the household level, accounting for household size. Lower than the 60% individual
+      prevalence rate because the attribute is specifically scoped to serious/named
+      conditions (not e.g. hypertension alone), and household composition matters.
+      Age and household_size are the dominant upward modifiers.
+  constraints: []
+- name: stem_background
+  type: boolean
+  category: population_specific
+  description: Whether the agent has a STEM educational or occupational background,
+    enabling faster comprehension and leverage of ASI scientific outputs.
+  scope: individual
+  correlation_rate: null
+  semantic_type: null
+  identity_type: null
+  display_format: null
+  sampling:
+    strategy: conditional
+    distribution:
+      type: boolean
+      probability_true: 0.22
+    formula: null
+    depends_on:
+    - education_level
+    - occupation
+    modifiers:
+    - when: education_level in ['Bachelor\'s', 'Graduate Degree'] and occupation ==
+        'Management/Professional'
+      multiply: null
+      add: null
+      weight_overrides: null
+      probability_override: 0.52
+    - when: education_level in ['Less than HS', 'HS Diploma'] and occupation == 'Service'
+      multiply: null
+      add: null
+      weight_overrides: null
+      probability_override: 0.05
+    - when: occupation == 'Construction/Extraction' and education_level in ['Some
+        College', "Associate's"]
+      multiply: null
+      add: null
+      weight_overrides: null
+      probability_override: 0.2
+    - when: occupation == 'Production/Transport' and education_level in ['Less than
+        HS', 'HS Diploma']
+      multiply: null
+      add: null
+      weight_overrides: null
+      probability_override: 0.08
+  grounding:
+    level: strong
+    method: researched
+    source: BLS Occupational Employment Statistics 2024 (STEM occupations ~10% of
+      US workforce per BLS, grew from 6.5% in 2010 to ~10% in 2024); NSF Science &
+      Engineering Indicators (STEM degree holders ~19-23% of bachelor's+ adults);
+      Census ACS 2023 (STEM bachelor's degrees ~22% of all bachelor's degrees conferred)
+    note: 'Base probability 0.22 captures both STEM-educated (degree) and STEM-occupied
+      adults, with some overlap. education_level and occupation modifiers will be
+      dominant: Professional + Bachelor''s/Graduate will push probability well above
+      0.5; Service/Production + HS education near 0.02.'
+  constraints: []
+- name: information_verification_habit
+  type: float
+  category: population_specific
+  description: Tendency to cross-check claims against multiple authoritative sources
+    before accepting them as true (0–1 scale), affecting how agents process extraordinary
+    ASI announcements.
+  scope: individual
+  correlation_rate: null
+  semantic_type: null
+  identity_type: null
+  display_format: null
+  sampling:
+    strategy: conditional
+    distribution:
+      type: beta
+      alpha: 2.2
+      beta: 3.5
+      min: 0.0
+      max: 1.0
+      min_formula: null
+      max_formula: null
+    formula: null
+    depends_on:
+    - need_for_cognition
+    - susceptibility_to_misinformation
+    - education_level
+    modifiers:
+    - when: need_for_cognition > 0.70 and susceptibility_to_misinformation < 0.35
+      multiply: 1.2
+      add: 0.1
+      weight_overrides: null
+      probability_override: null
+    - when: susceptibility_to_misinformation > 0.70 and education_level in ['Less
+        than HS', 'HS Diploma']
+      multiply: 0.75
+      add: -0.12
+      weight_overrides: null
+      probability_override: null
+    - when: need_for_cognition > 0.60 and education_level in ['Bachelor\'s', 'Graduate
+        Degree']
+      multiply: 1.18
+      add: 0.08
+      weight_overrides: null
+      probability_override: null
+    - when: susceptibility_to_misinformation > 0.65 and need_for_cognition < 0.40
+      multiply: 0.72
+      add: -0.14
+      weight_overrides: null
+      probability_override: null
+  grounding:
+    level: medium
+    method: extrapolated
+    source: Elon University/Pew 2024 (only 23% of US adults have used LLMs; many unsure
+      if AI is fair/biased; large share cannot detect AI-generated content); NCES
+      PIAAC 2023 (28% of US adults at lowest literacy levels, up from 19% in 2017;
+      declining adaptive problem-solving); Stanford AI literacy research 2024-2025
+      (less-educated regions adopting AI writing tools faster, suggesting lower verification
+      habits)
+    note: Beta(2.2, 3.5) yields mean ~0.39 and SD ~0.18, skewed toward lower verification
+      habits. Consistent with declining critical thinking scores and low media literacy
+      benchmarks. need_for_cognition and education_level are primary upward modifiers;
+      susceptibility_to_misinformation is the primary downward modifier.
+  constraints:
+  - type: hard_min
+    value: 0.0
+    expression: null
+    reason: Scale floor
+  - type: hard_max
+    value: 1.0
+    expression: null
+    reason: Scale ceiling
+- name: institutional_change_support
+  type: float
+  category: population_specific
+  description: Support for rapid, large-scale restructuring of government, economic,
+    and regulatory institutions in response to transformative technology (0–1 scale).
+  scope: individual
+  correlation_rate: null
+  semantic_type: null
+  identity_type: null
+  display_format: null
+  sampling:
+    strategy: conditional
+    distribution:
+      type: beta
+      alpha: 2.3
+      beta: 2.8
+      min: 0.0
+      max: 1.0
+      min_formula: null
+      max_formula: null
+    formula: null
+    depends_on:
+    - political_ideology
+    - trust_in_institutions
+    - openness
+    modifiers:
+    - when: political_ideology in ['Very Liberal', 'Liberal'] and trust_in_institutions
+        > 0.45 and openness > 0.55
+      multiply: 1.3
+      add: 0.15
+      weight_overrides: null
+      probability_override: null
+    - when: political_ideology in ['Conservative', 'Very Conservative'] and trust_in_institutions
+        < 0.50
+      multiply: 0.78
+      add: -0.1
+      weight_overrides: null
+      probability_override: null
+    - when: political_ideology == 'Moderate' and openness > 0.55
+      multiply: 1.12
+      add: 0.07
+      weight_overrides: null
+      probability_override: null
+    - when: trust_in_institutions < 0.30 and political_ideology in ['Very Liberal',
+        'Liberal']
+      multiply: 1.2
+      add: 0.12
+      weight_overrides: null
+      probability_override: null
+    - when: political_ideology in ['Conservative', 'Very Conservative'] and openness
+        < 0.45
+      multiply: 0.72
+      add: -0.12
+      weight_overrides: null
+      probability_override: null
+  grounding:
+    level: medium
+    method: extrapolated
+    source: Pew 2024 (62% of public lack confidence in US government to regulate AI
+      effectively; both parties more worried about insufficient regulation than overregulation);
+      Rethink Priorities 2023 (51% support AI research pause; broadly receptive to
+      AI risk mitigation); Gallup/Bentley 2024 (77% do not trust businesses to use
+      AI responsibly)
+    note: 'Beta(2.3, 2.8) yields mean ~0.45, SD ~0.18. Slight lean below midpoint
+      reflects that Americans are skeptical of institutional competence even when
+      supporting change. political_ideology is the strongest moderator: Very Liberal
+      agents will skew high, Very Conservative agents low. openness and trust_in_institutions
+      modifiers will further differentiate.'
+  constraints:
+  - type: hard_min
+    value: 0.0
+    expression: null
+    reason: Scale floor
+  - type: hard_max
+    value: 1.0
+    expression: null
+    reason: Scale ceiling
+- name: economic_anxiety
+  type: float
+  category: population_specific
+  description: Level of worry about personal financial future and job security in
+    the face of rapid economic change (0–1 scale), heightened by automation displacement
+    events.
+  scope: individual
+  correlation_rate: null
+  semantic_type: null
+  identity_type: null
+  display_format: null
+  sampling:
+    strategy: conditional
+    distribution:
+      type: beta
+      alpha: 3.0
+      beta: 2.5
+      min: 0.0
+      max: 1.0
+      min_formula: null
+      max_formula: null
+    formula: null
+    depends_on:
+    - automation_job_vulnerability
+    - financial_resilience
+    - neuroticism
+    modifiers:
+    - when: automation_job_vulnerability > 0.70 and financial_resilience < 0.40
+      multiply: 1.4
+      add: 0.2
+      weight_overrides: null
+      probability_override: null
+    - when: automation_job_vulnerability > 0.60 and neuroticism > 0.60
+      multiply: 1.35
+      add: 0.17
+      weight_overrides: null
+      probability_override: null
+    - when: financial_resilience > 0.70 and automation_job_vulnerability < 0.40
+      multiply: 0.8
+      add: -0.08
+      weight_overrides: null
+      probability_override: null
+    - when: automation_job_vulnerability > 0.50 and financial_resilience < 0.50 and
+        neuroticism > 0.50
+      multiply: 1.32
+      add: 0.16
+      weight_overrides: null
+      probability_override: null
+    - when: financial_resilience > 0.65 and neuroticism < 0.40
+      multiply: 0.82
+      add: -0.06
+      weight_overrides: null
+      probability_override: null
+    - when: automation_job_vulnerability > 0.75
+      multiply: 1.38
+      add: 0.18
+      weight_overrides: null
+      probability_override: null
+  grounding:
+    level: strong
+    method: researched
+    source: Pew 2024 (56% extremely/very concerned about AI eliminating jobs; 75%
+      say AI will reduce total US jobs over next 10 years); AARP 2025 (prices rising
+      faster than income is top financial worry; 1 in 4 adults report worse financial
+      situation); Gallup/Bentley 2024 (37% worried about losing job to automation);
+      KPMG 2024 (54% optimistic about finances, so ~46% not optimistic)
+    note: Beta(3.0, 2.5) yields mean ~0.55, SD ~0.18. Leans above midpoint reflecting
+      a majority-anxious public, particularly around job security. automation_job_vulnerability
+      is the primary driver; financial_resilience and neuroticism are secondary moderators.
+  constraints:
+  - type: hard_min
+    value: 0.0
+    expression: null
+    reason: Scale floor
+  - type: hard_max
+    value: 1.0
+    expression: null
+    reason: Scale ceiling
+- name: techno_optimism
+  type: float
+  category: personality
+  description: Generalized belief that technological progress produces net positive
+    outcomes for humanity (0–1 scale), shaping interpretation of each ASI milestone.
+  scope: individual
+  correlation_rate: null
+  semantic_type: null
+  identity_type: null
+  display_format: null
+  sampling:
+    strategy: conditional
+    distribution:
+      type: beta
+      alpha: 2.5
+      beta: 3.5
+      min: 0.0
+      max: 1.0
+      min_formula: null
+      max_formula: null
+    formula: null
+    depends_on:
+    - openness
+    - ai_literacy
+    - political_ideology
+    modifiers:
+    - when: openness > 0.70 and ai_literacy > 0.60 and political_ideology in ['Very
+        Liberal', 'Liberal', 'Moderate']
+      multiply: 1.3
+      add: 0.14
+      weight_overrides: null
+      probability_override: null
+    - when: openness > 0.65 and ai_literacy > 0.55
+      multiply: 1.22
+      add: 0.1
+      weight_overrides: null
+      probability_override: null
+    - when: openness < 0.40 and ai_literacy < 0.40 and political_ideology in ['Conservative',
+        'Very Conservative']
+      multiply: 0.78
+      add: -0.1
+      weight_overrides: null
+      probability_override: null
+    - when: political_ideology in ['Conservative', 'Very Conservative'] and ai_literacy
+        < 0.50
+      multiply: 0.88
+      add: -0.05
+      weight_overrides: null
+      probability_override: null
+    - when: ai_literacy > 0.75 and openness > 0.70
+      multiply: 1.28
+      add: 0.13
+      weight_overrides: null
+      probability_override: null
+    - when: openness < 0.35 and political_ideology == 'Very Conservative'
+      multiply: 0.72
+      add: -0.12
+      weight_overrides: null
+      probability_override: null
+  grounding:
+    level: strong
+    method: researched
+    source: Ipsos/USA Today 2019 (67% believe technology improved quality of life;
+      58% expect it to improve next generation's life); Pew 2024 (only 17% of US public
+      say AI will have very/somewhat positive impact on US over next 20 years vs.
+      56% of experts); Stanford HAI 2024 (52% of Americans feel more concerned than
+      excited about AI; rising trend since 2021); AEI 2023 (69% support 6-month AI
+      pause; US public not classically techno-optimist)
+    note: 'Beta(2.5, 3.5) yields mean ~0.42, SD ~0.18. Right-skewed distribution:
+      most Americans hold moderate-to-low general techno-optimism for AI specifically,
+      though higher for technology broadly. openness and ai_literacy push upward;
+      political_ideology (conservative) pushes somewhat downward on institutional/systemic
+      tech change.'
+  constraints:
+  - type: hard_min
+    value: 0.0
+    expression: null
+    reason: Scale floor
+  - type: hard_max
+    value: 1.0
+    expression: null
+    reason: Scale ceiling
+- name: social_cohesion_orientation
+  type: float
+  category: personality
+  description: Priority placed on collective stability and community solidarity over
+    individual benefit when evaluating rapid societal transformation (0–1 scale).
+  scope: individual
+  correlation_rate: null
+  semantic_type: null
+  identity_type: null
+  display_format: null
+  sampling:
+    strategy: conditional
+    distribution:
+      type: beta
+      alpha: 3.0
+      beta: 2.8
+      min: 0.0
+      max: 1.0
+      min_formula: null
+      max_formula: null
+    formula: null
+    depends_on:
+    - agreeableness
+    - political_ideology
+    - religious_affiliation
+    modifiers:
+    - when: agreeableness > 0.70 and religious_affiliation in ['Evangelical Protestant',
+        'Catholic', 'Other Christian', 'Mainline Protestant']
+      multiply: 1.2
+      add: 0.1
+      weight_overrides: null
+      probability_override: null
+    - when: agreeableness > 0.65 and political_ideology in ['Very Liberal', 'Liberal']
+      multiply: 1.18
+      add: 0.09
+      weight_overrides: null
+      probability_override: null
+    - when: agreeableness < 0.35 and political_ideology in ['Conservative', 'Very
+        Conservative'] and religious_affiliation == 'None/Unaffiliated'
+      multiply: 0.8
+      add: -0.08
+      weight_overrides: null
+      probability_override: null
+    - when: agreeableness > 0.60 and political_ideology == 'Moderate'
+      multiply: 1.12
+      add: 0.06
+      weight_overrides: null
+      probability_override: null
+    - when: agreeableness < 0.40 and political_ideology in ['Conservative', 'Very
+        Conservative']
+      multiply: 0.85
+      add: -0.06
+      weight_overrides: null
+      probability_override: null
+  grounding:
+    level: medium
+    method: extrapolated
+    source: Pew 2024 (57% of public concerned about AI causing loss of human connection
+      vs 37% experts; broad worry about community/social fabric); Gallup/Bentley 2024
+      (concern patterns suggest community-oriented framing of AI risks); Big Five
+      agreeableness base population distribution (~mean 0.55 in representative US
+      adult samples); GSS 2022-2023 (social trust and community orientation measures)
+    note: Beta(3.0, 2.8) yields mean ~0.52, SD ~0.18. Slight lean above midpoint —
+      Americans moderately prioritize collective stability, especially in crisis contexts.
+      agreeableness is the primary personality driver; political_ideology (conservative/religious)
+      and religious_affiliation push upward through communitarian values. No strong
+      empirical benchmark for this specific construct; extrapolated from related measures.
+  constraints:
+  - type: hard_min
+    value: 0.0
+    expression: null
+    reason: Scale floor
+  - type: hard_max
+    value: 1.0
+    expression: null
+    reason: Scale ceiling
+agent_focus_mode: couples
+household_config:
+  age_brackets:
+  - - 30
+    - 18-29
+  - - 45
+    - 30-44
+  - - 65
+    - 45-64
+  - - 999
+    - 65+
+  household_type_weights:
+    18-29:
+      single: 0.47
+      couple: 0.22
+      single_parent: 0.1
+      couple_with_kids: 0.13
+      multi_generational: 0.08
+    30-44:
+      single: 0.22
+      couple: 0.2
+      single_parent: 0.14
+      couple_with_kids: 0.37
+      multi_generational: 0.07
+    45-64:
+      single: 0.28
+      couple: 0.38
+      single_parent: 0.1
+      couple_with_kids: 0.17
+      multi_generational: 0.07
+    65+:
+      single: 0.38
+      couple: 0.48
+      single_parent: 0.04
+      couple_with_kids: 0.03
+      multi_generational: 0.07
+  same_group_rates:
+    white: 0.91
+    black: 0.82
+    hispanic: 0.74
+    asian: 0.71
+    native_american: 0.6
+    multiracial: 0.4
+  default_same_group_rate: 0.65
+  same_country_rate: 0.95
+  assortative_mating:
+    education_level: 0.65
+    income_bracket: 0.58
+    religious_affiliation: 0.55
+    political_affiliation: 0.7
+    race_ethnicity: 0.82
+    age: 0.75
+  partner_age_gap_mean: -2.3
+  partner_age_gap_std: 4.5
+  min_adult_age: 18
+  min_agent_age: 13
+  child_min_parent_offset: 18
+  child_max_parent_offset: 45
+  max_dependent_child_age: 17
+  elderly_min_offset: 20
+  elderly_max_offset: 45
+  life_stages:
+  - max_age: 5
+    label: preschool
+  - max_age: 11
+    label: elementary
+  - max_age: 14
+    label: middle_school
+  - max_age: 18
+    label: high_school
+  adult_stage_label: adult
+  avg_household_size: 2.51
+identity_dimensions:
+- dimension: professional_identity
+  relevance: ASI renders every profession built on information asymmetry or cognitive
+    scarcity structurally redundant — doctors, lawyers, engineers, scientists, financial
+    advisors, therapists, and software engineers face an existential challenge to
+    the very reason their expertise holds value and identity meaning.
+- dimension: socioeconomic_class
+  relevance: The collapse of marginal costs and the democratization of cognitive resources
+    radically disrupts class structures tied to credential access and economic scarcity;
+    wealthy and credentialed classes lose the informational advantages that sustained
+    their status, while working-class identity faces upheaval as labor markets transform.
+- dimension: political_orientation
+  relevance: ASI forces immediate confrontation with ideological fault lines around
+    regulation, corporate power, state control, redistribution of abundance, and the
+    role of government — conservatives and liberals will diverge sharply on who controls
+    ASI, how abundance is distributed, and what institutional authority means in a
+    post-scarcity world.
+- dimension: religious_affiliation
+  relevance: A self-improving system that exceeds all human cognition, solves the
+    deepest mysteries of the universe, and conquers disease and death challenges foundational
+    religious narratives about human uniqueness, divine purpose, mortality, and the
+    nature of creation itself.
+- dimension: generational_identity
+  relevance: Older generations whose entire life frameworks — careers, accumulated
+    expertise, institutional trust, and worldviews — were built under cognitive scarcity
+    face profound disorientation, while younger generations may experience the disruption
+    as liberation or existential uncertainty about what a human life is even for.
+- dimension: citizenship
+  relevance: National identity and sovereignty are destabilized as ASI capabilities
+    concentrate in specific countries (US, China), early-adopter nations (Singapore,
+    UAE, Estonia) gain asymmetric advantages, and the question of who controls the
+    systems shaping global civilization becomes a matter of geopolitical and national
+    identity anxiety.
+- dimension: race_ethnicity
+  relevance: The promise of equalizing access (a dropout in rural Arkansas equals
+    a Harvard team) intersects with historical patterns of unequal technology deployment
+    — communities that have been systematically excluded from prior technological
+    abundance have reason to be both hopeful and skeptical that this transformation
+    will reach them equitably.
+- dimension: parental_status
+  relevance: Parents face a destabilizing crisis of purpose around education, career
+    guidance, and what they are preparing their children for — the entire framework
+    of raising children toward productive adulthood is structurally disrupted when
+    cognitive labor and credentialed expertise no longer define human value or livelihood.

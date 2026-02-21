@@ -9,6 +9,7 @@ from ...core.models import PopulationSpec
 from ...population.validator import validate_spec
 from ..app import app, console, get_json_mode, is_agent_mode
 from ..utils import Output, ExitCode, format_validation_for_json
+from ...utils import topological_sort
 
 
 def _is_json_output() -> bool:
@@ -276,17 +277,21 @@ def _resolve_merged_population_for_persona(persona_file: Path) -> PopulationSpec
     from ...core.models.scenario import ScenarioSpec
 
     scenario_dir = persona_file.parent
-    scenario_files = sorted(
-        scenario_dir.glob("scenario.v*.yaml"),
-        key=lambda p: int(re.search(r"scenario\.v(\d+)\.yaml$", p.name).group(1)),  # type: ignore[union-attr]
-    )
-    if not scenario_files:
+    scenario_files_with_versions: list[tuple[int, Path]] = []
+    for path in scenario_dir.glob("scenario.v*.yaml"):
+        match = re.match(r"^scenario\.v(\d+)\.yaml$", path.name)
+        if not match:
+            continue
+        scenario_files_with_versions.append((int(match.group(1)), path))
+
+    scenario_files_with_versions.sort(key=lambda item: item[0])
+    if not scenario_files_with_versions:
         raise FileNotFoundError(
             f"No scenario.vN.yaml found next to persona file: {persona_file}"
         )
 
     # Choose latest scenario version in this directory.
-    scenario_path = scenario_files[-1]
+    scenario_path = scenario_files_with_versions[-1][1]
     scenario_spec = ScenarioSpec.from_yaml(scenario_path)
 
     pop_name, pop_version = scenario_spec.meta.get_population_ref()
@@ -304,7 +309,15 @@ def _resolve_merged_population_for_persona(persona_file: Path) -> PopulationSpec
     pop_spec = PopulationSpec.from_yaml(pop_path)
     ext_attrs = scenario_spec.extended_attributes or []
     merged_attrs = list(pop_spec.attributes) + ext_attrs
-    merged_order = pop_spec.merged_sampling_order(ext_attrs)
+    merged_deps: dict[str, list[str]] = {
+        attr.name: list(attr.sampling.depends_on or []) for attr in merged_attrs
+    }
+    merged_names = set(merged_deps.keys())
+    merged_deps = {
+        name: [dep for dep in deps if dep in merged_names]
+        for name, deps in merged_deps.items()
+    }
+    merged_order = topological_sort(merged_deps)
     return PopulationSpec(
         meta=pop_spec.meta,
         grounding=pop_spec.grounding,

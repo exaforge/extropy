@@ -293,6 +293,36 @@ def _validate_sampling_semantic_roles(
                             )
                         )
 
+    household = roles.household_roles
+    if household and household.household_size_attr:
+        attr = attr_lookup.get(household.household_size_attr)
+        if attr is None:
+            issues.append(
+                ValidationError(
+                    category="sampling_semantics",
+                    location="sampling_semantic_roles.household_roles.household_size_attr",
+                    message=(
+                        "Unknown household_size_attr: "
+                        f"'{household.household_size_attr}'"
+                    ),
+                    suggestion="Use an attribute name from base or extended attributes",
+                )
+            )
+        else:
+            attr_type = getattr(attr, "type", None)
+            if attr_type not in ("int", "float"):
+                issues.append(
+                    ValidationError(
+                        category="sampling_semantics",
+                        location="sampling_semantic_roles.household_roles.household_size_attr",
+                        message=(
+                            "household_size_attr must reference numeric attribute, "
+                            f"got type '{attr_type}'"
+                        ),
+                        suggestion="Map household_size_attr to an int/float attribute",
+                    )
+                )
+
     return issues
 
 

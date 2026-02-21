@@ -449,6 +449,15 @@ class ReligionRoles(BaseModel):
     )
 
 
+class HouseholdRoles(BaseModel):
+    """Role mapping for household-coupled structural attributes."""
+
+    household_size_attr: str | None = Field(
+        default=None,
+        description="Attribute name representing total realized household size",
+    )
+
+
 class SamplingSemanticRoles(BaseModel):
     """Scenario-owned semantic role mapping for deterministic sample/runtime logic."""
 
@@ -471,6 +480,10 @@ class SamplingSemanticRoles(BaseModel):
     religion_roles: ReligionRoles | None = Field(
         default=None,
         description="Religion role mapping",
+    )
+    household_roles: HouseholdRoles | None = Field(
+        default=None,
+        description="Household structural role mapping",
     )
 
 

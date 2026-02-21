@@ -1,0 +1,1973 @@
+[
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "education_level",
+    "message": "modifiers 0 and 1 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "education_level",
+    "message": "modifiers 0 and 2 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "education_level",
+    "message": "modifiers 0 and 3 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "education_level",
+    "message": "modifiers 0 and 4 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "education_level",
+    "message": "modifiers 1 and 2 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "education_level",
+    "message": "modifiers 1 and 3 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "education_level",
+    "message": "modifiers 1 and 4 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "education_level",
+    "message": "modifiers 2 and 3 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "education_level",
+    "message": "modifiers 2 and 4 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "education_level",
+    "message": "modifiers 3 and 4 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "marital_status",
+    "message": "modifiers 0 and 1 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "marital_status",
+    "message": "modifiers 0 and 2 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "marital_status",
+    "message": "modifiers 0 and 3 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "marital_status",
+    "message": "modifiers 0 and 4 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "marital_status",
+    "message": "modifiers 1 and 2 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "marital_status",
+    "message": "modifiers 1 and 3 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "marital_status",
+    "message": "modifiers 1 and 4 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "marital_status",
+    "message": "modifiers 2 and 3 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "marital_status",
+    "message": "modifiers 2 and 4 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "marital_status",
+    "message": "modifiers 3 and 4 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "has_children",
+    "message": "modifiers 0 and 4 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "has_children",
+    "message": "modifiers 0 and 5 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "has_children",
+    "message": "modifiers 1 and 2 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "has_children",
+    "message": "modifiers 1 and 3 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "has_children",
+    "message": "modifiers 1 and 5 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "has_children",
+    "message": "modifiers 2 and 3 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "has_children",
+    "message": "modifiers 2 and 5 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "has_children",
+    "message": "modifiers 3 and 5 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "has_children",
+    "message": "modifiers 4 and 5 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "employment_sector",
+    "message": "modifiers 0 and 2 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "employment_sector",
+    "message": "modifiers 0 and 4 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "employment_sector",
+    "message": "modifiers 0 and 5 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "employment_sector",
+    "message": "modifiers 1 and 2 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "employment_sector",
+    "message": "modifiers 1 and 4 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "employment_sector",
+    "message": "modifiers 1 and 5 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "employment_sector",
+    "message": "modifiers 2 and 4 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "employment_sector",
+    "message": "modifiers 2 and 5 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "employment_sector",
+    "message": "modifiers 3 and 4 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "employment_sector",
+    "message": "modifiers 3 and 5 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "employment_sector",
+    "message": "modifiers 4 and 5 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "financial_margin",
+    "message": "modifiers 0 and 1 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "financial_margin",
+    "message": "modifiers 0 and 2 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "financial_margin",
+    "message": "modifiers 0 and 3 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "financial_margin",
+    "message": "modifiers 0 and 4 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "financial_margin",
+    "message": "modifiers 1 and 2 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "financial_margin",
+    "message": "modifiers 1 and 3 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "financial_margin",
+    "message": "modifiers 1 and 4 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "financial_margin",
+    "message": "modifiers 2 and 3 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "financial_margin",
+    "message": "modifiers 2 and 4 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "financial_margin",
+    "message": "modifiers 3 and 4 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "investment_profile",
+    "message": "modifiers 0 and 1 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "investment_profile",
+    "message": "modifiers 0 and 4 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "investment_profile",
+    "message": "modifiers 1 and 4 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "investment_profile",
+    "message": "modifiers 2 and 4 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "investment_profile",
+    "message": "modifiers 3 and 4 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "primary_info_source",
+    "message": "modifiers 0 and 2 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "primary_info_source",
+    "message": "modifiers 0 and 4 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "primary_info_source",
+    "message": "modifiers 0 and 5 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "primary_info_source",
+    "message": "modifiers 1 and 3 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "primary_info_source",
+    "message": "modifiers 1 and 5 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "primary_info_source",
+    "message": "modifiers 2 and 4 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "primary_info_source",
+    "message": "modifiers 2 and 5 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "primary_info_source",
+    "message": "modifiers 3 and 5 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "primary_info_source",
+    "message": "modifiers 4 and 5 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "social_media_behavior",
+    "message": "modifiers 0 and 1 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "social_media_behavior",
+    "message": "modifiers 0 and 2 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "social_media_behavior",
+    "message": "modifiers 0 and 3 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "social_media_behavior",
+    "message": "modifiers 0 and 4 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "social_media_behavior",
+    "message": "modifiers 0 and 5 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "social_media_behavior",
+    "message": "modifiers 1 and 2 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "social_media_behavior",
+    "message": "modifiers 1 and 3 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "social_media_behavior",
+    "message": "modifiers 1 and 4 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "social_media_behavior",
+    "message": "modifiers 1 and 5 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "social_media_behavior",
+    "message": "modifiers 2 and 3 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "social_media_behavior",
+    "message": "modifiers 2 and 4 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "social_media_behavior",
+    "message": "modifiers 2 and 5 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "social_media_behavior",
+    "message": "modifiers 3 and 4 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "social_media_behavior",
+    "message": "modifiers 3 and 5 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "social_media_behavior",
+    "message": "modifiers 4 and 5 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "tech_adoption_posture",
+    "message": "modifiers 0 and 2 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "tech_adoption_posture",
+    "message": "modifiers 0 and 4 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "tech_adoption_posture",
+    "message": "modifiers 0 and 6 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "tech_adoption_posture",
+    "message": "modifiers 1 and 3 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "tech_adoption_posture",
+    "message": "modifiers 1 and 5 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "tech_adoption_posture",
+    "message": "modifiers 1 and 6 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "tech_adoption_posture",
+    "message": "modifiers 2 and 4 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "tech_adoption_posture",
+    "message": "modifiers 2 and 6 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "tech_adoption_posture",
+    "message": "modifiers 3 and 5 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "tech_adoption_posture",
+    "message": "modifiers 3 and 6 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "tech_adoption_posture",
+    "message": "modifiers 4 and 6 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "tech_adoption_posture",
+    "message": "modifiers 5 and 6 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "religious_engagement",
+    "message": "modifiers 0 and 1 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "religious_engagement",
+    "message": "modifiers 0 and 2 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "religious_engagement",
+    "message": "modifiers 1 and 2 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "religious_engagement",
+    "message": "modifiers 1 and 3 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "religious_engagement",
+    "message": "modifiers 1 and 5 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "religious_engagement",
+    "message": "modifiers 1 and 6 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "religious_engagement",
+    "message": "modifiers 3 and 5 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "religious_engagement",
+    "message": "modifiers 3 and 6 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "religious_engagement",
+    "message": "modifiers 5 and 6 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "religious_engagement",
+    "message": "modifiers 5 and 7 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "political_identity",
+    "message": "modifiers 0 and 1 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "political_identity",
+    "message": "modifiers 0 and 5 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "political_identity",
+    "message": "modifiers 0 and 6 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "political_identity",
+    "message": "modifiers 0 and 7 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "political_identity",
+    "message": "modifiers 0 and 8 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "political_identity",
+    "message": "modifiers 1 and 2 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "political_identity",
+    "message": "modifiers 1 and 6 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "political_identity",
+    "message": "modifiers 1 and 7 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "political_identity",
+    "message": "modifiers 1 and 8 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "political_identity",
+    "message": "modifiers 3 and 5 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "political_identity",
+    "message": "modifiers 3 and 7 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "political_identity",
+    "message": "modifiers 5 and 8 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "political_identity",
+    "message": "modifiers 6 and 7 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "political_identity",
+    "message": "modifiers 6 and 8 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "political_identity",
+    "message": "modifiers 7 and 8 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "political_engagement_level",
+    "message": "modifiers 0 and 1 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "political_engagement_level",
+    "message": "modifiers 2 and 3 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "political_engagement_level",
+    "message": "modifiers 4 and 5 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "vote_2024_presidential",
+    "message": "modifiers 0 and 1 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "vote_2024_presidential",
+    "message": "modifiers 0 and 6 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "vote_2024_presidential",
+    "message": "modifiers 1 and 7 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "vote_2024_presidential",
+    "message": "modifiers 4 and 5 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "vote_2024_presidential",
+    "message": "modifiers 4 and 6 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "vote_2024_presidential",
+    "message": "modifiers 4 and 7 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "vote_2024_presidential",
+    "message": "modifiers 5 and 6 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "vote_2024_presidential",
+    "message": "modifiers 5 and 7 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "vote_2024_presidential",
+    "message": "modifiers 6 and 7 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "midterm_turnout_propensity",
+    "message": "modifiers 0 and 1 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "midterm_turnout_propensity",
+    "message": "modifiers 2 and 3 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "midterm_turnout_propensity",
+    "message": "modifiers 5 and 6 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "congressional_district_competitiveness",
+    "message": "modifiers 0 and 1 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "congressional_district_competitiveness",
+    "message": "modifiers 0 and 2 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "congressional_district_competitiveness",
+    "message": "modifiers 0 and 3 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "congressional_district_competitiveness",
+    "message": "modifiers 0 and 6 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "congressional_district_competitiveness",
+    "message": "modifiers 0 and 9 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "congressional_district_competitiveness",
+    "message": "modifiers 0 and 12 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "congressional_district_competitiveness",
+    "message": "modifiers 1 and 2 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "congressional_district_competitiveness",
+    "message": "modifiers 1 and 4 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "congressional_district_competitiveness",
+    "message": "modifiers 1 and 7 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "congressional_district_competitiveness",
+    "message": "modifiers 1 and 10 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "congressional_district_competitiveness",
+    "message": "modifiers 1 and 13 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "congressional_district_competitiveness",
+    "message": "modifiers 2 and 5 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "congressional_district_competitiveness",
+    "message": "modifiers 2 and 8 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "congressional_district_competitiveness",
+    "message": "modifiers 2 and 11 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "congressional_district_competitiveness",
+    "message": "modifiers 2 and 14 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "congressional_district_competitiveness",
+    "message": "modifiers 3 and 4 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "congressional_district_competitiveness",
+    "message": "modifiers 3 and 5 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "congressional_district_competitiveness",
+    "message": "modifiers 3 and 6 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "congressional_district_competitiveness",
+    "message": "modifiers 3 and 9 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "congressional_district_competitiveness",
+    "message": "modifiers 3 and 12 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "congressional_district_competitiveness",
+    "message": "modifiers 4 and 5 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "congressional_district_competitiveness",
+    "message": "modifiers 4 and 7 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "congressional_district_competitiveness",
+    "message": "modifiers 4 and 10 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "congressional_district_competitiveness",
+    "message": "modifiers 4 and 13 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "congressional_district_competitiveness",
+    "message": "modifiers 5 and 8 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "congressional_district_competitiveness",
+    "message": "modifiers 5 and 11 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "congressional_district_competitiveness",
+    "message": "modifiers 5 and 14 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "congressional_district_competitiveness",
+    "message": "modifiers 6 and 7 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "congressional_district_competitiveness",
+    "message": "modifiers 6 and 8 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "congressional_district_competitiveness",
+    "message": "modifiers 6 and 9 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "congressional_district_competitiveness",
+    "message": "modifiers 6 and 12 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "congressional_district_competitiveness",
+    "message": "modifiers 7 and 8 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "congressional_district_competitiveness",
+    "message": "modifiers 7 and 10 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "congressional_district_competitiveness",
+    "message": "modifiers 7 and 13 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "congressional_district_competitiveness",
+    "message": "modifiers 8 and 11 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "congressional_district_competitiveness",
+    "message": "modifiers 8 and 14 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "congressional_district_competitiveness",
+    "message": "modifiers 9 and 10 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "congressional_district_competitiveness",
+    "message": "modifiers 9 and 11 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "congressional_district_competitiveness",
+    "message": "modifiers 9 and 12 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "congressional_district_competitiveness",
+    "message": "modifiers 10 and 11 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "congressional_district_competitiveness",
+    "message": "modifiers 10 and 13 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "congressional_district_competitiveness",
+    "message": "modifiers 11 and 14 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "congressional_district_competitiveness",
+    "message": "modifiers 12 and 13 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "congressional_district_competitiveness",
+    "message": "modifiers 12 and 14 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "congressional_district_competitiveness",
+    "message": "modifiers 13 and 14 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "top_issue_2026",
+    "message": "modifiers 0 and 2 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "top_issue_2026",
+    "message": "modifiers 0 and 3 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "top_issue_2026",
+    "message": "modifiers 0 and 4 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "top_issue_2026",
+    "message": "modifiers 0 and 6 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "top_issue_2026",
+    "message": "modifiers 1 and 2 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "top_issue_2026",
+    "message": "modifiers 1 and 5 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "top_issue_2026",
+    "message": "modifiers 1 and 6 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "top_issue_2026",
+    "message": "modifiers 2 and 3 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "top_issue_2026",
+    "message": "modifiers 2 and 5 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "top_issue_2026",
+    "message": "modifiers 4 and 5 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "top_issue_2026",
+    "message": "modifiers 4 and 6 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "country_direction_approval",
+    "message": "modifiers 0 and 1 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "country_direction_approval",
+    "message": "modifiers 0 and 2 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "country_direction_approval",
+    "message": "modifiers 0 and 3 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "country_direction_approval",
+    "message": "modifiers 0 and 7 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "country_direction_approval",
+    "message": "modifiers 1 and 4 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "country_direction_approval",
+    "message": "modifiers 1 and 5 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "country_direction_approval",
+    "message": "modifiers 1 and 6 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "country_direction_approval",
+    "message": "modifiers 2 and 3 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "country_direction_approval",
+    "message": "modifiers 2 and 7 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "country_direction_approval",
+    "message": "modifiers 3 and 4 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "country_direction_approval",
+    "message": "modifiers 3 and 7 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "country_direction_approval",
+    "message": "modifiers 4 and 5 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "country_direction_approval",
+    "message": "modifiers 4 and 6 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "country_direction_approval",
+    "message": "modifiers 5 and 6 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "country_direction_approval",
+    "message": "modifiers 6 and 7 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "consumer_identity",
+    "message": "modifiers 2 and 3 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "institutional_trust",
+    "message": "modifiers 0 and 1 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "institutional_trust",
+    "message": "modifiers 0 and 3 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "institutional_trust",
+    "message": "modifiers 0 and 5 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "institutional_trust",
+    "message": "modifiers 0 and 6 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "institutional_trust",
+    "message": "modifiers 0 and 7 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "institutional_trust",
+    "message": "modifiers 1 and 2 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "institutional_trust",
+    "message": "modifiers 1 and 4 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "institutional_trust",
+    "message": "modifiers 2 and 3 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "institutional_trust",
+    "message": "modifiers 2 and 4 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "institutional_trust",
+    "message": "modifiers 3 and 5 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "institutional_trust",
+    "message": "modifiers 3 and 6 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "institutional_trust",
+    "message": "modifiers 3 and 7 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "institutional_trust",
+    "message": "modifiers 4 and 5 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "institutional_trust",
+    "message": "modifiers 5 and 6 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "institutional_trust",
+    "message": "modifiers 5 and 7 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  },
+  {
+    "severity": "warning",
+    "category": "MODIFIER_OVERLAP",
+    "location": "institutional_trust",
+    "message": "modifiers 6 and 7 may overlap under last-wins semantics",
+    "suggestion": "Make conditions mutually exclusive or merge the modifier logic",
+    "modifier_index": null,
+    "value": null
+  }
+]

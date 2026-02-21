@@ -1,0 +1,73 @@
+{
+  "timestamp": "2026-02-17T23:18:58.656179",
+  "function": "reasoning_call",
+  "provider": "claude",
+  "request": {
+    "model": "claude-sonnet-4-6",
+    "prompt_length": 2404
+  },
+  "response": {
+    "id": "msg_01F9MskYv7whzAkvtLXi8C2L",
+    "content": [
+      {
+        "id": "toolu_01N2DT29hgiPNXxmGxJt8sVp",
+        "input": {
+          "phrasings": [
+            {
+              "attribute": "age",
+              "template": "I am {value} years old.",
+              "format_spec": ".0f",
+              "prefix": "",
+              "suffix": ""
+            },
+            {
+              "attribute": "household_size",
+              "template": "There are {value} people living in my household.",
+              "format_spec": ".0f",
+              "prefix": "",
+              "suffix": ""
+            },
+            {
+              "attribute": "household_income",
+              "template": "My household's annual income is {value}.",
+              "format_spec": ".2f",
+              "prefix": "$",
+              "suffix": ""
+            },
+            {
+              "attribute": "social_media_hours_per_day",
+              "template": "I spend about {value} hours on social media every day.",
+              "format_spec": ".1f",
+              "prefix": "",
+              "suffix": ""
+            }
+          ]
+        },
+        "name": "concrete_phrasings",
+        "type": "tool_use",
+        "caller": {
+          "type": "direct"
+        }
+      }
+    ],
+    "model": "claude-sonnet-4-6",
+    "role": "assistant",
+    "stop_reason": "tool_use",
+    "stop_sequence": null,
+    "type": "message",
+    "usage": {
+      "cache_creation": {
+        "ephemeral_1h_input_tokens": "[REDACTED_SECRET]",
+        "ephemeral_5m_input_tokens": "[REDACTED_SECRET]"
+      },
+      "cache_creation_input_tokens": "[REDACTED_SECRET]",
+      "cache_read_input_tokens": "[REDACTED_SECRET]",
+      "input_tokens": 1444,
+      "output_tokens": 264,
+      "server_tool_use": null,
+      "service_tier": "standard",
+      "inference_geo": "global"
+    }
+  },
+  "sources_extracted": []
+}

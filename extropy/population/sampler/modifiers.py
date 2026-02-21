@@ -2,8 +2,8 @@
 
 Modifiers adjust distributions based on agent attributes:
 - Numeric (multiply/add): All matching modifiers stack
-- Categorical (weight_overrides): Last matching modifier wins
-- Boolean (probability_override): Last matching modifier wins
+- Categorical (weight_overrides): One deterministic winner
+- Boolean (probability_override): One deterministic winner
 """
 
 import logging
@@ -20,6 +20,7 @@ from ...core.models import (
     CategoricalDistribution,
     BooleanDistribution,
 )
+from ..modifier_precedence import choose_modifier_precedence
 from ...utils.eval_safe import eval_condition
 from .distributions import (
     _sample_normal,
@@ -61,7 +62,6 @@ def apply_modifiers_and_sample(
         try:
             if eval_condition(mod.when, agent, raise_on_error=True):
                 matching_modifiers.append((i, mod))
-                triggered_indices.append(i)
         except Exception as e:
             warning = f"modifier[{i}] when='{mod.when}' eval failed: {e}"
             condition_warnings.append(warning)
@@ -70,14 +70,21 @@ def apply_modifiers_and_sample(
     # Route to type-specific handler
     if isinstance(dist, (NormalDistribution, LognormalDistribution)):
         value = _apply_numeric_modifiers(dist, matching_modifiers, rng, agent)
+        triggered_indices = [idx for idx, _ in matching_modifiers]
     elif isinstance(dist, UniformDistribution):
         value = _apply_uniform_modifiers(dist, matching_modifiers, rng)
+        triggered_indices = [idx for idx, _ in matching_modifiers]
     elif isinstance(dist, BetaDistribution):
         value = _apply_beta_modifiers(dist, matching_modifiers, rng)
+        triggered_indices = [idx for idx, _ in matching_modifiers]
     elif isinstance(dist, CategoricalDistribution):
-        value = _apply_categorical_modifiers(dist, matching_modifiers, rng)
+        value, winner_index = _apply_categorical_modifiers(
+            dist, matching_modifiers, rng
+        )
+        triggered_indices = [winner_index] if winner_index is not None else []
     elif isinstance(dist, BooleanDistribution):
-        value = _apply_boolean_modifiers(dist, matching_modifiers, rng)
+        value, winner_index = _apply_boolean_modifiers(dist, matching_modifiers, rng)
+        triggered_indices = [winner_index] if winner_index is not None else []
     else:
         raise ValueError(f"Unknown distribution type: {type(dist)}")
 
@@ -192,57 +199,81 @@ def _apply_categorical_modifiers(
     dist: CategoricalDistribution,
     matching: list[tuple[int, Modifier]],
     rng: random.Random,
-) -> str:
+) -> tuple[str, int | None]:
     """
-    Apply categorical modifiers (last weight_override wins).
+    Apply categorical modifiers with deterministic winner selection.
 
     Note: If modifiers only have multiply/add (legacy numeric modifiers on categorical),
-    we ignore them and use base weights.
+    they are ignored and base weights are used.
     """
-    # Find the last modifier with weight_overrides
-    override_weights: list[float] | None = None
+    weighted_modifiers = [(idx, mod) for idx, mod in matching if mod.weight_overrides]
+    winner_index, winner_modifier = _select_winner_modifier(weighted_modifiers)
 
-    for _, mod in matching:
-        if mod.weight_overrides:
-            # Build new weights list from overrides
-            new_weights = []
-            for option in dist.options:
-                if option in mod.weight_overrides:
-                    new_weights.append(mod.weight_overrides[option])
-                else:
-                    # Keep original weight for options not in override
-                    idx = dist.options.index(option)
-                    new_weights.append(dist.weights[idx])
-            override_weights = new_weights
+    if winner_modifier is None or winner_modifier.weight_overrides is None:
+        return _sample_categorical(dist, rng, None), None
 
-    return _sample_categorical(dist, rng, override_weights)
+    base_weights = dict(zip(dist.options, dist.weights, strict=False))
+    override_weights = [
+        winner_modifier.weight_overrides.get(option, base_weights[option])
+        for option in dist.options
+    ]
+    return _sample_categorical(dist, rng, override_weights), winner_index
 
 
 def _apply_boolean_modifiers(
     dist: BooleanDistribution,
     matching: list[tuple[int, Modifier]],
     rng: random.Random,
-) -> bool:
+) -> tuple[bool, int | None]:
     """
-    Apply boolean modifiers (last probability_override wins).
+    Apply boolean modifiers with deterministic winner selection.
 
     If modifiers use multiply/add instead of probability_override,
-    apply to probability: new_prob = (base_prob * multiply) + add, clamped to [0,1].
+    apply to probability using the selected winning modifier:
+    new_prob = (base_prob * multiply) + add, clamped to [0,1].
     """
     probability = dist.probability_true
 
-    for _, mod in matching:
-        if mod.probability_override is not None:
-            # Direct override wins
-            probability = mod.probability_override
+    effective = []
+    for idx, mod in matching:
+        has_effect = (
+            mod.probability_override is not None
+            or (mod.multiply is not None and mod.multiply != 1.0)
+            or (mod.add is not None and mod.add != 0)
+        )
+        if has_effect:
+            effective.append((idx, mod))
+
+    winner_index, winner_modifier = _select_winner_modifier(effective)
+    if winner_modifier is not None:
+        if winner_modifier.probability_override is not None:
+            probability = winner_modifier.probability_override
         else:
-            # Apply multiply/add to probability
-            if mod.multiply is not None:
-                probability *= mod.multiply
-            if mod.add is not None:
-                probability += mod.add
+            if winner_modifier.multiply is not None:
+                probability *= winner_modifier.multiply
+            if winner_modifier.add is not None:
+                probability += winner_modifier.add
 
     # Clamp probability to [0, 1]
     probability = max(0.0, min(1.0, probability))
 
-    return _sample_boolean(dist, rng, probability)
+    return _sample_boolean(dist, rng, probability), winner_index
+
+
+def _select_winner_modifier(
+    matching: list[tuple[int, Modifier]],
+) -> tuple[int | None, Modifier | None]:
+    """Pick one deterministic winner from matching modifiers."""
+    if not matching:
+        return None, None
+
+    decision = choose_modifier_precedence([(idx, mod.when) for idx, mod in matching])
+    if decision is None:
+        return None, None
+
+    by_index = {idx: mod for idx, mod in matching}
+    winner = by_index.get(decision.winner_index)
+    if winner is None:
+        return None, None
+
+    return decision.winner_index, winner

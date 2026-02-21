@@ -51,6 +51,14 @@ class LifeStageThreshold(BaseModel):
     label: str = Field(description="Stage label, e.g. 'elementary', 'high_school'")
 
 
+class PartnerGenderPairWeight(BaseModel):
+    """Weighted probability for an unordered partner gender pair."""
+
+    left: str = Field(description="One gender value in the pair")
+    right: str = Field(description="Other gender value in the pair")
+    weight: float = Field(ge=0, description="Non-negative pair weight")
+
+
 class HouseholdConfig(BaseModel):
     """Household composition and dependent generation parameters.
 
@@ -114,6 +122,20 @@ class HouseholdConfig(BaseModel):
             "religious_affiliation": 0.7,
             "political_orientation": 0.5,
         }
+    )
+    partner_gender_mode: Literal["independent", "weighted"] = Field(
+        default="independent",
+        description=(
+            "independent: sample partner gender from base distribution; "
+            "weighted: apply partner_gender_pair_weights to bias pair composition"
+        ),
+    )
+    partner_gender_pair_weights: list[PartnerGenderPairWeight] = Field(
+        default_factory=list,
+        description=(
+            "Optional unordered partner gender pair weights "
+            "(e.g., male/female, female/female)."
+        ),
     )
     partner_age_gap_mean: float = -2.0
     partner_age_gap_std: float = 3.0

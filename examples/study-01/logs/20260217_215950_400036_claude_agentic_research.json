@@ -1,0 +1,1964 @@
+{
+  "timestamp": "2026-02-17T21:59:50.400093",
+  "function": "agentic_research",
+  "provider": "claude",
+  "request": {
+    "model": "claude-sonnet-4-6",
+    "prompt_length": 11850
+  },
+  "response": {
+    "id": "msg_01H4ceayyVtwBYKdgBEYBaWG",
+    "content": [
+      {
+        "citations": null,
+        "text": "[REDACTED_TEXT length=93]",
+        "type": "text",
+        "parsed_output": null
+      },
+      {
+        "id": "srvtoolu_01Vs8sxdJmHGJmzVfzQ3RUSD",
+        "input": {
+          "query": "US adult population age distribution 2024 census"
+        },
+        "name": "web_search",
+        "type": "server_tool_use",
+        "caller": {
+          "type": "direct"
+        }
+      },
+      {
+        "id": "srvtoolu_01TmNyyEuJLivLTGJQKJRJWK",
+        "input": {
+          "query": "US gender distribution adults 2024 census statistics"
+        },
+        "name": "web_search",
+        "type": "server_tool_use",
+        "caller": {
+          "type": "direct"
+        }
+      },
+      {
+        "content": [
+          {
+            "encrypted_content": "[REDACTED_TEXT length=3112]",
+            "page_age": null,
+            "title": "National Population by Characteristics: 2020-2025",
+            "type": "web_search_result",
+            "url": "https://www.census.gov/data/tables/time-series/demo/popest/2020s-national-detail.html"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=2960]",
+            "page_age": "September 17, 2025",
+            "title": "Visualizing the U.S. Population by Age Group",
+            "type": "web_search_result",
+            "url": "https://www.visualcapitalist.com/u-s-population-by-age-group/"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=6480]",
+            "page_age": "12 hours ago",
+            "title": "US population by year, race, age, ethnicity, & more | USAFacts",
+            "type": "web_search_result",
+            "url": "https://usafacts.org/data/topics/people-society/population-and-demographics/our-changing-population/"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=1280]",
+            "page_age": null,
+            "title": "2023 Population Estimates by Age and Sex",
+            "type": "web_search_result",
+            "url": "https://www.census.gov/newsroom/press-releases/2024/population-estimates-age-sex.html"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=4076]",
+            "page_age": null,
+            "title": "Population of the U.S. by sex and age 2024",
+            "type": "web_search_result",
+            "url": "https://www.statista.com/statistics/241488/population-of-the-us-by-sex-and-age/"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=1680]",
+            "page_age": null,
+            "title": "Adult Population by Age Group Statistics",
+            "type": "web_search_result",
+            "url": "https://datacenter.aecf.org/data/tables/6538-adult-population-by-age-group"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=5616]",
+            "page_age": null,
+            "title": "An Aging Nation: U.S. Median Age Surpassed 39 in 2024",
+            "type": "web_search_result",
+            "url": "https://www.census.gov/library/stories/2025/06/metro-areas-median-age.html"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=968]",
+            "page_age": null,
+            "title": "Population of United States of America 2024 - PopulationPyramid.net",
+            "type": "web_search_result",
+            "url": "https://www.populationpyramid.net/united-states-of-america/2024/"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=348]",
+            "page_age": "December 18, 2025",
+            "title": "Population Distribution by Age | KFF State Health Facts",
+            "type": "web_search_result",
+            "url": "https://www.kff.org/state-health-policy-data/state-indicator/distribution-by-age/"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=3112]",
+            "page_age": null,
+            "title": "National Population by Characteristics: 2020-2024",
+            "type": "web_search_result",
+            "url": "https://www.census.gov/data/datasets/time-series/demo/popest/2020s-national-detail.html"
+          }
+        ],
+        "tool_use_id": "srvtoolu_01Vs8sxdJmHGJmzVfzQ3RUSD",
+        "type": "web_search_tool_result"
+      },
+      {
+        "content": [
+          {
+            "encrypted_content": "[REDACTED_TEXT length=1280]",
+            "page_age": null,
+            "title": "2023 Population Estimates by Age and Sex",
+            "type": "web_search_result",
+            "url": "https://www.census.gov/newsroom/press-releases/2024/population-estimates-age-sex.html"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=3264]",
+            "page_age": null,
+            "title": "National Population by Characteristics: 2020-2025",
+            "type": "web_search_result",
+            "url": "https://www.census.gov/data/tables/time-series/demo/popest/2020s-national-detail.html"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=4140]",
+            "page_age": null,
+            "title": "Population of the U.S. by sex and age 2024",
+            "type": "web_search_result",
+            "url": "https://www.statista.com/statistics/241488/population-of-the-us-by-sex-and-age/"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=3640]",
+            "page_age": null,
+            "title": "US population by gender 2027| Statista",
+            "type": "web_search_result",
+            "url": "https://www.statista.com/statistics/737923/us-population-by-gender/"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=352]",
+            "page_age": null,
+            "title": "United States Population by Age and Sex",
+            "type": "web_search_result",
+            "url": "https://www.census.gov/popclock/data_tables.php?component=pyramid"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=2952]",
+            "page_age": "September 17, 2025",
+            "title": "Visualizing the U.S. Population by Age Group",
+            "type": "web_search_result",
+            "url": "https://www.visualcapitalist.com/u-s-population-by-age-group/"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=6920]",
+            "page_age": "1 week ago",
+            "title": "Demographics of the United States - Wikipedia",
+            "type": "web_search_result",
+            "url": "https://en.wikipedia.org/wiki/Demographics_of_the_United_States"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=4596]",
+            "page_age": null,
+            "title": "U.S. population by sex 1980-2024",
+            "type": "web_search_result",
+            "url": "https://www.statista.com/statistics/241495/us-population-by-sex/"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=3264]",
+            "page_age": null,
+            "title": "National Population by Characteristics: 2020-2024",
+            "type": "web_search_result",
+            "url": "https://www.census.gov/data/datasets/time-series/demo/popest/2020s-national-detail.html"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=5436]",
+            "page_age": "October 11, 2025",
+            "title": "Population by Gender in US 2025 | Statistics & Facts - The World Data",
+            "type": "web_search_result",
+            "url": "https://theworlddata.com/population-by-gender-in-us/"
+          }
+        ],
+        "tool_use_id": "srvtoolu_01TmNyyEuJLivLTGJQKJRJWK",
+        "type": "web_search_tool_result"
+      },
+      {
+        "id": "srvtoolu_019JCHGXv1UDrjBzTWkxPtgv",
+        "input": {
+          "query": "US race ethnicity distribution 2024 White Black Hispanic Asian census percent"
+        },
+        "name": "web_search",
+        "type": "server_tool_use",
+        "caller": {
+          "type": "direct"
+        }
+      },
+      {
+        "id": "srvtoolu_01R2i252CDL5gPX4kjXsCVQY",
+        "input": {
+          "query": "US political affiliation party identification 2024 Pew Gallup Democrat Republican Independent percent"
+        },
+        "name": "web_search",
+        "type": "server_tool_use",
+        "caller": {
+          "type": "direct"
+        }
+      },
+      {
+        "content": [
+          {
+            "encrypted_content": "[REDACTED_TEXT length=7056]",
+            "page_age": "2 weeks ago",
+            "title": "Race and ethnicity in the United States - Wikipedia",
+            "type": "web_search_result",
+            "url": "https://en.wikipedia.org/wiki/Race_and_ethnicity_in_the_United_States"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=3920]",
+            "page_age": null,
+            "title": "Population by race in the U.S. 2024| Statista",
+            "type": "web_search_result",
+            "url": "https://www.statista.com/statistics/183489/population-of-the-us-by-ethnicity-since-2000/"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=5600]",
+            "page_age": "December 16, 2025",
+            "title": "How the US Census Measures Race and What Americans Think About It | Pew Research Center",
+            "type": "web_search_result",
+            "url": "https://www.pewresearch.org/race-and-ethnicity/2025/11/03/counting-race-how-the-census-measures-identity-and-what-americans-think-about-it/"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=6480]",
+            "page_age": "12 hours ago",
+            "title": "US population by year, race, age, ethnicity, & more | USAFacts",
+            "type": "web_search_result",
+            "url": "https://usafacts.org/data/topics/people-society/population-and-demographics/our-changing-population/"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=5488]",
+            "page_age": "February 21, 2025",
+            "title": "United States Population by Race & Ethnicity - 2025 Update | Neilsberg",
+            "type": "web_search_result",
+            "url": "https://www.neilsberg.com/insights/united-states-population-by-race/"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=7504]",
+            "page_age": "1 week ago",
+            "title": "Demographics of the United States - Wikipedia",
+            "type": "web_search_result",
+            "url": "https://en.wikipedia.org/wiki/Demographics_of_the_United_States"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=5512]",
+            "page_age": null,
+            "title": "New Estimates Highlight Differences in Growth Between the U.S. Hispanic and Non-Hispanic Populations",
+            "type": "web_search_result",
+            "url": "https://www.census.gov/newsroom/press-releases/2024/population-estimates-characteristics.html"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=4276]",
+            "page_age": "September 18, 2024",
+            "title": "U.S. Population Racial Breakdown (1990-2023)",
+            "type": "web_search_result",
+            "url": "https://www.visualcapitalist.com/u-s-population-racial-breakdown-1990-2023/"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=3060]",
+            "page_age": "May 21, 2021",
+            "title": "Mapped: Visualizing the U.S. Population by Race",
+            "type": "web_search_result",
+            "url": "https://www.visualcapitalist.com/visualizing-u-s-population-by-race/"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=1812]",
+            "page_age": null,
+            "title": "US Population Distribution, by Generation and Race/Ethnicity, in 2024 - Marketing Charts",
+            "type": "web_search_result",
+            "url": "https://www.marketingcharts.com/charts/us-population-distribution-by-generation-and-race-ethnicity-in-2024"
+          }
+        ],
+        "tool_use_id": "srvtoolu_019JCHGXv1UDrjBzTWkxPtgv",
+        "type": "web_search_tool_result"
+      },
+      {
+        "content": [
+          {
+            "encrypted_content": "[REDACTED_TEXT length=5076]",
+            "page_age": "April 3, 2025",
+            "title": "GOP Holds Edge in Party Affiliation for Third Straight Year",
+            "type": "web_search_result",
+            "url": "https://news.gallup.com/poll/655157/gop-holds-edge-party-affiliation-third-straight-year.aspx"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=1456]",
+            "page_age": "September 20, 2007",
+            "title": "Party Affiliation | Gallup Historical Trends",
+            "type": "web_search_result",
+            "url": "https://news.gallup.com/poll/15370/party-affiliation.aspx"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=3016]",
+            "page_age": "April 24, 2025",
+            "title": "Party affiliation and ideology of US registered voters | Pew Research Center",
+            "type": "web_search_result",
+            "url": "https://www.pewresearch.org/politics/2024/04/09/the-partisanship-and-ideology-of-american-voters/"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=5536]",
+            "page_age": "March 26, 2025",
+            "title": "Independent Party ID Tied for High; Democratic ID at New Low",
+            "type": "web_search_result",
+            "url": "https://news.gallup.com/poll/548459/independent-party-tied-high-democratic-new-low.aspx"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=3756]",
+            "page_age": "2 weeks ago",
+            "title": "New High of 45% in U.S. Identify as Political Independents",
+            "type": "web_search_result",
+            "url": "https://news.gallup.com/poll/700499/new-high-identify-political-independents.aspx"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=3108]",
+            "page_age": "December 16, 2025",
+            "title": "Party Affiliation Fact Sheet (NPORS) | Pew Research Center",
+            "type": "web_search_result",
+            "url": "https://www.pewresearch.org/politics/fact-sheet/party-affiliation-fact-sheet-npors/"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=5704]",
+            "page_age": "July 31, 2025",
+            "title": "Democrats Regain Advantage in Party Affiliation",
+            "type": "web_search_result",
+            "url": "https://news.gallup.com/poll/692978/democrats-regain-advantage-party-affiliation.aspx"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=4800]",
+            "page_age": null,
+            "title": "Political party identification U.S. 2024| Statista",
+            "type": "web_search_result",
+            "url": "https://www.statista.com/statistics/1078361/political-party-identification-us-major-parties/"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=5476]",
+            "page_age": "June 21, 2024",
+            "title": "Age, generation and party identification of registered voters | Pew Research Center",
+            "type": "web_search_result",
+            "url": "https://www.pewresearch.org/politics/2024/04/09/age-generational-cohorts-and-party-identification/"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=3692]",
+            "page_age": null,
+            "title": "Research Brief: Growing Cohort of Independent Voters Becomes Critical Segment of Electorate | Unite America",
+            "type": "web_search_result",
+            "url": "https://www.uniteamerica.org/articles/research-brief-growing-cohort-of-independent-voters-becomes-critical-segment-of-electorate"
+          }
+        ],
+        "tool_use_id": "srvtoolu_01R2i252CDL5gPX4kjXsCVQY",
+        "type": "web_search_tool_result"
+      },
+      {
+        "id": "srvtoolu_014gohVvQR4izbsqiq6gy3hn",
+        "input": {
+          "query": "US religious affiliation 2024 Pew Protestant Catholic unaffiliated percent adults Big Five personality traits US population averages education employment social media usage statistics"
+        },
+        "name": "web_search",
+        "type": "server_tool_use",
+        "caller": {
+          "type": "direct"
+        }
+      },
+      {
+        "content": [
+          {
+            "encrypted_content": "[REDACTED_TEXT length=4292]",
+            "page_age": "October 28, 2025",
+            "title": "2023-24 Religious Landscape Study: Executive summary | Pew Research Center",
+            "type": "web_search_result",
+            "url": "https://www.pewresearch.org/religion/2025/02/26/religious-landscape-study-executive-summary/"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=5544]",
+            "page_age": "April 17, 2025",
+            "title": "Religious Preferences Largely Stable in U.S. Since 2020",
+            "type": "web_search_result",
+            "url": "https://news.gallup.com/poll/659339/religious-preferences-largely-stable-2020.aspx"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=4148]",
+            "page_age": "February 26, 2025",
+            "title": "Christianity declines among U.S. adults while \"religiously unaffiliated\" grows, study says - OPB",
+            "type": "web_search_result",
+            "url": "https://www.opb.org/article/2025/02/26/pew-religious-landscape-study-christianity/"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=2956]",
+            "page_age": "November 13, 2025",
+            "title": "Americans\u2019 religious profile, visualized as 100 people | Pew Research Center",
+            "type": "web_search_result",
+            "url": "https://www.pewresearch.org/short-reads/2025/11/13/if-the-u-s-had-100-people-charting-americans-religious-affiliations/"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=5460]",
+            "page_age": "December 15, 2025",
+            "title": "Why do some Americans who were raised unaffiliated join a religion while others don\u2019t? | Pew Research Center",
+            "type": "web_search_result",
+            "url": "https://www.pewresearch.org/religion/2025/12/15/why-many-us-adults-are-nones-and-why-some-former-nones-have-joined-a-religion/"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=4404]",
+            "page_age": "October 28, 2025",
+            "title": "Religious identity in the United States | Pew Research Center",
+            "type": "web_search_result",
+            "url": "https://www.pewresearch.org/religion/2025/02/26/religious-landscape-study-religious-identity/"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=5432]",
+            "page_age": "October 28, 2025",
+            "title": "US religious groups' age, education, income, race & gender profiles with other demographics | Pew Research Center",
+            "type": "web_search_result",
+            "url": "https://www.pewresearch.org/religion/2025/02/26/age-race-education-and-other-demographic-traits-of-us-religious-groups/"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=6504]",
+            "page_age": "1 week ago",
+            "title": "Religion in the United States - Wikipedia",
+            "type": "web_search_result",
+            "url": "https://en.wikipedia.org/wiki/Religion_in_the_United_States"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=6692]",
+            "page_age": "3 weeks ago",
+            "title": "Irreligion in the United States - Wikipedia",
+            "type": "web_search_result",
+            "url": "https://en.wikipedia.org/wiki/Irreligion_in_the_United_States"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=5532]",
+            "page_age": "October 28, 2025",
+            "title": "US Christian Decline May Be Stabilizing: 2023-24 Religious Landscape Study (RLS) | Pew Research Center",
+            "type": "web_search_result",
+            "url": "https://www.pewresearch.org/religion/2025/02/26/decline-of-christianity-in-the-us-has-slowed-may-have-leveled-off/"
+          }
+        ],
+        "tool_use_id": "srvtoolu_014gohVvQR4izbsqiq6gy3hn",
+        "type": "web_search_tool_result"
+      },
+      {
+        "citations": null,
+        "text": "[REDACTED_TEXT length=134]",
+        "type": "text",
+        "parsed_output": null
+      },
+      {
+        "id": "toolu_01RH6EfkAi3MjF8yHM9LPNmh",
+        "input": {
+          "attributes": [
+            {
+              "name": "country",
+              "distribution": {
+                "type": "categorical",
+                "options": [
+                  "United States"
+                ],
+                "weights": [
+                  1.0
+                ],
+                "mean": null,
+                "std": null,
+                "min": null,
+                "max": null,
+                "alpha": null,
+                "beta": null,
+                "probability_true": null
+              },
+              "constraints": [
+                {
+                  "type": "spec_expression",
+                  "expression": "sum(weights)==1",
+                  "value": null,
+                  "reason": "All agents are US residents by simulation definition"
+                }
+              ],
+              "grounding": {
+                "level": "strong",
+                "method": "researched",
+                "source": "Simulation spec: US population only",
+                "note": "Universally 'United States' per the simulation scope statement"
+              }
+            },
+            {
+              "name": "age",
+              "distribution": {
+                "type": "normal",
+                "mean": 47,
+                "std": 17,
+                "min": 18,
+                "max": 99,
+                "alpha": null,
+                "beta": null,
+                "options": null,
+                "weights": null,
+                "probability_true": null
+              },
+              "constraints": [
+                {
+                  "type": "hard_min",
+                  "value": 18,
+                  "expression": null,
+                  "reason": "Simulation is adults 18+ only"
+                },
+                {
+                  "type": "hard_max",
+                  "value": 99,
+                  "expression": null,
+                  "reason": "Practical upper bound for living US adults; centenarians are <0.1% of population"
+                }
+              ],
+              "grounding": {
+                "level": "strong",
+                "method": "researched",
+                "source": "US Census Bureau 2024 national population estimates (census.gov); U.S. median age 39+ overall, ~47 for adult-only population",
+                "note": "Median US age surpassed 39 in 2024 per Census (census.gov/library/stories/2025/06/metro-areas-median-age.html). Adult-only median is higher (~46-48). Normal approximation is reasonable; real distribut...[truncated]"
+              }
+            },
+            {
+              "name": "gender",
+              "distribution": {
+                "type": "categorical",
+                "options": [
+                  "Male",
+                  "Female",
+                  "Non-binary/Other"
+                ],
+                "weights": [
+                  0.492,
+                  0.494,
+                  0.014
+                ],
+                "mean": null,
+                "std": null,
+                "min": null,
+                "max": null,
+                "alpha": null,
+                "beta": null,
+                "probability_true": null
+              },
+              "constraints": [
+                {
+                  "type": "spec_expression",
+                  "expression": "sum(weights)==1",
+                  "value": null,
+                  "reason": "Weights must sum to 1"
+                }
+              ],
+              "grounding": {
+                "level": "strong",
+                "method": "researched",
+                "source": "US Census Bureau Vintage 2024 via theworlddata.com; 2020 Census (wikipedia Demographics of US); Williams Institute UCLA non-binary estimates (~1.2-1.4%)",
+                "note": "2020 Census: females 50.9%, males 49.1% of total. 2025 estimates show near-parity (50.24% male, 49.76% female) due to immigration shifts. Non-binary/Other ~1.2-1.6% per UCLA Williams Institute. Adult ...[truncated]"
+              }
+            },
+            {
+              "name": "state",
+              "distribution": {
+                "type": "categorical",
+                "options": [
+                  "CA",
+                  "TX",
+                  "FL",
+                  "NY",
+                  "PA",
+                  "IL",
+                  "OH",
+                  "GA",
+                  "NC",
+                  "MI",
+                  "NJ",
+                  "VA",
+                  "WA",
+                  "AZ",
+                  "TN",
+                  "MA",
+                  "IN",
+                  "MO",
+                  "MD",
+                  "WI",
+                  "CO",
+                  "MN",
+                  "SC",
+                  "AL",
+                  "LA",
+                  "KY",
+                  "OR",
+                  "OK",
+                  "CT",
+                  "UT",
+                  "IA",
+                  "NV",
+                  "AR",
+                  "MS",
+                  "KS",
+                  "NM",
+                  "NE",
+                  "ID",
+                  "WV",
+                  "HI",
+                  "NH",
+                  "ME",
+                  "RI",
+                  "MT",
+                  "DE",
+                  "SD",
+                  "ND",
+                  "AK",
+                  "VT",
+                  "WY",
+                  "DC"
+                ],
+                "weights": [
+                  0.1175,
+                  0.0891,
+                  0.0659,
+                  0.059,
+                  0.0387,
+                  0.0381,
+                  0.0355,
+                  0.0324,
+                  0.0315,
+                  0.0298,
+                  0.0275,
+                  0.026,
+                  0.0232,
+                  0.0218,
+                  0.0207,
+                  0.0209,
+                  0.0202,
+                  0.0184,
+                  0.0184,
+                  0.0178,
+                  0.0174,
+                  0.0169,
+                  0.0157,
+                  0.0147,
+                  0.0139,
+                  0.0131,
+                  0.0131,
+                  0.0118,
+                  0.0108,
+                  0.0102,
+                  0.0096,
+                  0.0094,
+                  0.0093,
+                  0.0088,
+                  0.0087,
+                  0.0065,
+                  0.0059,
+                  0.0057,
+                  0.0054,
+                  0.0042,
+                  0.0042,
+                  0.004,
+                  0.0032,
+                  0.0032,
+                  0.003,
+                  0.0026,
+                  0.0023,
+                  0.0022,
+                  0.0019,
+                  0.0017,
+                  0.0021
+                ],
+                "mean": null,
+                "std": null,
+                "min": null,
+                "max": null,
+                "alpha": null,
+                "beta": null,
+                "probability_true": null
+              },
+              "constraints": [
+                {
+                  "type": "spec_expression",
+                  "expression": "abs(sum(weights)-1.0) < 0.001",
+                  "value": null,
+                  "reason": "Weights must sum to approximately 1.0"
+                }
+              ],
+              "grounding": {
+                "level": "strong",
+                "method": "researched",
+                "source": "US Census Bureau 2024 state population estimates (census.gov); proportional to each state's adult population",
+                "note": "Weights are approximate proportions of US adult population by state. Top 5 states (CA, TX, FL, NY, PA) account for ~37% of US adults. DC included as distinct jurisdiction."
+              }
+            },
+            {
+              "name": "race_ethnicity",
+              "distribution": {
+                "type": "categorical",
+                "options": [
+                  "White non-Hispanic",
+                  "Black",
+                  "Hispanic",
+                  "Asian",
+                  "Other"
+                ],
+                "weights": [
+                  0.576,
+                  0.124,
+                  0.19,
+                  0.061,
+                  0.049
+                ],
+                "mean": null,
+                "std": null,
+                "min": null,
+                "max": null,
+                "alpha": null,
+                "beta": null,
+                "probability_true": null
+              },
+              "constraints": [
+                {
+                  "type": "spec_expression",
+                  "expression": "abs(sum(weights)-1.0) < 0.001",
+                  "value": null,
+                  "reason": "Weights must sum to 1"
+                }
+              ],
+              "grounding": {
+                "level": "strong",
+                "method": "researched",
+                "source": "Pew Research Center 2025 (pewresearch.org/race-and-ethnicity/2025/11/03); ACS 2019-2023 neilsberg.com; US Census Vintage 2023 (census.gov/newsroom/press-releases/2024/population-estimates-characterist...[truncated]",
+                "note": "2020 Census: White non-Hispanic 57.8%, Hispanic 18.7%, Black 12.1%, Asian 5.9%, Other ~4.1%+. ACS 2023 5-yr: Hispanic 18.99%, Black 12.36%. Weights adjusted to sum to 1.0 with 'Other' encompassing AIA...[truncated]"
+              }
+            },
+            {
+              "name": "openness",
+              "distribution": {
+                "type": "beta",
+                "alpha": 7.5,
+                "beta": 7.5,
+                "min": 0.0,
+                "max": 1.0,
+                "mean": null,
+                "std": null,
+                "options": null,
+                "weights": null,
+                "probability_true": null
+              },
+              "constraints": [
+                {
+                  "type": "hard_min",
+                  "value": 0.0,
+                  "expression": null,
+                  "reason": "Scale floor"
+                },
+                {
+                  "type": "hard_max",
+                  "value": 1.0,
+                  "expression": null,
+                  "reason": "Scale ceiling"
+                }
+              ],
+              "grounding": {
+                "level": "medium",
+                "method": "extrapolated",
+                "source": "Big Five personality meta-analyses (Costa & McCrae; Soto et al. 2011 JPSP; Cross-cultural Big Five norms); US adult population means",
+                "note": "Openness in US adults has population mean ~0.5 with moderate SD (~0.15). Beta(7.5,7.5) gives symmetric distribution centered at 0.5 with most mass in [0.2,0.8]. Real distribution is approximately norm...[truncated]"
+              }
+            },
+            {
+              "name": "conscientiousness",
+              "distribution": {
+                "type": "beta",
+                "alpha": 9.0,
+                "beta": 6.0,
+                "min": 0.0,
+                "max": 1.0,
+                "mean": null,
+                "std": null,
+                "options": null,
+                "weights": null,
+                "probability_true": null
+              },
+              "constraints": [
+                {
+                  "type": "hard_min",
+                  "value": 0.0,
+                  "expression": null,
+                  "reason": "Scale floor"
+                },
+                {
+                  "type": "hard_max",
+                  "value": 1.0,
+                  "expression": null,
+                  "reason": "Scale ceiling"
+                }
+              ],
+              "grounding": {
+                "level": "medium",
+                "method": "extrapolated",
+                "source": "Soto et al. (2011) JPSP Big Five norms; Donnellan & Lucas (2008); US adult population typically scores above midpoint on Conscientiousness",
+                "note": "US adults consistently score slightly above midpoint (~0.55-0.60) on Conscientiousness in population surveys. Beta(9,6) gives mean ~0.60 with SD ~0.13. Distribution is slightly left-skewed (more high-...[truncated]"
+              }
+            },
+            {
+              "name": "extraversion",
+              "distribution": {
+                "type": "beta",
+                "alpha": 7.0,
+                "beta": 7.5,
+                "min": 0.0,
+                "max": 1.0,
+                "mean": null,
+                "std": null,
+                "options": null,
+                "weights": null,
+                "probability_true": null
+              },
+              "constraints": [
+                {
+                  "type": "hard_min",
+                  "value": 0.0,
+                  "expression": null,
+                  "reason": "Scale floor"
+                },
+                {
+                  "type": "hard_max",
+                  "value": 1.0,
+                  "expression": null,
+                  "reason": "Scale ceiling"
+                }
+              ],
+              "grounding": {
+                "level": "medium",
+                "method": "extrapolated",
+                "source": "Soto et al. (2011); Big Five International Item Pool norms; US typically slightly above midpoint on extraversion",
+                "note": "US adults score slightly above midpoint on Extraversion (~0.48-0.52). Beta(7,7.5) gives mean ~0.48 with SD ~0.13. US is often cited as among higher extraversion nations but distribution is still rough...[truncated]"
+              }
+            },
+            {
+              "name": "agreeableness",
+              "distribution": {
+                "type": "beta",
+                "alpha": 9.5,
+                "beta": 6.5,
+                "min": 0.0,
+                "max": 1.0,
+                "mean": null,
+                "std": null,
+                "options": null,
+                "weights": null,
+                "probability_true": null
+              },
+              "constraints": [
+                {
+                  "type": "hard_min",
+                  "value": 0.0,
+                  "expression": null,
+                  "reason": "Scale floor"
+                },
+                {
+                  "type": "hard_max",
+                  "value": 1.0,
+                  "expression": null,
+                  "reason": "Scale ceiling"
+                }
+              ],
+              "grounding": {
+                "level": "medium",
+                "method": "extrapolated",
+                "source": "Soto et al. (2011) JPSP; Costa & McCrae NEO PI-R norms; Agreeableness higher in women and older adults in US samples",
+                "note": "Agreeableness is typically the highest-scoring Big Five domain in US adults (~0.60). Beta(9.5,6.5) gives mean ~0.594 with SD ~0.13. Increases with age; women score higher than men. Mixed slightly towa...[truncated]"
+              }
+            },
+            {
+              "name": "neuroticism",
+              "distribution": {
+                "type": "beta",
+                "alpha": 6.0,
+                "beta": 9.0,
+                "min": 0.0,
+                "max": 1.0,
+                "mean": null,
+                "std": null,
+                "options": null,
+                "weights": null,
+                "probability_true": null
+              },
+              "constraints": [
+                {
+                  "type": "hard_min",
+                  "value": 0.0,
+                  "expression": null,
+                  "reason": "Scale floor"
+                },
+                {
+                  "type": "hard_max",
+                  "value": 1.0,
+                  "expression": null,
+                  "reason": "Scale ceiling"
+                }
+              ],
+              "grounding": {
+                "level": "medium",
+                "method": "extrapolated",
+                "source": "Soto et al. (2011); Terracciano et al. cross-cultural norms; Neuroticism declines with age in US samples",
+                "note": "US adults score slightly below midpoint on Neuroticism (~0.40). Beta(6,9) gives mean ~0.40 with SD ~0.13. Distribution skewed toward lower neuroticism. Women score higher than men; young adults score ...[truncated]"
+              }
+            },
+            {
+              "name": "urban_rural",
+              "distribution": {
+                "type": "categorical",
+                "options": [
+                  "Urban",
+                  "Suburban",
+                  "Rural"
+                ],
+                "weights": [
+                  0.31,
+                  0.55,
+                  0.14
+                ],
+                "mean": null,
+                "std": null,
+                "min": null,
+                "max": null,
+                "alpha": null,
+                "beta": null,
+                "probability_true": null
+              },
+              "constraints": [
+                {
+                  "type": "spec_expression",
+                  "expression": "sum(weights)==1",
+                  "value": null,
+                  "reason": "Weights must sum to 1"
+                }
+              ],
+              "grounding": {
+                "level": "strong",
+                "method": "researched",
+                "source": "US Census Bureau urban/rural classification 2020; Pew Research Center suburban/urban/rural surveys; ~80% of US population lives in metro areas",
+                "note": "Census: ~80% live in urbanized areas but the suburban/urban split within that is estimated at ~55% suburban, ~31% urban core. Rural ~19.3% of population but ~14% of adults (rural population skews olde...[truncated]"
+              }
+            },
+            {
+              "name": "education_level",
+              "distribution": {
+                "type": "categorical",
+                "options": [
+                  "Less than HS",
+                  "HS Diploma",
+                  "Some College",
+                  "Associate's",
+                  "Bachelor's",
+                  "Graduate Degree"
+                ],
+                "weights": [
+                  0.088,
+                  0.268,
+                  0.2,
+                  0.095,
+                  0.222,
+                  0.127
+                ],
+                "mean": null,
+                "std": null,
+                "min": null,
+                "max": null,
+                "alpha": null,
+                "beta": null,
+                "probability_true": null
+              },
+              "constraints": [
+                {
+                  "type": "spec_expression",
+                  "expression": "abs(sum(weights)-1.0) < 0.001",
+                  "value": null,
+                  "reason": "Weights must sum to 1"
+                }
+              ],
+              "grounding": {
+                "level": "strong",
+                "method": "researched",
+                "source": "US Census Bureau ACS 2023 Educational Attainment for Adults 25+ (census.gov); CPS 2024",
+                "note": "ACS 2023 adults 25+: No HS diploma ~8.8%, HS grad ~27.0%, Some college (no degree) ~20%, Associate's ~9.5%, Bachelor's ~22.2%, Graduate ~12.7%. Adults 18-24 skew toward lower attainment but for simula...[truncated]"
+              }
+            },
+            {
+              "name": "household_income",
+              "distribution": {
+                "type": "lognormal",
+                "mean": 11.0,
+                "std": 0.85,
+                "min": 0,
+                "max": 2000000,
+                "alpha": null,
+                "beta": null,
+                "options": null,
+                "weights": null,
+                "probability_true": null
+              },
+              "constraints": [
+                {
+                  "type": "hard_min",
+                  "value": 0,
+                  "expression": null,
+                  "reason": "Income cannot be negative"
+                },
+                {
+                  "type": "hard_max",
+                  "value": 2000000,
+                  "expression": null,
+                  "reason": "Practical upper bound; captures top 0.01% without wild outliers distorting model"
+                }
+              ],
+              "grounding": {
+                "level": "strong",
+                "method": "researched",
+                "source": "US Census Bureau CPS ASEC 2023; median household income ~$80,610 in 2023 (census.gov); lognormal is standard model for income distributions",
+                "note": "Lognormal params: mean=11.0 (exp(11)~$60,000 geometric mean), std=0.85 on log scale gives median ~$60k, mean ~$89k which matches CPS data. US median HH income was $80,610 in 2023 (all HH); for adults ...[truncated]"
+              }
+            },
+            {
+              "name": "marital_status",
+              "distribution": {
+                "type": "categorical",
+                "options": [
+                  "Single",
+                  "Married",
+                  "Divorced",
+                  "Widowed",
+                  "Domestic Partnership"
+                ],
+                "weights": [
+                  0.318,
+                  0.476,
+                  0.113,
+                  0.059,
+                  0.034
+                ],
+                "mean": null,
+                "std": null,
+                "min": null,
+                "max": null,
+                "alpha": null,
+                "beta": null,
+                "probability_true": null
+              },
+              "constraints": [
+                {
+                  "type": "spec_expression",
+                  "expression": "abs(sum(weights)-1.0) < 0.001",
+                  "value": null,
+                  "reason": "Weights must sum to 1"
+                }
+              ],
+              "grounding": {
+                "level": "strong",
+                "method": "researched",
+                "source": "US Census Bureau CPS 2023; ACS 2022-2023 marital status for adults 18+",
+                "note": "CPS 2023 adults 18+: Never married ~32%, Married ~48%, Divorced ~11%, Widowed ~6%, Cohabiting ~3.4%. Widowed higher among older adults. Domestic partnership includes cohabiting/civil unions. Single = ...[truncated]"
+              }
+            },
+            {
+              "name": "household_size",
+              "distribution": {
+                "type": "normal",
+                "mean": 2.53,
+                "std": 1.4,
+                "min": 1,
+                "max": 10,
+                "alpha": null,
+                "beta": null,
+                "options": null,
+                "weights": null,
+                "probability_true": null
+              },
+              "constraints": [
+                {
+                  "type": "hard_min",
+                  "value": 1,
+                  "expression": null,
+                  "reason": "At minimum the agent lives alone"
+                },
+                {
+                  "type": "hard_max",
+                  "value": 15,
+                  "expression": null,
+                  "reason": "Practical upper bound; extreme multi-generational households exist but >15 extremely rare"
+                }
+              ],
+              "grounding": {
+                "level": "strong",
+                "method": "researched",
+                "source": "US Census Bureau CPS 2023; ACS 2023: average household size 2.53 persons",
+                "note": "US average household size 2.53 in 2023. Distribution is right-skewed (many 1- and 2-person households, some large families). Normal approximation with hard_min=1 captures this. Post-sampling, round to...[truncated]"
+              }
+            },
+            {
+              "name": "has_children",
+              "distribution": {
+                "type": "boolean",
+                "probability_true": 0.28,
+                "mean": null,
+                "std": null,
+                "min": null,
+                "max": null,
+                "alpha": null,
+                "beta": null,
+                "options": null,
+                "weights": null
+              },
+              "constraints": [
+                {
+                  "type": "expression",
+                  "expression": "has_children == False or household_size >= 2",
+                  "value": null,
+                  "reason": "Cannot have children in household if household_size < 2"
+                }
+              ],
+              "grounding": {
+                "level": "strong",
+                "method": "researched",
+                "source": "US Census Bureau CPS 2023; ~28-30% of US households have own children under 18 present",
+                "note": "CPS 2023: ~28% of all households have own children under 18. Among adults 18+, this is the household-level figure. Higher among 25-45 age group; nearly 0 for 65+. Reflects children under 18 in househo...[truncated]"
+              }
+            },
+            {
+              "name": "employment_status",
+              "distribution": {
+                "type": "categorical",
+                "options": [
+                  "Full-time",
+                  "Part-time",
+                  "Self-employed",
+                  "Unemployed",
+                  "Retired",
+                  "Student"
+                ],
+                "weights": [
+                  0.465,
+                  0.115,
+                  0.095,
+                  0.035,
+                  0.225,
+                  0.065
+                ],
+                "mean": null,
+                "std": null,
+                "min": null,
+                "max": null,
+                "alpha": null,
+                "beta": null,
+                "probability_true": null
+              },
+              "constraints": [
+                {
+                  "type": "spec_expression",
+                  "expression": "abs(sum(weights)-1.0) < 0.001",
+                  "value": null,
+                  "reason": "Weights must sum to 1"
+                }
+              ],
+              "grounding": {
+                "level": "strong",
+                "method": "researched",
+                "source": "BLS Current Employment Statistics 2024; BLS CPS 2024 labor force participation; employment-population ratio ~60.4%",
+                "note": "BLS 2024: Employment-population ratio ~60.4%, unemployment rate ~3.7-4.0%. Self-employed ~9.5% of workforce. Retired accounts for large share (~22%) due to aging population. Student ~6.5% of adults 18...[truncated]"
+              }
+            },
+            {
+              "name": "occupation",
+              "distribution": {
+                "type": "categorical",
+                "options": [
+                  "Management",
+                  "Professional",
+                  "Service",
+                  "Sales",
+                  "Construction",
+                  "Production",
+                  "Other"
+                ],
+                "weights": [
+                  0.107,
+                  0.228,
+                  0.167,
+                  0.147,
+                  0.09,
+                  0.065,
+                  0.196
+                ],
+                "mean": null,
+                "std": null,
+                "min": null,
+                "max": null,
+                "alpha": null,
+                "beta": null,
+                "probability_true": null
+              },
+              "constraints": [
+                {
+                  "type": "spec_expression",
+                  "expression": "abs(sum(weights)-1.0) < 0.001",
+                  "value": null,
+                  "reason": "Weights must sum to 1"
+                }
+              ],
+              "grounding": {
+                "level": "strong",
+                "method": "researched",
+                "source": "BLS Occupational Employment and Wage Statistics 2023 (bls.gov/oes); BLS occupational group employment shares",
+                "note": "BLS 2023 major occupation groups: Management 10.7%, Professional 22.8%, Service 16.7%, Sales 14.7%, Construction/Extraction 9.0%, Production/Transportation 6.5%, Other (including admin support, transp...[truncated]"
+              }
+            },
+            {
+              "name": "political_affiliation",
+              "distribution": {
+                "type": "categorical",
+                "options": [
+                  "Strong Democrat",
+                  "Lean Democrat",
+                  "Independent",
+                  "Lean Republican",
+                  "Strong Republican"
+                ],
+                "weights": [
+                  0.165,
+                  0.155,
+                  0.235,
+                  0.145,
+                  0.2
+                ],
+                "mean": null,
+                "std": null,
+                "min": null,
+                "max": null,
+                "alpha": null,
+                "beta": null,
+                "probability_true": null
+              },
+              "constraints": [
+                {
+                  "type": "spec_expression",
+                  "expression": "abs(sum(weights)-1.0) < 0.001",
+                  "value": null,
+                  "reason": "Weights must sum to 1"
+                }
+              ],
+              "grounding": {
+                "level": "strong",
+                "method": "researched",
+                "source": "Gallup 2024 party affiliation data (news.gallup.com/poll/655157); Pew Research Center NPORS 2024-2025 (pewresearch.org/politics/fact-sheet/party-affiliation-fact-sheet-npors)",
+                "note": "Gallup 2024: 28% Democrat, 28% Republican, 43% Independent (pure). Leaned: 46% R or R-lean, 45% D or D-lean. Pew NPORS: 31% Republican, 28% Democrat, 41% independent/other. Strong vs Lean split estima...[truncated]"
+              }
+            },
+            {
+              "name": "political_ideology",
+              "distribution": {
+                "type": "categorical",
+                "options": [
+                  "Very Liberal",
+                  "Liberal",
+                  "Moderate",
+                  "Conservative",
+                  "Very Conservative"
+                ],
+                "weights": [
+                  0.085,
+                  0.185,
+                  0.355,
+                  0.245,
+                  0.13
+                ],
+                "mean": null,
+                "std": null,
+                "min": null,
+                "max": null,
+                "alpha": null,
+                "beta": null,
+                "probability_true": null
+              },
+              "constraints": [
+                {
+                  "type": "spec_expression",
+                  "expression": "abs(sum(weights)-1.0) < 0.001",
+                  "value": null,
+                  "reason": "Weights must sum to 1"
+                }
+              ],
+              "grounding": {
+                "level": "strong",
+                "method": "researched",
+                "source": "Gallup 2023-2024 ideology tracking (news.gallup.com/poll/548459); Gallup 2025 annual average (35% conservative, 33% moderate, 28% liberal)",
+                "note": "Gallup 2023: 36% conservative, 36% moderate, 25% liberal. Gallup 2025: 35% conservative, 33% moderate, 28% liberal. Very liberal/very conservative split estimated from ANES and GSS sub-categories (~8-...[truncated]"
+              }
+            },
+            {
+              "name": "religious_affiliation",
+              "distribution": {
+                "type": "categorical",
+                "options": [
+                  "Evangelical Protestant",
+                  "Mainline Protestant",
+                  "Catholic",
+                  "Other Christian",
+                  "Jewish",
+                  "Muslim",
+                  "Other Non-Christian",
+                  "None/Unaffiliated"
+                ],
+                "weights": [
+                  0.23,
+                  0.11,
+                  0.19,
+                  0.06,
+                  0.02,
+                  0.011,
+                  0.04,
+                  0.29
+                ],
+                "mean": null,
+                "std": null,
+                "min": null,
+                "max": null,
+                "alpha": null,
+                "beta": null,
+                "probability_true": null
+              },
+              "constraints": [
+                {
+                  "type": "spec_expression",
+                  "expression": "abs(sum(weights)-1.0) < 0.001",
+                  "value": null,
+                  "reason": "Weights must sum to 1"
+                }
+              ],
+              "grounding": {
+                "level": "strong",
+                "method": "researched",
+                "source": "Pew Research Center 2023-24 Religious Landscape Study (pewresearch.org/religion/2025/02/26/religious-landscape-study-executive-summary); Gallup 2024 religious preferences (news.gallup.com/poll/659339)",
+                "note": "Pew RLS 2023-24: Evangelical Protestant 23%, Mainline Protestant 11%, Catholic 19%, Other Christian 3-5%, Jewish 2%, Muslim 1%, Buddhist/Hindu/Other ~4%, Unaffiliated 29%. Gallup 2024: Protestant/nond...[truncated]"
+              }
+            },
+            {
+              "name": "religious_attendance",
+              "distribution": {
+                "type": "categorical",
+                "options": [
+                  "Never",
+                  "Seldom",
+                  "A few times/year",
+                  "Monthly",
+                  "Weekly",
+                  "More than weekly"
+                ],
+                "weights": [
+                  0.265,
+                  0.165,
+                  0.155,
+                  0.095,
+                  0.215,
+                  0.105
+                ],
+                "mean": null,
+                "std": null,
+                "min": null,
+                "max": null,
+                "alpha": null,
+                "beta": null,
+                "probability_true": null
+              },
+              "constraints": [
+                {
+                  "type": "spec_expression",
+                  "expression": "abs(sum(weights)-1.0) < 0.001",
+                  "value": null,
+                  "reason": "Weights must sum to 1"
+                }
+              ],
+              "grounding": {
+                "level": "medium",
+                "method": "researched",
+                "source": "Pew Research Center 2023-24 RLS religious practice data; Gallup church attendance tracking 2022-2024; GSS 2022",
+                "note": "Pew 2023-24 RLS: ~26% attend at least weekly, ~22% seldom/never attend. GSS 2022: ~21% weekly, ~33% never. Gallup 2024: weekly/nearly weekly ~20-22%. 'Never' ~26%, 'Seldom' ~17%, 'A few times/year' ~1...[truncated]"
+              }
+            },
+            {
+              "name": "primary_news_source",
+              "distribution": {
+                "type": "categorical",
+                "options": [
+                  "TV",
+                  "Online/Digital",
+                  "Social Media",
+                  "Radio",
+                  "Print Newspaper",
+                  "None"
+                ],
+                "weights": [
+                  0.285,
+                  0.295,
+                  0.195,
+                  0.07,
+                  0.04,
+                  0.115
+                ],
+                "mean": null,
+                "std": null,
+                "min": null,
+                "max": null,
+                "alpha": null,
+                "beta": null,
+                "probability_true": null
+              },
+              "constraints": [
+                {
+                  "type": "spec_expression",
+                  "expression": "abs(sum(weights)-1.0) < 0.001",
+                  "value": null,
+                  "reason": "Weights must sum to 1"
+                }
+              ],
+              "grounding": {
+                "level": "strong",
+                "method": "researched",
+                "source": "Pew Research Center 2024 news consumption survey; Reuters Institute Digital News Report 2024; Gallup media consumption data 2023-2024",
+                "note": "Pew 2024: TV ~32% primary news source (declining), Online/Digital ~29% (growing), Social Media ~18-20%, Radio ~7%, Print ~4%, None/Other ~10-12%. Social media as primary news source growing esp. among...[truncated]"
+              }
+            },
+            {
+              "name": "news_outlet_lean",
+              "distribution": {
+                "type": "categorical",
+                "options": [
+                  "Left-leaning",
+                  "Center",
+                  "Right-leaning",
+                  "Mixed/No Preference"
+                ],
+                "weights": [
+                  0.265,
+                  0.2,
+                  0.255,
+                  0.28
+                ],
+                "mean": null,
+                "std": null,
+                "min": null,
+                "max": null,
+                "alpha": null,
+                "beta": null,
+                "probability_true": null
+              },
+              "constraints": [
+                {
+                  "type": "spec_expression",
+                  "expression": "abs(sum(weights)-1.0) < 0.001",
+                  "value": null,
+                  "reason": "Weights must sum to 1"
+                }
+              ],
+              "grounding": {
+                "level": "medium",
+                "method": "extrapolated",
+                "source": "Pew Research Center 2023 news pathways and polarization report; Reuters Institute Digital News Report 2024; AllSides and Ad Fontes Media audience data",
+                "note": "Estimated from cross-tabulation of political affiliation with reported outlet consumption. Fox News ~12-14% of adults as primary source (right-leaning). MSNBC/CNN ~12-15% (left). Network TV/AP/Reuters...[truncated]"
+              }
+            },
+            {
+              "name": "social_media_platforms",
+              "distribution": {
+                "type": "categorical",
+                "options": [
+                  "Facebook",
+                  "Twitter/X",
+                  "Instagram",
+                  "TikTok",
+                  "YouTube",
+                  "None/Minimal"
+                ],
+                "weights": [
+                  0.285,
+                  0.085,
+                  0.165,
+                  0.115,
+                  0.205,
+                  0.145
+                ],
+                "mean": null,
+                "std": null,
+                "min": null,
+                "max": null,
+                "alpha": null,
+                "beta": null,
+                "probability_true": null
+              },
+              "constraints": [
+                {
+                  "type": "spec_expression",
+                  "expression": "abs(sum(weights)-1.0) < 0.001",
+                  "value": null,
+                  "reason": "Weights must sum to 1"
+                }
+              ],
+              "grounding": {
+                "level": "strong",
+                "method": "researched",
+                "source": "Pew Research Center 2023-2024 Social Media Use surveys (pewresearch.org); Statista US social media platform reach 2024",
+                "note": "Pew 2023: YouTube 83%, Facebook 68%, Instagram 47%, TikTok 33%, Twitter/X 22% of US adults use each. As PRIMARY platform: Facebook still dominant overall (older users), YouTube growing esp. cross-age,...[truncated]"
+              }
+            },
+            {
+              "name": "social_media_hours_per_day",
+              "distribution": {
+                "type": "lognormal",
+                "mean": 0.85,
+                "std": 0.75,
+                "min": 0.0,
+                "max": 12.0,
+                "alpha": null,
+                "beta": null,
+                "options": null,
+                "weights": null,
+                "probability_true": null
+              },
+              "constraints": [
+                {
+                  "type": "hard_min",
+                  "value": 0.0,
+                  "expression": null,
+                  "reason": "Cannot be negative"
+                },
+                {
+                  "type": "hard_max",
+                  "value": 12.0,
+                  "expression": null,
+                  "reason": "Practical maximum (waking hours spent on social media)"
+                }
+              ],
+              "grounding": {
+                "level": "strong",
+                "method": "researched",
+                "source": "Pew Research Center 2023-24 social media time data; Statista/DataReportal 2024: US average social media time ~2.3 hours/day across all users",
+                "note": "DataReportal 2024: US average social media use ~2.3 hrs/day across users. Lognormal with mean=0.85 (log scale), std=0.75 gives median ~exp(0.85)~2.3 hrs, with long right tail for heavy users. Includes...[truncated]"
+              }
+            },
+            {
+              "name": "internet_access",
+              "distribution": {
+                "type": "categorical",
+                "options": [
+                  "Broadband",
+                  "Mobile Only",
+                  "Dial-up/Satellite",
+                  "None"
+                ],
+                "weights": [
+                  0.73,
+                  0.145,
+                  0.045,
+                  0.08
+                ],
+                "mean": null,
+                "std": null,
+                "min": null,
+                "max": null,
+                "alpha": null,
+                "beta": null,
+                "probability_true": null
+              },
+              "constraints": [
+                {
+                  "type": "spec_expression",
+                  "expression": "abs(sum(weights)-1.0) < 0.001",
+                  "value": null,
+                  "reason": "Weights must sum to 1"
+                }
+              ],
+              "grounding": {
+                "level": "strong",
+                "method": "researched",
+                "source": "Pew Research Center 2024 internet access survey; FCC Broadband Deployment Report 2024; NTIA Internet Use Survey 2023",
+                "note": "Pew 2024: ~77% of US adults have home broadband. ~7% are smartphone-only internet users. ~8% have no internet at home. ~4-5% have satellite/DSL/dial-up as primary. Broadband access has grown steadily;...[truncated]"
+              }
+            },
+            {
+              "name": "civic_engagement",
+              "distribution": {
+                "type": "categorical",
+                "options": [
+                  "Votes regularly",
+                  "Votes sometimes",
+                  "Rarely votes/Never votes",
+                  "Also actively volunteers or campaigns"
+                ],
+                "weights": [
+                  0.415,
+                  0.235,
+                  0.225,
+                  0.125
+                ],
+                "mean": null,
+                "std": null,
+                "min": null,
+                "max": null,
+                "alpha": null,
+                "beta": null,
+                "probability_true": null
+              },
+              "constraints": [
+                {
+                  "type": "spec_expression",
+                  "expression": "abs(sum(weights)-1.0) < 0.001",
+                  "value": null,
+                  "reason": "Weights must sum to 1"
+                }
+              ],
+              "grounding": {
+                "level": "strong",
+                "method": "researched",
+                "source": "US Elections Project voter turnout data 2020-2024; Census Bureau Voting and Registration Supplement CPS 2022-2024; CIRCLE youth civic engagement data",
+                "note": "2020 election turnout ~66.8% of eligible voters (highest since 1900). 2022 midterm ~46.8%. 2024 ~64%. Among registered voters, ~70-75% vote in presidential years. 'Regularly' votes ~41-43% (votes in p...[truncated]"
+              }
+            },
+            {
+              "name": "homeownership",
+              "distribution": {
+                "type": "boolean",
+                "probability_true": 0.656,
+                "mean": null,
+                "std": null,
+                "min": null,
+                "max": null,
+                "alpha": null,
+                "beta": null,
+                "options": null,
+                "weights": null
+              },
+              "constraints": [],
+              "grounding": {
+                "level": "strong",
+                "method": "researched",
+                "source": "US Census Bureau Housing Vacancies and Homeownership Survey (HVS) Q3 2024; homeownership rate 65.6%",
+                "note": "Census Bureau HVS Q3 2024: US homeownership rate 65.6%. Varies significantly by age (18-34: ~38%, 65+: ~79%), race (White non-Hispanic ~73%, Black ~46%, Hispanic ~49%), and income. National rate is ro...[truncated]"
+              }
+            },
+            {
+              "name": "health_insurance_type",
+              "distribution": {
+                "type": "categorical",
+                "options": [
+                  "Employer-sponsored",
+                  "Medicaid/CHIP",
+                  "Medicare",
+                  "Individual Market/ACA",
+                  "Military/VA",
+                  "Uninsured"
+                ],
+                "weights": [
+                  0.468,
+                  0.17,
+                  0.155,
+                  0.07,
+                  0.032,
+                  0.105
+                ],
+                "mean": null,
+                "std": null,
+                "min": null,
+                "max": null,
+                "alpha": null,
+                "beta": null,
+                "probability_true": null
+              },
+              "constraints": [
+                {
+                  "type": "spec_expression",
+                  "expression": "abs(sum(weights)-1.0) < 0.001",
+                  "value": null,
+                  "reason": "Weights must sum to 1"
+                }
+              ],
+              "grounding": {
+                "level": "strong",
+                "method": "researched",
+                "source": "KFF Health Insurance Coverage 2023; Census Bureau CPS ASEC 2023 health insurance data; CMS enrollment data 2023",
+                "note": "KFF 2023: Employer-sponsored ~46.8%, Medicaid ~17%, Medicare ~15.5%, Individual market ~7%, Military/VA ~3.2%, Uninsured ~10.5%. Some overlap (dual coverage) handled by assigning primary source. Medic...[truncated]"
+              }
+            },
+            {
+              "name": "immigration_status",
+              "distribution": {
+                "type": "categorical",
+                "options": [
+                  "US-born citizen",
+                  "Naturalized citizen",
+                  "Permanent resident",
+                  "Other"
+                ],
+                "weights": [
+                  0.843,
+                  0.075,
+                  0.043,
+                  0.039
+                ],
+                "mean": null,
+                "std": null,
+                "min": null,
+                "max": null,
+                "alpha": null,
+                "beta": null,
+                "probability_true": null
+              },
+              "constraints": [
+                {
+                  "type": "spec_expression",
+                  "expression": "abs(sum(weights)-1.0) < 0.001",
+                  "value": null,
+                  "reason": "Weights must sum to 1"
+                }
+              ],
+              "grounding": {
+                "level": "strong",
+                "method": "researched",
+                "source": "US Census Bureau ACS 2023 nativity and citizenship status; CPS 2023 foreign-born population data",
+                "note": "ACS 2023: Foreign-born ~14.3% of total US population (~47M). Of these: naturalized citizens ~52%, LPRs ~30%, other (visa, undocumented) ~18%. US-born ~85.7%. Adult proportion: US-born ~84.3%, Naturali...[truncated]"
+              }
+            },
+            {
+              "name": "union_membership",
+              "distribution": {
+                "type": "boolean",
+                "probability_true": 0.1,
+                "mean": null,
+                "std": null,
+                "min": null,
+                "max": null,
+                "alpha": null,
+                "beta": null,
+                "options": null,
+                "weights": null
+              },
+              "constraints": [],
+              "grounding": {
+                "level": "strong",
+                "method": "researched",
+                "source": "BLS Union Members Summary January 2024 (bls.gov/news.release/union2); union membership rate 10.0% in 2023",
+                "note": "BLS: Union membership rate was 10.0% in 2023, down from 10.1% in 2022. Public sector rate 32.5%, private sector 6.0%. Applied to all adults (not just employed) means effective rate ~10% of adults who ...[truncated]"
+              }
+            },
+            {
+              "name": "gun_ownership",
+              "distribution": {
+                "type": "boolean",
+                "probability_true": 0.32,
+                "mean": null,
+                "std": null,
+                "min": null,
+                "max": null,
+                "alpha": null,
+                "beta": null,
+                "options": null,
+                "weights": null
+              },
+              "constraints": [],
+              "grounding": {
+                "level": "strong",
+                "method": "researched",
+                "source": "Pew Research Center 2023 gun ownership survey (pewresearch.org); Gallup 2023 gun ownership ~44% of households; NORC GSS 2022",
+                "note": "Pew 2023: 32% of US adults personally own a gun; 44% live in gun-owning households. GSS 2022: ~32-34% household gun ownership. NORC/Gallup historically higher (~44%). Variation by method: self-report ...[truncated]"
+              }
+            },
+            {
+              "name": "trust_in_institutions",
+              "distribution": {
+                "type": "beta",
+                "alpha": 3.5,
+                "beta": 6.5,
+                "min": 0.0,
+                "max": 1.0,
+                "mean": null,
+                "std": null,
+                "options": null,
+                "weights": null,
+                "probability_true": null
+              },
+              "constraints": [
+                {
+                  "type": "hard_min",
+                  "value": 0.0,
+                  "expression": null,
+                  "reason": "Scale floor"
+                },
+                {
+                  "type": "hard_max",
+                  "value": 1.0,
+                  "expression": null,
+                  "reason": "Scale ceiling"
+                }
+              ],
+              "grounding": {
+                "level": "strong",
+                "method": "researched",
+                "source": "Gallup Confidence in Institutions 2023-2024 (news.gallup.com); Edelman Trust Barometer 2024 US data; Pew trust in government 2024",
+                "note": "Gallup 2023-2024: Confidence in most US institutions at or near historical lows. Congress ~8-13%, media ~14-18%, presidency ~26-35%, SCOTUS ~25-40%. Edelman 2024 Trust Index for US ~47/100. Beta(3.5,6...[truncated]"
+              }
+            },
+            {
+              "name": "need_for_cognition",
+              "distribution": {
+                "type": "beta",
+                "alpha": 6.0,
+                "beta": 6.0,
+                "min": 0.0,
+                "max": 1.0,
+                "mean": null,
+                "std": null,
+                "options": null,
+                "weights": null,
+                "probability_true": null
+              },
+              "constraints": [
+                {
+                  "type": "hard_min",
+                  "value": 0.0,
+                  "expression": null,
+                  "reason": "Scale floor"
+                },
+                {
+                  "type": "hard_max",
+                  "value": 1.0,
+                  "expression": null,
+                  "reason": "Scale ceiling"
+                }
+              ],
+              "grounding": {
+                "level": "medium",
+                "method": "extrapolated",
+                "source": "Cacioppo & Petty NFC Scale meta-analyses; Fleischhauer et al. (2010); NFC correlates with education and openness in US samples",
+                "note": "Need for Cognition (NFC) in general adult populations follows approximately normal distribution on the scale. Mean ~0.50, SD ~0.16. Beta(6,6) gives symmetric distribution centered at 0.5. NFC positive...[truncated]"
+              }
+            },
+            {
+              "name": "susceptibility_to_misinformation",
+              "distribution": {
+                "type": "beta",
+                "alpha": 4.5,
+                "beta": 6.5,
+                "min": 0.0,
+                "max": 1.0,
+                "mean": null,
+                "std": null,
+                "options": null,
+                "weights": null,
+                "probability_true": null
+              },
+              "constraints": [
+                {
+                  "type": "hard_min",
+                  "value": 0.0,
+                  "expression": null,
+                  "reason": "Scale floor"
+                },
+                {
+                  "type": "hard_max",
+                  "value": 1.0,
+                  "expression": null,
+                  "reason": "Scale ceiling"
+                }
+              ],
+              "grounding": {
+                "level": "medium",
+                "method": "extrapolated",
+                "source": "Pennycook & Rand (2019, 2021) misinformation susceptibility research; Roozenbeek et al. (2022) inoculation studies; Reuters Institute Digital News Report 2023-2024 news literacy data",
+                "note": "Susceptibility to misinformation inversely correlated with analytical thinking (NFC), education, and media literacy. Pennycook & Rand (2019) found ~25-30% of US adults regularly fail to discriminate r...[truncated]"
+              }
+            }
+          ]
+        },
+        "name": "independent_hydration",
+        "type": "tool_use",
+        "caller": {
+          "type": "direct"
+        }
+      }
+    ],
+    "model": "claude-sonnet-4-6",
+    "role": "assistant",
+    "stop_reason": "tool_use",
+    "stop_sequence": null,
+    "type": "message",
+    "usage": {
+      "cache_creation": {
+        "ephemeral_1h_input_tokens": "[REDACTED_SECRET]",
+        "ephemeral_5m_input_tokens": "[REDACTED_SECRET]"
+      },
+      "cache_creation_input_tokens": "[REDACTED_SECRET]",
+      "cache_read_input_tokens": "[REDACTED_SECRET]",
+      "input_tokens": 148603,
+      "output_tokens": 13691,
+      "server_tool_use": {
+        "web_search_requests": 5,
+        "web_fetch_requests": 0
+      },
+      "service_tier": "standard",
+      "inference_geo": "global"
+    }
+  },
+  "sources_extracted": [
+    "https://en.wikipedia.org/wiki/Religion_in_the_United_States",
+    "https://www.statista.com/statistics/241495/us-population-by-sex/",
+    "https://www.census.gov/newsroom/press-releases/2024/population-estimates-characteristics.html",
+    "https://en.wikipedia.org/wiki/Irreligion_in_the_United_States",
+    "https://news.gallup.com/poll/655157/gop-holds-edge-party-affiliation-third-straight-year.aspx",
+    "https://www.kff.org/state-health-policy-data/state-indicator/distribution-by-age/",
+    "https://www.populationpyramid.net/united-states-of-america/2024/",
+    "https://www.pewresearch.org/politics/fact-sheet/party-affiliation-fact-sheet-npors/",
+    "https://www.pewresearch.org/politics/2024/04/09/age-generational-cohorts-and-party-identification/",
+    "https://www.pewresearch.org/religion/2025/02/26/decline-of-christianity-in-the-us-has-slowed-may-have-leveled-off/",
+    "https://www.neilsberg.com/insights/united-states-population-by-race/",
+    "https://en.wikipedia.org/wiki/Demographics_of_the_United_States",
+    "https://www.opb.org/article/2025/02/26/pew-religious-landscape-study-christianity/",
+    "https://news.gallup.com/poll/692978/democrats-regain-advantage-party-affiliation.aspx",
+    "https://www.visualcapitalist.com/u-s-population-by-age-group/",
+    "https://news.gallup.com/poll/700499/new-high-identify-political-independents.aspx",
+    "https://www.uniteamerica.org/articles/research-brief-growing-cohort-of-independent-voters-becomes-critical-segment-of-electorate",
+    "https://www.visualcapitalist.com/visualizing-u-s-population-by-race/",
+    "https://www.pewresearch.org/religion/2025/02/26/age-race-education-and-other-demographic-traits-of-us-religious-groups/",
+    "https://datacenter.aecf.org/data/tables/6538-adult-population-by-age-group",
+    "https://news.gallup.com/poll/659339/religious-preferences-largely-stable-2020.aspx",
+    "https://www.statista.com/statistics/183489/population-of-the-us-by-ethnicity-since-2000/",
+    "https://www.visualcapitalist.com/u-s-population-racial-breakdown-1990-2023/",
+    "https://www.census.gov/library/stories/2025/06/metro-areas-median-age.html",
+    "https://usafacts.org/data/topics/people-society/population-and-demographics/our-changing-population/",
+    "https://www.pewresearch.org/politics/2024/04/09/the-partisanship-and-ideology-of-american-voters/",
+    "https://en.wikipedia.org/wiki/Race_and_ethnicity_in_the_United_States",
+    "https://www.census.gov/newsroom/press-releases/2024/population-estimates-age-sex.html",
+    "https://www.census.gov/data/tables/time-series/demo/popest/2020s-national-detail.html",
+    "https://www.statista.com/statistics/1078361/political-party-identification-us-major-parties/",
+    "https://www.statista.com/statistics/737923/us-population-by-gender/",
+    "https://theworlddata.com/population-by-gender-in-us/",
+    "https://www.pewresearch.org/religion/2025/12/15/why-many-us-adults-are-nones-and-why-some-former-nones-have-joined-a-religion/",
+    "https://www.marketingcharts.com/charts/us-population-distribution-by-generation-and-race-ethnicity-in-2024",
+    "https://news.gallup.com/poll/15370/party-affiliation.aspx",
+    "https://www.pewresearch.org/short-reads/2025/11/13/if-the-u-s-had-100-people-charting-americans-religious-affiliations/",
+    "https://www.pewresearch.org/religion/2025/02/26/religious-landscape-study-religious-identity/",
+    "https://www.pewresearch.org/religion/2025/02/26/religious-landscape-study-executive-summary/",
+    "https://www.pewresearch.org/race-and-ethnicity/2025/11/03/counting-race-how-the-census-measures-identity-and-what-americans-think-about-it/",
+    "https://news.gallup.com/poll/548459/independent-party-tied-high-democratic-new-low.aspx",
+    "https://www.census.gov/data/datasets/time-series/demo/popest/2020s-national-detail.html",
+    "https://www.statista.com/statistics/241488/population-of-the-us-by-sex-and-age/",
+    "https://www.census.gov/popclock/data_tables.php?component=pyramid"
+  ]
+}

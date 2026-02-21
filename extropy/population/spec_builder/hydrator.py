@@ -110,6 +110,55 @@ def _should_hydrate_household_config(
     return False
 
 
+def _extract_gender_options_for_household(
+    context: list[AttributeSpec] | None,
+    hydrated_attrs: list[HydratedAttribute],
+) -> list[str]:
+    """Extract explicit gender-category options for household partner pairing."""
+
+    def options_for(attr: AttributeSpec) -> list[str]:
+        if attr.type != "categorical" or attr.sampling.distribution is None:
+            return []
+        dist = attr.sampling.distribution
+        if not hasattr(dist, "options"):
+            return []
+        opts = getattr(dist, "options", None) or []
+        return [str(o) for o in opts if str(o).strip()]
+
+    # Prefer semantic metadata over name heuristics.
+    candidates: list[AttributeSpec] = []
+    for attr in (context or []):
+        if attr.identity_type == "gender_identity":
+            candidates.append(attr)
+    for attr in hydrated_attrs:
+        if attr.identity_type == "gender_identity":
+            candidates.append(attr)
+
+    # Legacy fallback for older specs lacking identity_type metadata.
+    if not candidates:
+        fallback_names = {"gender", "sex", "gender_identity"}
+        for attr in (context or []):
+            if attr.name in fallback_names:
+                candidates.append(attr)
+        for attr in hydrated_attrs:
+            if attr.name in fallback_names:
+                candidates.append(attr)
+
+    for attr in candidates:
+        opts = options_for(attr)
+        if opts:
+            # Preserve original option casing/order from spec.
+            seen: set[str] = set()
+            ordered: list[str] = []
+            for value in opts:
+                if value not in seen:
+                    seen.add(value)
+                    ordered.append(value)
+            return ordered
+
+    return []
+
+
 # =============================================================================
 # Main Orchestrator
 # =============================================================================
@@ -303,9 +352,21 @@ def hydrate_attributes(
     # Step 2e: Household config (optional; enabled by scenario stage)
     if include_household and _should_hydrate_household_config(population, attributes):
         report("2e", "Researching household composition...")
+        merged_attribute_names = sorted(
+            {
+                *(attr.name for attr in attributes),
+                *(attr.name for attr in context or []),
+            }
+        )
+        gender_options = _extract_gender_options_for_household(
+            context=context,
+            hydrated_attrs=independent_attrs + derived_attrs + conditional_attrs,
+        )
         household_config, hh_sources = hydrate_household_config(
             population=population,
             geography=geography,
+            allowed_attributes=merged_attribute_names,
+            allowed_gender_values=gender_options,
             model=model,
             reasoning_effort=reasoning_effort,
             on_retry=make_retry_callback("2e"),

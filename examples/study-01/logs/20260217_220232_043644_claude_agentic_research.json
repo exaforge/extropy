@@ -1,0 +1,743 @@
+{
+  "timestamp": "2026-02-17T22:02:32.043693",
+  "function": "agentic_research",
+  "provider": "claude",
+  "request": {
+    "model": "claude-sonnet-4-6",
+    "prompt_length": 19407
+  },
+  "response": {
+    "id": "msg_01QhtNXMUpXidxiJjqwBqxtc",
+    "content": [
+      {
+        "id": "srvtoolu_015oGhCoztVaEbgayuFmAfXN",
+        "input": {
+          "query": "public opinion surveys AI superintelligence risk perception trust 2024 2025"
+        },
+        "name": "web_search",
+        "type": "server_tool_use",
+        "caller": {
+          "type": "direct"
+        }
+      },
+      {
+        "id": "srvtoolu_01RHRYmcqK3W26JJ2n4bCZgp",
+        "input": {
+          "query": "AI automation job displacement anxiety survey US adults 2024"
+        },
+        "name": "web_search",
+        "type": "server_tool_use",
+        "caller": {
+          "type": "direct"
+        }
+      },
+      {
+        "content": [
+          {
+            "encrypted_content": "[REDACTED_TEXT length=5308]",
+            "page_age": "November 11, 2025",
+            "title": "How the US Public and AI Experts View Artificial Intelligence | Pew Research Center",
+            "type": "web_search_result",
+            "url": "https://www.pewresearch.org/internet/2025/04/03/how-the-us-public-and-ai-experts-view-artificial-intelligence/"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=1800]",
+            "page_age": null,
+            "title": "Public Opinion | The 2025 AI Index Report - Stanford HAI",
+            "type": "web_search_result",
+            "url": "https://hai.stanford.edu/ai-index/2025-ai-index-report/public-opinion"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=2432]",
+            "page_age": null,
+            "title": "Global study reveals trust of AI remains a critical challenge",
+            "type": "web_search_result",
+            "url": "https://mbs.edu/news/global-study-reveals-trust-of-ai-remains-a-critical-challenge"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=1688]",
+            "page_age": null,
+            "title": "Trust, attitudes and use of Artificial Intelligence: A global study 2025",
+            "type": "web_search_result",
+            "url": "https://mbs.edu/faculty-and-research/trust-and-ai"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=3084]",
+            "page_age": null,
+            "title": "CHAPTER 8: Public Opinion",
+            "type": "web_search_result",
+            "url": "https://hai.stanford.edu/assets/files/hai_ai-index-report-2025_chapter8_final.pdf"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=1936]",
+            "page_age": "May 1, 2025",
+            "title": "Trust, attitudes and use of artificial intelligence: A global study 2025",
+            "type": "web_search_result",
+            "url": "https://kpmg.com/xx/en/our-insights/ai-and-technology/trust-attitudes-and-use-of-ai.html"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=568]",
+            "page_age": null,
+            "title": "Trust, attitudes and use of artificial intelligence A global study 2025",
+            "type": "web_search_result",
+            "url": "https://assets.kpmg.com/content/dam/kpmgsites/xx/pdf/2025/05/trust-attitudes-and-use-of-ai-global-report.pdf"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=476]",
+            "page_age": "November 11, 2025",
+            "title": "AI risks, opportunities, regulation: Views of US public and AI experts | Pew Research Center",
+            "type": "web_search_result",
+            "url": "https://www.pewresearch.org/internet/2025/04/03/views-of-risks-opportunities-and-regulation-of-ai/"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=1804]",
+            "page_age": null,
+            "title": "Global study reveals trust of AI remains a critical challenge reflecting tension between benefits and risks",
+            "type": "web_search_result",
+            "url": "https://kpmg.com/xx/en/media/press-releases/2025/04/trust-of-ai-remains-a-critical-challenge.html"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=4140]",
+            "page_age": null,
+            "title": "Most Americans use AI but still don\u2019t trust it",
+            "type": "web_search_result",
+            "url": "https://yougov.com/en-us/articles/53701-most-americans-use-ai-but-still-dont-trust-it"
+          }
+        ],
+        "tool_use_id": "srvtoolu_015oGhCoztVaEbgayuFmAfXN",
+        "type": "web_search_tool_result"
+      },
+      {
+        "content": [
+          {
+            "encrypted_content": "[REDACTED_TEXT length=5548]",
+            "page_age": "May 30, 2025",
+            "title": "59 AI Job Statistics: Future of U.S. Jobs | National University",
+            "type": "web_search_result",
+            "url": "https://www.nu.edu/blog/ai-job-statistics/"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=5540]",
+            "page_age": null,
+            "title": "Top 20 Predictions from Experts on AI Job Loss",
+            "type": "web_search_result",
+            "url": "https://research.aimultiple.com/ai-job-loss/"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=5116]",
+            "page_age": "February 26, 2025",
+            "title": "Resume Now\u2019s AI Disruption Report Reveals Anxiety About AI Job Loss",
+            "type": "web_search_result",
+            "url": "https://www.resume-now.com/job-resources/careers/ai-disruption-report"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=4512]",
+            "page_age": "July 11, 2024",
+            "title": "50+ AI Replacing Jobs Statistics 2024 \u00b7 AIPRM",
+            "type": "web_search_result",
+            "url": "https://www.aiprm.com/ai-replacing-jobs-statistics/"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=5656]",
+            "page_age": "5 days ago",
+            "title": "Measuring US workers\u2019 capacity to adapt to AI-driven job displacement | Brookings",
+            "type": "web_search_result",
+            "url": "https://www.brookings.edu/articles/measuring-us-workers-capacity-to-adapt-to-ai-driven-job-displacement/"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=500]",
+            "page_age": "3 weeks ago",
+            "title": "Automation, Generative AI, and Job Displacement Risk in U.S. Employment",
+            "type": "web_search_result",
+            "url": "https://www.shrm.org/topics-tools/research/automation-generative-ai-and-job-displacement-risk-in-u-s--employment"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=4960]",
+            "page_age": null,
+            "title": "Automation, Generative AI, and Job Displacement Risk in HR Employment",
+            "type": "web_search_result",
+            "url": "https://www.shrm.org/topics-tools/research/automation-generative-ai-job-displacement-risk-hr-employment"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=4748]",
+            "page_age": "August 22, 2025",
+            "title": "71% Fear AI Will Take Jobs. Here\u2019s What Actually Happens | by The Hidden Layer | Medium",
+            "type": "web_search_result",
+            "url": "https://hiddenlayerai.medium.com/71-fear-ai-will-take-jobs-heres-what-actually-happens-f853cd5758fa"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=2964]",
+            "page_age": "March 12, 2025",
+            "title": "On Future AI Use in Workplace, US Workers More Worried Than Hopeful | Pew Research Center",
+            "type": "web_search_result",
+            "url": "https://www.pewresearch.org/social-trends/2025/02/25/u-s-workers-are-more-worried-than-hopeful-about-future-ai-use-in-the-workplace/"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=1792]",
+            "page_age": "August 20, 2025",
+            "title": "New Poll Finds 7 in 10 Americans Fear AI Job Loss",
+            "type": "web_search_result",
+            "url": "https://www.eweek.com/news/americans-fear-ai-job-loss-survey/"
+          }
+        ],
+        "tool_use_id": "srvtoolu_01RHRYmcqK3W26JJ2n4bCZgp",
+        "type": "web_search_tool_result"
+      },
+      {
+        "citations": null,
+        "text": "[REDACTED_TEXT length=2202]",
+        "type": "text",
+        "parsed_output": null
+      },
+      {
+        "id": "toolu_013AamNovqeH7mT1iJHo17qn",
+        "input": {
+          "attributes": [
+            {
+              "name": "ai_literacy",
+              "modifiers": [
+                {
+                  "when": "education_level in ['Bachelor\\'s', 'Graduate Degree'] and occupation == 'Management/Professional'",
+                  "multiply": 1.25,
+                  "add": 0.08,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "education_level in ['Less than HS', 'HS Diploma'] and age > 55",
+                  "multiply": 0.8,
+                  "add": -0.05,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "age < 35 and occupation in ['Management/Professional', 'Sales/Office']",
+                  "multiply": 1.2,
+                  "add": 0.06,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "age > 65 and education_level in ['Less than HS', 'HS Diploma', 'Some College']",
+                  "multiply": 0.75,
+                  "add": -0.07,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "occupation == 'Production/Transport' and education_level in ['Less than HS', 'HS Diploma']",
+                  "multiply": 0.85,
+                  "add": -0.04,
+                  "weight_overrides": null,
+                  "probability_override": null
+                }
+              ]
+            },
+            {
+              "name": "ai_risk_perception",
+              "modifiers": [
+                {
+                  "when": "ai_literacy < 0.35 and trust_in_institutions < 0.40",
+                  "multiply": 1.3,
+                  "add": 0.18,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "ai_literacy > 0.70 and openness > 0.65",
+                  "multiply": 1.1,
+                  "add": 0.12,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "trust_in_institutions < 0.30",
+                  "multiply": 1.25,
+                  "add": 0.2,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "openness < 0.40 and trust_in_institutions < 0.45",
+                  "multiply": 1.2,
+                  "add": 0.15,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "ai_literacy > 0.75 and trust_in_institutions > 0.60",
+                  "multiply": 1.05,
+                  "add": 0.08,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "ai_literacy < 0.50 and openness < 0.50",
+                  "multiply": 1.18,
+                  "add": 0.14,
+                  "weight_overrides": null,
+                  "probability_override": null
+                }
+              ]
+            },
+            {
+              "name": "automation_job_vulnerability",
+              "modifiers": [
+                {
+                  "when": "occupation == 'Sales/Office' and employment_status in ['Full-time', 'Part-time']",
+                  "multiply": 1.4,
+                  "add": 0.18,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "occupation == 'Management/Professional' and education_level in ['Bachelor\\'s', 'Graduate Degree']",
+                  "multiply": 1.35,
+                  "add": 0.15,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "occupation == 'Production/Transport'",
+                  "multiply": 1.45,
+                  "add": 0.2,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "occupation == 'Service' and education_level in ['Less than HS', 'HS Diploma', 'Some College']",
+                  "multiply": 1.2,
+                  "add": 0.1,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "occupation == 'Construction/Extraction'",
+                  "multiply": 1.15,
+                  "add": 0.08,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "employment_status == 'Self-employed' and occupation == 'Management/Professional'",
+                  "multiply": 1.25,
+                  "add": 0.12,
+                  "weight_overrides": null,
+                  "probability_override": null
+                }
+              ]
+            },
+            {
+              "name": "asi_adoption_willingness",
+              "modifiers": [
+                {
+                  "when": "ai_literacy > 0.70 and openness > 0.65 and ai_risk_perception < 0.60",
+                  "multiply": 1.35,
+                  "add": 0.15,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "ai_literacy > 0.60 and openness > 0.55",
+                  "multiply": 1.25,
+                  "add": 0.1,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "ai_risk_perception > 0.75 and openness < 0.45",
+                  "multiply": 0.7,
+                  "add": -0.12,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "ai_literacy < 0.35 and ai_risk_perception > 0.65",
+                  "multiply": 0.75,
+                  "add": -0.1,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "ai_literacy < 0.40 and openness > 0.60",
+                  "multiply": 1.1,
+                  "add": 0.06,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "ai_risk_perception > 0.80",
+                  "multiply": 0.72,
+                  "add": -0.13,
+                  "weight_overrides": null,
+                  "probability_override": null
+                }
+              ]
+            },
+            {
+              "name": "financial_resilience",
+              "modifiers": [
+                {
+                  "when": "household_income < 40000 and homeownership == false and employment_status in ['Full-time', 'Part-time']",
+                  "multiply": 0.82,
+                  "add": -0.07,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "household_income > 120000 and homeownership == true",
+                  "multiply": 1.1,
+                  "add": 0.05,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "employment_status == 'Unemployed' and household_income < 50000",
+                  "multiply": 0.7,
+                  "add": -0.12,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "employment_status == 'Retired' and homeownership == true",
+                  "multiply": 1.08,
+                  "add": 0.04,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "household_income < 60000 and employment_status in ['Full-time', 'Part-time', 'Self-employed']",
+                  "multiply": 0.88,
+                  "add": -0.05,
+                  "weight_overrides": null,
+                  "probability_override": null
+                }
+              ]
+            },
+            {
+              "name": "chronic_illness_household",
+              "modifiers": [
+                {
+                  "when": "age > 60 and household_size >= 2",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": null,
+                  "probability_override": 0.58
+                },
+                {
+                  "when": "age > 70",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": null,
+                  "probability_override": 0.7
+                },
+                {
+                  "when": "age >= 45 and age <= 60 and household_size >= 3",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": null,
+                  "probability_override": 0.42
+                },
+                {
+                  "when": "age < 35 and household_size <= 2",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": null,
+                  "probability_override": 0.09
+                }
+              ]
+            },
+            {
+              "name": "stem_background",
+              "modifiers": [
+                {
+                  "when": "education_level in ['Bachelor\\'s', 'Graduate Degree'] and occupation == 'Management/Professional'",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": null,
+                  "probability_override": 0.52
+                },
+                {
+                  "when": "education_level in ['Less than HS', 'HS Diploma'] and occupation == 'Service'",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": null,
+                  "probability_override": 0.05
+                },
+                {
+                  "when": "occupation == 'Construction/Extraction' and education_level in ['Some College', \"Associate's\"]",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": null,
+                  "probability_override": 0.2
+                },
+                {
+                  "when": "occupation == 'Production/Transport' and education_level in ['Less than HS', 'HS Diploma']",
+                  "multiply": null,
+                  "add": null,
+                  "weight_overrides": null,
+                  "probability_override": 0.08
+                }
+              ]
+            },
+            {
+              "name": "information_verification_habit",
+              "modifiers": [
+                {
+                  "when": "need_for_cognition > 0.70 and susceptibility_to_misinformation < 0.35",
+                  "multiply": 1.2,
+                  "add": 0.1,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "susceptibility_to_misinformation > 0.70 and education_level in ['Less than HS', 'HS Diploma']",
+                  "multiply": 0.75,
+                  "add": -0.12,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "need_for_cognition > 0.60 and education_level in ['Bachelor\\'s', 'Graduate Degree']",
+                  "multiply": 1.18,
+                  "add": 0.08,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "susceptibility_to_misinformation > 0.65 and need_for_cognition < 0.40",
+                  "multiply": 0.72,
+                  "add": -0.14,
+                  "weight_overrides": null,
+                  "probability_override": null
+                }
+              ]
+            },
+            {
+              "name": "institutional_change_support",
+              "modifiers": [
+                {
+                  "when": "political_ideology in ['Very Liberal', 'Liberal'] and trust_in_institutions > 0.45 and openness > 0.55",
+                  "multiply": 1.3,
+                  "add": 0.15,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "political_ideology in ['Conservative', 'Very Conservative'] and trust_in_institutions < 0.50",
+                  "multiply": 0.78,
+                  "add": -0.1,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "political_ideology == 'Moderate' and openness > 0.55",
+                  "multiply": 1.12,
+                  "add": 0.07,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "trust_in_institutions < 0.30 and political_ideology in ['Very Liberal', 'Liberal']",
+                  "multiply": 1.2,
+                  "add": 0.12,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "political_ideology in ['Conservative', 'Very Conservative'] and openness < 0.45",
+                  "multiply": 0.72,
+                  "add": -0.12,
+                  "weight_overrides": null,
+                  "probability_override": null
+                }
+              ]
+            },
+            {
+              "name": "economic_anxiety",
+              "modifiers": [
+                {
+                  "when": "automation_job_vulnerability > 0.70 and financial_resilience < 0.40",
+                  "multiply": 1.4,
+                  "add": 0.2,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "automation_job_vulnerability > 0.60 and neuroticism > 0.60",
+                  "multiply": 1.35,
+                  "add": 0.17,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "financial_resilience > 0.70 and automation_job_vulnerability < 0.40",
+                  "multiply": 0.8,
+                  "add": -0.08,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "automation_job_vulnerability > 0.50 and financial_resilience < 0.50 and neuroticism > 0.50",
+                  "multiply": 1.32,
+                  "add": 0.16,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "financial_resilience > 0.65 and neuroticism < 0.40",
+                  "multiply": 0.82,
+                  "add": -0.06,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "automation_job_vulnerability > 0.75",
+                  "multiply": 1.38,
+                  "add": 0.18,
+                  "weight_overrides": null,
+                  "probability_override": null
+                }
+              ]
+            },
+            {
+              "name": "techno_optimism",
+              "modifiers": [
+                {
+                  "when": "openness > 0.70 and ai_literacy > 0.60 and political_ideology in ['Very Liberal', 'Liberal', 'Moderate']",
+                  "multiply": 1.3,
+                  "add": 0.14,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "openness > 0.65 and ai_literacy > 0.55",
+                  "multiply": 1.22,
+                  "add": 0.1,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "openness < 0.40 and ai_literacy < 0.40 and political_ideology in ['Conservative', 'Very Conservative']",
+                  "multiply": 0.78,
+                  "add": -0.1,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "political_ideology in ['Conservative', 'Very Conservative'] and ai_literacy < 0.50",
+                  "multiply": 0.88,
+                  "add": -0.05,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "ai_literacy > 0.75 and openness > 0.70",
+                  "multiply": 1.28,
+                  "add": 0.13,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "openness < 0.35 and political_ideology == 'Very Conservative'",
+                  "multiply": 0.72,
+                  "add": -0.12,
+                  "weight_overrides": null,
+                  "probability_override": null
+                }
+              ]
+            },
+            {
+              "name": "social_cohesion_orientation",
+              "modifiers": [
+                {
+                  "when": "agreeableness > 0.70 and religious_affiliation in ['Evangelical Protestant', 'Catholic', 'Other Christian', 'Mainline Protestant']",
+                  "multiply": 1.2,
+                  "add": 0.1,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "agreeableness > 0.65 and political_ideology in ['Very Liberal', 'Liberal']",
+                  "multiply": 1.18,
+                  "add": 0.09,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "agreeableness < 0.35 and political_ideology in ['Conservative', 'Very Conservative'] and religious_affiliation == 'None/Unaffiliated'",
+                  "multiply": 0.8,
+                  "add": -0.08,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "agreeableness > 0.60 and political_ideology == 'Moderate'",
+                  "multiply": 1.12,
+                  "add": 0.06,
+                  "weight_overrides": null,
+                  "probability_override": null
+                },
+                {
+                  "when": "agreeableness < 0.40 and political_ideology in ['Conservative', 'Very Conservative']",
+                  "multiply": 0.85,
+                  "add": -0.06,
+                  "weight_overrides": null,
+                  "probability_override": null
+                }
+              ]
+            }
+          ]
+        },
+        "name": "conditional_modifiers_hydration",
+        "type": "tool_use",
+        "caller": {
+          "type": "direct"
+        }
+      }
+    ],
+    "model": "claude-sonnet-4-6",
+    "role": "assistant",
+    "stop_reason": "tool_use",
+    "stop_sequence": null,
+    "type": "message",
+    "usage": {
+      "cache_creation": {
+        "ephemeral_1h_input_tokens": "[REDACTED_SECRET]",
+        "ephemeral_5m_input_tokens": "[REDACTED_SECRET]"
+      },
+      "cache_creation_input_tokens": "[REDACTED_SECRET]",
+      "cache_read_input_tokens": "[REDACTED_SECRET]",
+      "input_tokens": 33122,
+      "output_tokens": 5543,
+      "server_tool_use": {
+        "web_search_requests": 2,
+        "web_fetch_requests": 0
+      },
+      "service_tier": "standard",
+      "inference_geo": "global"
+    }
+  },
+  "sources_extracted": [
+    "https://www.brookings.edu/articles/measuring-us-workers-capacity-to-adapt-to-ai-driven-job-displacement/",
+    "https://hai.stanford.edu/ai-index/2025-ai-index-report/public-opinion",
+    "https://www.pewresearch.org/social-trends/2025/02/25/u-s-workers-are-more-worried-than-hopeful-about-future-ai-use-in-the-workplace/",
+    "https://mbs.edu/news/global-study-reveals-trust-of-ai-remains-a-critical-challenge",
+    "https://www.pewresearch.org/internet/2025/04/03/how-the-us-public-and-ai-experts-view-artificial-intelligence/",
+    "https://assets.kpmg.com/content/dam/kpmgsites/xx/pdf/2025/05/trust-attitudes-and-use-of-ai-global-report.pdf",
+    "https://www.nu.edu/blog/ai-job-statistics/",
+    "https://www.resume-now.com/job-resources/careers/ai-disruption-report",
+    "https://research.aimultiple.com/ai-job-loss/",
+    "https://kpmg.com/xx/en/our-insights/ai-and-technology/trust-attitudes-and-use-of-ai.html",
+    "https://mbs.edu/faculty-and-research/trust-and-ai",
+    "https://www.shrm.org/topics-tools/research/automation-generative-ai-and-job-displacement-risk-in-u-s--employment",
+    "https://hiddenlayerai.medium.com/71-fear-ai-will-take-jobs-heres-what-actually-happens-f853cd5758fa",
+    "https://www.pewresearch.org/internet/2025/04/03/views-of-risks-opportunities-and-regulation-of-ai/",
+    "https://yougov.com/en-us/articles/53701-most-americans-use-ai-but-still-dont-trust-it",
+    "https://www.eweek.com/news/americans-fear-ai-job-loss-survey/",
+    "https://hai.stanford.edu/assets/files/hai_ai-index-report-2025_chapter8_final.pdf",
+    "https://www.aiprm.com/ai-replacing-jobs-statistics/",
+    "https://www.shrm.org/topics-tools/research/automation-generative-ai-job-displacement-risk-hr-employment",
+    "https://kpmg.com/xx/en/media/press-releases/2025/04/trust-of-ai-remains-a-critical-challenge.html"
+  ]
+}

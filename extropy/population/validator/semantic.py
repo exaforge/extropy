@@ -4,6 +4,10 @@ These checks produce WARNING severity issues that don't block sampling.
 They help identify potential issues but don't indicate structural problems.
 """
 
+import ast
+import itertools
+import math
+
 from ...core.models.validation import Severity, ValidationIssue
 from ...core.models import (
     PopulationSpec,
@@ -15,7 +19,8 @@ from ...core.models import (
     CategoricalDistribution,
     BooleanDistribution,
 )
-from ...utils import extract_comparisons_from_expression
+from ..modifier_precedence import choose_modifier_precedence
+from ...utils import extract_comparisons_from_expression, extract_names_from_expression
 
 
 # =============================================================================
@@ -48,7 +53,7 @@ def run_semantic_checks(spec: PopulationSpec) -> list[ValidationIssue]:
         issues.extend(_check_condition_values(attr, attr_lookup))
 
         # Category 13: Last-Wins overlap detection for categorical/boolean
-        issues.extend(_check_last_wins_overlaps(attr))
+        issues.extend(_check_last_wins_overlaps(attr, attr_lookup))
 
     return issues
 
@@ -260,8 +265,16 @@ def _check_condition_values(
 # =============================================================================
 
 
-def _check_last_wins_overlaps(attr: AttributeSpec) -> list[ValidationIssue]:
-    """Warn when categorical/boolean modifiers may overlap under last-wins semantics."""
+def _check_last_wins_overlaps(
+    attr: AttributeSpec,
+    attr_lookup: dict[str, AttributeSpec],
+) -> list[ValidationIssue]:
+    """Warn when categorical/boolean modifiers overlap ambiguously.
+
+    Overlap itself is not always problematic when precedence is deterministic
+    by condition specificity/subset. We only warn when overlap would still
+    resolve by declaration order.
+    """
     issues: list[ValidationIssue] = []
     dist = attr.sampling.distribution
     modifiers = attr.sampling.modifiers
@@ -280,13 +293,6 @@ def _check_last_wins_overlaps(attr: AttributeSpec) -> list[ValidationIssue]:
         normalized = normalize_when(expr)
         return normalized in {"true", "1==1", "(true)"}
 
-    def compared_pairs(expr: str) -> set[tuple[str, str]]:
-        pairs: set[tuple[str, str]] = set()
-        for attr_name, values in extract_comparisons_from_expression(expr):
-            for value in values:
-                pairs.add((attr_name, str(value)))
-        return pairs
-
     for i in range(len(modifiers)):
         for j in range(i + 1, len(modifiers)):
             left = modifiers[i].when
@@ -300,24 +306,211 @@ def _check_last_wins_overlaps(attr: AttributeSpec) -> list[ValidationIssue]:
             elif normalize_when(left) == normalize_when(right):
                 may_overlap = True
             else:
-                left_pairs = compared_pairs(left)
-                right_pairs = compared_pairs(right)
-                if not left_pairs or not right_pairs:
-                    may_overlap = True
-                elif left_pairs.intersection(right_pairs):
-                    may_overlap = True
+                may_overlap = _conditions_can_both_be_true(
+                    left,
+                    right,
+                    attr_lookup,
+                )
 
             if may_overlap:
+                decision = choose_modifier_precedence([(i, left), (j, right)])
+                if decision and decision.reason in {"subset", "specificity"}:
+                    continue
+
                 issues.append(
                     ValidationIssue(
                         severity=Severity.WARNING,
                         category="MODIFIER_OVERLAP",
                         location=attr.name,
                         message=(
-                            f"modifiers {i} and {j} may overlap under last-wins semantics"
+                            f"modifiers {i} and {j} overlap and currently rely on declaration order"
                         ),
-                        suggestion="Make conditions mutually exclusive or merge the modifier logic",
+                        suggestion=(
+                            "Make conditions mutually exclusive or add specificity so one "
+                            "rule deterministically dominates"
+                        ),
                     )
                 )
 
     return issues
+
+
+def _conditions_can_both_be_true(
+    left: str,
+    right: str,
+    attr_lookup: dict[str, AttributeSpec],
+) -> bool:
+    """Return True if both condition expressions appear jointly satisfiable."""
+    referenced = sorted(
+        (
+            extract_names_from_expression(left) | extract_names_from_expression(right)
+        ).intersection(set(attr_lookup.keys()))
+    )
+
+    # If no referenced attrs, evaluate directly.
+    if not referenced:
+        return _eval_condition_bool(left, {}) and _eval_condition_bool(right, {})
+
+    # If expressions reference unknown names, keep conservative warning behavior.
+    all_referenced = extract_names_from_expression(
+        left
+    ) | extract_names_from_expression(right)
+    unknown = [name for name in all_referenced if name not in attr_lookup]
+    if unknown:
+        return True
+
+    domains: dict[str, list[object]] = {}
+    for name in referenced:
+        domains[name] = _candidate_values_for_attr(attr_lookup[name], [left, right])
+        if not domains[name]:
+            return True
+
+    domain_lists = [domains[name] for name in referenced]
+    total = 1
+    for values in domain_lists:
+        total *= max(1, len(values))
+
+    max_combinations = 120_000
+    if total > max_combinations:
+        trimmed = []
+        for values in domain_lists:
+            if len(values) <= 18:
+                trimmed.append(values)
+                continue
+            step = max(1, len(values) // 18)
+            trimmed.append(values[::step][:18])
+        domain_lists = trimmed
+
+    for combo in itertools.product(*domain_lists):
+        env = dict(zip(referenced, combo, strict=False))
+        if not _eval_condition_bool(left, env):
+            continue
+        if _eval_condition_bool(right, env):
+            return True
+
+    return False
+
+
+def _eval_condition_bool(expr: str, env: dict[str, object]) -> bool:
+    """Evaluate condition expression; return False on evaluation errors."""
+    try:
+        return bool(eval(expr, {"__builtins__": {}}, env))
+    except Exception:
+        return False
+
+
+def _candidate_values_for_attr(
+    attr: AttributeSpec,
+    expressions: list[str],
+) -> list[object]:
+    """Build a bounded candidate set for condition satisfiability checks."""
+    dist = attr.sampling.distribution
+
+    if attr.type == "boolean":
+        return [True, False]
+
+    if attr.type == "categorical" and isinstance(dist, CategoricalDistribution):
+        return list(dist.options or [])
+
+    if attr.type in {"int", "float"}:
+        values: set[float] = set()
+        min_val, max_val = _numeric_bounds(attr)
+
+        if min_val is not None:
+            values.add(min_val)
+        if max_val is not None:
+            values.add(max_val)
+        if min_val is not None and max_val is not None and min_val <= max_val:
+            values.add((min_val + max_val) / 2.0)
+
+        for expr in expressions:
+            for constant in _extract_numeric_constants(expr):
+                values.add(constant)
+                values.add(constant - 1)
+                values.add(constant + 1)
+                values.add(constant - 0.5)
+                values.add(constant + 0.5)
+
+        if not values:
+            values = {0.0, 1.0, 10.0}
+
+        bounded: list[float] = []
+        for value in values:
+            if min_val is not None and value < min_val:
+                continue
+            if max_val is not None and value > max_val:
+                continue
+            bounded.append(value)
+
+        if attr.type == "int":
+            ints: list[int] = []
+            for value in bounded:
+                ints.extend(
+                    [
+                        int(math.floor(value)),
+                        int(round(value)),
+                        int(math.ceil(value)),
+                    ]
+                )
+            ints = sorted(set(ints))
+            if len(ints) > 80:
+                step = max(1, len(ints) // 80)
+                ints = ints[::step]
+            return ints
+
+        floats = sorted(set(round(value, 6) for value in bounded))
+        if len(floats) > 80:
+            step = max(1, len(floats) // 80)
+            floats = floats[::step]
+        return floats
+
+    return []
+
+
+def _numeric_bounds(attr: AttributeSpec) -> tuple[float | None, float | None]:
+    """Infer numeric min/max from distribution bounds and hard constraints."""
+    min_val = None
+    max_val = None
+
+    dist = attr.sampling.distribution
+    if isinstance(
+        dist,
+        (
+            NormalDistribution,
+            LognormalDistribution,
+            UniformDistribution,
+            BetaDistribution,
+        ),
+    ):
+        min_val = dist.min
+        max_val = dist.max
+
+    for constraint in attr.constraints:
+        if constraint.type == "hard_min" and constraint.value is not None:
+            if min_val is None:
+                min_val = float(constraint.value)
+            else:
+                min_val = max(min_val, float(constraint.value))
+        elif constraint.type == "hard_max" and constraint.value is not None:
+            if max_val is None:
+                max_val = float(constraint.value)
+            else:
+                max_val = min(max_val, float(constraint.value))
+
+    return min_val, max_val
+
+
+def _extract_numeric_constants(expr: str) -> set[float]:
+    """Extract numeric constants from an expression AST."""
+    out: set[float] = set()
+    try:
+        tree = ast.parse(expr, mode="eval")
+    except SyntaxError:
+        return out
+
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Constant) and isinstance(node.value, (int, float)):
+            if isinstance(node.value, bool):
+                continue
+            out.add(float(node.value))
+    return out

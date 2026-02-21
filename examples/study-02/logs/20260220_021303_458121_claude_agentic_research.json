@@ -1,0 +1,1030 @@
+{
+  "timestamp": "2026-02-20T02:13:03.458160",
+  "function": "agentic_research",
+  "provider": "claude",
+  "request": {
+    "model": "claude-sonnet-4-6",
+    "prompt_length": 18769
+  },
+  "response": {
+    "id": "msg_01XZqpaQDkZgnSbtqzbTrhra",
+    "content": [
+      {
+        "id": "srvtoolu_01BMpqQQiW8DuHzzybUQPnUX",
+        "input": {
+          "query": "American attitudes AI existential threat opportunity 2024 survey"
+        },
+        "name": "web_search",
+        "type": "server_tool_use",
+        "caller": {
+          "type": "direct"
+        }
+      },
+      {
+        "id": "srvtoolu_0164PNtX2AUhUDfTjeDdnrYN",
+        "input": {
+          "query": "US public AI adoption willingness reluctance survey 2024"
+        },
+        "name": "web_search",
+        "type": "server_tool_use",
+        "caller": {
+          "type": "direct"
+        }
+      },
+      {
+        "id": "srvtoolu_01WuHYRw9Tvu9hJzdh4zSBpP",
+        "input": {
+          "query": "job displacement automation vulnerability by occupation education level survey 2024"
+        },
+        "name": "web_search",
+        "type": "server_tool_use",
+        "caller": {
+          "type": "direct"
+        }
+      },
+      {
+        "content": [
+          {
+            "encrypted_content": "[REDACTED_TEXT length=2956]",
+            "page_age": null,
+            "title": "Existential threats: global public attitudes",
+            "type": "web_search_result",
+            "url": "https://theelders.org/news/existential-threats-global-public-attitudes"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=2900]",
+            "page_age": null,
+            "title": "Public Opinion | The 2024 AI Index Report | Stanford HAI",
+            "type": "web_search_result",
+            "url": "https://hai.stanford.edu/ai-index/2024-ai-index-report/public-opinion"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=6216]",
+            "page_age": "November 11, 2025",
+            "title": "How the US Public and AI Experts View Artificial Intelligence | Pew Research Center",
+            "type": "web_search_result",
+            "url": "https://www.pewresearch.org/internet/2025/04/03/how-the-us-public-and-ai-experts-view-artificial-intelligence/"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=4288]",
+            "page_age": "November 4, 2024",
+            "title": "New surveys find that most Americans support AI regulation, believing that AI risk mitigation is a global priority - Rethink Priorities",
+            "type": "web_search_result",
+            "url": "https://rethinkpriorities.org/new-surveys-find-that-most-americans-support-ai-regulation-believing-that-ai-risk-mitigation-is-a-global-priority/"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=5500]",
+            "page_age": "December 31, 2025",
+            "title": "With AI\u2019s rise, hope and anxiety - Rochester BeaconRochester Beacon",
+            "type": "web_search_result",
+            "url": "https://rochesterbeacon.com/2025/12/24/with-ais-rise-hope-and-anxiety/"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=3224]",
+            "page_age": "December 17, 2024",
+            "title": "Americans Divided on Whether AI Will Make Things Better or Worse, New Survey Finds \u2013 Center for Data Innovation",
+            "type": "web_search_result",
+            "url": "https://datainnovation.org/2024/05/americans-divided-on-whether-ai-will-make-things-better-or-worse-new-survey-finds/"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=4580]",
+            "page_age": "September 17, 2025",
+            "title": "How Americans View AI and Its Impact on Human Abilities, Society | Pew Research Center",
+            "type": "web_search_result",
+            "url": "https://www.pewresearch.org/science/2025/09/17/how-americans-view-ai-and-its-impact-on-people-and-society/"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=4036]",
+            "page_age": "November 11, 2025",
+            "title": "AI risks, opportunities, regulation: Views of US public and AI experts | Pew Research Center",
+            "type": "web_search_result",
+            "url": "https://www.pewresearch.org/internet/2025/04/03/views-of-risks-opportunities-and-regulation-of-ai/"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=5676]",
+            "page_age": null,
+            "title": "Surveys of US public opinion on AI [AI Impacts Wiki]",
+            "type": "web_search_result",
+            "url": "https://wiki.aiimpacts.org/responses_to_ai/public_opinion_on_ai/surveys_of_public_opinion_on_ai/surveys_of_us_public_opinion_on_ai"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=5600]",
+            "page_age": null,
+            "title": "Sentience Institute | AI Policy Insights from the AIMS Survey",
+            "type": "web_search_result",
+            "url": "https://www.sentienceinstitute.org/blog/ai-policy-insights-from-the-aims-survey"
+          }
+        ],
+        "tool_use_id": "srvtoolu_01BMpqQQiW8DuHzzybUQPnUX",
+        "type": "web_search_tool_result",
+        "caller": {
+          "type": "direct"
+        }
+      },
+      {
+        "content": [
+          {
+            "encrypted_content": "[REDACTED_TEXT length=5556]",
+            "page_age": "December 12, 2024",
+            "title": "Exploring America\u2019s Receptiveness to AI [2024 Survey]",
+            "type": "web_search_result",
+            "url": "https://www.freshworks.com/explore-cx/us-ai-receptiveness-survey/"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=380]",
+            "page_age": null,
+            "title": "AI Adoption in 2024: 74% of Companies Struggle to Achieve and Scale Value | BCG",
+            "type": "web_search_result",
+            "url": "https://www.bcg.com/press/24october2024-ai-adoption-in-2024-74-of-companies-struggle-to-achieve-and-scale-value"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=5340]",
+            "page_age": "November 11, 2025",
+            "title": "How the US Public and AI Experts View Artificial Intelligence | Pew Research Center",
+            "type": "web_search_result",
+            "url": "https://www.pewresearch.org/internet/2025/04/03/how-the-us-public-and-ai-experts-view-artificial-intelligence/"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=3988]",
+            "page_age": "October 9, 2025",
+            "title": "The Rapid Adoption of Generative AI | St. Louis Fed",
+            "type": "web_search_result",
+            "url": "https://www.stlouisfed.org/on-the-economy/2024/sep/rapid-adoption-generative-ai"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=5576]",
+            "page_age": "May 1, 2025",
+            "title": "The American Trust in AI Paradox: Adoption Outpaces Governance",
+            "type": "web_search_result",
+            "url": "https://kpmg.com/us/en/media/news/trust-in-ai-2025.html"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=6244]",
+            "page_age": null,
+            "title": "NBER WORKING PAPER SERIES THE RAPID ADOPTION OF GENERATIVE AI Alexander Bick",
+            "type": "web_search_result",
+            "url": "https://www.nber.org/system/files/working_papers/w32966/w32966.pdf"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=1688]",
+            "page_age": null,
+            "title": "AI Adoption Statistics 2024: All Figures & Facts to Know",
+            "type": "web_search_result",
+            "url": "https://ventionteams.com/solutions/ai/adoption-statistics"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=5684]",
+            "page_age": "November 25, 2025",
+            "title": "How are Americans using AI? Evidence from a nationwide survey | Brookings",
+            "type": "web_search_result",
+            "url": "https://www.brookings.edu/articles/how-are-americans-using-ai-evidence-from-a-nationwide-survey/"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=5496]",
+            "page_age": "November 19, 2025",
+            "title": "The State of Generative AI Adoption in 2025 | St. Louis Fed",
+            "type": "web_search_result",
+            "url": "https://www.stlouisfed.org/on-the-economy/2025/nov/state-generative-ai-adoption-2025"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=524]",
+            "page_age": "December 19, 2024",
+            "title": "Survey Reveals Concerns and Adoption Trends Around AI\u2019s Rising Influence | Rutgers University",
+            "type": "web_search_result",
+            "url": "https://www.rutgers.edu/news/survey-reveals-concerns-and-adoption-trends-around-ais-rising-influence"
+          }
+        ],
+        "tool_use_id": "srvtoolu_0164PNtX2AUhUDfTjeDdnrYN",
+        "type": "web_search_tool_result",
+        "caller": {
+          "type": "direct"
+        }
+      },
+      {
+        "content": [
+          {
+            "encrypted_content": "[REDACTED_TEXT length=5524]",
+            "page_age": null,
+            "title": "Growth trends for selected occupations considered at risk from automation : Monthly Labor Review : U.S. Bureau of Labor Statistics",
+            "type": "web_search_result",
+            "url": "https://www.bls.gov/opub/mlr/2022/article/growth-trends-for-selected-occupations-considered-at-risk-from-automation.htm"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=5464]",
+            "page_age": "May 30, 2025",
+            "title": "59 AI Job Statistics: Future of U.S. Jobs | National University",
+            "type": "web_search_result",
+            "url": "https://www.nu.edu/blog/ai-job-statistics/"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=4764]",
+            "page_age": "July 7, 2025",
+            "title": "40 Jobs Lost to Automation Statistics: 2024 Job Displacement Analysis - Financesonline.com",
+            "type": "web_search_result",
+            "url": "https://financesonline.com/jobs-lost-to-automation-statistics/"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=5400]",
+            "page_age": "1 week ago",
+            "title": "Measuring US workers\u2019 capacity to adapt to AI-driven job displacement | Brookings",
+            "type": "web_search_result",
+            "url": "https://www.brookings.edu/articles/measuring-us-workers-capacity-to-adapt-to-ai-driven-job-displacement/"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=5456]",
+            "page_age": "May 31, 2024",
+            "title": "AI and Automation: The Looming Threat of Job Displacement in 2024",
+            "type": "web_search_result",
+            "url": "https://workonpeak.org/ai-and-automation-the-threat-of-job-displacement/"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=5376]",
+            "page_age": "July 11, 2024",
+            "title": "50+ AI Replacing Jobs Statistics 2024 \u00b7 AIPRM",
+            "type": "web_search_result",
+            "url": "https://www.aiprm.com/ai-replacing-jobs-statistics/"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=4828]",
+            "page_age": "February 14, 2024",
+            "title": "Jobs Lost to Automation Statistics in 2024 | TeamStage",
+            "type": "web_search_result",
+            "url": "https://teamstage.io/jobs-lost-to-automation-statistics/"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=5688]",
+            "page_age": null,
+            "title": "Automation, Generative AI, and Job Displacement Risk in HR Employment",
+            "type": "web_search_result",
+            "url": "https://www.shrm.org/topics-tools/research/automation-generative-ai-job-displacement-risk-hr-employment"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=5440]",
+            "page_age": "November 7, 2024",
+            "title": "Artificial Intelligence and Job Automation: Challenges for Secondary Students\u2019 Career Development and Life Planning",
+            "type": "web_search_result",
+            "url": "https://www.mdpi.com/2673-8104/4/4/27"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=5696]",
+            "page_age": null,
+            "title": "Top 20 Predictions from Experts on AI Job Loss",
+            "type": "web_search_result",
+            "url": "https://research.aimultiple.com/ai-job-loss/"
+          }
+        ],
+        "tool_use_id": "srvtoolu_01WuHYRw9Tvu9hJzdh4zSBpP",
+        "type": "web_search_tool_result",
+        "caller": {
+          "type": "direct"
+        }
+      },
+      {
+        "id": "srvtoolu_011rtusXZFDYXGDjJ1rq3Qn4",
+        "input": {
+          "query": "American public trust AI companies OpenAI Anthropic survey 2024 2025 governance preferences"
+        },
+        "name": "web_search",
+        "type": "server_tool_use",
+        "caller": {
+          "type": "direct"
+        }
+      },
+      {
+        "id": "srvtoolu_01Vz3MkdJgvGkGD74rE8MMyS",
+        "input": {
+          "query": "US China AI geopolitical concern survey Americans 2024 scientific literacy levels education"
+        },
+        "name": "web_search",
+        "type": "server_tool_use",
+        "caller": {
+          "type": "direct"
+        }
+      },
+      {
+        "content": [
+          {
+            "encrypted_content": "[REDACTED_TEXT length=2844]",
+            "page_age": "May 1, 2025",
+            "title": "The American Trust in AI Paradox: Adoption Outpaces Governance",
+            "type": "web_search_result",
+            "url": "https://kpmg.com/us/en/media/news/trust-in-ai-2025.html"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=5452]",
+            "page_age": null,
+            "title": "The Governance of AI Companies: Reconciling Purpose ...",
+            "type": "web_search_result",
+            "url": "https://sciencespo.hal.science/hal-04932663v1/document"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=4088]",
+            "page_age": null,
+            "title": "The 2025 Foundation Model Transparency Index Alexander Wan\u2020 UC Berkeley",
+            "type": "web_search_result",
+            "url": "https://crfm.stanford.edu/fmti/paper.pdf"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=6376]",
+            "page_age": null,
+            "title": "PwC's 2025 Responsible AI survey: From policy to practice",
+            "type": "web_search_result",
+            "url": "https://www.pwc.com/us/en/tech-effect/ai-analytics/responsible-ai-survey.html"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=3124]",
+            "page_age": "May 1, 2025",
+            "title": "Trust, attitudes and use of artificial intelligence: A global study 2025",
+            "type": "web_search_result",
+            "url": "https://kpmg.com/xx/en/our-insights/ai-and-technology/trust-attitudes-and-use-of-ai.html"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=5560]",
+            "page_age": "April 10, 2025",
+            "title": "Amoral Drift in AI Corporate Governance - Harvard Law Review",
+            "type": "web_search_result",
+            "url": "https://harvardlawreview.org/print/vol-138/amoral-drift-in-ai-corporate-governance/"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=6348]",
+            "page_age": null,
+            "title": "From OpenAI to Anthropic: who's leading on AI governance?",
+            "type": "web_search_result",
+            "url": "https://www.cgi.org.uk/resources/blogs/2025/from-openai-to-anthropic-whos-leading-on-ai-governance/"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=4104]",
+            "page_age": null,
+            "title": "Can Trustworthy AI Improve Governance and Trust? AI Trends, Biases, and Gaps | MIT GOV/LAB",
+            "type": "web_search_result",
+            "url": "https://mitgovlab.org/news/can-trustworthy-ai-improve-governance-and-trust-ai-trends-biases-and-gaps/"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=5828]",
+            "page_age": null,
+            "title": "Anthropic Response to OSTP RFI (March 2025)",
+            "type": "web_search_result",
+            "url": "https://assets.anthropic.com/m/4e20a4ab6512e217/original/Anthropic-Response-to-OSTP-RFI-March-2025-Final-Submission-v3.pdf"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=6464]",
+            "page_age": null,
+            "title": "Why public-private partnerships key to building AI trust | World Economic Forum",
+            "type": "web_search_result",
+            "url": "https://www.weforum.org/stories/2025/09/ai-trust-crisis-public-private-partnerships/"
+          }
+        ],
+        "tool_use_id": "srvtoolu_011rtusXZFDYXGDjJ1rq3Qn4",
+        "type": "web_search_tool_result",
+        "caller": {
+          "type": "direct"
+        }
+      },
+      {
+        "content": [
+          {
+            "encrypted_content": "[REDACTED_TEXT length=6176]",
+            "page_age": null,
+            "title": "AI in education strategies: US vs China April 24, 2025",
+            "type": "web_search_result",
+            "url": "https://futureofbeinghuman.com/api/v1/file/2737ea4a-2ca4-4cb5-85cb-4c9ad88f6204.pdf"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=5420]",
+            "page_age": "October 15, 2025",
+            "title": "Majority of Americans See U.S. Leadership in AI as Crucial, Survey Finds | RAND",
+            "type": "web_search_result",
+            "url": "https://www.rand.org/pubs/research_reports/RRA4363-1.html"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=5520]",
+            "page_age": null,
+            "title": "The 2024 AI Index Report | Stanford HAI",
+            "type": "web_search_result",
+            "url": "https://hai.stanford.edu/ai-index/2024-ai-index-report"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=6400]",
+            "page_age": "August 1, 2025",
+            "title": "Education Under Two Flags: AI Ecosystems Deepen the U.S.\u2013China Divide | The EduTimes",
+            "type": "web_search_result",
+            "url": "https://edutimes.com/news/2025/08/202508113292"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=5360]",
+            "page_age": "July 22, 2025",
+            "title": "Survey: How Do Elite Chinese Students Feel About the Risks of AI? - Jamestown",
+            "type": "web_search_result",
+            "url": "https://jamestown.org/survey-how-do-elite-chinese-students-feel-about-the-risks-of-ai/"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=6400]",
+            "page_age": "November 19, 2024",
+            "title": "China and the U.S. produce more impactful AI research when collaborating together | Scientific Reports",
+            "type": "web_search_result",
+            "url": "https://www.nature.com/articles/s41598-024-79863-5"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=6716]",
+            "page_age": "September 29, 2025",
+            "title": "Frontiers | Geopolitics: AI and China; enabling ideology?",
+            "type": "web_search_result",
+            "url": "https://www.frontiersin.org/journals/political-science/articles/10.3389/fpos.2025.1654697/full"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=6188]",
+            "page_age": null,
+            "title": "NATIONAL SCIENCE BOARD SCIENCE & ENGINEERING INDICATORS 2024 Public Attitudes",
+            "type": "web_search_result",
+            "url": "https://ncses.nsf.gov/pubs/nsb20244/assets/nsb20244.pdf"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=5364]",
+            "page_age": "January 15, 2026",
+            "title": "Eight ways AI will shape geopolitics in 2026 - Atlantic Council",
+            "type": "web_search_result",
+            "url": "https://www.atlanticcouncil.org/dispatches/eight-ways-ai-will-shape-geopolitics-in-2026/"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=5000]",
+            "page_age": "December 4, 2025",
+            "title": "China\u2019s Views on AI Safety Are Changing\u2014Quickly | Carnegie Endowment for International Peace",
+            "type": "web_search_result",
+            "url": "https://carnegieendowment.org/research/2024/08/china-artificial-intelligence-ai-safety-regulation?lang=en"
+          }
+        ],
+        "tool_use_id": "srvtoolu_01Vz3MkdJgvGkGD74rE8MMyS",
+        "type": "web_search_tool_result",
+        "caller": {
+          "type": "direct"
+        }
+      },
+      {
+        "citations": null,
+        "text": "[REDACTED_TEXT length=134]",
+        "type": "text",
+        "parsed_output": null
+      },
+      {
+        "id": "toolu_01HzSfWdHtd2wQbE2uQDyynk",
+        "input": {
+          "attributes": [
+            {
+              "name": "asi_threat_perception",
+              "distribution": {
+                "type": "categorical",
+                "options": [
+                  "Existential threat",
+                  "Economic threat",
+                  "Neutral development",
+                  "Transformative opportunity",
+                  "Utopian salvation"
+                ],
+                "weights": [
+                  0.18,
+                  0.32,
+                  0.14,
+                  0.28,
+                  0.08
+                ],
+                "mean": null,
+                "std": null,
+                "mean_formula": null,
+                "std_formula": null,
+                "min": null,
+                "max": null,
+                "min_formula": null,
+                "max_formula": null,
+                "alpha": null,
+                "beta": null,
+                "probability_true": null
+              },
+              "constraints": [
+                {
+                  "type": "spec_expression",
+                  "expression": "abs(sum(weights) - 1.0) < 0.001",
+                  "value": null,
+                  "reason": "Categorical weights must sum to 1"
+                }
+              ],
+              "grounding": {
+                "level": "strong",
+                "method": "researched",
+                "source": "Pew Research 2024 (51% more concerned than excited); Rethink Priorities surveys (60% see AI as significant threat); Stanford HAI 2024 AI Index; KPMG 2025 global study (54% accept/approve AI in US). Ec...[truncated]",
+                "note": "In an ASI scenario (vs. current narrow AI), existential threat perception will be elevated vs. current baseline. Base distribution reflects pre-ASI public attitudes; modifiers from institutional_trust...[truncated]"
+              }
+            },
+            {
+              "name": "asi_usage_propensity",
+              "distribution": {
+                "type": "categorical",
+                "options": [
+                  "Early adopter",
+                  "Willing user",
+                  "Cautious user",
+                  "Reluctant user",
+                  "Refuser"
+                ],
+                "weights": [
+                  0.12,
+                  0.33,
+                  0.28,
+                  0.18,
+                  0.09
+                ],
+                "mean": null,
+                "std": null,
+                "mean_formula": null,
+                "std_formula": null,
+                "min": null,
+                "max": null,
+                "min_formula": null,
+                "max_formula": null,
+                "alpha": null,
+                "beta": null,
+                "probability_true": null
+              },
+              "constraints": [
+                {
+                  "type": "spec_expression",
+                  "expression": "abs(sum(weights) - 1.0) < 0.001",
+                  "value": null,
+                  "reason": "Categorical weights must sum to 1"
+                }
+              ],
+              "grounding": {
+                "level": "strong",
+                "method": "researched",
+                "source": "Freshworks 2024 survey (81% willing to use AI tools at work; 78% willing to use AI at home); NBER Real-Time Population Survey (44.6% of US adults 18-64 already use GenAI as of Aug 2024, 54.6% by Aug 2...[truncated]",
+                "note": "ASI context dramatically increases salience vs. current gen-AI baseline. 'Refuser' reflects ~9% who currently never use AI per Freshworks. Modifiers from tech_adoption_posture and asi_threat_perceptio...[truncated]"
+              }
+            },
+            {
+              "name": "job_displacement_vulnerability",
+              "distribution": {
+                "type": "categorical",
+                "options": [
+                  "Low",
+                  "Moderate",
+                  "High",
+                  "Already redundant"
+                ],
+                "weights": [
+                  0.28,
+                  0.35,
+                  0.27,
+                  0.1
+                ],
+                "mean": null,
+                "std": null,
+                "mean_formula": null,
+                "std_formula": null,
+                "min": null,
+                "max": null,
+                "min_formula": null,
+                "max_formula": null,
+                "alpha": null,
+                "beta": null,
+                "probability_true": null
+              },
+              "constraints": [
+                {
+                  "type": "spec_expression",
+                  "expression": "abs(sum(weights) - 1.0) < 0.001",
+                  "value": null,
+                  "reason": "Categorical weights must sum to 1"
+                }
+              ],
+              "grounding": {
+                "level": "strong",
+                "method": "researched",
+                "source": "Pew 2024 (64% of public thinks AI will lead to fewer jobs over next 20 years); Brookings 2025 analysis (3.9% national average of workers in high-exposure, low-adaptive-capacity occupations); Goldman S...[truncated]",
+                "note": "In an ASI scenario, 'Already redundant' is elevated vs. current AI exposure data. For ASI (not just LLMs), virtually all cognitive jobs face some disruption. 'Low' here refers to physical/hands-on tra...[truncated]"
+              }
+            },
+            {
+              "name": "asi_governance_preference",
+              "distribution": {
+                "type": "categorical",
+                "options": [
+                  "Unregulated free market",
+                  "Industry self-regulation",
+                  "National government oversight",
+                  "International treaty body",
+                  "Halt/moratorium"
+                ],
+                "weights": [
+                  0.07,
+                  0.14,
+                  0.38,
+                  0.27,
+                  0.14
+                ],
+                "mean": null,
+                "std": null,
+                "mean_formula": null,
+                "std_formula": null,
+                "min": null,
+                "max": null,
+                "min_formula": null,
+                "max_formula": null,
+                "alpha": null,
+                "beta": null,
+                "probability_true": null
+              },
+              "constraints": [
+                {
+                  "type": "spec_expression",
+                  "expression": "abs(sum(weights) - 1.0) < 0.001",
+                  "value": null,
+                  "reason": "Categorical weights must sum to 1"
+                }
+              ],
+              "grounding": {
+                "level": "strong",
+                "method": "researched",
+                "source": "MITRE/Harris 2022 (82% think AI should be regulated); Rethink Priorities (65% support international AI governance); KPMG 2025 (72% of US consumers say more regulation needed; only 29% think current re...[truncated]",
+                "note": "National government oversight is the plurality preference, but international treaty body is also strong. Distrust in government capacity creates tension: people want regulation but distrust regulators...[truncated]"
+              }
+            },
+            {
+              "name": "geopolitical_anxiety_asi",
+              "distribution": {
+                "type": "beta",
+                "alpha": 3.2,
+                "beta": 2.1,
+                "mean": null,
+                "std": null,
+                "mean_formula": null,
+                "std_formula": null,
+                "min": 0.0,
+                "max": 1.0,
+                "min_formula": null,
+                "max_formula": null,
+                "options": null,
+                "weights": null,
+                "probability_true": null
+              },
+              "constraints": [
+                {
+                  "type": "hard_min",
+                  "value": 0.0,
+                  "expression": null,
+                  "reason": "Anxiety score is bounded at 0"
+                },
+                {
+                  "type": "hard_max",
+                  "value": 1.0,
+                  "expression": null,
+                  "reason": "Anxiety score is bounded at 1"
+                }
+              ],
+              "grounding": {
+                "level": "strong",
+                "method": "researched",
+                "source": "RAND 2025 survey: 72% of Americans rated concern about China becoming world AI leader at 6 or higher out of 10; 38% rated it a 10/10. RAND also found concern remains relatively high across all familia...[truncated]",
+                "note": "Beta(3.2, 2.1) gives mean ~0.60 with moderate variance. This reflects a population that is broadly anxious about Chinese AI competition but with a meaningful minority who are less concerned or prefer ...[truncated]"
+              }
+            },
+            {
+              "name": "abundance_distribution_priority",
+              "distribution": {
+                "type": "categorical",
+                "options": [
+                  "Global equal access",
+                  "Domestic priority",
+                  "Market-determined",
+                  "Strategic allies",
+                  "Local community first"
+                ],
+                "weights": [
+                  0.16,
+                  0.38,
+                  0.2,
+                  0.14,
+                  0.12
+                ],
+                "mean": null,
+                "std": null,
+                "mean_formula": null,
+                "std_formula": null,
+                "min": null,
+                "max": null,
+                "min_formula": null,
+                "max_formula": null,
+                "alpha": null,
+                "beta": null,
+                "probability_true": null
+              },
+              "constraints": [
+                {
+                  "type": "spec_expression",
+                  "expression": "abs(sum(weights) - 1.0) < 0.001",
+                  "value": null,
+                  "reason": "Categorical weights must sum to 1"
+                }
+              ],
+              "grounding": {
+                "level": "medium",
+                "method": "extrapolated",
+                "source": "Extrapolated from: RAND 2025 (72% prioritize US AI leadership over China); general polling on America First sentiment; Pew international aid attitudes (Americans tend domestic-first on resource distri...[truncated]",
+                "note": "Domestic priority is the plurality given strong America-first sentiment in polling data. Market-determined reflects libertarian/free-market preference. Global equal access reflects cosmopolitan minori...[truncated]"
+              }
+            },
+            {
+              "name": "information_verification_behavior",
+              "distribution": {
+                "type": "categorical",
+                "options": [
+                  "Accepts at face value",
+                  "Waits for consensus",
+                  "Actively verifies",
+                  "Dismisses as hype/misinformation",
+                  "Seeks ASI to verify"
+                ],
+                "weights": [
+                  0.18,
+                  0.31,
+                  0.22,
+                  0.2,
+                  0.09
+                ],
+                "mean": null,
+                "std": null,
+                "mean_formula": null,
+                "std_formula": null,
+                "min": null,
+                "max": null,
+                "min_formula": null,
+                "max_formula": null,
+                "alpha": null,
+                "beta": null,
+                "probability_true": null
+              },
+              "constraints": [
+                {
+                  "type": "spec_expression",
+                  "expression": "abs(sum(weights) - 1.0) < 0.001",
+                  "value": null,
+                  "reason": "Categorical weights must sum to 1"
+                }
+              ],
+              "grounding": {
+                "level": "medium",
+                "method": "extrapolated",
+                "source": "Extrapolated from: Pew 2024 institutional_trust data; general media literacy surveys showing ~20-25% of Americans fact-check claims; Pew (66% of US adults concerned about AI-generated misinformation)....[truncated]",
+                "note": "'Seeks ASI to verify' is a novel behavior only possible post-ASI public access (Month 3); base rate estimated at ~9% of early adopters. Primary modifiers: institutional_trust (low trust \u2192 dismisses), ...[truncated]"
+              }
+            },
+            {
+              "name": "identity_threat_from_asi",
+              "distribution": {
+                "type": "beta",
+                "alpha": 2.0,
+                "beta": 3.5,
+                "mean": null,
+                "std": null,
+                "mean_formula": null,
+                "std_formula": null,
+                "min": 0.0,
+                "max": 1.0,
+                "min_formula": null,
+                "max_formula": null,
+                "options": null,
+                "weights": null,
+                "probability_true": null
+              },
+              "constraints": [
+                {
+                  "type": "hard_min",
+                  "value": 0.0,
+                  "expression": null,
+                  "reason": "Identity threat is bounded at 0 (no threat felt)"
+                },
+                {
+                  "type": "hard_max",
+                  "value": 1.0,
+                  "expression": null,
+                  "reason": "Identity threat is bounded at 1 (profound identity crisis)"
+                }
+              ],
+              "grounding": {
+                "level": "medium",
+                "method": "extrapolated",
+                "source": "Extrapolated from: Pew 2024 (56% of US adults extremely/very concerned about AI eliminating jobs); Pew data on AI and human abilities (53% say AI will worsen creative ability; 50% say it will worsen m...[truncated]",
+                "note": "Beta(2.0, 3.5) gives mean ~0.36, reflecting that most people feel some identity threat from ASI but not a profound crisis at baseline. The distribution is left-skewed: more people near 0.2-0.4 than ne...[truncated]"
+              }
+            },
+            {
+              "name": "asi_corporate_trust",
+              "distribution": {
+                "type": "categorical",
+                "options": [
+                  "High trust",
+                  "Moderate trust",
+                  "Low trust",
+                  "Deep distrust"
+                ],
+                "weights": [
+                  0.09,
+                  0.28,
+                  0.37,
+                  0.26
+                ],
+                "mean": null,
+                "std": null,
+                "mean_formula": null,
+                "std_formula": null,
+                "min": null,
+                "max": null,
+                "min_formula": null,
+                "max_formula": null,
+                "alpha": null,
+                "beta": null,
+                "probability_true": null
+              },
+              "constraints": [
+                {
+                  "type": "spec_expression",
+                  "expression": "abs(sum(weights) - 1.0) < 0.001",
+                  "value": null,
+                  "reason": "Categorical weights must sum to 1"
+                }
+              ],
+              "grounding": {
+                "level": "strong",
+                "method": "researched",
+                "source": "KPMG 2025: only 41% of US adults willing to trust AI; 43% have low confidence in commercial entities to develop AI in public interest; most Americans trust universities (76%) and healthcare (72%) far ...[truncated]",
+                "note": "Low trust and Deep distrust together represent ~63% \u2014 consistent with KPMG finding that 43% have low confidence in commercial AI developers. 'High trust' (9%) reflects tech-enthusiast minority. Modifi...[truncated]"
+              }
+            },
+            {
+              "name": "sci_tech_literacy",
+              "distribution": {
+                "type": "categorical",
+                "options": [
+                  "Basic",
+                  "Intermediate",
+                  "Advanced",
+                  "Expert"
+                ],
+                "weights": [
+                  0.38,
+                  0.38,
+                  0.18,
+                  0.06
+                ],
+                "mean": null,
+                "std": null,
+                "mean_formula": null,
+                "std_formula": null,
+                "min": null,
+                "max": null,
+                "min_formula": null,
+                "max_formula": null,
+                "alpha": null,
+                "beta": null,
+                "probability_true": null
+              },
+              "constraints": [
+                {
+                  "type": "spec_expression",
+                  "expression": "abs(sum(weights) - 1.0) < 0.001",
+                  "value": null,
+                  "reason": "Categorical weights must sum to 1"
+                }
+              ],
+              "grounding": {
+                "level": "strong",
+                "method": "researched",
+                "source": "NSF Science & Engineering Indicators 2024: 22% of Americans reported knowing 'nothing' about AI, 62% knowing 'some', 17% knowing 'a lot' (3M 2020 data). NSF also documents that most Americans support ...[truncated]",
+                "note": "Basic (38%) and Intermediate (38%) together represent ~76%, consistent with NSF and Pew data on public science literacy. 'Expert' (6%) aligns with STEM workforce share. Key modifiers: education_level ...[truncated]"
+              }
+            },
+            {
+              "name": "community_coordination_role",
+              "distribution": {
+                "type": "categorical",
+                "options": [
+                  "Leader/organizer",
+                  "Active participant",
+                  "Follower",
+                  "Withdrawn/observer",
+                  "Obstructionist"
+                ],
+                "weights": [
+                  0.1,
+                  0.22,
+                  0.3,
+                  0.3,
+                  0.08
+                ],
+                "mean": null,
+                "std": null,
+                "mean_formula": null,
+                "std_formula": null,
+                "min": null,
+                "max": null,
+                "min_formula": null,
+                "max_formula": null,
+                "alpha": null,
+                "beta": null,
+                "probability_true": null
+              },
+              "constraints": [
+                {
+                  "type": "spec_expression",
+                  "expression": "abs(sum(weights) - 1.0) < 0.001",
+                  "value": null,
+                  "reason": "Categorical weights must sum to 1"
+                }
+              ],
+              "grounding": {
+                "level": "medium",
+                "method": "extrapolated",
+                "source": "Extrapolated from: political engagement data (Pew: ~35% of Americans are Highly Engaged Partisans or very politically active); community organizing literature (typically 10% leaders, 20% active partic...[truncated]",
+                "note": "Leader/organizer (10%) and Active participant (22%) reflect realistic social movement participation rates. Follower and Withdrawn/observer together represent the civic majority (~60%). Key modifiers: ...[truncated]"
+              }
+            }
+          ]
+        },
+        "name": "conditional_base_hydration",
+        "type": "tool_use",
+        "caller": {
+          "type": "direct"
+        }
+      }
+    ],
+    "model": "claude-sonnet-4-6",
+    "role": "assistant",
+    "stop_reason": "tool_use",
+    "stop_sequence": null,
+    "type": "message",
+    "usage": {
+      "cache_creation": {
+        "ephemeral_1h_input_tokens": "[REDACTED_SECRET]",
+        "ephemeral_5m_input_tokens": "[REDACTED_SECRET]"
+      },
+      "cache_creation_input_tokens": "[REDACTED_SECRET]",
+      "cache_read_input_tokens": "[REDACTED_SECRET]",
+      "input_tokens": 124562,
+      "output_tokens": 5328,
+      "server_tool_use": {
+        "web_search_requests": 5,
+        "web_fetch_requests": 0
+      },
+      "service_tier": "standard",
+      "inference_geo": "global"
+    }
+  },
+  "sources_extracted": [
+    "https://www.stlouisfed.org/on-the-economy/2025/nov/state-generative-ai-adoption-2025",
+    "https://www.rutgers.edu/news/survey-reveals-concerns-and-adoption-trends-around-ais-rising-influence",
+    "https://www.weforum.org/stories/2025/09/ai-trust-crisis-public-private-partnerships/",
+    "https://hai.stanford.edu/ai-index/2024-ai-index-report",
+    "https://www.frontiersin.org/journals/political-science/articles/10.3389/fpos.2025.1654697/full",
+    "https://www.pewresearch.org/science/2025/09/17/how-americans-view-ai-and-its-impact-on-people-and-society/",
+    "https://www.bls.gov/opub/mlr/2022/article/growth-trends-for-selected-occupations-considered-at-risk-from-automation.htm",
+    "https://www.pewresearch.org/internet/2025/04/03/views-of-risks-opportunities-and-regulation-of-ai/",
+    "https://www.nature.com/articles/s41598-024-79863-5",
+    "https://ventionteams.com/solutions/ai/adoption-statistics",
+    "https://www.cgi.org.uk/resources/blogs/2025/from-openai-to-anthropic-whos-leading-on-ai-governance/",
+    "https://futureofbeinghuman.com/api/v1/file/2737ea4a-2ca4-4cb5-85cb-4c9ad88f6204.pdf",
+    "https://rethinkpriorities.org/new-surveys-find-that-most-americans-support-ai-regulation-believing-that-ai-risk-mitigation-is-a-global-priority/",
+    "https://mitgovlab.org/news/can-trustworthy-ai-improve-governance-and-trust-ai-trends-biases-and-gaps/",
+    "https://www.shrm.org/topics-tools/research/automation-generative-ai-job-displacement-risk-hr-employment",
+    "https://www.bcg.com/press/24october2024-ai-adoption-in-2024-74-of-companies-struggle-to-achieve-and-scale-value",
+    "https://carnegieendowment.org/research/2024/08/china-artificial-intelligence-ai-safety-regulation?lang=en",
+    "https://www.pewresearch.org/internet/2025/04/03/how-the-us-public-and-ai-experts-view-artificial-intelligence/",
+    "https://www.atlanticcouncil.org/dispatches/eight-ways-ai-will-shape-geopolitics-in-2026/",
+    "https://www.brookings.edu/articles/how-are-americans-using-ai-evidence-from-a-nationwide-survey/",
+    "https://www.sentienceinstitute.org/blog/ai-policy-insights-from-the-aims-survey",
+    "https://kpmg.com/us/en/media/news/trust-in-ai-2025.html",
+    "https://www.brookings.edu/articles/measuring-us-workers-capacity-to-adapt-to-ai-driven-job-displacement/",
+    "https://theelders.org/news/existential-threats-global-public-attitudes",
+    "https://financesonline.com/jobs-lost-to-automation-statistics/",
+    "https://ncses.nsf.gov/pubs/nsb20244/assets/nsb20244.pdf",
+    "https://crfm.stanford.edu/fmti/paper.pdf",
+    "https://www.stlouisfed.org/on-the-economy/2024/sep/rapid-adoption-generative-ai",
+    "https://hai.stanford.edu/ai-index/2024-ai-index-report/public-opinion",
+    "https://assets.anthropic.com/m/4e20a4ab6512e217/original/Anthropic-Response-to-OSTP-RFI-March-2025-Final-Submission-v3.pdf",
+    "https://www.freshworks.com/explore-cx/us-ai-receptiveness-survey/",
+    "https://kpmg.com/xx/en/our-insights/ai-and-technology/trust-attitudes-and-use-of-ai.html",
+    "https://sciencespo.hal.science/hal-04932663v1/document",
+    "https://teamstage.io/jobs-lost-to-automation-statistics/",
+    "https://harvardlawreview.org/print/vol-138/amoral-drift-in-ai-corporate-governance/",
+    "https://wiki.aiimpacts.org/responses_to_ai/public_opinion_on_ai/surveys_of_public_opinion_on_ai/surveys_of_us_public_opinion_on_ai",
+    "https://www.aiprm.com/ai-replacing-jobs-statistics/",
+    "https://research.aimultiple.com/ai-job-loss/",
+    "https://rochesterbeacon.com/2025/12/24/with-ais-rise-hope-and-anxiety/",
+    "https://www.rand.org/pubs/research_reports/RRA4363-1.html",
+    "https://www.nu.edu/blog/ai-job-statistics/",
+    "https://jamestown.org/survey-how-do-elite-chinese-students-feel-about-the-risks-of-ai/",
+    "https://workonpeak.org/ai-and-automation-the-threat-of-job-displacement/",
+    "https://edutimes.com/news/2025/08/202508113292",
+    "https://www.nber.org/system/files/working_papers/w32966/w32966.pdf",
+    "https://www.pwc.com/us/en/tech-effect/ai-analytics/responsible-ai-survey.html",
+    "https://www.mdpi.com/2673-8104/4/4/27",
+    "https://datainnovation.org/2024/05/americans-divided-on-whether-ai-will-make-things-better-or-worse-new-survey-finds/"
+  ]
+}

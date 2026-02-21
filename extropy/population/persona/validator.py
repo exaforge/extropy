@@ -180,16 +180,4 @@ def validate_persona_config(
                 message=f"missing concrete phrasing for '{attr_name}'",
             )
 
-        # Float treatment should support mixed rendering quality.
-        if (
-            attr.type == "float"
-            and treatment == "relative"
-            and attr_name not in conc_map
-        ):
-            result.add_warning(
-                category="PERSONA_PHRASING",
-                location=f"phrasings.concrete.{attr_name}",
-                message="relative float has no concrete fallback template",
-            )
-
     return result

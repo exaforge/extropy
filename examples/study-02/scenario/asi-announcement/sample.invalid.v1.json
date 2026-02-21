@@ -1,0 +1,19 @@
+{
+  "stage": "sample",
+  "scenario": "asi-announcement",
+  "error": "post_sample_rule_pack_failed",
+  "rule_pack": {
+    "status": "fail",
+    "summary": "Implausible reconciliation rate exceeds 5%",
+    "impossible_count": 0,
+    "implausible_count": 3716,
+    "implausible_rate": 0.7432
+  },
+  "reconciliation_counts": {
+    "marital_status_updates": 2677,
+    "household_size_updates": 942,
+    "household_surname_updates": 97
+  },
+  "constraint_violations": {},
+  "condition_warnings": []
+}

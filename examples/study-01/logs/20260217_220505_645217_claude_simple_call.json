@@ -1,0 +1,60 @@
+{
+  "timestamp": "2026-02-17T22:05:05.645311",
+  "function": "simple_call",
+  "provider": "claude",
+  "request": {
+    "model": "claude-sonnet-4-6",
+    "prompt_length": 11476
+  },
+  "response": {
+    "id": "msg_01FtUJumKkz9m8FuwwFTtDiF",
+    "content": [
+      {
+        "id": "toolu_017nCCvDG6r1cYGHYuDHoqXm",
+        "input": {
+          "decision": {
+            "name": "asi_integration_stance",
+            "description": "How agents behaviorally respond to ASI's public availability \u2014 whether they actively adopt and integrate ASI into their daily decision-making, selectively engage, resist and disengage, or attempt to o...[truncated]",
+            "options": [
+              "full_integration",
+              "selective_adoption",
+              "active_resistance",
+              "collective_governance_push"
+            ],
+            "option_friction": {
+              "full_integration": 0.75,
+              "selective_adoption": 0.45,
+              "active_resistance": 0.7,
+              "collective_governance_push": 0.8
+            }
+          },
+          "reasoning": "[REDACTED_TEXT length=1399]"
+        },
+        "name": "outcome_definition",
+        "type": "tool_use",
+        "caller": {
+          "type": "direct"
+        }
+      }
+    ],
+    "model": "claude-sonnet-4-6",
+    "role": "assistant",
+    "stop_reason": "tool_use",
+    "stop_sequence": null,
+    "type": "message",
+    "usage": {
+      "cache_creation": {
+        "ephemeral_1h_input_tokens": "[REDACTED_SECRET]",
+        "ephemeral_5m_input_tokens": "[REDACTED_SECRET]"
+      },
+      "cache_creation_input_tokens": "[REDACTED_SECRET]",
+      "cache_read_input_tokens": "[REDACTED_SECRET]",
+      "input_tokens": 3431,
+      "output_tokens": 487,
+      "server_tool_use": null,
+      "service_tier": "standard",
+      "inference_geo": "global"
+    }
+  },
+  "sources_extracted": []
+}

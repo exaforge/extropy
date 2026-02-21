@@ -69,6 +69,14 @@ _SAMPLING_SEMANTIC_ROLES_SCHEMA = {
             "required": ["religion_attr", "secular_values"],
             "additionalProperties": False,
         },
+        "household_roles": {
+            "type": "object",
+            "properties": {
+                "household_size_attr": {"type": ["string", "null"]},
+            },
+            "required": ["household_size_attr"],
+            "additionalProperties": False,
+        },
     },
     "required": [
         "marital_roles",
@@ -76,6 +84,7 @@ _SAMPLING_SEMANTIC_ROLES_SCHEMA = {
         "partner_correlation_roles",
         "school_parent_role",
         "religion_roles",
+        "household_roles",
     ],
     "additionalProperties": False,
 }
@@ -150,6 +159,9 @@ Role definitions:
 5) religion_roles:
 - religion_attr: religion/faith affiliation attribute
 - secular_values: values indicating no religion
+
+6) household_roles:
+- household_size_attr: attribute representing realized household size
 
 Rules:
 - Never invent attribute names.
@@ -228,6 +240,9 @@ def _sanitize_roles(
             if isinstance(v, str) and v.strip()
         ]
 
+    household_raw = data.get("household_roles") or {}
+    household_size_attr = keep_attr(household_raw.get("household_size_attr"))
+
     return SamplingSemanticRoles.model_validate(
         {
             "marital_roles": {
@@ -244,6 +259,9 @@ def _sanitize_roles(
             "religion_roles": {
                 "religion_attr": religion_attr,
                 "secular_values": secular_values,
+            },
+            "household_roles": {
+                "household_size_attr": household_size_attr,
             },
         }
     )

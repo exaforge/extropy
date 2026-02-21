@@ -1,0 +1,925 @@
+{
+  "timestamp": "2026-02-20T03:41:03.664207",
+  "function": "reasoning_call",
+  "provider": "claude",
+  "request": {
+    "model": "claude-sonnet-4-6",
+    "prompt_length": 12260
+  },
+  "response": {
+    "id": "msg_01GV74WXz7RyHimsKquUatwv",
+    "content": [
+      {
+        "id": "toolu_01S8nTWuyBH236LzQgcu8PVc",
+        "input": {
+          "phrasings": [
+            {
+              "attribute": "country",
+              "option_phrases": [
+                {
+                  "option": "United States",
+                  "phrase": "I live in the United States"
+                }
+              ],
+              "null_options": [],
+              "null_phrase": ""
+            },
+            {
+              "attribute": "gender",
+              "option_phrases": [
+                {
+                  "option": "Male",
+                  "phrase": "I identify as male"
+                },
+                {
+                  "option": "Female",
+                  "phrase": "I identify as female"
+                },
+                {
+                  "option": "Non-binary/Other",
+                  "phrase": "I identify outside the traditional male/female categories"
+                }
+              ],
+              "null_options": [],
+              "null_phrase": ""
+            },
+            {
+              "attribute": "race_ethnicity",
+              "option_phrases": [
+                {
+                  "option": "White non-Hispanic",
+                  "phrase": "I identify as White, non-Hispanic"
+                },
+                {
+                  "option": "Black",
+                  "phrase": "I identify as Black or African American"
+                },
+                {
+                  "option": "Hispanic/Latino",
+                  "phrase": "I identify as Hispanic or Latino"
+                },
+                {
+                  "option": "Asian",
+                  "phrase": "I identify as Asian or Asian American"
+                },
+                {
+                  "option": "Other/Multiracial",
+                  "phrase": "I identify as multiracial or with a background that doesn't fit neatly into standard categories"
+                }
+              ],
+              "null_options": [],
+              "null_phrase": ""
+            },
+            {
+              "attribute": "us_region",
+              "option_phrases": [
+                {
+                  "option": "Northeast",
+                  "phrase": "I live in the Northeast part of the country"
+                },
+                {
+                  "option": "Southeast",
+                  "phrase": "I live in the Southeast"
+                },
+                {
+                  "option": "Midwest",
+                  "phrase": "I'm based in the Midwest"
+                },
+                {
+                  "option": "Southwest",
+                  "phrase": "I live in the Southwest"
+                },
+                {
+                  "option": "West Coast",
+                  "phrase": "I'm on the West Coast"
+                }
+              ],
+              "null_options": [],
+              "null_phrase": ""
+            },
+            {
+              "attribute": "urban_rural",
+              "option_phrases": [
+                {
+                  "option": "Urban",
+                  "phrase": "I live in a city"
+                },
+                {
+                  "option": "Suburban",
+                  "phrase": "I live in the suburbs"
+                },
+                {
+                  "option": "Rural",
+                  "phrase": "I live in a rural area, away from major cities"
+                }
+              ],
+              "null_options": [],
+              "null_phrase": ""
+            },
+            {
+              "attribute": "education_level",
+              "option_phrases": [
+                {
+                  "option": "Less than HS",
+                  "phrase": "I didn't finish high school"
+                },
+                {
+                  "option": "HS diploma/GED",
+                  "phrase": "I graduated high school or earned my GED"
+                },
+                {
+                  "option": "Some college",
+                  "phrase": "I attended some college but didn't finish a degree"
+                },
+                {
+                  "option": "Bachelor's degree",
+                  "phrase": "I have a four-year college degree"
+                },
+                {
+                  "option": "Graduate degree",
+                  "phrase": "I have a graduate or professional degree beyond a bachelor's"
+                }
+              ],
+              "null_options": [],
+              "null_phrase": ""
+            },
+            {
+              "attribute": "marital_status",
+              "option_phrases": [
+                {
+                  "option": "Married/partnered",
+                  "phrase": "I'm married or in a committed partnership"
+                },
+                {
+                  "option": "Single",
+                  "phrase": "I'm currently single and not in a long-term relationship"
+                },
+                {
+                  "option": "Divorced/separated",
+                  "phrase": "I'm divorced or separated"
+                },
+                {
+                  "option": "Widowed",
+                  "phrase": "I've lost my spouse or partner"
+                }
+              ],
+              "null_options": [],
+              "null_phrase": ""
+            },
+            {
+              "attribute": "employment_sector",
+              "option_phrases": [
+                {
+                  "option": "Federal government",
+                  "phrase": "I work for the federal government"
+                },
+                {
+                  "option": "State/local government",
+                  "phrase": "I work for a state or local government agency"
+                },
+                {
+                  "option": "Private sector",
+                  "phrase": "I work for a private company or corporation"
+                },
+                {
+                  "option": "Gig/contract",
+                  "phrase": "I do gig work or contract jobs \u2014 there's no single employer"
+                },
+                {
+                  "option": "Self-employed",
+                  "phrase": "I'm self-employed and run my own business"
+                },
+                {
+                  "option": "Retired",
+                  "phrase": "I'm retired and no longer working"
+                },
+                {
+                  "option": "Unemployed",
+                  "phrase": "I'm currently out of work and looking for a job"
+                },
+                {
+                  "option": "Not in labor force",
+                  "phrase": "I'm not currently working or looking for work \u2014 I'm a caregiver, student, or otherwise out of the workforce"
+                }
+              ],
+              "null_options": [
+                "Retired",
+                "Unemployed",
+                "Not in labor force"
+              ],
+              "null_phrase": "I don't currently have a traditional job or employer"
+            },
+            {
+              "attribute": "job_security_perception",
+              "option_phrases": [
+                {
+                  "option": "Very secure",
+                  "phrase": "I feel very secure in my job \u2014 I'm not worried about losing it"
+                },
+                {
+                  "option": "Somewhat secure",
+                  "phrase": "My job feels mostly stable, though nothing's guaranteed"
+                },
+                {
+                  "option": "Somewhat insecure",
+                  "phrase": "I have some real concerns about my job security"
+                },
+                {
+                  "option": "Very insecure",
+                  "phrase": "I'm genuinely worried I could lose my job soon"
+                },
+                {
+                  "option": "N/A - not employed",
+                  "phrase": "Job security isn't something I think about \u2014 I'm not in the workforce right now"
+                }
+              ],
+              "null_options": [
+                "N/A - not employed"
+              ],
+              "null_phrase": "Job security isn't something I think about \u2014 I'm not in the workforce right now"
+            },
+            {
+              "attribute": "financial_margin",
+              "option_phrases": [
+                {
+                  "option": "Comfortable savings buffer",
+                  "phrase": "I have a solid savings cushion and feel financially stable"
+                },
+                {
+                  "option": "Modest buffer",
+                  "phrase": "I have some savings, but not a lot of room for unexpected expenses"
+                },
+                {
+                  "option": "Paycheck-to-paycheck",
+                  "phrase": "I'm basically living paycheck to paycheck with little left over"
+                },
+                {
+                  "option": "In debt/deficit",
+                  "phrase": "I'm carrying more debt than I can comfortably manage \u2014 I'm in the red"
+                }
+              ],
+              "null_options": [],
+              "null_phrase": ""
+            },
+            {
+              "attribute": "investment_profile",
+              "option_phrases": [
+                {
+                  "option": "No investments",
+                  "phrase": "I don't have any investments or market accounts"
+                },
+                {
+                  "option": "401k/IRA only",
+                  "phrase": "My only investments are a retirement account like a 401k or IRA"
+                },
+                {
+                  "option": "Diversified investor",
+                  "phrase": "I have a diversified portfolio across stocks, bonds, and other assets beyond just retirement accounts"
+                },
+                {
+                  "option": "Active trader",
+                  "phrase": "I actively trade stocks or other securities on a regular basis"
+                },
+                {
+                  "option": "Crypto holder",
+                  "phrase": "I hold cryptocurrency as part of my financial strategy"
+                }
+              ],
+              "null_options": [
+                "No investments"
+              ],
+              "null_phrase": "I don't have any investments or market accounts"
+            },
+            {
+              "attribute": "primary_info_source",
+              "option_phrases": [
+                {
+                  "option": "Cable/broadcast TV news",
+                  "phrase": "I get most of my news from cable or broadcast television"
+                },
+                {
+                  "option": "Social media",
+                  "phrase": "Social media is where I mostly find out what's going on in the world"
+                },
+                {
+                  "option": "Online news sites",
+                  "phrase": "I mainly follow the news through websites and digital news outlets"
+                },
+                {
+                  "option": "Podcasts",
+                  "phrase": "Podcasts are my main way of staying informed"
+                },
+                {
+                  "option": "Local news",
+                  "phrase": "I rely mainly on local TV, radio, or newspapers for my news"
+                },
+                {
+                  "option": "Print media",
+                  "phrase": "I still primarily read print newspapers or magazines to stay informed"
+                },
+                {
+                  "option": "Avoids news",
+                  "phrase": "Honestly, I try to tune out the news as much as possible"
+                }
+              ],
+              "null_options": [
+                "Avoids news"
+              ],
+              "null_phrase": "Honestly, I try to tune out the news as much as possible"
+            },
+            {
+              "attribute": "social_media_behavior",
+              "option_phrases": [
+                {
+                  "option": "Non-user",
+                  "phrase": "I don't use social media at all"
+                },
+                {
+                  "option": "Passive consumer",
+                  "phrase": "I scroll through social media but rarely post or comment"
+                },
+                {
+                  "option": "Occasional poster",
+                  "phrase": "I post on social media sometimes, but I'm not super active"
+                },
+                {
+                  "option": "Active poster/Influencer",
+                  "phrase": "I post regularly and engage heavily on social media \u2014 building or maintaining an audience is part of how I operate"
+                }
+              ],
+              "null_options": [
+                "Non-user"
+              ],
+              "null_phrase": "I don't use social media at all"
+            },
+            {
+              "attribute": "tech_adoption_posture",
+              "option_phrases": [
+                {
+                  "option": "Technophobe/Avoider",
+                  "phrase": "I actively avoid new technology whenever I can \u2014 it's not for me"
+                },
+                {
+                  "option": "Late majority adopter",
+                  "phrase": "I wait until a technology is well-established and widely used before I bother with it"
+                },
+                {
+                  "option": "Early majority adopter",
+                  "phrase": "Once I see that something works and people around me are using it, I'm willing to try it"
+                },
+                {
+                  "option": "Early adopter",
+                  "phrase": "I tend to get into new technology pretty early \u2014 I like staying ahead of the curve"
+                },
+                {
+                  "option": "Innovator",
+                  "phrase": "I'm usually among the very first to try cutting-edge technology \u2014 I love being at the frontier"
+                }
+              ],
+              "null_options": [],
+              "null_phrase": ""
+            },
+            {
+              "attribute": "religious_engagement",
+              "option_phrases": [
+                {
+                  "option": "Secular/None",
+                  "phrase": "I don't practice any religion and don't consider myself religious"
+                },
+                {
+                  "option": "Nominally affiliated",
+                  "phrase": "I loosely identify with a religion but don't really practice it"
+                },
+                {
+                  "option": "Moderately religious",
+                  "phrase": "Faith plays a meaningful role in my life, though I'm not strictly observant"
+                },
+                {
+                  "option": "Devout",
+                  "phrase": "My faith is central to who I am and shapes how I live my life"
+                }
+              ],
+              "null_options": [
+                "Secular/None"
+              ],
+              "null_phrase": "I don't practice any religion and don't consider myself religious"
+            },
+            {
+              "attribute": "political_identity",
+              "option_phrases": [
+                {
+                  "option": "Strong Democrat",
+                  "phrase": "I'm a committed Democrat \u2014 I strongly identify with the party and its values"
+                },
+                {
+                  "option": "Lean Democrat",
+                  "phrase": "I generally lean Democratic, though I don't think of myself as a hardcore partisan"
+                },
+                {
+                  "option": "True Independent",
+                  "phrase": "I'm genuinely independent \u2014 I don't align with either party"
+                },
+                {
+                  "option": "Lean Republican",
+                  "phrase": "I tend to lean Republican, though I'm not a die-hard party loyalist"
+                },
+                {
+                  "option": "Strong Republican",
+                  "phrase": "I'm a committed Republican \u2014 I strongly identify with the party and its values"
+                }
+              ],
+              "null_options": [],
+              "null_phrase": ""
+            },
+            {
+              "attribute": "political_engagement_level",
+              "option_phrases": [
+                {
+                  "option": "Disengaged",
+                  "phrase": "I really don't follow politics closely \u2014 it feels distant from my daily life"
+                },
+                {
+                  "option": "Single-issue voter",
+                  "phrase": "There's one issue that drives almost all of my political engagement"
+                },
+                {
+                  "option": "Moderate/occasional participant",
+                  "phrase": "I pay attention to politics and vote, but I'm not deeply involved beyond that"
+                },
+                {
+                  "option": "Highly engaged partisan",
+                  "phrase": "I'm very politically active \u2014 I follow politics closely and do more than just vote"
+                }
+              ],
+              "null_options": [
+                "Disengaged"
+              ],
+              "null_phrase": "I really don't follow politics closely \u2014 it feels distant from my daily life"
+            },
+            {
+              "attribute": "vote_2024_presidential",
+              "option_phrases": [
+                {
+                  "option": "Trump",
+                  "phrase": "I voted for Donald Trump in the 2024 presidential election"
+                },
+                {
+                  "option": "Harris",
+                  "phrase": "I voted for Kamala Harris in the 2024 presidential election"
+                },
+                {
+                  "option": "Third party",
+                  "phrase": "I voted for a third-party candidate in the 2024 presidential race"
+                },
+                {
+                  "option": "Did not vote",
+                  "phrase": "I didn't vote in the 2024 presidential election"
+                },
+                {
+                  "option": "Not eligible",
+                  "phrase": "I wasn't eligible to vote in the 2024 presidential election"
+                }
+              ],
+              "null_options": [
+                "Did not vote",
+                "Not eligible"
+              ],
+              "null_phrase": "I didn't cast a ballot in the 2024 presidential race"
+            },
+            {
+              "attribute": "midterm_turnout_propensity",
+              "option_phrases": [
+                {
+                  "option": "Always votes",
+                  "phrase": "I vote in every midterm election \u2014 it's something I always do"
+                },
+                {
+                  "option": "Sometimes votes",
+                  "phrase": "I vote in midterms sometimes, depending on how much I care about what's on the ballot"
+                },
+                {
+                  "option": "Rarely votes",
+                  "phrase": "I rarely vote in midterm elections \u2014 it doesn't usually feel worth it"
+                },
+                {
+                  "option": "Never votes",
+                  "phrase": "I don't vote in midterm elections"
+                }
+              ],
+              "null_options": [],
+              "null_phrase": ""
+            },
+            {
+              "attribute": "congressional_district_competitiveness",
+              "option_phrases": [
+                {
+                  "option": "Safe Republican",
+                  "phrase": "My congressional district is solidly Republican \u2014 there's no real competition"
+                },
+                {
+                  "option": "Lean Republican",
+                  "phrase": "My district tilts Republican, but it's not a total lock"
+                },
+                {
+                  "option": "Swing district",
+                  "phrase": "I live in a genuine swing district where either party could win"
+                },
+                {
+                  "option": "Lean Democrat",
+                  "phrase": "My district tends to go Democratic, though it's not completely safe"
+                },
+                {
+                  "option": "Safe Democrat",
+                  "phrase": "My congressional district is solidly Democratic \u2014 the outcome is pretty predictable"
+                }
+              ],
+              "null_options": [],
+              "null_phrase": ""
+            },
+            {
+              "attribute": "top_issue_2026",
+              "option_phrases": [
+                {
+                  "option": "Economy/Jobs",
+                  "phrase": "The economy and jobs are the issues I care most about going into 2026"
+                },
+                {
+                  "option": "Abortion/Reproductive rights",
+                  "phrase": "Abortion and reproductive rights are my top concern for the 2026 elections"
+                },
+                {
+                  "option": "Immigration",
+                  "phrase": "Immigration is the issue driving my vote more than anything else in 2026"
+                },
+                {
+                  "option": "Democracy/Rule of law",
+                  "phrase": "Protecting democracy and the rule of law is my single biggest priority for 2026"
+                },
+                {
+                  "option": "Healthcare",
+                  "phrase": "Healthcare \u2014 its cost and access \u2014 is what I care about most heading into 2026"
+                },
+                {
+                  "option": "Climate",
+                  "phrase": "Climate change is the issue I'm most focused on for the 2026 elections"
+                },
+                {
+                  "option": "Education",
+                  "phrase": "Education policy is the issue I care most about as we head into 2026"
+                },
+                {
+                  "option": "AI/Technology",
+                  "phrase": "The regulation and impact of AI and new technology is my top concern for 2026"
+                }
+              ],
+              "null_options": [],
+              "null_phrase": ""
+            },
+            {
+              "attribute": "country_direction_approval",
+              "option_phrases": [
+                {
+                  "option": "Strongly approve",
+                  "phrase": "I strongly approve of the direction the country is headed right now"
+                },
+                {
+                  "option": "Somewhat approve",
+                  "phrase": "I think things are generally moving in the right direction, even if not perfectly"
+                },
+                {
+                  "option": "Somewhat disapprove",
+                  "phrase": "I'm not happy with the direction the country is going, though it's not all bad"
+                },
+                {
+                  "option": "Strongly disapprove",
+                  "phrase": "I strongly disapprove of the direction this country is headed \u2014 things are going very wrong"
+                }
+              ],
+              "null_options": [],
+              "null_phrase": ""
+            },
+            {
+              "attribute": "consumer_identity",
+              "option_phrases": [
+                {
+                  "option": "Brand loyal",
+                  "phrase": "I tend to stick with the brands I trust \u2014 I'm not constantly switching"
+                },
+                {
+                  "option": "Price/value driven",
+                  "phrase": "Price and value for money are what drive my buying decisions more than anything else"
+                },
+                {
+                  "option": "Values/ethics driven",
+                  "phrase": "I try to buy from companies whose ethics and values align with mine, even if it costs more"
+                },
+                {
+                  "option": "Convenience driven",
+                  "phrase": "Convenience is king for me \u2014 I buy whatever is easiest and fastest"
+                }
+              ],
+              "null_options": [],
+              "null_phrase": ""
+            },
+            {
+              "attribute": "institutional_trust",
+              "option_phrases": [
+                {
+                  "option": "High trust",
+                  "phrase": "I generally trust major institutions \u2014 government, media, science, and corporations \u2014 to act in good faith"
+                },
+                {
+                  "option": "Moderate trust",
+                  "phrase": "I have moderate trust in institutions \u2014 I believe in them but know they're flawed"
+                },
+                {
+                  "option": "Low trust",
+                  "phrase": "I have pretty low trust in most major institutions \u2014 I think they frequently let people down"
+                },
+                {
+                  "option": "Distrustful/Conspiratorial",
+                  "phrase": "I deeply distrust most major institutions and believe a lot of what we're told is manipulated or hidden from us"
+                }
+              ],
+              "null_options": [],
+              "null_phrase": ""
+            },
+            {
+              "attribute": "personal_health_stake",
+              "option_phrases": [
+                {
+                  "option": "No personal stake",
+                  "phrase": "I don't have a particular personal or family health reason to care about medical breakthroughs"
+                },
+                {
+                  "option": "Mild interest",
+                  "phrase": "I'm generally interested in medical advances, though nothing urgent personally drives that interest"
+                },
+                {
+                  "option": "Significant - managing chronic illness",
+                  "phrase": "I or someone close to me is managing a serious chronic illness, so medical breakthroughs matter a lot to us"
+                },
+                {
+                  "option": "Critical - terminal or degenerative diagnosis",
+                  "phrase": "I or a family member has a terminal or degenerative diagnosis \u2014 medical breakthroughs could be genuinely life-or-death for us"
+                }
+              ],
+              "null_options": [
+                "No personal stake"
+              ],
+              "null_phrase": "I don't have a particular personal or family health reason to care about medical breakthroughs"
+            },
+            {
+              "attribute": "asi_threat_perception",
+              "option_phrases": [
+                {
+                  "option": "Existential threat",
+                  "phrase": "I see advanced AI as an existential threat to humanity \u2014 this could go very badly for all of us"
+                },
+                {
+                  "option": "Serious risk/concern",
+                  "phrase": "I think advanced AI poses serious risks and society needs to take those dangers much more seriously"
+                },
+                {
+                  "option": "Cautiously optimistic",
+                  "phrase": "I'm cautiously optimistic about advanced AI \u2014 I see real benefits, but also real risks that need managing"
+                },
+                {
+                  "option": "Enthusiastically positive",
+                  "phrase": "I'm excited about what advanced AI can do \u2014 I think the benefits far outweigh the risks"
+                },
+                {
+                  "option": "Indifferent/uncertain",
+                  "phrase": "Honestly, I'm not sure what to think about advanced AI \u2014 I haven't formed a strong view either way"
+                }
+              ],
+              "null_options": [
+                "Indifferent/uncertain"
+              ],
+              "null_phrase": "Honestly, I'm not sure what to think about advanced AI \u2014 I haven't formed a strong view either way"
+            },
+            {
+              "attribute": "job_displacement_vulnerability",
+              "option_phrases": [
+                {
+                  "option": "High - core tasks fully automatable",
+                  "phrase": "Most of what I do for work could realistically be automated by AI \u2014 I'm in a high-risk position"
+                },
+                {
+                  "option": "Moderate - partial displacement likely",
+                  "phrase": "Some of my work could be taken over by AI, though I don't think I'd be fully replaced"
+                },
+                {
+                  "option": "Low - physical/relational job",
+                  "phrase": "My work is physical or deeply relational in ways that are hard to automate \u2014 I feel fairly insulated from AI displacement"
+                },
+                {
+                  "option": "Already displaced",
+                  "phrase": "AI or automation has already disrupted my career or cost me work"
+                },
+                {
+                  "option": "Not employed",
+                  "phrase": "I'm not currently employed, so job displacement from AI isn't something I'm facing right now"
+                }
+              ],
+              "null_options": [
+                "Not employed"
+              ],
+              "null_phrase": "I'm not currently employed, so job displacement from AI isn't something I'm facing right now"
+            },
+            {
+              "attribute": "asi_adoption_intent",
+              "option_phrases": [
+                {
+                  "option": "Already using heavily",
+                  "phrase": "I'm already using advanced AI tools heavily in my daily life or work"
+                },
+                {
+                  "option": "Planning to adopt soon",
+                  "phrase": "I plan to start integrating AI tools into my life or work pretty soon"
+                },
+                {
+                  "option": "Curious but hesitant",
+                  "phrase": "I'm curious about AI tools but haven't committed to using them \u2014 I'm still on the fence"
+                },
+                {
+                  "option": "Resistant but may be forced",
+                  "phrase": "I'm resistant to using AI tools, but I can see that I might not have a choice for long"
+                },
+                {
+                  "option": "Actively refusing",
+                  "phrase": "I'm actively choosing not to use AI tools and intend to keep it that way"
+                }
+              ],
+              "null_options": [],
+              "null_phrase": ""
+            },
+            {
+              "attribute": "asi_governance_stance",
+              "option_phrases": [
+                {
+                  "option": "No regulation - let it run",
+                  "phrase": "I think AI should be left alone to develop without government interference"
+                },
+                {
+                  "option": "Light-touch industry self-regulation",
+                  "phrase": "I prefer the industry regulate itself with minimal government involvement"
+                },
+                {
+                  "option": "Moderate government oversight",
+                  "phrase": "I support reasonable government oversight of AI to manage risks without strangling innovation"
+                },
+                {
+                  "option": "Heavy international regulation",
+                  "phrase": "I think AI needs strong international regulation and coordination to prevent catastrophic misuse"
+                },
+                {
+                  "option": "Halt/moratorium until safe",
+                  "phrase": "I believe development of the most powerful AI systems should be paused until we can prove it's safe"
+                }
+              ],
+              "null_options": [],
+              "null_phrase": ""
+            },
+            {
+              "attribute": "information_verification_behavior",
+              "option_phrases": [
+                {
+                  "option": "Accepts information uncritically",
+                  "phrase": "I generally take information at face value without digging into whether it's accurate"
+                },
+                {
+                  "option": "Relies on trusted outlets",
+                  "phrase": "I stick to a handful of sources I trust and don't feel the need to verify beyond that"
+                },
+                {
+                  "option": "Cross-references multiple sources",
+                  "phrase": "When something seems important, I check it against multiple sources before I accept it as true"
+                },
+                {
+                  "option": "Uses ASI tools to fact-check",
+                  "phrase": "I actually use AI tools to help me verify and fact-check information I come across"
+                },
+                {
+                  "option": "Deep skeptic - trusts very little",
+                  "phrase": "I'm skeptical of almost everything I read or hear \u2014 I trust very little of what's out there"
+                }
+              ],
+              "null_options": [],
+              "null_phrase": ""
+            },
+            {
+              "attribute": "redistribution_support",
+              "option_phrases": [
+                {
+                  "option": "Strongly supports aggressive redistribution",
+                  "phrase": "I strongly support bold redistribution policies \u2014 things like UBI, wealth taxes, or public ownership of AI \u2014 to make sure everyone benefits"
+                },
+                {
+                  "option": "Supports moderate redistribution",
+                  "phrase": "I support some redistribution to share the gains from AI more broadly, even if I don't go as far as full public ownership"
+                },
+                {
+                  "option": "Prefers market-led distribution",
+                  "phrase": "I think the market should determine who benefits from AI \u2014 redistribution creates more problems than it solves"
+                },
+                {
+                  "option": "Opposes redistribution",
+                  "phrase": "I'm opposed to redistribution \u2014 government taking and reallocating wealth is fundamentally wrong to me"
+                },
+                {
+                  "option": "Uncertain",
+                  "phrase": "I genuinely haven't made up my mind about how the benefits of AI should be distributed across society"
+                }
+              ],
+              "null_options": [
+                "Uncertain"
+              ],
+              "null_phrase": "I genuinely haven't made up my mind about how the benefits of AI should be distributed across society"
+            },
+            {
+              "attribute": "geopolitical_competition_concern",
+              "option_phrases": [
+                {
+                  "option": "Very concerned - sees it as primary threat",
+                  "phrase": "The US-China race on AI is what I see as the most serious geopolitical threat we face right now"
+                },
+                {
+                  "option": "Somewhat concerned",
+                  "phrase": "I'm somewhat concerned about AI competition with China and its national security implications"
+                },
+                {
+                  "option": "Mildly concerned",
+                  "phrase": "The geopolitics of AI is on my radar, but it's not something I worry about deeply"
+                },
+                {
+                  "option": "Not concerned",
+                  "phrase": "I'm not particularly concerned about US-China AI competition \u2014 it doesn't feel like a major issue to me"
+                },
+                {
+                  "option": "Views competition as beneficial",
+                  "phrase": "I actually think competition between the US and China on AI will drive better outcomes for everyone"
+                }
+              ],
+              "null_options": [],
+              "null_phrase": ""
+            },
+            {
+              "attribute": "asi_credibility_assessment",
+              "option_phrases": [
+                {
+                  "option": "Fully credible",
+                  "phrase": "I believe the AI milestones and breakthroughs we're hearing about are real and credible"
+                },
+                {
+                  "option": "Mostly credible",
+                  "phrase": "I think most of what's being claimed about AI advances is genuine, even if details get spun"
+                },
+                {
+                  "option": "Skeptical - likely overhyped",
+                  "phrase": "I think a lot of the AI breakthrough news is overhyped and the reality is more mundane than advertised"
+                },
+                {
+                  "option": "Conspiracy - staged or manipulated",
+                  "phrase": "I'm skeptical that what we're being shown about AI is real \u2014 I think some of it is staged or manipulated for political or commercial purposes"
+                },
+                {
+                  "option": "Uninformed - unaware of events",
+                  "phrase": "I honestly haven't been following the news about AI milestones closely enough to have an opinion"
+                }
+              ],
+              "null_options": [
+                "Uninformed - unaware of events"
+              ],
+              "null_phrase": "I honestly haven't been following the news about AI milestones closely enough to have an opinion"
+            }
+          ]
+        },
+        "name": "categorical_phrasings",
+        "type": "tool_use",
+        "caller": {
+          "type": "direct"
+        }
+      }
+    ],
+    "model": "claude-sonnet-4-6",
+    "role": "assistant",
+    "stop_reason": "tool_use",
+    "stop_sequence": null,
+    "type": "message",
+    "usage": {
+      "cache_creation": {
+        "ephemeral_1h_input_tokens": "[REDACTED_SECRET]",
+        "ephemeral_5m_input_tokens": "[REDACTED_SECRET]"
+      },
+      "cache_creation_input_tokens": "[REDACTED_SECRET]",
+      "cache_read_input_tokens": "[REDACTED_SECRET]",
+      "input_tokens": 3717,
+      "output_tokens": 6505,
+      "server_tool_use": null,
+      "service_tier": "standard",
+      "inference_geo": "global"
+    }
+  },
+  "sources_extracted": []
+}
