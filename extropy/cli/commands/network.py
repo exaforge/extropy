@@ -603,7 +603,10 @@ def network_command(
             console.print(f"  Largest Component: {metrics.largest_component_ratio:.1%}")
             console.print(f"  Degree Assortativity: {metrics.degree_assortativity:.3f}")
 
-            is_valid, warnings = metrics.is_valid()
+            quality_bounds = (result.meta.get("quality", {}) or {}).get("bounds", {})
+            is_valid, warnings = metrics.is_valid(
+                bounds=quality_bounds if quality_bounds else None
+            )
             console.print()
             if is_valid:
                 console.print("[green]✓[/green] All metrics within expected ranges")

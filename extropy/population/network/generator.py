@@ -28,6 +28,14 @@ from .similarity import (
 
 logger = logging.getLogger(__name__)
 _STATUS_HEARTBEAT_SECONDS = 5.0
+_GATE_NUMERIC_EPSILON = 1e-4
+
+try:
+    import networkx as nx
+
+    HAS_NETWORKX = True
+except ImportError:
+    HAS_NETWORKX = False
 
 _SIM_WORKER_AGENTS: list[dict[str, Any]] | None = None
 _SIM_WORKER_ATTRIBUTE_WEIGHTS = None
@@ -1058,13 +1066,15 @@ def _evaluate_topology_gate(
     mod_max: float,
     lcc_min: float,
     min_edge_floor: int,
+    epsilon: float = _GATE_NUMERIC_EPSILON,
 ) -> tuple[bool, dict[str, float]]:
     """Evaluate strict topology gate and return deltas vs configured bounds."""
+    eps = max(0.0, float(epsilon))
     in_range = (
-        deg_min <= metrics["avg_degree"] <= deg_max
-        and metrics["clustering"] >= cluster_min
-        and mod_min <= metrics["modularity"] <= mod_max
-        and metrics["largest_component_ratio"] >= lcc_min
+        (deg_min - eps) <= metrics["avg_degree"] <= (deg_max + eps)
+        and metrics["clustering"] >= (cluster_min - eps)
+        and (mod_min - eps) <= metrics["modularity"] <= (mod_max + eps)
+        and metrics["largest_component_ratio"] >= (lcc_min - eps)
         and metrics["edge_count"] >= min_edge_floor
     )
     deltas = {
@@ -1077,6 +1087,81 @@ def _evaluate_topology_gate(
         "edge_count_to_min": metrics["edge_count"] - min_edge_floor,
     }
     return in_range, deltas
+
+
+def _similarity_reserve_ratio(config: NetworkConfig) -> float:
+    """Reserve a minimum similarity budget so structural channels do not dominate."""
+    if config.quality_profile == "strict":
+        return 0.45
+    if config.quality_profile == "fast":
+        return 0.25
+    return 0.35
+
+
+def _compute_modularity_louvain(
+    edges: list[Edge], agent_ids: list[str]
+) -> float | None:
+    """Compute modularity via Louvain on the final graph (same method as metrics.py)."""
+    if not HAS_NETWORKX:
+        return None
+    try:
+        graph = nx.Graph()
+        graph.add_nodes_from(agent_ids)
+        for edge in edges:
+            graph.add_edge(edge.source, edge.target)
+        communities = nx.community.louvain_communities(graph, seed=42)
+        return float(nx.community.modularity(graph, communities))
+    except Exception:
+        return None
+
+
+def _merge_edges_with_structural(
+    similarity_edges: list[Edge],
+    structural_edges: list[Edge],
+) -> tuple[list[Edge], set[tuple[str, str]], int]:
+    """Merge structural edges into similarity edges, deduplicating by undirected pair."""
+    merged = list(similarity_edges)
+    edge_set: set[tuple[str, str]] = set()
+    for edge in merged:
+        edge_set.add((edge.source, edge.target))
+        edge_set.add((edge.target, edge.source))
+
+    added = 0
+    for structural in structural_edges:
+        if (structural.source, structural.target) in edge_set:
+            continue
+        merged.append(structural)
+        edge_set.add((structural.source, structural.target))
+        edge_set.add((structural.target, structural.source))
+        added += 1
+
+    return merged, edge_set, added
+
+
+def _compute_gate_metrics(
+    *,
+    edges: list[Edge],
+    agent_ids: list[str],
+    communities: list[int] | None,
+    fallback_modularity: float = 0.0,
+) -> dict[str, float]:
+    """Compute final gate metrics on the realized graph."""
+    n = len(agent_ids)
+    adjacency = _build_adjacency_from_edges(edges, agent_ids, n)
+    modularity = _compute_modularity_louvain(edges, agent_ids)
+    if modularity is None:
+        if communities and len(communities) == n:
+            modularity = _compute_modularity_fast(edges, agent_ids, communities)
+        else:
+            modularity = fallback_modularity
+
+    return {
+        "edge_count": len(edges),
+        "avg_degree": (2 * len(edges) / n) if n > 0 else 0.0,
+        "clustering": _compute_avg_clustering(adjacency, n),
+        "largest_component_ratio": _compute_largest_component_ratio(adjacency, n),
+        "modularity": modularity,
+    }
 
 
 def _apply_scale_target_caps(
@@ -1872,6 +1957,10 @@ def _resolve_structural_keys_from_config(
 
     for slot, fallback_keys in defaults.items():
         configured = getattr(roles, slot, None)
+        if configured and populated_counts.get(configured, 0) > 0:
+            # Config-selected role must win when populated; fallbacks are only backup.
+            resolved[slot] = configured
+            continue
         candidates: list[str] = []
         if configured:
             candidates.append(configured)
@@ -1946,6 +2035,7 @@ def _generate_structural_edges(
     agent_ids: list[str],
     rng: random.Random,
     config: NetworkConfig | None = None,
+    target_edge_budget: int | None = None,
 ) -> list[Edge]:
     """Generate deterministic structural edges from agent attributes.
 
@@ -1956,10 +2046,10 @@ def _generate_structural_edges(
     edges: list[Edge] = []
     added: set[tuple[int, int]] = set()
 
-    def _add(i: int, j: int, etype: str, weight: float, context: str) -> None:
+    def _add(i: int, j: int, etype: str, weight: float, context: str) -> bool:
         pair = (min(i, j), max(i, j))
         if pair in added or i == j:
-            return
+            return False
         added.add(pair)
         edges.append(
             Edge(
@@ -1971,6 +2061,7 @@ def _generate_structural_edges(
                 context=context,
             )
         )
+        return True
 
     effective_config = config or NetworkConfig()
     resolved_keys = _resolve_structural_keys_from_config(agents, effective_config)
@@ -2026,48 +2117,111 @@ def _generate_structural_edges(
         if has_school_kid and region:
             school_parent_map.setdefault((region, urban_bucket), []).append(idx)
 
-    # 1. Partner edges (weight 1.0, max 1 per agent)
+    # 1) Mandatory structural edges: partner + household.
+    # These are preserved even when they exceed target edge budgets.
     for idx, agent in enumerate(agents):
         partner_id = agent.get(partner_key) if partner_key else None
         if partner_id and partner_id in id_to_idx:
             j = id_to_idx[partner_id]
             _add(idx, j, "partner", 1.0, "household")
 
-    # 2. Household edges (weight 0.9, all members in same household)
+    # 2) Household edges (co-residence ties).
     for members in household_map.values():
         for i_pos in range(len(members)):
             for j_pos in range(i_pos + 1, len(members)):
                 _add(members[i_pos], members[j_pos], "household", 0.9, "household")
 
-    # 3. Coworker edges (weight 0.6, capped at ~8 per agent)
+    # Optional structural budget: keep headroom for similarity-based structure.
+    optional_budget: int | None = None
+    if target_edge_budget is not None:
+        optional_budget = max(0, int(target_edge_budget) - len(edges))
+
+    def _channel_pressure(
+        pools: dict[tuple[str, str], list[int]], weight: float
+    ) -> float:
+        opportunity = sum(max(0, len(pool) - 1) for pool in pools.values())
+        if opportunity <= 0:
+            return 0.0
+        # Square-root dampening avoids one giant channel monopolizing budget.
+        return weight * (opportunity**0.5)
+
+    channel_order = ["coworker", "neighbor", "congregation", "school_parent"]
+    channel_scores = {
+        "coworker": _channel_pressure(sector_region_map, 1.00),
+        "neighbor": _channel_pressure(region_urban_map, 0.80),
+        "congregation": _channel_pressure(religion_region_map, 0.65),
+        "school_parent": _channel_pressure(school_parent_map, 0.60),
+    }
+    channel_quotas: dict[str, int] | None = None
+    if optional_budget is not None:
+        channel_quotas = {name: 0 for name in channel_order}
+        total_score = sum(channel_scores.values())
+        if optional_budget > 0 and total_score > 0:
+            fractional: list[tuple[float, str]] = []
+            allocated = 0
+            for name in channel_order:
+                raw = optional_budget * (channel_scores[name] / total_score)
+                whole = int(raw)
+                channel_quotas[name] = whole
+                allocated += whole
+                fractional.append((raw - whole, name))
+            remainder = max(0, optional_budget - allocated)
+            fractional.sort(key=lambda item: (-item[0], item[1]))
+            for _, name in fractional:
+                if remainder <= 0:
+                    break
+                channel_quotas[name] += 1
+                remainder -= 1
+
+    def _quota_for(channel: str) -> int | None:
+        if channel_quotas is None:
+            return None
+        return channel_quotas.get(channel, 0)
+
+    # 3) Coworker edges (weight 0.6, locally capped).
     _MAX_COWORKER = 8
     coworker_count: dict[int, int] = {}
+    coworker_added = 0
+    coworker_quota = _quota_for("coworker")
     for pool in sector_region_map.values():
+        if coworker_quota is not None and coworker_added >= coworker_quota:
+            break
         if len(pool) < 2:
             continue
         shuffled = list(pool)
         rng.shuffle(shuffled)
         for i_pos, i in enumerate(shuffled):
+            if coworker_quota is not None and coworker_added >= coworker_quota:
+                break
             if coworker_count.get(i, 0) >= _MAX_COWORKER:
                 continue
             for j in shuffled[i_pos + 1 :]:
+                if coworker_quota is not None and coworker_added >= coworker_quota:
+                    break
                 if coworker_count.get(j, 0) >= _MAX_COWORKER:
                     continue
                 if coworker_count.get(i, 0) >= _MAX_COWORKER:
                     break
-                _add(i, j, "coworker", 0.6, "workplace")
-                coworker_count[i] = coworker_count.get(i, 0) + 1
-                coworker_count[j] = coworker_count.get(j, 0) + 1
+                if _add(i, j, "coworker", 0.6, "workplace"):
+                    coworker_count[i] = coworker_count.get(i, 0) + 1
+                    coworker_count[j] = coworker_count.get(j, 0) + 1
+                    coworker_added += 1
 
-    # 4. Neighbor edges (weight 0.4, capped at ~4, age within 15yr)
+    # 4) Neighbor edges (weight 0.4, locally capped, age-bounded).
     _MAX_NEIGHBOR = 4
     neighbor_count: dict[int, int] = {}
+    neighbor_added = 0
+    neighbor_quota = _quota_for("neighbor")
     for pool in region_urban_map.values():
+        if neighbor_quota is not None and neighbor_added >= neighbor_quota:
+            break
         if len(pool) < 2:
             continue
         shuffled = list(pool)
         rng.shuffle(shuffled)
         for i_pos, i in enumerate(shuffled):
+            if neighbor_quota is not None and neighbor_added >= neighbor_quota:
+                break
             if neighbor_count.get(i, 0) >= _MAX_NEIGHBOR:
                 continue
             age_i_raw = agents[i].get(age_key) if age_key else None
@@ -2075,6 +2229,8 @@ def _generate_structural_edges(
                 age_i_raw = int(age_i_raw.strip())
             age_i = age_i_raw if isinstance(age_i_raw, (int, float)) else 40
             for j in shuffled[i_pos + 1 :]:
+                if neighbor_quota is not None and neighbor_added >= neighbor_quota:
+                    break
                 if neighbor_count.get(j, 0) >= _MAX_NEIGHBOR:
                     continue
                 if neighbor_count.get(i, 0) >= _MAX_NEIGHBOR:
@@ -2084,49 +2240,74 @@ def _generate_structural_edges(
                     age_j_raw = int(age_j_raw.strip())
                 age_j = age_j_raw if isinstance(age_j_raw, (int, float)) else 40
                 if abs(age_i - age_j) <= 15:
-                    _add(i, j, "neighbor", 0.4, "neighborhood")
-                    neighbor_count[i] = neighbor_count.get(i, 0) + 1
-                    neighbor_count[j] = neighbor_count.get(j, 0) + 1
+                    if _add(i, j, "neighbor", 0.4, "neighborhood"):
+                        neighbor_count[i] = neighbor_count.get(i, 0) + 1
+                        neighbor_count[j] = neighbor_count.get(j, 0) + 1
+                        neighbor_added += 1
 
-    # 5. Congregation edges (weight 0.4, capped at ~4)
+    # 5) Congregation edges (weight 0.4, locally capped).
     _MAX_CONGREGATION = 4
     congregation_count: dict[int, int] = {}
+    congregation_added = 0
+    congregation_quota = _quota_for("congregation")
     for pool in religion_region_map.values():
+        if congregation_quota is not None and congregation_added >= congregation_quota:
+            break
         if len(pool) < 2:
             continue
         shuffled = list(pool)
         rng.shuffle(shuffled)
         for i_pos, i in enumerate(shuffled):
+            if (
+                congregation_quota is not None
+                and congregation_added >= congregation_quota
+            ):
+                break
             if congregation_count.get(i, 0) >= _MAX_CONGREGATION:
                 continue
             for j in shuffled[i_pos + 1 :]:
+                if (
+                    congregation_quota is not None
+                    and congregation_added >= congregation_quota
+                ):
+                    break
                 if congregation_count.get(j, 0) >= _MAX_CONGREGATION:
                     continue
                 if congregation_count.get(i, 0) >= _MAX_CONGREGATION:
                     break
-                _add(i, j, "congregation", 0.4, "congregation")
-                congregation_count[i] = congregation_count.get(i, 0) + 1
-                congregation_count[j] = congregation_count.get(j, 0) + 1
+                if _add(i, j, "congregation", 0.4, "congregation"):
+                    congregation_count[i] = congregation_count.get(i, 0) + 1
+                    congregation_count[j] = congregation_count.get(j, 0) + 1
+                    congregation_added += 1
 
-    # 6. School parent edges (weight 0.35, capped at ~3)
+    # 6) School-parent edges (weight 0.35, locally capped).
     _MAX_SCHOOL_PARENT = 3
     school_count: dict[int, int] = {}
+    school_added = 0
+    school_quota = _quota_for("school_parent")
     for pool in school_parent_map.values():
+        if school_quota is not None and school_added >= school_quota:
+            break
         if len(pool) < 2:
             continue
         shuffled = list(pool)
         rng.shuffle(shuffled)
         for i_pos, i in enumerate(shuffled):
+            if school_quota is not None and school_added >= school_quota:
+                break
             if school_count.get(i, 0) >= _MAX_SCHOOL_PARENT:
                 continue
             for j in shuffled[i_pos + 1 :]:
+                if school_quota is not None and school_added >= school_quota:
+                    break
                 if school_count.get(j, 0) >= _MAX_SCHOOL_PARENT:
                     continue
                 if school_count.get(i, 0) >= _MAX_SCHOOL_PARENT:
                     break
-                _add(i, j, "school_parent", 0.35, "school")
-                school_count[i] = school_count.get(i, 0) + 1
-                school_count[j] = school_count.get(j, 0) + 1
+                if _add(i, j, "school_parent", 0.35, "school"):
+                    school_count[i] = school_count.get(i, 0) + 1
+                    school_count[j] = school_count.get(j, 0) + 1
+                    school_added += 1
 
     return edges
 
@@ -2325,10 +2506,17 @@ def generate_network(
     stage_plan = _stage_plan()
     elapsed_budget = max(1, int(config.max_calibration_minutes * 60))
     stage_budget = max(30, elapsed_budget // max(1, len(stage_plan)))
+    target_edge_budget = max(1, int(round(n * config.avg_degree / 2.0)))
+    structural_edge_budget = max(
+        1,
+        int(round(target_edge_budget * (1.0 - _similarity_reserve_ratio(config)))),
+    )
 
     calibration_accepted = False
     best_score = float("inf")
-    best_edges: list[Edge] | None = None
+    best_similarity_edges: list[Edge] | None = None
+    best_structural_edges: list[Edge] | None = None
+    best_structural_pair_set: set[tuple[str, str]] | None = None
     calibration_best_metrics: dict[str, float] | None = None
     calibration_best_communities: list[int] | None = None
     best_stage = ""
@@ -2343,10 +2531,6 @@ def generate_network(
         * config.calibration_restarts
         * config.max_calibration_iterations,
     )
-
-    # Initialized before stage loop; populated in Step 3b inside the loop.
-    structural_edges: list[Edge] = []
-    structural_pair_set: set[tuple[str, str]] = set()
 
     for stage_idx, stage in enumerate(stage_plan):
         if time.time() - started_at >= elapsed_budget:
@@ -2579,41 +2763,47 @@ def generate_network(
             )
             continue
 
-        # Step 3b: Generate structural edges first (structural-first ordering).
-        # Structural edges consume part of the degree budget; similarity
-        # calibration targets the remainder.
+        # Step 3b: Generate structural edges first with a global budget.
         structural_fn = _generate_structural_edges
         sig = inspect.signature(structural_fn)
-        if "config" in sig.parameters or len(sig.parameters) >= 4:
-            structural_edges = structural_fn(
-                agents,
-                agent_ids,
-                rng,
-                config=stage_cfg,
+        structural_kwargs: dict[str, Any] = {}
+        if "config" in sig.parameters:
+            structural_kwargs["config"] = stage_cfg
+        if "target_edge_budget" in sig.parameters:
+            structural_kwargs["target_edge_budget"] = structural_edge_budget
+        if structural_kwargs:
+            stage_structural_edges = structural_fn(
+                agents, agent_ids, rng, **structural_kwargs
             )
         else:
-            structural_edges = structural_fn(agents, agent_ids, rng)
-        structural_pair_set: set[tuple[str, str]] = set()
-        for se in structural_edges:
-            structural_pair_set.add((se.source, se.target))
-            structural_pair_set.add((se.target, se.source))
+            stage_structural_edges = structural_fn(agents, agent_ids, rng)
+        stage_structural_pair_set: set[tuple[str, str]] = set()
+        for se in stage_structural_edges:
+            stage_structural_pair_set.add((se.source, se.target))
+            stage_structural_pair_set.add((se.target, se.source))
 
         structural_degree: Counter[str] = Counter()
-        for se in structural_edges:
+        for se in stage_structural_edges:
             structural_degree[se.source] += 1
             structural_degree[se.target] += 1
         avg_structural = (
-            sum(structural_degree.values()) / max(n, 1) if structural_edges else 0.0
+            sum(structural_degree.values()) / max(n, 1)
+            if stage_structural_edges
+            else 0.0
         )
 
-        # Reduce similarity target by average structural degree
-        similarity_target = max(1.0, config.avg_degree - avg_structural)
+        # Keep enough residual degree for similarity edges.
+        residual_target = max(1.0, config.avg_degree - avg_structural)
+        similarity_target = max(
+            1.0,
+            min(config.avg_degree, residual_target),
+        )
         stage_cfg = stage_cfg.model_copy(update={"avg_degree": similarity_target})
 
         logger.info(
             "[NETWORK] Structural edges: %d (avg structural degree: %.2f, "
             "similarity target: %.2f)",
-            len(structural_edges),
+            len(stage_structural_edges),
             avg_structural,
             similarity_target,
         )
@@ -2658,20 +2848,28 @@ def generate_network(
                     },
                 )
                 iter_rng = random.Random(restart_seed + iteration * 1000)
-                edges, avg_degree, clustering, modularity, largest_component_ratio = (
-                    _generate_network_single_pass(
-                        agents,
-                        agent_ids,
-                        similarities,
-                        communities,
-                        degree_factors,
-                        stage_cfg,
-                        intra_scale,
-                        inter_scale,
-                        iter_rng,
-                        structural_pairs=structural_pair_set,
-                    )
+                edges, _, _, _, _ = _generate_network_single_pass(
+                    agents,
+                    agent_ids,
+                    similarities,
+                    communities,
+                    degree_factors,
+                    stage_cfg,
+                    intra_scale,
+                    inter_scale,
+                    iter_rng,
+                    structural_pairs=stage_structural_pair_set,
                 )
+                combined_edges, _, _ = _merge_edges_with_structural(
+                    edges, stage_structural_edges
+                )
+                adjacency = _build_adjacency_from_edges(combined_edges, agent_ids, n)
+                avg_degree = 2 * len(combined_edges) / n if n > 0 else 0.0
+                clustering = _compute_avg_clustering(adjacency, n)
+                modularity = _compute_modularity_fast(
+                    combined_edges, agent_ids, communities
+                )
+                largest_component_ratio = _compute_largest_component_ratio(adjacency, n)
                 lcc_deficit = max(
                     0.0, config.target_largest_component_ratio - largest_component_ratio
                 )
@@ -2698,17 +2896,23 @@ def generate_network(
                         iter_rng,
                         max_swaps_override=swap_budget,
                     )
+                    combined_edges, _, _ = _merge_edges_with_structural(
+                        edges, stage_structural_edges
+                    )
                 emit_progress(
                     "Repair pass",
                     iteration + 1,
                     config.max_calibration_iterations,
                     message={"stage": stage_name, "restart": restart + 1},
                 )
-                adjacency = _build_adjacency_from_edges(edges, agent_ids, n)
+                adjacency = _build_adjacency_from_edges(combined_edges, agent_ids, n)
+                avg_degree = 2 * len(combined_edges) / n if n > 0 else 0.0
                 clustering = _compute_avg_clustering(adjacency, n)
-                modularity = _compute_modularity_fast(edges, agent_ids, communities)
+                modularity = _compute_modularity_fast(
+                    combined_edges, agent_ids, communities
+                )
                 largest_component_ratio = _compute_largest_component_ratio(adjacency, n)
-                edge_count = len(edges)
+                edge_count = len(combined_edges)
 
                 score = 0.0
                 if avg_degree < deg_min:
@@ -2754,7 +2958,9 @@ def generate_network(
                     stage_best_metrics = metrics_payload
                 if score < best_score:
                     best_score = score
-                    best_edges = edges
+                    best_similarity_edges = list(edges)
+                    best_structural_edges = list(stage_structural_edges)
+                    best_structural_pair_set = set(stage_structural_pair_set)
                     calibration_best_metrics = metrics_payload
                     calibration_best_communities = list(communities)
                     best_stage = stage_name
@@ -2864,24 +3070,12 @@ def generate_network(
     emit_progress(
         "Calibrating network", calibration_total, calibration_total, force_db=True
     )
-    edges = best_edges or []
-
-    # Rebuild edge_set from best edges
-    edge_set: set[tuple[str, str]] = set()
-    for edge in edges:
-        edge_set.add((edge.source, edge.target))
-        edge_set.add((edge.target, edge.source))
-
-    # Step 4b: Merge pre-generated structural edges into similarity edges.
-    # Structural edges were generated before calibration (Step 3b) and the
-    # similarity budget was reduced accordingly. Now merge them in.
-    structural_added = 0
-    for se in structural_edges:
-        if (se.source, se.target) not in edge_set:
-            edges.append(se)
-            edge_set.add((se.source, se.target))
-            edge_set.add((se.target, se.source))
-            structural_added += 1
+    similarity_edges = best_similarity_edges or []
+    chosen_structural_edges = best_structural_edges or []
+    chosen_structural_pair_set = best_structural_pair_set or set()
+    edges, edge_set, structural_added = _merge_edges_with_structural(
+        similarity_edges, chosen_structural_edges
+    )
 
     if structural_added > 0:
         emit_progress(
@@ -2890,41 +3084,22 @@ def generate_network(
             structural_added,
             message={
                 "structural_added": structural_added,
-                "total_structural": len(structural_edges),
+                "total_structural": len(chosen_structural_edges),
             },
             force_db=True,
         )
 
     # Step 5: Watts-Strogatz rewiring (skip structural edges)
-    emit_progress("Rewiring edges", 0, len(edges), force_db=True)
-    edges, edge_set, rewired_count = _apply_rewiring(
-        agents,
-        agent_ids,
-        edges,
-        edge_set,
-        config,
-        rng,
-        protected_pairs=structural_pair_set,
+    pre_rewire_edges = list(edges)
+    pre_rewire_edge_set = set(edge_set)
+    pre_rewire_metrics = _compute_gate_metrics(
+        edges=pre_rewire_edges,
+        agent_ids=agent_ids,
+        communities=calibration_best_communities,
+        fallback_modularity=(calibration_best_metrics or {}).get("modularity", 0.0),
     )
-    emit_progress("Rewiring edges", len(edges), len(edges), force_db=True)
-
-    final_adjacency = _build_adjacency_from_edges(edges, agent_ids, n)
-    final_metrics = {
-        "edge_count": len(edges),
-        "avg_degree": (2 * len(edges) / n) if n > 0 else 0.0,
-        "clustering": _compute_avg_clustering(final_adjacency, n),
-        "largest_component_ratio": _compute_largest_component_ratio(final_adjacency, n),
-        "modularity": 0.0,
-    }
-    if calibration_best_communities and len(calibration_best_communities) == n:
-        final_metrics["modularity"] = _compute_modularity_fast(
-            edges, agent_ids, calibration_best_communities
-        )
-    elif calibration_best_metrics is not None:
-        final_metrics["modularity"] = calibration_best_metrics.get("modularity", 0.0)
-
-    final_accepted, quality_deltas = _evaluate_topology_gate(
-        metrics=final_metrics,
+    pre_rewire_accepted, pre_rewire_deltas = _evaluate_topology_gate(
+        metrics=pre_rewire_metrics,
         deg_min=deg_min,
         deg_max=deg_max,
         cluster_min=cluster_min,
@@ -2933,6 +3108,53 @@ def generate_network(
         lcc_min=config.target_largest_component_ratio,
         min_edge_floor=min_edge_floor,
     )
+
+    emit_progress("Rewiring edges", 0, len(edges), force_db=True)
+    edges, edge_set, rewired_count = _apply_rewiring(
+        agents,
+        agent_ids,
+        edges,
+        edge_set,
+        config,
+        rng,
+        protected_pairs=chosen_structural_pair_set,
+    )
+    emit_progress("Rewiring edges", len(edges), len(edges), force_db=True)
+
+    post_rewire_metrics = _compute_gate_metrics(
+        edges=edges,
+        agent_ids=agent_ids,
+        communities=calibration_best_communities,
+        fallback_modularity=(calibration_best_metrics or {}).get("modularity", 0.0),
+    )
+
+    post_rewire_accepted, post_rewire_deltas = _evaluate_topology_gate(
+        metrics=post_rewire_metrics,
+        deg_min=deg_min,
+        deg_max=deg_max,
+        cluster_min=cluster_min,
+        mod_min=mod_min,
+        mod_max=mod_max,
+        lcc_min=config.target_largest_component_ratio,
+        min_edge_floor=min_edge_floor,
+    )
+    rewire_gate_fallback_used = False
+    reverted_rewired_count = 0
+    if pre_rewire_accepted and not post_rewire_accepted:
+        # Rewiring is an optimization pass. If it breaks a gate-valid graph,
+        # keep the calibrated pre-rewire network as the canonical result.
+        edges = pre_rewire_edges
+        edge_set = pre_rewire_edge_set
+        final_metrics = pre_rewire_metrics
+        final_accepted = True
+        quality_deltas = pre_rewire_deltas
+        reverted_rewired_count = rewired_count
+        rewired_count = 0
+        rewire_gate_fallback_used = True
+    else:
+        final_metrics = post_rewire_metrics
+        final_accepted = post_rewire_accepted
+        quality_deltas = post_rewire_deltas
 
     calibration_quality_deltas = {
         "degree_to_min": (calibration_best_metrics or {}).get("avg_degree", 0.0)
@@ -2970,6 +3192,8 @@ def generate_network(
             "target_clustering": config.target_clustering,
             "target_modularity": config.target_modularity,
             "quality_profile": config.quality_profile,
+            "target_edge_budget": target_edge_budget,
+            "structural_edge_budget": structural_edge_budget,
         },
         "quality": {
             "topology_gate": config.topology_gate,
@@ -2977,6 +3201,13 @@ def generate_network(
             "best_score": best_score,
             "best_metrics": calibration_best_metrics or {},
             "final_metrics": final_metrics,
+            "pre_rewire_metrics": pre_rewire_metrics,
+            "post_rewire_metrics": post_rewire_metrics,
+            "pre_rewire_gate_accepted": pre_rewire_accepted,
+            "post_rewire_gate_accepted": post_rewire_accepted,
+            "rewire_gate_fallback_used": rewire_gate_fallback_used,
+            "gate_numeric_epsilon": _GATE_NUMERIC_EPSILON,
+            "rewired_count_reverted": reverted_rewired_count,
             "calibration_accepted": calibration_accepted,
             "best_stage": best_stage,
             "gate_deltas": quality_deltas,
@@ -2993,7 +3224,7 @@ def generate_network(
             },
             "ladder_stages": stage_summaries,
         },
-        "structural_edge_count": len(structural_edges),
+        "structural_edge_count": len(chosen_structural_edges),
         "structural_edges_added": structural_added,
         "resume_calibration_requested": resume_calibration,
         "generated_at": datetime.now().isoformat(),
