@@ -295,9 +295,14 @@ def generate_dependents(
     elderly_count = 0
     if household_type == HouseholdType.MULTI_GENERATIONAL and num_dependents > 0:
         elderly_count = 1
-        elderly_age = primary_age + rng.randint(
-            config.elderly_min_offset, config.elderly_max_offset
+        elderly_min_age = primary_age + config.elderly_min_offset
+        elderly_max_age = min(
+            primary_age + config.elderly_max_offset,
+            config.max_elderly_dependent_age,
         )
+        if elderly_max_age < elderly_min_age:
+            elderly_min_age = elderly_max_age
+        elderly_age = rng.randint(elderly_min_age, elderly_max_age)
         elderly_gender = rng.choice(["male", "female"])
         relationship = "father" if elderly_gender == "male" else "mother"
         dep_first, _ = generate_name(

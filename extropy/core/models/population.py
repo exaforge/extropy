@@ -148,6 +148,7 @@ class HouseholdConfig(BaseModel):
     max_dependent_child_age: int = 17
     elderly_min_offset: int = 22
     elderly_max_offset: int = 35
+    max_elderly_dependent_age: int = 105
 
     # Life stages (replaces hardcoded _school_status)
     life_stages: list[LifeStageThreshold] = Field(

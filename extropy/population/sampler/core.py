@@ -116,6 +116,108 @@ def _coerce_minor_income(value: Any, options: list[str] | None) -> Any:
     return 0
 
 
+def _coerce_young_adult_education(value: Any, age: int, options: list[str]) -> Any:
+    """Coerce implausible early education stages for young adults."""
+    if age >= 22:
+        return value
+    if not isinstance(value, str):
+        return value
+
+    def stage(option: str) -> int:
+        token = _normalize_attr_token(option)
+        if any(k in token for k in ("phd", "doctorate", "doctoral", "graduate", "masters")):
+            return 5
+        if any(k in token for k in ("bachelor", "ba", "bs")):
+            return 4
+        if "associate" in token:
+            return 3
+        if "some_college" in token or "college" in token:
+            return 2
+        if "high_school" in token or "hs" in token or "ged" in token:
+            return 1
+        return 0
+
+    current_stage = stage(value)
+    if age < 20 and current_stage >= 4:
+        allowed_max = 2
+    elif age < 22 and current_stage >= 5:
+        allowed_max = 4
+    else:
+        return value
+
+    candidates = [opt for opt in options if stage(opt) <= allowed_max]
+    if not candidates:
+        return value
+    return max(candidates, key=stage)
+
+
+def _coerce_early_retirement(value: Any, age: int, options: list[str]) -> Any:
+    """Coerce retirement status for very young adults."""
+    if age >= 30:
+        return value
+    if not isinstance(value, str):
+        return value
+
+    value_token = _normalize_attr_token(value)
+    if "retired" not in value_token:
+        return value
+
+    preferred_tokens = (
+        "student",
+        "intern",
+        "part_time",
+        "gig",
+        "self",
+        "private",
+        "public",
+        "government",
+        "unemployed",
+        "labor_force",
+        "employed",
+    )
+    for token in preferred_tokens:
+        for opt in options:
+            norm = _normalize_attr_token(opt)
+            if "retired" in norm:
+                continue
+            if token in norm:
+                return opt
+
+    for opt in options:
+        if "retired" not in _normalize_attr_token(opt):
+            return opt
+    return value
+
+
+def _normalize_young_adult_attributes(
+    agent: dict[str, Any],
+    spec: PopulationSpec,
+) -> None:
+    """Normalize rare but implausible lifecycle combinations for young adults."""
+    age = agent.get("age")
+    if not isinstance(age, (int, float)):
+        return
+    age_int = int(age)
+    if age_int >= 30:
+        return
+
+    for attr in spec.attributes:
+        if attr.name not in agent:
+            continue
+        if (
+            attr.sampling.distribution is None
+            or not hasattr(attr.sampling.distribution, "options")
+            or not attr.sampling.distribution.options
+        ):
+            continue
+        options = list(attr.sampling.distribution.options)
+        value = agent[attr.name]
+        if attr.semantic_type == "education":
+            agent[attr.name] = _coerce_young_adult_education(value, age_int, options)
+        elif attr.semantic_type == "employment":
+            agent[attr.name] = _coerce_early_retirement(value, age_int, options)
+
+
 def _normalize_minor_attributes(
     agent: dict[str, Any],
     spec: PopulationSpec,
@@ -379,7 +481,11 @@ def sample_population(
             semantic_roles=semantic_roles,
         )
         _reconcile_household_coherence(
-            agents, attr_map, stats, semantic_roles=semantic_roles
+            agents,
+            attr_map,
+            stats,
+            semantic_roles=semantic_roles,
+            household_config=hh_config,
         )
     else:
         agents = _sample_population_independent(
@@ -647,6 +753,7 @@ def _sample_population_households(
     marital_attr = _resolve_marital_attr_name(attr_map, semantic_roles)
     household_size_attr = _resolve_household_size_attr_name(attr_map, semantic_roles)
     gender_attr = _resolve_gender_attr_name(attr_map)
+    parental_status_attrs = _resolve_parental_status_attrs(attr_map)
     marital_spec = attr_map.get(marital_attr) if marital_attr else None
     categorical_options: dict[str, list[str]] = {}
     for attr in spec.attributes:
@@ -811,17 +918,56 @@ def _sample_population_households(
         if adult2_added:
             household_members.append(adult2)
         household_members.extend(promoted_dependents)
+        adult_members = [
+            member
+            for member in household_members
+            if str(member.get("household_role", "")).startswith("adult_")
+        ]
 
         # In household-mode, household-coupled fields should reflect realized structure
         # before post-sampling reconciliation/gating runs.
         if household_size_attr:
             npc_partner_count = 1 if has_partner and not adult2_added else 0
             realized_size = len(household_members) + npc_partner_count + len(dep_dicts)
-            for member in household_members:
+            for member in adult_members:
                 member[household_size_attr] = realized_size
 
+        if parental_status_attrs:
+            child_dependents_present = any(
+                isinstance(dep, dict)
+                and _dependent_is_child(dep, child_age_max=config.max_dependent_child_age)
+                for dep in dep_dicts
+            )
+            if not child_dependents_present:
+                child_dependents_present = any(
+                    str(member.get("household_role", "")).startswith("dependent_")
+                    and _dependent_is_child(
+                        {
+                            "relationship": str(member.get("household_role", ""))[
+                                len("dependent_") :
+                            ],
+                            "age": member.get("age"),
+                        },
+                        child_age_max=config.max_dependent_child_age,
+                    )
+                    for member in household_members
+                )
+
+            for member in adult_members:
+                for attr_name in parental_status_attrs:
+                    attr_spec = attr_map.get(attr_name)
+                    if attr_spec is None:
+                        continue
+                    desired = _pick_parental_status_value(
+                        attr_spec,
+                        child_dependents_present,
+                        current_value=member.get(attr_name),
+                    )
+                    if desired is not None:
+                        member[attr_name] = desired
+
         if marital_spec and marital_attr:
-            for member in household_members:
+            for member in adult_members:
                 has_partner_member = bool(
                     member.get("partner_id") or member.get("partner_npc")
                 )
@@ -831,6 +977,7 @@ def _sample_population_households(
                     marital_roles=(
                         semantic_roles.marital_roles if semantic_roles else None
                     ),
+                    current_value=member.get(marital_attr),
                 )
                 if desired is not None:
                     member[marital_attr] = desired
@@ -948,6 +1095,8 @@ def _sample_partner_agent(
         agent[attr_name] = value
         _update_stats(attr, value, stats, numeric_values)
 
+    _normalize_young_adult_attributes(agent, spec)
+
     if gender_attr and gender_attr in agent:
         partner_gender = choose_partner_gender(
             primary_gender=(
@@ -1025,6 +1174,8 @@ def _sample_single_agent(
 
         # Update stats
         _update_stats(attr, value, stats, numeric_values)
+
+    _normalize_young_adult_attributes(agent, spec)
 
     # Generate demographically-plausible name
     gender = agent.get("gender") or agent.get("sex")
@@ -1269,6 +1420,117 @@ def _resolve_household_size_attr_name(
     return None
 
 
+def _resolve_parental_status_attrs(
+    attr_map: dict[str, AttributeSpec],
+) -> list[str]:
+    """Resolve parental-status attributes with semantic role first, aliases second."""
+    names: list[str] = []
+    for name, attr in attr_map.items():
+        if attr.identity_type == "parental_status":
+            names.append(name)
+
+    if names:
+        return names
+
+    for alias in (
+        "has_children",
+        "is_parent",
+        "parental_status",
+        "has_kids",
+        "children_at_home",
+    ):
+        candidate = _find_attr_name(attr_map, {alias})
+        if candidate and candidate not in names:
+            names.append(candidate)
+    return names
+
+
+def _dependent_is_child(dep: dict[str, Any], child_age_max: int = 17) -> bool:
+    """Detect child dependents from relationship/age/school metadata."""
+    rel = _normalize_attr_token(str(dep.get("relationship", "")))
+    if any(
+        token in rel
+        for token in ("son", "daughter", "child", "stepchild", "foster_child")
+    ):
+        return True
+
+    age_raw = dep.get("age")
+    if isinstance(age_raw, str) and age_raw.strip().isdigit():
+        age_raw = int(age_raw.strip())
+    if isinstance(age_raw, (int, float)) and 0 <= int(age_raw) <= child_age_max:
+        return True
+
+    school_status = _normalize_attr_token(str(dep.get("school_status", "")))
+    school_tokens = {
+        "home",
+        "elementary",
+        "middle_school",
+        "high_school",
+        "primary",
+        "secondary",
+        "k12",
+    }
+    return school_status in school_tokens
+
+
+def _pick_parental_status_value(
+    attr: AttributeSpec,
+    has_child_dependents: bool,
+    current_value: Any | None = None,
+) -> Any | None:
+    """Pick a coherent parental-status value based on realized household children."""
+    if attr.type == "boolean":
+        return has_child_dependents
+
+    if (
+        attr.type != "categorical"
+        or attr.sampling.distribution is None
+        or not hasattr(attr.sampling.distribution, "options")
+    ):
+        return None
+
+    options = list(getattr(attr.sampling.distribution, "options", []) or [])
+    if not options:
+        return None
+
+    if current_value in options:
+        norm_current = _normalize_attr_token(str(current_value))
+        if has_child_dependents and any(
+            token in norm_current for token in ("child", "children", "parent")
+        ):
+            return current_value
+        if not has_child_dependents and any(
+            token in norm_current
+            for token in (
+                "no_child",
+                "no_children",
+                "non_parent",
+                "not_parent",
+                "childfree",
+            )
+        ):
+            return current_value
+
+    yes_tokens = ("child", "children", "parent", "has_kid", "has_child", "yes", "true")
+    no_tokens = (
+        "no_child",
+        "no_children",
+        "non_parent",
+        "not_parent",
+        "childfree",
+        "none",
+        "no",
+        "false",
+    )
+
+    token_set = yes_tokens if has_child_dependents else no_tokens
+    for opt in options:
+        norm = _normalize_attr_token(str(opt))
+        if any(token in norm for token in token_set):
+            return opt
+    return None
+
+
 def _resolve_gender_attr_name(attr_map: dict[str, AttributeSpec]) -> str | None:
     """Resolve gender attribute by metadata first, then legacy alias fallback."""
     for name, attr in attr_map.items():
@@ -1299,6 +1561,7 @@ def _pick_marital_value(
     attr: AttributeSpec,
     has_partner: bool,
     marital_roles: MaritalRoles | None = None,
+    current_value: Any | None = None,
 ) -> Any | None:
     """Pick a coherent marital value based on realized partner status."""
     if attr.type == "boolean":
@@ -1319,6 +1582,11 @@ def _pick_marital_value(
         if _normalize_attr_token(attr.name) == _normalize_attr_token(
             marital_roles.attr
         ):
+            if current_value in options:
+                if has_partner and current_value in marital_roles.partnered_values:
+                    return current_value
+                if not has_partner and current_value in marital_roles.single_values:
+                    return current_value
             preferred = (
                 marital_roles.partnered_values
                 if has_partner
@@ -1328,7 +1596,6 @@ def _pick_marital_value(
                 if value in options:
                     return value
 
-    normalized = {opt: _normalize_attr_token(opt) for opt in options}
     partnered_tokens = (
         "married",
         "partner",
@@ -1338,6 +1605,14 @@ def _pick_marital_value(
     )
     single_tokens = ("single", "unmarried", "not_married", "divorced", "widowed")
 
+    if current_value in options:
+        norm_current = _normalize_attr_token(str(current_value))
+        if has_partner and any(token in norm_current for token in partnered_tokens):
+            return current_value
+        if not has_partner and any(token in norm_current for token in single_tokens):
+            return current_value
+
+    normalized = {opt: _normalize_attr_token(opt) for opt in options}
     token_set = partnered_tokens if has_partner else single_tokens
     for opt, norm in normalized.items():
         if any(token in norm for token in token_set):
@@ -1391,6 +1666,7 @@ def _reconcile_household_coherence(
     attr_map: dict[str, AttributeSpec],
     stats: SamplingStats,
     semantic_roles: SamplingSemanticRoles | None = None,
+    household_config: HouseholdConfig | None = None,
 ) -> None:
     """Deterministically reconcile household coherence after realization."""
     by_household: dict[str, list[dict[str, Any]]] = {}
@@ -1405,16 +1681,28 @@ def _reconcile_household_coherence(
 
     marital_attr = _resolve_marital_attr_name(attr_map, semantic_roles)
     household_size_attr = _resolve_household_size_attr_name(attr_map, semantic_roles)
+    parental_status_attrs = _resolve_parental_status_attrs(attr_map)
+    child_age_max = (
+        household_config.max_dependent_child_age if household_config else 17
+    )
 
     marital_updates = 0
     household_size_updates = 0
     surname_updates = 0
+    parental_status_updates = 0
 
     for members in by_household.values():
         primary = next(
             (m for m in members if m.get("household_role") == "adult_primary"),
             members[0],
         )
+        adult_members = [
+            member
+            for member in members
+            if str(member.get("household_role", "")).startswith("adult_")
+        ]
+        if not adult_members:
+            adult_members = members
         dependents = primary.get("dependents", [])
         npc_partner_count = 1 if primary.get("partner_npc") else 0
         npc_dependents_count = len(dependents) if isinstance(dependents, list) else 0
@@ -1454,9 +1742,47 @@ def _reconcile_household_coherence(
                             dep["name"] = corrected
                             surname_updates += 1
 
+        child_dependents_present = False
+        if isinstance(dependents, list):
+            child_dependents_present = any(
+                isinstance(dep, dict) and _dependent_is_child(dep, child_age_max)
+                for dep in dependents
+            )
+        if not child_dependents_present:
+            child_dependents_present = any(
+                str(member.get("household_role", "")).startswith("dependent_")
+                and _dependent_is_child(
+                    {
+                        "relationship": str(member.get("household_role", ""))[
+                            len("dependent_") :
+                        ],
+                        "age": member.get("age"),
+                    },
+                    child_age_max,
+                )
+                for member in members
+            )
+
+        if parental_status_attrs:
+            for member in adult_members:
+                for attr_name in parental_status_attrs:
+                    attr_spec = attr_map.get(attr_name)
+                    if attr_spec is None:
+                        continue
+                    desired = _pick_parental_status_value(
+                        attr_spec,
+                        child_dependents_present,
+                        current_value=member.get(attr_name),
+                    )
+                    if desired is None:
+                        continue
+                    if member.get(attr_name) != desired:
+                        member[attr_name] = desired
+                        parental_status_updates += 1
+
         if marital_attr:
             marital_spec = attr_map[marital_attr]
-            for member in members:
+            for member in adult_members:
                 has_partner = bool(
                     member.get("partner_id") or member.get("partner_npc")
                 )
@@ -1466,6 +1792,7 @@ def _reconcile_household_coherence(
                     marital_roles=(
                         semantic_roles.marital_roles if semantic_roles else None
                     ),
+                    current_value=member.get(marital_attr),
                 )
                 if desired is None:
                     continue
@@ -1480,6 +1807,8 @@ def _reconcile_household_coherence(
         reconciliation["household_size_updates"] = household_size_updates
     if surname_updates:
         reconciliation["household_surname_updates"] = surname_updates
+    if parental_status_updates:
+        reconciliation["parental_status_updates"] = parental_status_updates
     if reconciliation:
         stats.reconciliation_counts.update(reconciliation)
 
