@@ -1,0 +1,343 @@
+avg_degree: 12.0
+rewire_prob: 0.05
+similarity_store_threshold: 0.05
+similarity_threshold: 0.3
+similarity_steepness: 10.0
+candidate_mode: blocked
+candidate_pool_multiplier: 12.0
+min_candidate_pool: 80
+similarity_workers: 8
+similarity_chunk_size: 64
+checkpoint_every_rows: 250
+triadic_closure_prob: 0.6
+target_clustering: 0.35
+target_modularity: 0.55
+inter_community_scale: 0.3
+max_calibration_iterations: 12
+quality_profile: balanced
+topology_gate: strict
+max_calibration_minutes: 30
+calibration_restarts: 4
+target_largest_component_ratio: 0.95
+target_degree_tolerance_pct: 0.15
+target_modularity_tolerance: 0.1
+target_clustering_tolerance: 0.08
+bridge_budget_fraction: 0.08
+swap_passes: 3
+power_law_exponent: 2.5
+identity_clustering_boost: 1.5
+auto_save_generated_config: true
+allow_quarantine: true
+quarantine_suffix: rejected
+attribute_weights:
+  urban_rural:
+    weight: 3.5
+    match_type: exact
+  us_region:
+    weight: 3.0
+    match_type: exact
+  political_identity:
+    weight: 3.0
+    match_type: within_n
+    range_value: 1.0
+    ordinal_levels:
+      Strong Democrat: 1
+      Lean Democrat: 2
+      True Independent: 3
+      Lean Republican: 4
+      Strong Republican: 5
+  education_level:
+    weight: 2.5
+    match_type: within_n
+    range_value: 1.0
+    ordinal_levels:
+      Less than HS: 1
+      HS diploma/GED: 2
+      Some college: 3
+      Bachelor's degree: 4
+      Graduate degree: 5
+  religious_engagement:
+    weight: 2.5
+    match_type: within_n
+    range_value: 1.0
+    ordinal_levels:
+      Secular/None: 1
+      Nominally affiliated: 2
+      Moderately religious: 3
+      Devout: 4
+  race_ethnicity:
+    weight: 2.0
+    match_type: exact
+  age:
+    weight: 2.0
+    match_type: numeric_range
+    range_value: 15.0
+  employment_sector:
+    weight: 2.0
+    match_type: exact
+  financial_margin:
+    weight: 1.5
+    match_type: within_n
+    range_value: 1.0
+    ordinal_levels:
+      Comfortable savings buffer: 1
+      Modest buffer: 2
+      Paycheck-to-paycheck: 3
+      In debt/deficit: 4
+  marital_status:
+    weight: 1.5
+    match_type: exact
+  primary_info_source:
+    weight: 1.5
+    match_type: exact
+  social_media_behavior:
+    weight: 1.0
+    match_type: within_n
+    range_value: 1.0
+    ordinal_levels:
+      Non-user: 1
+      Passive consumer: 2
+      Occasional poster: 3
+      Active poster/Influencer: 4
+degree_multipliers:
+- attribute: social_media_behavior
+  condition: Active poster/Influencer
+  multiplier: 2.5
+  rationale: "Social media influencers and active posters maintain large networks\
+    \ by definition \u2014 they broadcast to followers, engage in comment threads,\
+    \ and are sought out for opinions. This is the primary network hub mechanic in\
+    \ modern America."
+- attribute: political_engagement_level
+  condition: Highly engaged partisan
+  multiplier: 2.0
+  rationale: Political activists, campaign volunteers, and party organizers have unusually
+    wide networks spanning neighbors, coworkers, and fellow partisans. They attend
+    events, canvass neighborhoods, and coordinate across communities.
+- attribute: employment_sector
+  condition: Self-employed
+  multiplier: 1.8
+  rationale: Small business owners and entrepreneurs must cultivate broad networks
+    of clients, vendors, suppliers, and referral sources. Their livelihood depends
+    on relationship breadth.
+- attribute: religious_engagement
+  condition: Devout
+  multiplier: 1.7
+  rationale: Devout individuals attend religious services regularly, participate in
+    faith communities, serve on committees, and form dense congregational networks.
+    Churches remain one of the most powerful community-forming institutions in America.
+- attribute: employment_sector
+  condition: State/local government
+  multiplier: 1.5
+  rationale: "State and local government workers are embedded in civic infrastructure\
+    \ \u2014 they interact with the public, attend municipal meetings, and know local\
+    \ officials, community leaders, and service recipients."
+- attribute: marital_status
+  condition: Married/partnered
+  multiplier: 1.3
+  rationale: "Married couples have dual social networks that often merge \u2014 each\
+    \ partner brings their own friends, family, and colleagues, expanding the household's\
+    \ total social footprint."
+- attribute: has_children
+  condition: true
+  multiplier: 1.4
+  rationale: "Parents of school-age children are embedded in school networks, sports\
+    \ leagues, PTAs, and playdate circles \u2014 generating many weak and strong ties\
+    \ with other parents in the same community."
+edge_type_rules:
+- name: close_family_household
+  condition: a_marital_status == b_marital_status and a_us_region == b_us_region and
+    a_urban_rural == b_urban_rural and a_race_ethnicity == b_race_ethnicity
+  priority: 50
+  description: "Household members and close family sharing region, settlement type,\
+    \ and background \u2014 proxies for family and very close community bonds."
+- name: coworker_professional
+  condition: a_employment_sector == b_employment_sector and a_us_region == b_us_region
+    and a_employment_sector != "Retired" and a_employment_sector != "Unemployed" and
+    a_employment_sector != "Not in labor force"
+  priority: 40
+  description: "People working in the same employment sector within the same region\
+    \ \u2014 proxy for professional and coworker relationships."
+- name: faith_community
+  condition: a_religious_engagement == b_religious_engagement and a_religious_engagement
+    != "Secular/None" and a_us_region == b_us_region and a_urban_rural == b_urban_rural
+  priority: 35
+  description: "People sharing similar religious engagement levels in the same region\
+    \ and settlement type \u2014 proxy for fellow congregants and faith-based community\
+    \ bonds."
+- name: political_tribe
+  condition: a_political_identity == b_political_identity and a_us_region == b_us_region
+    and a_political_engagement_level == b_political_engagement_level
+  priority: 30
+  description: "Highly aligned partisans in the same region with the same engagement\
+    \ level \u2014 proxies for political club members, activists, and ideologically\
+    \ sorted social circles."
+- name: neighbor_community
+  condition: a_us_region == b_us_region and a_urban_rural == b_urban_rural
+  priority: 20
+  description: "People in the same region and settlement type \u2014 broad neighborhood,\
+    \ community, and local acquaintance ties."
+- name: media_echo_chamber
+  condition: a_primary_info_source == b_primary_info_source and a_political_identity
+    == b_political_identity
+  priority: 15
+  description: "People consuming the same primary media source with the same political\
+    \ identity \u2014 online communities, comment sections, Facebook groups, and podcast\
+    \ listener circles that transcend geography."
+influence_factors:
+- attribute: political_engagement_level
+  type: ordinal
+  levels:
+    Disengaged: 1
+    Single-issue voter: 2
+    Moderate/occasional participant: 3
+    Highly engaged partisan: 4
+  weight: 0.35
+  description: Highly engaged partisans and political activists actively push information,
+    frame events, and mobilize others. Disengaged citizens are disproportionately
+    influenced by the politically active people in their networks.
+- attribute: social_media_behavior
+  type: ordinal
+  levels:
+    Non-user: 1
+    Passive consumer: 2
+    Occasional poster: 3
+    Active poster/Influencer: 4
+  weight: 0.35
+  description: Active posters and influencers broadcast information asymmetrically
+    to their followers. Passive consumers receive information without generating it,
+    creating a clear influence asymmetry in digital information flows.
+- attribute: education_level
+  type: ordinal
+  levels:
+    Less than HS: 1
+    HS diploma/GED: 2
+    Some college: 3
+    Bachelor's degree: 4
+    Graduate degree: 5
+  weight: 0.25
+  description: "Higher educational attainment confers perceived epistemic authority\
+    \ in peer conversations \u2014 people with advanced degrees are more often deferred\
+    \ to on policy, science, and technical questions, even by friends with strong\
+    \ opinions."
+- attribute: household_income
+  type: numeric
+  weight: 0.15
+  description: Wealth confers social status and decision-making authority. Higher-income
+    individuals are more likely to be opinion leaders in consumer decisions, investment
+    behavior, and lifestyle choices. Economic precarity reduces social influence.
+structural_attribute_roles:
+  household_id: household_income
+  partner_id: marital_status
+  age: age
+  sector: employment_sector
+  region: urban_rural
+  urbanicity: urban_rural
+  religion: religious_engagement
+default_edge_type: acquaintance
+ordinal_levels:
+  political_identity:
+    Strong Democrat: 1
+    Lean Democrat: 2
+    True Independent: 3
+    Lean Republican: 4
+    Strong Republican: 5
+  education_level:
+    Less than HS: 1
+    HS diploma/GED: 2
+    Some college: 3
+    Bachelor's degree: 4
+    Graduate degree: 5
+  religious_engagement:
+    Secular/None: 1
+    Nominally affiliated: 2
+    Moderately religious: 3
+    Devout: 4
+  financial_margin:
+    Comfortable savings buffer: 1
+    Modest buffer: 2
+    Paycheck-to-paycheck: 3
+    In debt/deficit: 4
+  social_media_behavior:
+    Non-user: 1
+    Passive consumer: 2
+    Occasional poster: 3
+    Active poster/Influencer: 4
+generated_from: "Nationally representative US adult population (18-80). Must capture\
+  \ the demographic, economic, and attitudinal fault lines that drive divergent responses\
+  \ to major national events \u2014 especially technology disruption, economic shocks,\
+  \ cultural controversies, and electoral behavior in the 2026 midterm elections.\n\
+  \nBeyond standard demographics (age, gender, race/ethnicity, education, income,\
+  \ geography), prioritize attributes that determine how people process and react\
+  \ to news, make decisions under uncertainty, and vote:\n\n- technology adoption\
+  \ posture and digital literacy (technophobe to early adopter)\n- media ecosystem\
+  \ and primary information sources (cable news, social media, podcasts, local news,\
+  \ none)\n- institutional trust (government, corporations, media, science, financial\
+  \ system)\n- financial margin and economic anxiety (savings buffer, debt load, paycheck-to-paycheck\
+  \ status)\n- employment sector and job security perception (federal/state government,\
+  \ private sector, gig, self-employed, retired)\n- consumer identity and brand relationship\
+  \ (brand loyal, price-driven, values-driven)\n- social media behavior and influence\
+  \ (passive consumer, active poster, influencer, non-user)\n- investment and financial\
+  \ literacy (no investments, 401k only, active trader, crypto holder)\n- religious\
+  \ engagement and worldview (secular, moderate, devout, denomination)\n- political\
+  \ identity and engagement level (strong partisan, moderate, disengaged, single-issue)\n\
+  - 2024 presidential vote (Trump, Harris, third party, didn\u2019t vote, not eligible)\n\
+  - congressional district competitiveness (safe R, safe D, swing district)\n- midterm\
+  \ turnout propensity (always, sometimes, rarely, never)\n- issue salience for 2026\
+  \ (economy/jobs, abortion/reproductive rights, immigration, democracy/rule of law,\
+  \ healthcare, climate, education, AI/technology)\n- approval of current direction\
+  \ (strongly approve to strongly disapprove)\n\nGeographic distribution should span\
+  \ urban/suburban/rural across major US regions (Northeast, Southeast, Midwest, Southwest,\
+  \ West Coast), with realistic correlation structure between attributes."
+generation_rationale: "This is a nationally representative US adult population simulation\
+  \ focused on political, economic, and cultural fault lines. Here's my reasoning\
+  \ for each design choice:\n\n**Average Degree (12):** General consumer/citizen population\
+  \ with moderate social connectivity. Americans have ~10-15 meaningful social contacts\
+  \ on average. This captures neighborhood friends, coworkers, family-adjacent contacts,\
+  \ and community ties without over-connecting.\n\n**Attribute Weights:**\n1. **urban_rural\
+  \ (3.5)** \u2013 The single strongest driver of who you know. Rural, suburban, and\
+  \ urban Americans live in fundamentally different social ecosystems with little\
+  \ cross-over. Also proxies commute patterns, church vs. bar culture, etc.\n2. **us_region\
+  \ (3.0)** \u2013 Regional identity shapes social circles deeply. Northeasterners\
+  \ and Southerners rarely know each other organically.\n3. **political_identity (3.0)**\
+  \ \u2013 Political homophily is one of the strongest documented social sorting forces\
+  \ in modern America. People self-select neighborhoods, churches, and friend groups\
+  \ by politics.\n4. **education_level (2.5)** \u2013 Educational attainment strongly\
+  \ predicts social circle composition (college-educated people disproportionately\
+  \ befriend other college-educated people).\n5. **religious_engagement (2.5)** \u2013\
+  \ Church is one of the primary community-forming institutions in America, especially\
+  \ outside urban cores. Devout people form dense church-based networks.\n6. **employment_sector\
+  \ (2.0)** \u2013 Coworkers form natural social bonds. Government workers know government\
+  \ workers; gig workers are more isolated.\n7. **age (2.0)** \u2013 Age homophily\
+  \ is strong \u2014 people form friendships in age-proximate cohorts (school, early\
+  \ career, retirement).\n8. **primary_info_source (1.5)** \u2013 Shared media ecosystems\
+  \ reflect and reinforce social clustering. People who watch the same cable news\
+  \ or follow the same podcasters often share social circles.\n9. **race_ethnicity\
+  \ (2.0)** \u2013 Residential segregation and cultural networks mean race/ethnicity\
+  \ remains a meaningful predictor of social connection in the US.\n10. **marital_status\
+  \ (1.5)** \u2013 Married couples socialize with other married couples; singles gravitate\
+  \ toward singles. Life-stage sorting.\n11. **financial_margin (1.5)** \u2013 Economic\
+  \ class shapes where you live, what you do for fun, and who you meet. Paycheck-to-paycheck\
+  \ people and comfortable savers rarely share social worlds.\n12. **social_media_behavior\
+  \ (1.0)** \u2013 Active posters and influencers disproportionately connect with\
+  \ other active users; non-users form offline-only networks.\n\n**Degree Multipliers:**\n\
+  - Active poster/Influencer: These people have structurally more connections by definition\
+  \ \u2014 they maintain large social media followings and offline networks.\n- Highly\
+  \ engaged partisan: Political organizers, campaign volunteers, and activists have\
+  \ wide networks spanning their community.\n- Self-employed: Business owners must\
+  \ maintain broad client/vendor/community networks.\n- Extraversion (high): Extraverts\
+  \ genuinely accumulate more social ties \u2014 but we'll proxy this through social_media_behavior\
+  \ and engagement_level since we want observable attributes.\n- Religious devout:\
+  \ Regular church attendance creates dense community networks.\n- Federal/State government\
+  \ workers: Public sector jobs involve community-facing roles and professional networks.\n\
+  \n**Edge Types:**\n- Household members (same household_id) \u2192 family\n- Same\
+  \ region + same urban/rural + same political identity \u2192 close community (political\
+  \ tribe)\n- Same employment sector (non-retired/unemployed) \u2192 coworker/professional\n\
+  - Same us_region + same religious_engagement (devout/moderate) \u2192 faith community\n\
+  - Same us_region + similar age \u2192 neighbor/community acquaintance\n- Default:\
+  \ acquaintance (weak tie)\n\n**Influence Factors:**\n- education_level: Higher education\
+  \ \u2192 more epistemic authority in conversations\n- political_engagement_level:\
+  \ Highly engaged partisans and activists influence disengaged peers\n- social_media_behavior:\
+  \ Active posters/influencers push information asymmetrically to passive consumers\n\
+  - household_income: Wealth confers social status and decision-making authority in\
+  \ peer groups"
+seed: 42
