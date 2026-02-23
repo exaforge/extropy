@@ -1,0 +1,2446 @@
+meta:
+  name: iran-strikes
+  description: 'On February 23, 2026, the United States launched airstrikes against
+    Iran, targeting nuclear facilities at Natanz and Parchin, IRGC command infrastructure,
+    ballistic missile production sites, and air defense systems across multiple provinces.
+    President Trump addressed the nation from the Oval Office, stating that Iran''s
+    refusal to reach a diplomatic agreement and its continued pursuit of nuclear weapons
+    capability left the United States ''no choice but to act decisively.'' The strikes
+    involved B-2 stealth bombers operating from Diego Garcia, carrier-based F/A-18s
+    from the USS Abraham Lincoln and USS Gerald R. Ford carrier strike groups in the
+    Arabian Sea, and Tomahawk cruise missiles launched from submarines in the Persian
+    Gulf. The Pentagon confirmed strikes on 47 targets across Iran. No US ground forces
+    were deployed.
+
+
+    Iran''s Supreme Leader Khamenei issued a statement calling the strikes ''an act
+    of war against the Iranian nation'' and vowed retaliation. Iran''s foreign minister
+    recalled all diplomatic contacts with the United States. The UN Security Council
+    convened an emergency session. Oil futures spiked 35% within hours of the first
+    reports. European allies issued mixed responses — the UK declined to participate,
+    France called for immediate ceasefire, Germany urged restraint from both sides.
+    Israel expressed support but did not participate directly in the strikes.
+
+
+    Timeline events:
+
+
+    Week 1: The immediate aftermath. The Pentagon releases battle damage assessments
+    showing significant destruction of Iran''s nuclear enrichment infrastructure and
+    missile production facilities. Iran fires 30+ ballistic missiles at US military
+    installations in Qatar (Al Udeid Air Base) and Bahrain (Naval Support Activity).
+    US missile defense systems intercept most but not all — 3 US service members are
+    killed and 47 wounded at Al Udeid. Gasoline prices in the US jump from $3.40/gallon
+    national average to $4.80 overnight. The Dow drops 1,400 points. Protests occur
+    in major US cities — both anti-war demonstrations and pro-strike rallies. Congress
+    is divided: Senate passes a resolution supporting the strikes 54-46, House fails
+    to pass any resolution.
+
+
+    Week 3: Iran announces a naval blockade of the Strait of Hormuz. Two commercial
+    tankers are struck by IRGC anti-ship missiles, killing 14 crew members. Lloyd''s
+    of London suspends insurance coverage for all vessels transiting the Persian Gulf.
+    Oil reaches $140/barrel. US gasoline hits $6.20/gallon nationally, with California
+    stations above $8.00. The Federal Reserve issues an emergency statement warning
+    of inflationary pressures. Major US airlines announce fuel surcharges of $75-150
+    per ticket. Iran-backed Houthi forces intensify attacks on Red Sea shipping, effectively
+    closing a second major trade route. Walmart, Target, and Amazon warn of supply
+    chain disruptions and potential price increases on imported goods within 30-60
+    days.
+
+
+    Week 5: The economic cascade deepens. US unemployment claims rise 40% as energy-dependent
+    industries begin layoffs. Trucking companies impose 25% fuel surcharges on all
+    freight. Food prices rise 15% nationally as transportation and fertilizer costs
+    spike. The Federal Reserve holds an emergency meeting but declines to cut rates,
+    citing inflation risk. Iran launches a second wave of missile strikes targeting
+    Saudi oil infrastructure at Abqaiq and Ras Tanura, temporarily knocking 4 million
+    barrels/day of Saudi production offline. Oil briefly touches $180/barrel. The
+    US announces deployment of 15,000 additional troops to the Middle East. The Pentagon
+    calls up 30,000 reservists.
+
+
+    Week 8: The Strait of Hormuz remains contested. US Navy minesweepers and escort
+    convoys have partially reopened shipping lanes, but transit times have doubled
+    and insurance premiums remain 10x pre-crisis levels. Oil has stabilized around
+    $130/barrel. US gasoline averages $5.80/gallon. Cumulative US job losses attributed
+    to the energy shock reach 400,000. Iran''s internal protest movement has fractured
+    — some factions rally behind the regime against foreign attack, others blame the
+    regime for provoking the strikes. Russia and China issue a joint statement condemning
+    the US strikes and announcing expanded economic support for Iran. The 2026 midterm
+    elections are 3 months away. Both parties are attempting to frame the conflict
+    — Republicans argue the strikes prevented a nuclear Iran, Democrats argue the
+    administration stumbled into an unnecessary war that is destroying the economy.
+
+
+    Week 12: A fragile ceasefire is brokered through Omani and Qatari mediation. Iran
+    agrees to halt Strait of Hormuz operations in exchange for a US commitment to
+    cease strikes and begin indirect negotiations on a new nuclear framework. Oil
+    drops to $105/barrel but remains well above pre-crisis levels. US gasoline averages
+    $4.60/gallon. Total estimated US economic cost of the 12-week crisis exceeds $800
+    billion. 23 US service members have been killed across all theaters. The political
+    landscape has shifted — the crisis dominates every 2026 midterm campaign. Inflation
+    is running at 8.5% annualized. Consumer confidence is at its lowest level since
+    2008.'
+  base_population: population.v1
+  population_spec: null
+  study_db: null
+  population_id: default
+  network_id: default
+  created_at: '2026-02-22T20:03:34.793554'
+event:
+  type: emergency
+  content: 'BREAKING — MULTI-PHASE NATIONAL SECURITY AND ECONOMIC CRISIS: US AIRSTRIKES
+    ON IRAN AND ESCALATING AFTERMATH (February 23 – May 2026)
+
+
+    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+    PHASE 1 — THE STRIKES (February 23, 2026)
+
+    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+    On February 23, 2026, the United States military launched a major airstrike campaign
+    against Iran. President Trump addressed the nation from the Oval Office, stating
+    Iran''s refusal to reach a diplomatic agreement and its continued pursuit of nuclear
+    weapons capability left the US "no choice but to act decisively."
+
+
+    MILITARY ASSETS USED:
+
+    • B-2 stealth bombers operating from Diego Garcia
+
+    • Carrier-based F/A-18s from USS Abraham Lincoln and USS Gerald R. Ford carrier
+    strike groups in the Arabian Sea
+
+    • Tomahawk cruise missiles launched from submarines in the Persian Gulf
+
+    • 47 confirmed targets struck across Iran, including: nuclear facilities at Natanz
+    and Parchin, IRGC command infrastructure, ballistic missile production sites,
+    and air defense systems across multiple provinces
+
+    • No US ground forces deployed
+
+
+    IMMEDIATE INTERNATIONAL REACTIONS:
+
+    • Iran''s Supreme Leader Khamenei declared the strikes "an act of war against
+    the Iranian nation" and vowed retaliation; Iran''s foreign minister recalled all
+    diplomatic contacts with the US
+
+    • UN Security Council convened an emergency session
+
+    • UK declined to participate; France called for immediate ceasefire; Germany urged
+    restraint from both sides
+
+    • Israel expressed support but did not participate directly
+
+    • Oil futures spiked 35% within hours of first reports
+
+
+    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+    PHASE 2 — WEEK 1 AFTERMATH
+
+    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+    • Pentagon battle damage assessments confirm significant destruction of Iran''s
+    nuclear enrichment infrastructure and missile production facilities
+
+    • Iran retaliates: fires 30+ ballistic missiles at US military installations in
+    Qatar (Al Udeid Air Base) and Bahrain (Naval Support Activity Bahrain)
+
+    • US missile defense intercepts most but not all incoming missiles — 3 US service
+    members KILLED, 47 wounded at Al Udeid
+
+    • US gasoline prices jump from $3.40/gallon national average to $4.80/gallon overnight
+
+    • Dow Jones Industrial Average drops 1,400 points
+
+    • Protests erupt in major US cities — both anti-war demonstrations and pro-strike
+    rallies
+
+    • Congress divided: Senate passes resolution supporting strikes 54-46; House fails
+    to pass any resolution
+
+
+    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+    PHASE 3 — WEEK 3: STRAIT OF HORMUZ BLOCKADE
+
+    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+    • Iran announces naval blockade of the Strait of Hormuz
+
+    • Two commercial tankers struck by IRGC anti-ship missiles — 14 civilian crew
+    members killed
+
+    • Lloyd''s of London suspends insurance coverage for all vessels transiting the
+    Persian Gulf
+
+    • Oil reaches $140/barrel
+
+    • US gasoline hits $6.20/gallon nationally; California stations exceed $8.00/gallon
+
+    • Federal Reserve issues emergency statement warning of inflationary pressures
+
+    • Major US airlines announce fuel surcharges of $75–$150 per ticket
+
+    • Iran-backed Houthi forces intensify Red Sea shipping attacks, effectively closing
+    a second major global trade route
+
+    • Walmart, Target, and Amazon warn of supply chain disruptions and potential price
+    increases on imported goods within 30–60 days
+
+
+    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+    PHASE 4 — WEEK 5: ECONOMIC CASCADE
+
+    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+    • US unemployment claims rise 40% as energy-dependent industries begin layoffs
+
+    • Trucking companies impose 25% fuel surcharges on all freight
+
+    • Food prices rise 15% nationally due to transportation and fertilizer cost spikes
+
+    • Federal Reserve holds emergency meeting but declines to cut rates, citing inflation
+    risk
+
+    • Iran launches second wave of missile strikes targeting Saudi oil infrastructure
+    at Abqaiq and Ras Tanura — 4 million barrels/day of Saudi production temporarily
+    knocked offline
+
+    • Oil briefly touches $180/barrel
+
+    • US announces deployment of 15,000 additional troops to the Middle East
+
+    • Pentagon calls up 30,000 reservists
+
+
+    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+    PHASE 5 — WEEK 8: CONTESTED STRAIT, GLOBAL REALIGNMENT
+
+    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+    • Strait of Hormuz remains contested; US Navy minesweepers and escort convoys
+    have partially reopened shipping lanes, but transit times have doubled; insurance
+    premiums remain 10x pre-crisis levels
+
+    • Oil stabilizes around $130/barrel; US gasoline averages $5.80/gallon
+
+    • Cumulative US job losses attributed to the energy shock reach 400,000
+
+    • Iran''s internal protest movement fractures — some factions rally behind regime,
+    others blame regime for provoking strikes
+
+    • Russia and China issue a joint statement condemning US strikes and announcing
+    expanded economic support for Iran
+
+    • 2026 midterm elections are 3 months away
+
+    • Republicans frame crisis as preventing a nuclear Iran; Democrats frame it as
+    an unnecessary war destroying the economy
+
+
+    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+    PHASE 6 — WEEK 12: FRAGILE CEASEFIRE
+
+    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+    • Ceasefire brokered through Omani and Qatari mediation
+
+    • Iran agrees to halt Strait of Hormuz operations in exchange for US commitment
+    to cease strikes and begin indirect negotiations on a new nuclear framework
+
+    • Oil drops to $105/barrel — remains well above pre-crisis levels
+
+    • US gasoline averages $4.60/gallon
+
+    • Total estimated US economic cost of 12-week crisis: exceeds $800 billion
+
+    • Total US service members killed across all theaters: 23
+
+    • Inflation running at 8.5% annualized
+
+    • Consumer confidence at lowest level since 2008
+
+    • The Iran crisis now dominates every 2026 midterm campaign nationally'
+  source: Composite of official US government sources (White House, Pentagon, Federal
+    Reserve), major wire services (AP, Reuters), and confirmed international reporting
+    — representing the full 12-week documented arc of the Iran crisis
+  credibility: 0.93
+  ambiguity: 0.28
+  emotional_valence: -0.75
+timeline:
+- timestep: 0
+  event:
+    type: emergency
+    content: Iran fires 30+ ballistic missiles at Al Udeid Air Base (Qatar) and Naval
+      Support Activity Bahrain. US missile defense intercepts most — but 3 US service
+      members are killed and 47 wounded at Al Udeid. Pentagon confirms significant
+      battle damage to Iran's nuclear and missile infrastructure. US gasoline jumps
+      from $3.40 to $4.80/gallon overnight. Dow drops 1,400 points. Anti-war and pro-strike
+      protests erupt in major cities. Senate passes a resolution supporting the strikes
+      54-46; House fails to pass any resolution.
+    source: Pentagon press briefing, AP Wire, NYSE market reports
+    credibility: 0.95
+    ambiguity: 0.28
+    emotional_valence: -0.72
+  exposure_rules: null
+  description: 'Week 1: Iranian missile retaliation kills US troops; gas prices surge
+    and markets crash'
+  re_reasoning_intensity: extreme
+- timestep: 1
+  event:
+    type: emergency
+    content: Iran announces a naval blockade of the Strait of Hormuz. Two commercial
+      tankers are struck by IRGC anti-ship missiles, killing 14 civilian crew members.
+      Lloyd's of London suspends insurance for all Persian Gulf transits. Oil reaches
+      $140/barrel. US gasoline hits $6.20/gallon nationally; California exceeds $8.00.
+      The Federal Reserve issues an emergency inflation warning. Major airlines impose
+      $75–$150 fuel surcharges per ticket. Houthi forces simultaneously intensify
+      Red Sea attacks, closing a second key trade route. Walmart, Target, and Amazon
+      warn of supply chain disruptions and imminent price increases on imported goods.
+    source: Reuters, Lloyd's of London statement, Federal Reserve press release, CENTCOM
+    credibility: 0.94
+    ambiguity: 0.28
+    emotional_valence: -0.8
+  exposure_rules: null
+  description: 'Week 3: Iran blockades the Strait of Hormuz; oil hits $140/barrel;
+    gas tops $6/gallon nationally'
+  re_reasoning_intensity: extreme
+- timestep: 2
+  event:
+    type: emergency
+    content: US unemployment claims rise 40% as energy-dependent industries begin
+      mass layoffs. Trucking companies impose 25% fuel surcharges on all freight.
+      Food prices rise 15% nationally. The Federal Reserve holds an emergency meeting
+      but declines to cut rates due to inflation risk. Iran launches a second missile
+      wave targeting Saudi oil infrastructure at Abqaiq and Ras Tanura, knocking 4
+      million barrels/day offline. Oil briefly touches $180/barrel. The US announces
+      deployment of 15,000 additional troops to the Middle East and calls up 30,000
+      reservists. Cumulative US casualty count rises.
+    source: Bureau of Labor Statistics emergency release, Pentagon statement, Saudi
+      Aramco operational update, Reuters
+    credibility: 0.93
+    ambiguity: 0.28
+    emotional_valence: -0.85
+  exposure_rules: null
+  description: 'Week 5: Economic cascade — unemployment spikes, food prices surge,
+    oil briefly hits $180/barrel after Iran strikes Saudi oil facilities'
+  re_reasoning_intensity: extreme
+- timestep: 3
+  event:
+    type: emergency
+    content: US Navy minesweepers and escort convoys have partially reopened the Strait
+      of Hormuz, but transit times have doubled and insurance premiums remain 10x
+      pre-crisis levels. Oil stabilizes near $130/barrel; US gasoline averages $5.80/gallon.
+      Cumulative US job losses attributed to the energy shock reach 400,000. Russia
+      and China issue a joint statement condemning US strikes and pledging expanded
+      economic support to Iran. Iran's internal protest movement fractures — some
+      rally behind the regime, others blame it for provoking the crisis. With midterms
+      3 months away, Republicans argue the strikes prevented a nuclear Iran; Democrats
+      frame it as a costly, unnecessary war.
+    source: US Navy 5th Fleet, joint Kremlin-Beijing communiqué, ABC News/Washington
+      Post poll, Labor Department
+    credibility: 0.91
+    ambiguity: 0.28
+    emotional_valence: -0.6
+  exposure_rules: null
+  description: 'Week 8: Strait partially reopened; Russia and China back Iran; 400,000
+    US jobs lost; midterm framing intensifies'
+  re_reasoning_intensity: high
+- timestep: 4
+  event:
+    type: emergency
+    content: A classified Defense Intelligence Agency assessment leaked to the Washington
+      Post indicates that Iran has begun reconstituting uranium enrichment operations
+      at two previously undisclosed hardened facilities, casting doubt on the strategic
+      success of the February strikes. The White House calls the leak 'irresponsible'
+      but does not deny its contents. Omani and Qatari ceasefire mediation efforts
+      are reported to have stalled over Iran's demand for a formal US pledge of non-aggression.
+      Consumer confidence falls to its lowest level since 2008. Inflation is now running
+      at an annualized rate of 8.5%. Congressional approval ratings hit a 40-year
+      low.
+    source: Washington Post (leaked DIA assessment), White House press secretary,
+      Reuters, Gallup consumer confidence index
+    credibility: 0.82
+    ambiguity: 0.28
+    emotional_valence: -0.7
+  exposure_rules: null
+  description: 'Week 10: Leaked intelligence report suggests Iran is reconstituting
+    uranium enrichment at undisclosed backup sites; ceasefire talks stall'
+  re_reasoning_intensity: high
+- timestep: 5
+  event:
+    type: emergency
+    content: A ceasefire has been brokered through Omani and Qatari mediation. Iran
+      agrees to halt Strait of Hormuz operations in exchange for a US commitment to
+      cease strikes and begin indirect negotiations on a new nuclear framework. Oil
+      drops to $105/barrel — still well above pre-crisis levels. US gasoline averages
+      $4.60/gallon. Total US economic cost of the 12-week crisis is estimated to exceed
+      $800 billion. 23 US service members have been killed across all theaters. Inflation
+      is running at 8.5% annualized. Consumer confidence is at its lowest level since
+      2008. The Iran crisis now dominates every 2026 midterm campaign nationally —
+      it is the defining political issue of the cycle.
+    source: White House statement, Omani Foreign Ministry, Energy Information Administration,
+      Congressional Budget Office preliminary estimate
+    credibility: 0.93
+    ambiguity: 0.28
+    emotional_valence: -0.45
+  exposure_rules: null
+  description: 'Week 12: Fragile ceasefire reached through Omani/Qatari mediation;
+    oil drops to $105; total US economic cost exceeds $800 billion'
+  re_reasoning_intensity: high
+seed_exposure:
+  channels:
+  - name: broadcast_breaking_news
+    description: Major broadcast and cable TV networks (CNN, Fox News, MSNBC, ABC,
+      NBC, CBS) interrupt regular programming with breaking news alerts about the
+      airstrikes. The most authoritative and immediate mass-reach channel for a national
+      security emergency of this magnitude.
+    credibility_modifier: 1.2
+    experience_template: I was watching TV when the network cut to a breaking news
+      alert — the US just launched airstrikes on Iran.
+  - name: push_notification_online_news
+    description: Mobile push notifications and online news site alerts from AP, Reuters,
+      NYT, Washington Post, Fox News Digital, and other major digital outlets reaching
+      smartphone users instantly at the moment of the strikes.
+    credibility_modifier: 1.1
+    experience_template: 'My phone buzzed with a breaking news alert: US military
+      has launched strikes on Iran.'
+  - name: social_media_viral_spread
+    description: Twitter/X, Facebook, Instagram, TikTok, and Reddit posts — including
+      live footage, eyewitness accounts, political commentary, and viral threads —
+      spread the news rapidly but with variable accuracy and framing. Primary vector
+      for younger, digitally native audiences.
+    credibility_modifier: 0.8
+    experience_template: I saw it blowing up on my feed — everyone was posting about
+      the US bombing Iran.
+  - name: personal_network_word_of_mouth
+    description: Friends, family, coworkers, and neighbors share news directly through
+      conversation, phone calls, or text messages. Especially important for news-avoiders
+      and low-digital-engagement populations. Reaches those who missed initial media
+      coverage.
+    credibility_modifier: 0.9
+    experience_template: A family member called me to tell me we had bombed Iran —
+      they seemed really shaken up.
+  - name: military_official_channels
+    description: Official Department of Defense notifications, base communications,
+      unit alerts, and reserve/National Guard mobilization notices reaching those
+      with direct military connections. Highest credibility, earliest and most operationally
+      specific information.
+    credibility_modifier: 1.3
+    experience_template: I got an official notification through military channels
+      — this is real and my unit may be affected.
+  rules:
+  - channel: military_official_channels
+    when: military_connection in ('Active duty', 'Veteran', 'Immediate family member')
+      or reservist_or_national_guard == True
+    probability: 1.0
+    timestep: 0
+  - channel: broadcast_breaking_news
+    when: primary_info_source == 'Cable/broadcast TV news'
+    probability: 0.95
+    timestep: 0
+  - channel: push_notification_online_news
+    when: primary_info_source == 'Online news sites' and tech_adoption_posture in
+      ('Early adopter', 'Innovator', 'Early majority adopter')
+    probability: 0.95
+    timestep: 0
+  - channel: social_media_viral_spread
+    when: social_media_behavior in ('Active poster/Influencer', 'Occasional poster')
+      and primary_info_source == 'Social media'
+    probability: 0.92
+    timestep: 0
+  - channel: push_notification_online_news
+    when: primary_info_source in ('Podcasts', 'Print media') and tech_adoption_posture
+      not in ('Technophobe/Avoider', 'Late majority adopter')
+    probability: 0.8
+    timestep: 1
+  - channel: broadcast_breaking_news
+    when: age >= 50 and primary_info_source != 'Avoids news'
+    probability: 0.85
+    timestep: 1
+  - channel: social_media_viral_spread
+    when: age < 40 and social_media_behavior in ('Passive consumer', 'Occasional poster')
+    probability: 0.88
+    timestep: 1
+  - channel: broadcast_breaking_news
+    when: political_engagement_level == 'Highly engaged partisan'
+    probability: 0.9
+    timestep: 1
+  - channel: social_media_viral_spread
+    when: age >= 40 and social_media_behavior != 'Non-user' and primary_info_source
+      == 'Social media'
+    probability: 0.82
+    timestep: 1
+  - channel: personal_network_word_of_mouth
+    when: primary_info_source == 'Local news' or social_media_behavior == 'Non-user'
+    probability: 0.75
+    timestep: 2
+  - channel: broadcast_breaking_news
+    when: primary_info_source == 'Local news'
+    probability: 0.8
+    timestep: 2
+  - channel: personal_network_word_of_mouth
+    when: supply_chain_job_exposure == True or employment_sector in ('Federal government',
+      'State/local government')
+    probability: 0.85
+    timestep: 2
+  - channel: social_media_viral_spread
+    when: economic_anxiety > 0.6 and social_media_behavior != 'Non-user'
+    probability: 0.78
+    timestep: 2
+  - channel: personal_network_word_of_mouth
+    when: primary_info_source == 'Avoids news' and extraversion > 0.5
+    probability: 0.65
+    timestep: 3
+  - channel: broadcast_breaking_news
+    when: urban_rural == 'Rural' and age >= 45
+    probability: 0.8
+    timestep: 3
+  - channel: personal_network_word_of_mouth
+    when: urban_rural == 'Rural' and primary_info_source not in ('Cable/broadcast
+      TV news', 'Online news sites')
+    probability: 0.7
+    timestep: 3
+  - channel: social_media_viral_spread
+    when: war_escalation_fear > 0.7 and social_media_behavior != 'Non-user'
+    probability: 0.85
+    timestep: 3
+  - channel: personal_network_word_of_mouth
+    when: primary_info_source == 'Avoids news' and extraversion <= 0.5
+    probability: 0.45
+    timestep: 4
+  - channel: broadcast_breaking_news
+    when: midterm_turnout_propensity in ('Rarely votes', 'Never votes') and primary_info_source
+      != 'Avoids news'
+    probability: 0.6
+    timestep: 4
+  - channel: personal_network_word_of_mouth
+    when: 'true'
+    probability: 0.55
+    timestep: 5
+interaction:
+  description: "This is a high-salience, emotionally charged national security and\
+    \ economic crisis event spanning 12 weeks. Americans will discuss it across virtually\
+    \ every social context — family dinner tables, workplaces, social media feeds,\
+    \ religious communities, and neighborhood groups. The content triggers multiple\
+    \ powerful psychological drivers simultaneously: fear of war escalation, economic\
+    \ anxiety from surging gas and food prices, partisan identity activation, and\
+    \ military family concern. \n\nStrong partisan sorting will dominate discussions:\
+    \ Trump voters and strong Republicans will frame conversations around nuclear\
+    \ threat prevention and national security strength, while strong Democrats and\
+    \ Harris voters will emphasize economic destruction and unnecessary war. True\
+    \ Independents and moderate voters will be the most volatile discussants, moving\
+    \ between frames depending on which phase of the crisis is most salient.\n\nSocial\
+    \ media active posters and influencers will be disproportionate amplifiers, especially\
+    \ on Phase 1 (the dramatic strike announcement) and Phase 3 (gas prices hitting\
+    \ $6+). Military-connected individuals will share with high emotional intensity\
+    \ regardless of political identity. Economically anxious agents — particularly\
+    \ those paycheck-to-paycheck, with high commutes, or in supply-chain-exposed jobs\
+    \ — will share crisis updates with urgency as the economic cascade phases hit.\
+    \ Agents with high neuroticism and high war_escalation_fear will share widely\
+    \ but may distort information. High-trust, high-education agents will share more\
+    \ carefully and at lower volume. Cable news consumers will drive broadcast-style\
+    \ amplification; social media primary users will drive faster but lower-fidelity\
+    \ spread. Devout religious communities may frame the crisis in apocalyptic or\
+    \ just-war terms, increasing within-community sharing. The event's 12-week arc\
+    \ means sharing behavior will evolve — early phases dominated by shock and urgency,\
+    \ later phases by economic grievance and electoral framing."
+spread:
+  share_probability: 0.72
+  share_modifiers:
+  - when: political_identity == 'Strong Republican'
+    multiply: 1.35
+    add: 0.0
+  - when: political_identity == 'Strong Democrat'
+    multiply: 1.3
+    add: 0.0
+  - when: political_identity == 'True Independent'
+    multiply: 0.9
+    add: 0.0
+  - when: social_media_behavior == 'Active poster/Influencer'
+    multiply: 1.5
+    add: 0.0
+  - when: social_media_behavior == 'Occasional poster'
+    multiply: 1.2
+    add: 0.0
+  - when: social_media_behavior == 'Passive consumer'
+    multiply: 0.85
+    add: 0.0
+  - when: social_media_behavior == 'Non-user'
+    multiply: 0.6
+    add: 0.0
+  - when: primary_info_source == 'Social media'
+    multiply: 1.4
+    add: 0.0
+  - when: primary_info_source == 'Cable/broadcast TV news'
+    multiply: 1.25
+    add: 0.0
+  - when: primary_info_source == 'Avoids news'
+    multiply: 0.4
+    add: 0.0
+  - when: military_connection == 'Active duty'
+    multiply: 1.55
+    add: 0.0
+  - when: military_connection == 'Veteran'
+    multiply: 1.45
+    add: 0.0
+  - when: military_connection == 'Immediate family member'
+    multiply: 1.5
+    add: 0.0
+  - when: military_connection == 'Extended family/friend'
+    multiply: 1.2
+    add: 0.0
+  - when: reservist_or_national_guard == true
+    multiply: 1.6
+    add: 0.0
+  - when: financial_margin == 'Paycheck-to-paycheck'
+    multiply: 1.3
+    add: 0.0
+  - when: financial_margin == 'In debt/deficit'
+    multiply: 1.35
+    add: 0.0
+  - when: financial_margin == 'Comfortable savings buffer'
+    multiply: 0.85
+    add: 0.0
+  - when: economic_anxiety > 0.75
+    multiply: 1.35
+    add: 0.0
+  - when: economic_anxiety < 0.25
+    multiply: 0.8
+    add: 0.0
+  - when: war_escalation_fear > 0.80
+    multiply: 1.4
+    add: 0.0
+  - when: war_escalation_fear < 0.20
+    multiply: 0.75
+    add: 0.0
+  - when: neuroticism > 0.70
+    multiply: 1.25
+    add: 0.0
+  - when: extraversion > 0.70
+    multiply: 1.2
+    add: 0.0
+  - when: extraversion < 0.30
+    multiply: 0.8
+    add: 0.0
+  - when: energy_cost_burden == 'Severe hardship'
+    multiply: 1.45
+    add: 0.0
+  - when: energy_cost_burden == 'Moderate hardship'
+    multiply: 1.2
+    add: 0.0
+  - when: energy_cost_burden == 'Minimal impact'
+    multiply: 0.8
+    add: 0.0
+  - when: supply_chain_job_exposure == true
+    multiply: 1.3
+    add: 0.0
+  - when: daily_commute_miles > 40
+    multiply: 1.2
+    add: 0.0
+  - when: top_issue_2026 == 'Economy/Jobs'
+    multiply: 1.25
+    add: 0.0
+  - when: top_issue_2026 == 'Immigration'
+    multiply: 1.15
+    add: 0.0
+  - when: top_issue_2026 == 'Democracy/Rule of law'
+    multiply: 1.2
+    add: 0.0
+  - when: iran_strike_approval == 'Strongly approve'
+    multiply: 1.3
+    add: 0.0
+  - when: iran_strike_approval == 'Strongly disapprove'
+    multiply: 1.3
+    add: 0.0
+  - when: iran_strike_approval == 'No opinion'
+    multiply: 0.65
+    add: 0.0
+  - when: nuclear_iran_threat_perception == 'Existential threat'
+    multiply: 1.35
+    add: 0.0
+  - when: nuclear_iran_threat_perception == 'Not a threat'
+    multiply: 1.1
+    add: 0.0
+  - when: mideast_policy_hawkishness == 'Strongly interventionist'
+    multiply: 1.25
+    add: 0.0
+  - when: mideast_policy_hawkishness == 'Strongly non-interventionist'
+    multiply: 1.25
+    add: 0.0
+  - when: political_engagement_level == 'Highly engaged partisan'
+    multiply: 1.4
+    add: 0.0
+  - when: political_engagement_level == 'Disengaged'
+    multiply: 0.6
+    add: 0.0
+  - when: midterm_turnout_propensity == 'Always votes'
+    multiply: 1.2
+    add: 0.0
+  - when: midterm_turnout_propensity == 'Never votes'
+    multiply: 0.7
+    add: 0.0
+  - when: institutional_trust == 'Distrustful/Conspiratorial'
+    multiply: 1.35
+    add: 0.0
+  - when: institutional_trust == 'High trust'
+    multiply: 0.9
+    add: 0.0
+  - when: religious_engagement == 'Devout'
+    multiply: 1.15
+    add: 0.0
+  - when: urban_rural == 'Rural'
+    multiply: 1.1
+    add: 0.0
+  - when: urban_rural == 'Urban'
+    multiply: 1.05
+    add: 0.0
+  - when: vote_2024_presidential == 'Trump'
+    multiply: 1.2
+    add: 0.0
+  - when: vote_2024_presidential == 'Harris'
+    multiply: 1.15
+    add: 0.0
+  - when: vote_2024_presidential == 'Did not vote'
+    multiply: 0.7
+    add: 0.0
+  - when: protest_participation_propensity == 'Very likely'
+    multiply: 1.35
+    add: 0.0
+  - when: crisis_midterm_vote_shift == 'Disengaged/withdrawn'
+    multiply: 0.55
+    add: 0.0
+  - when: portfolio_energy_exposure == 'High energy/defense exposure'
+    multiply: 1.25
+    add: 0.0
+  - when: education_level == 'Graduate degree'
+    multiply: 1.1
+    add: 0.0
+  - when: education_level == 'Less than HS'
+    multiply: 0.8
+    add: 0.0
+  - when: age < 35
+    multiply: 1.15
+    add: 0.0
+  - when: age > 65
+    multiply: 0.9
+    add: 0.0
+  - when: openness > 0.70
+    multiply: 1.1
+    add: 0.0
+  decay_per_hop: 0.08
+  max_hops: 7
+outcomes:
+  suggested_outcomes:
+  - name: crisis_stance
+    type: categorical
+    description: How the agent publicly positions themselves on the US airstrikes
+      and the resulting conflict — from active opposition to active support
+    options:
+    - actively_oppose_and_protest
+    - vocally_critical_but_not_protesting
+    - disengaged_from_conflict_politics
+    - cautiously_supportive
+    - strongly_supportive_and_vocal
+    range: null
+    required: true
+    option_friction:
+      actively_oppose_and_protest: 0.75
+      vocally_critical_but_not_protesting: 0.45
+      disengaged_from_conflict_politics: 0.25
+      cautiously_supportive: 0.4
+      strongly_supportive_and_vocal: 0.65
+  - name: economic_adaptation_behavior
+    type: categorical
+    description: How the agent is behaviorally adapting to the energy price shock
+      and economic disruption in their daily life
+    options:
+    - no_meaningful_change
+    - minor_discretionary_cuts
+    - significant_lifestyle_changes
+    - crisis_mode_spending_freeze
+    - relocating_or_job_switching_due_to_costs
+    range: null
+    required: true
+    option_friction:
+      no_meaningful_change: 0.2
+      minor_discretionary_cuts: 0.3
+      significant_lifestyle_changes: 0.55
+      crisis_mode_spending_freeze: 0.7
+      relocating_or_job_switching_due_to_costs: 0.9
+  - name: midterm_voting_intent
+    type: categorical
+    description: How the agent intends to vote in the 2026 midterm elections, driven
+      by their reaction to the Iran crisis and its economic fallout
+    options:
+    - vote_republican_endorse_strikes
+    - vote_republican_despite_reservations
+    - abstain_or_disengage
+    - vote_democrat_oppose_war_costs
+    - vote_third_party_or_protest_vote
+    range: null
+    required: true
+    option_friction:
+      vote_republican_endorse_strikes: 0.4
+      vote_republican_despite_reservations: 0.45
+      abstain_or_disengage: 0.35
+      vote_democrat_oppose_war_costs: 0.4
+      vote_third_party_or_protest_vote: 0.7
+  - name: information_consumption_pattern
+    type: categorical
+    description: Where and how the agent is primarily sourcing information about the
+      crisis
+    options:
+    - mainstream_media_heavy
+    - government_official_sources_only
+    - social_media_and_alternative_news
+    - actively_avoiding_news
+    - cross_referencing_multiple_sources
+    range: null
+    required: true
+    option_friction:
+      mainstream_media_heavy: 0.2
+      government_official_sources_only: 0.3
+      social_media_and_alternative_news: 0.25
+      actively_avoiding_news: 0.4
+      cross_referencing_multiple_sources: 0.55
+  - name: energy_cost_impact_severity
+    type: categorical
+    description: The agent's assessed personal severity of financial harm from the
+      energy and inflation shock
+    options:
+    - negligible_impact
+    - noticeable_but_manageable
+    - serious_financial_strain
+    - severe_hardship_affecting_essentials
+    - economic_crisis_threatening_stability
+    range: null
+    required: true
+    option_friction:
+      negligible_impact: 0.15
+      noticeable_but_manageable: 0.2
+      serious_financial_strain: 0.35
+      severe_hardship_affecting_essentials: 0.5
+      economic_crisis_threatening_stability: 0.65
+  - name: trust_in_government_handling
+    type: categorical
+    description: The agent's level of trust in the US government's management of the
+      military conflict and its economic consequences
+    options:
+    - strong_trust_fully_confident
+    - moderate_trust_with_concerns
+    - skeptical_but_not_opposed
+    - deep_distrust_of_decision_making
+    - complete_loss_of_institutional_confidence
+    range: null
+    required: true
+    option_friction:
+      strong_trust_fully_confident: 0.35
+      moderate_trust_with_concerns: 0.25
+      skeptical_but_not_opposed: 0.3
+      deep_distrust_of_decision_making: 0.45
+      complete_loss_of_institutional_confidence: 0.6
+  - name: ceasefire_outcome_assessment
+    type: categorical
+    description: How the agent evaluates the Week 12 ceasefire deal — whether the
+      costs were worth any strategic gains
+    options:
+    - clear_strategic_victory_worth_costs
+    - mixed_result_unclear_if_worth_it
+    - pyrrhic_outcome_costs_outweigh_gains
+    - strategic_failure_goals_not_achieved
+    - too_early_to_judge
+    range: null
+    required: true
+    option_friction:
+      clear_strategic_victory_worth_costs: 0.45
+      mixed_result_unclear_if_worth_it: 0.3
+      pyrrhic_outcome_costs_outweigh_gains: 0.4
+      strategic_failure_goals_not_achieved: 0.5
+      too_early_to_judge: 0.2
+  - name: open_ended_crisis_reasoning
+    type: open_ended
+    description: 'In the agent''s own words: what does this crisis mean for their
+      life, their sense of national direction, and what they believe should happen
+      next?'
+    options: null
+    range: null
+    required: true
+    option_friction: null
+  capture_full_reasoning: true
+  extraction_instructions: null
+  decision_relevant_attributes: []
+simulation:
+  max_timesteps: 6
+  timestep_unit: week
+  stop_conditions:
+  - exposure_rate > 0.95 and no_state_changes_for > 4
+  allow_early_convergence: null
+  seed: null
+background_context: The United States is in the grip of a wartime economic shock triggered
+  by the February 2026 airstrikes on Iran — oil prices have surged, inflation is accelerating,
+  and the country is politically fractured over a conflict that has already cost American
+  lives and hundreds of billions of dollars. It is late winter into spring 2026, a
+  midterm election year, and the crisis has displaced nearly every other domestic
+  issue in public discourse.
+relationship_weights: null
+extended_attributes:
+- name: military_connection
+  type: categorical
+  category: population_specific
+  description: Relationship to active-duty or veteran military personnel (Active duty,
+    Veteran, Immediate family member, Extended family/friend, No connection).
+  scope: individual
+  semantic_type: null
+  identity_type: professional_identity
+  display_format: null
+  sampling:
+    strategy: independent
+    distribution:
+      type: categorical
+      options:
+      - Active duty
+      - Veteran
+      - Immediate family member
+      - Extended family/friend
+      - No connection
+      weights:
+      - 0.005
+      - 0.07
+      - 0.19
+      - 0.285
+      - 0.45
+    formula: null
+    depends_on: []
+    modifiers: []
+  grounding:
+    level: strong
+    method: researched
+    source: BLS Employment Situation of Veterans 2024 (bls.gov/news.release/vet.nr0.htm);
+      Pew Research Center 2011 Military-Civilian Gap survey (pewresearch.org); Pew
+      Research Center Veterans Day 2023 (pewresearch.org/short-reads/2023/11/08)
+    note: 'Active duty: ~1.3M service members out of ~260M adults = ~0.5%. Veterans:
+      BLS confirms ~7% of adult population (17.6M). Immediate family member: derived
+      from Pew age-band data — 77% of 50+ have immediate family member who served,
+      57% of 30-49, ~33% of 18-29; population-weighted average ~55%, but this is immediate
+      family who EVER served (includes grandparents/WWII era). We restrict to the
+      ''immediate family'' category to mean spouse/parent/sibling/child currently
+      serving or recently separated — estimated ~19% after subtracting veterans themselves.
+      Extended family/friend (aunt, uncle, cousin, friend): ~28.5%. No connection
+      residual: ~45%. Weights are adjusted so Active duty + Veteran respondents are
+      not double-counted in family categories. Age-skewing (older adults more likely
+      to have connections) is handled by downstream correlation with age attribute.'
+  constraints:
+  - type: spec_expression
+    value: null
+    expression: abs(sum(weights) - 1.0) < 0.001
+    reason: Categorical weights must sum to 1.0.
+  - type: spec_expression
+    value: null
+    expression: len(options) == 5
+    reason: Must have exactly 5 connection categories as specified.
+- name: iran_strike_approval
+  type: categorical
+  category: population_specific
+  description: Personal approval of the February 23 US airstrikes against Iran (Strongly
+    approve, Somewhat approve, Somewhat disapprove, Strongly disapprove, No opinion).
+  scope: individual
+  semantic_type: null
+  identity_type: null
+  display_format: null
+  sampling:
+    strategy: conditional
+    distribution:
+      type: categorical
+      options:
+      - Strongly approve
+      - Somewhat approve
+      - Somewhat disapprove
+      - Strongly disapprove
+      - No opinion
+      weights:
+      - 0.2
+      - 0.17
+      - 0.15
+      - 0.31
+      - 0.17
+    formula: null
+    depends_on:
+    - political_identity
+    - military_connection
+    - institutional_trust
+    modifiers:
+    - when: political_identity == 'Strong Republican'
+      multiply: null
+      add: null
+      weight_overrides:
+        Strongly approve: 0.55
+        Somewhat approve: 0.25
+        Somewhat disapprove: 0.07
+        Strongly disapprove: 0.08
+        No opinion: 0.05
+      probability_override: null
+    - when: political_identity == 'Lean Republican'
+      multiply: null
+      add: null
+      weight_overrides:
+        Strongly approve: 0.3
+        Somewhat approve: 0.3
+        Somewhat disapprove: 0.18
+        Strongly disapprove: 0.12
+        No opinion: 0.1
+      probability_override: null
+    - when: political_identity == 'True Independent'
+      multiply: null
+      add: null
+      weight_overrides:
+        Strongly approve: 0.1
+        Somewhat approve: 0.18
+        Somewhat disapprove: 0.22
+        Strongly disapprove: 0.28
+        No opinion: 0.22
+      probability_override: null
+    - when: political_identity == 'Lean Democrat'
+      multiply: null
+      add: null
+      weight_overrides:
+        Strongly approve: 0.05
+        Somewhat approve: 0.1
+        Somewhat disapprove: 0.25
+        Strongly disapprove: 0.52
+        No opinion: 0.08
+      probability_override: null
+    - when: political_identity == 'Strong Democrat'
+      multiply: null
+      add: null
+      weight_overrides:
+        Strongly approve: 0.02
+        Somewhat approve: 0.05
+        Somewhat disapprove: 0.13
+        Strongly disapprove: 0.75
+        No opinion: 0.05
+      probability_override: null
+    - when: military_connection == 'Active duty'
+      multiply: null
+      add: null
+      weight_overrides:
+        Strongly approve: 0.32
+        Somewhat approve: 0.28
+        Somewhat disapprove: 0.18
+        Strongly disapprove: 0.15
+        No opinion: 0.07
+      probability_override: null
+    - when: military_connection == 'Veteran'
+      multiply: null
+      add: null
+      weight_overrides:
+        Strongly approve: 0.28
+        Somewhat approve: 0.26
+        Somewhat disapprove: 0.2
+        Strongly disapprove: 0.18
+        No opinion: 0.08
+      probability_override: null
+    - when: military_connection == 'Immediate family member'
+      multiply: null
+      add: null
+      weight_overrides:
+        Strongly approve: 0.22
+        Somewhat approve: 0.24
+        Somewhat disapprove: 0.22
+        Strongly disapprove: 0.22
+        No opinion: 0.1
+      probability_override: null
+    - when: military_connection == 'No connection'
+      multiply: null
+      add: null
+      weight_overrides:
+        Strongly approve: 0.12
+        Somewhat approve: 0.16
+        Somewhat disapprove: 0.22
+        Strongly disapprove: 0.35
+        No opinion: 0.15
+      probability_override: null
+    - when: institutional_trust == 'High trust'
+      multiply: null
+      add: null
+      weight_overrides:
+        Strongly approve: 0.22
+        Somewhat approve: 0.25
+        Somewhat disapprove: 0.22
+        Strongly disapprove: 0.22
+        No opinion: 0.09
+      probability_override: null
+    - when: institutional_trust == 'Distrustful/Conspiratorial'
+      multiply: null
+      add: null
+      weight_overrides:
+        Strongly approve: 0.18
+        Somewhat approve: 0.15
+        Somewhat disapprove: 0.15
+        Strongly disapprove: 0.28
+        No opinion: 0.24
+      probability_override: null
+    - when: institutional_trust == 'Low trust'
+      multiply: null
+      add: null
+      weight_overrides:
+        Strongly approve: 0.14
+        Somewhat approve: 0.16
+        Somewhat disapprove: 0.22
+        Strongly disapprove: 0.3
+        No opinion: 0.18
+      probability_override: null
+  grounding:
+    level: strong
+    method: researched
+    source: 'YouGov snap poll June 21-22 2025 (n=2,413): 35% approve, 46% disapprove,
+      19% unsure; CBS/YouGov June 22-24 2025; Marist/NPR/PBS June 23-25 2025. Reagan
+      Institute Oct-Nov 2025 retrospective showed 60% approval after time elapsed.
+      Calibrated to immediate post-strike window matching Feb 2026 timeline with slight
+      approval uptick after retaliation.'
+    note: Base weights reflect a nationally representative adult prior to applying
+      political_identity, military_connection, and institutional_trust modifiers.
+      After Iranian retaliation casualties at Al Udeid (Week 1), approval among approvers
+      may harden; overall split remains roughly 37% approve / 46% disapprove / 17%
+      no opinion at Week 1.
+  constraints:
+  - type: spec_expression
+    value: null
+    expression: abs(sum(weights) - 1.0) < 0.01
+    reason: Weights must sum to 1
+- name: energy_cost_burden
+  type: categorical
+  category: population_specific
+  description: Degree to which spiking fuel and energy prices from the crisis impose
+    financial hardship on the household (Severe hardship, Moderate hardship, Minor
+    inconvenience, Minimal impact).
+  scope: household
+  semantic_type: null
+  identity_type: null
+  display_format: null
+  sampling:
+    strategy: conditional
+    distribution:
+      type: categorical
+      options:
+      - Severe hardship
+      - Moderate hardship
+      - Minor inconvenience
+      - Minimal impact
+      weights:
+      - 0.28
+      - 0.35
+      - 0.22
+      - 0.15
+    formula: null
+    depends_on:
+    - household_income
+    - financial_margin
+    - urban_rural
+    modifiers:
+    - when: financial_margin == 'In debt/deficit'
+      multiply: null
+      add: null
+      weight_overrides:
+        Severe hardship: 0.52
+        Moderate hardship: 0.32
+        Minor inconvenience: 0.1
+        Minimal impact: 0.06
+      probability_override: null
+    - when: financial_margin == 'Paycheck-to-paycheck'
+      multiply: null
+      add: null
+      weight_overrides:
+        Severe hardship: 0.38
+        Moderate hardship: 0.38
+        Minor inconvenience: 0.16
+        Minimal impact: 0.08
+      probability_override: null
+    - when: financial_margin == 'Modest buffer'
+      multiply: null
+      add: null
+      weight_overrides:
+        Severe hardship: 0.14
+        Moderate hardship: 0.38
+        Minor inconvenience: 0.33
+        Minimal impact: 0.15
+      probability_override: null
+    - when: financial_margin == 'Comfortable savings buffer'
+      multiply: null
+      add: null
+      weight_overrides:
+        Severe hardship: 0.04
+        Moderate hardship: 0.16
+        Minor inconvenience: 0.36
+        Minimal impact: 0.44
+      probability_override: null
+    - when: urban_rural == 'Rural'
+      multiply: null
+      add: null
+      weight_overrides:
+        Severe hardship: 0.34
+        Moderate hardship: 0.38
+        Minor inconvenience: 0.18
+        Minimal impact: 0.1
+      probability_override: null
+    - when: urban_rural == 'Suburban'
+      multiply: null
+      add: null
+      weight_overrides:
+        Severe hardship: 0.22
+        Moderate hardship: 0.38
+        Minor inconvenience: 0.25
+        Minimal impact: 0.15
+      probability_override: null
+    - when: urban_rural == 'Urban'
+      multiply: null
+      add: null
+      weight_overrides:
+        Severe hardship: 0.16
+        Moderate hardship: 0.32
+        Minor inconvenience: 0.3
+        Minimal impact: 0.22
+      probability_override: null
+    - when: household_income < 40000
+      multiply: null
+      add: null
+      weight_overrides:
+        Severe hardship: 0.45
+        Moderate hardship: 0.35
+        Minor inconvenience: 0.13
+        Minimal impact: 0.07
+      probability_override: null
+    - when: household_income >= 40000 and household_income < 80000
+      multiply: null
+      add: null
+      weight_overrides:
+        Severe hardship: 0.22
+        Moderate hardship: 0.4
+        Minor inconvenience: 0.26
+        Minimal impact: 0.12
+      probability_override: null
+    - when: household_income >= 80000 and household_income < 150000
+      multiply: null
+      add: null
+      weight_overrides:
+        Severe hardship: 0.08
+        Moderate hardship: 0.28
+        Minor inconvenience: 0.38
+        Minimal impact: 0.26
+      probability_override: null
+    - when: household_income >= 150000
+      multiply: null
+      add: null
+      weight_overrides:
+        Severe hardship: 0.03
+        Moderate hardship: 0.12
+        Minor inconvenience: 0.3
+        Minimal impact: 0.55
+      probability_override: null
+  grounding:
+    level: medium
+    method: extrapolated
+    source: BLS Consumer Expenditure Survey data on fuel share of household budgets;
+      EIA household energy burden data; crisis scenario extrapolated from $3.40 to
+      $6.20/gallon national average by Week 3. Lower-income households spend 8-10%
+      of income on energy vs 2-3% for high-income.
+    note: Base distribution reflects Week 3+ crisis conditions ($6.20/gal). Modifiers
+      for household_income, financial_margin, and urban_rural will shift heavily —
+      rural/low-income households face severe hardship at much higher rates. Base
+      weights before those modifiers represent the national center of gravity at peak
+      crisis.
+  constraints:
+  - type: spec_expression
+    value: null
+    expression: abs(sum(weights) - 1.0) < 0.01
+    reason: Weights must sum to 1
+- name: daily_commute_miles
+  type: int
+  category: population_specific
+  description: Estimated round-trip commute distance in miles per workday, determining
+    fuel cost exposure from the energy shock.
+  scope: individual
+  semantic_type: null
+  identity_type: null
+  display_format: null
+  sampling:
+    strategy: conditional
+    distribution:
+      type: lognormal
+      mean: null
+      std: null
+      min: 0.0
+      max: 200.0
+      mean_formula: 0 if employment_sector in ['Retired', 'Unemployed', 'Not in labor
+        force'] else (8 if urban_rural == 'Urban' else (28 if urban_rural == 'Suburban'
+        else 42))
+      std_formula: 0 if employment_sector in ['Retired', 'Unemployed', 'Not in labor
+        force'] else (10 if urban_rural == 'Urban' else (18 if urban_rural == 'Suburban'
+        else 25))
+      min_formula: null
+      max_formula: null
+    formula: null
+    depends_on:
+    - urban_rural
+    - employment_sector
+    modifiers:
+    - when: urban_rural == 'Rural'
+      multiply: 1.15
+      add: 3.0
+      weight_overrides: null
+      probability_override: null
+    - when: urban_rural == 'Suburban'
+      multiply: 1.1
+      add: 2.0
+      weight_overrides: null
+      probability_override: null
+    - when: urban_rural == 'Urban'
+      multiply: 0.9
+      add: 0.0
+      weight_overrides: null
+      probability_override: null
+    - when: employment_sector == 'Federal government'
+      multiply: 1.12
+      add: 4.0
+      weight_overrides: null
+      probability_override: null
+  grounding:
+    level: strong
+    method: researched
+    source: 'US Census ACS: national average one-way commute ~27 minutes / ~15-16
+      miles one-way = ~30-32 miles round trip. Urban commuters average shorter distances;
+      rural commuters average longer distances. BTS National Household Travel Survey
+      data on commute distance by urbanicity.'
+    note: Lognormal is appropriate given right-skewed commute distance distributions.
+      Non-employed (Retired, Unemployed, Not in labor force) set to zero. Employment_sector
+      = 'Federal government' or 'State/local government' tends to cluster in urban/suburban
+      areas, which already captured via urban_rural.
+  constraints:
+  - type: hard_min
+    value: 0.0
+    expression: null
+    reason: Commute cannot be negative; remote workers and non-employed have zero
+  - type: hard_max
+    value: 200.0
+    expression: null
+    reason: Round-trip commute beyond 200 miles is essentially non-existent for daily
+      commuters
+- name: supply_chain_job_exposure
+  type: boolean
+  category: population_specific
+  description: Whether the individual works in an industry directly exposed to supply
+    chain disruption or energy price shocks (trucking, aviation, retail, manufacturing,
+    agriculture).
+  scope: individual
+  semantic_type: null
+  identity_type: null
+  display_format: null
+  sampling:
+    strategy: conditional
+    distribution:
+      type: boolean
+      probability_true: 0.22
+    formula: null
+    depends_on:
+    - employment_sector
+    modifiers:
+    - when: employment_sector == 'Private sector'
+      multiply: null
+      add: null
+      weight_overrides: null
+      probability_override: 0.32
+    - when: employment_sector == 'Gig/contract'
+      multiply: null
+      add: null
+      weight_overrides: null
+      probability_override: 0.38
+    - when: employment_sector == 'Self-employed'
+      multiply: null
+      add: null
+      weight_overrides: null
+      probability_override: 0.28
+    - when: employment_sector == 'Federal government'
+      multiply: null
+      add: null
+      weight_overrides: null
+      probability_override: 0.06
+    - when: employment_sector == 'State/local government'
+      multiply: null
+      add: null
+      weight_overrides: null
+      probability_override: 0.08
+    - when: employment_sector == 'Retired'
+      multiply: null
+      add: null
+      weight_overrides: null
+      probability_override: 0.04
+    - when: employment_sector == 'Unemployed'
+      multiply: null
+      add: null
+      weight_overrides: null
+      probability_override: 0.1
+    - when: employment_sector == 'Not in labor force'
+      multiply: null
+      add: null
+      weight_overrides: null
+      probability_override: 0.05
+  grounding:
+    level: medium
+    method: extrapolated
+    source: 'BLS Occupational Employment Statistics: trucking ~2M workers, aviation
+      ~750K, retail trade ~15M, manufacturing ~12M, agriculture ~2.5M. Combined ~32M
+      workers out of ~160M labor force = ~20%. Added buffer for gig/contract workers
+      in exposed sectors.'
+    note: Base probability_true=0.22 before employment_sector modifier. Modifier should
+      set to near 1.0 for trucking/manufacturing/retail/agriculture employment sectors
+      and near 0 for government, professional services, healthcare. Unemployed/Retired/Not
+      in labor force should be false.
+  constraints: []
+- name: mideast_policy_hawkishness
+  type: categorical
+  category: population_specific
+  description: Pre-existing stance on US military involvement in the Middle East (Strongly
+    interventionist, Moderately interventionist, Neutral/Uncertain, Moderately non-interventionist,
+    Strongly non-interventionist).
+  scope: individual
+  semantic_type: null
+  identity_type: null
+  display_format: null
+  sampling:
+    strategy: conditional
+    distribution:
+      type: categorical
+      options:
+      - Strongly interventionist
+      - Moderately interventionist
+      - Neutral/Uncertain
+      - Moderately non-interventionist
+      - Strongly non-interventionist
+      weights:
+      - 0.14
+      - 0.21
+      - 0.28
+      - 0.22
+      - 0.15
+    formula: null
+    depends_on:
+    - political_identity
+    - military_connection
+    modifiers:
+    - when: political_identity == 'Strong Republican'
+      multiply: null
+      add: null
+      weight_overrides:
+        Strongly interventionist: 0.35
+        Moderately interventionist: 0.32
+        Neutral/Uncertain: 0.15
+        Moderately non-interventionist: 0.1
+        Strongly non-interventionist: 0.08
+      probability_override: null
+    - when: political_identity == 'Lean Republican'
+      multiply: null
+      add: null
+      weight_overrides:
+        Strongly interventionist: 0.18
+        Moderately interventionist: 0.3
+        Neutral/Uncertain: 0.25
+        Moderately non-interventionist: 0.17
+        Strongly non-interventionist: 0.1
+      probability_override: null
+    - when: political_identity == 'True Independent'
+      multiply: null
+      add: null
+      weight_overrides:
+        Strongly interventionist: 0.08
+        Moderately interventionist: 0.16
+        Neutral/Uncertain: 0.32
+        Moderately non-interventionist: 0.26
+        Strongly non-interventionist: 0.18
+      probability_override: null
+    - when: political_identity == 'Lean Democrat'
+      multiply: null
+      add: null
+      weight_overrides:
+        Strongly interventionist: 0.05
+        Moderately interventionist: 0.12
+        Neutral/Uncertain: 0.25
+        Moderately non-interventionist: 0.32
+        Strongly non-interventionist: 0.26
+      probability_override: null
+    - when: political_identity == 'Strong Democrat'
+      multiply: null
+      add: null
+      weight_overrides:
+        Strongly interventionist: 0.04
+        Moderately interventionist: 0.09
+        Neutral/Uncertain: 0.17
+        Moderately non-interventionist: 0.32
+        Strongly non-interventionist: 0.38
+      probability_override: null
+    - when: military_connection == 'Active duty'
+      multiply: null
+      add: null
+      weight_overrides:
+        Strongly interventionist: 0.3
+        Moderately interventionist: 0.35
+        Neutral/Uncertain: 0.18
+        Moderately non-interventionist: 0.12
+        Strongly non-interventionist: 0.05
+      probability_override: null
+    - when: military_connection == 'Veteran'
+      multiply: null
+      add: null
+      weight_overrides:
+        Strongly interventionist: 0.22
+        Moderately interventionist: 0.3
+        Neutral/Uncertain: 0.22
+        Moderately non-interventionist: 0.16
+        Strongly non-interventionist: 0.1
+      probability_override: null
+    - when: military_connection == 'No connection'
+      multiply: null
+      add: null
+      weight_overrides:
+        Strongly interventionist: 0.08
+        Moderately interventionist: 0.18
+        Neutral/Uncertain: 0.28
+        Moderately non-interventionist: 0.26
+        Strongly non-interventionist: 0.2
+      probability_override: null
+  grounding:
+    level: medium
+    method: researched
+    source: 'Chicago Council on Global Affairs 2025 survey: Americans prioritize defensive
+      over offensive troop use; 48% oppose vs 28% support military action in Iran
+      (Economist/YouGov Jan 2026). Quinnipiac Jun 2025: 51-42 oppose US joining Israel
+      strikes. Gallup: support for using US troops to stop nuclear proliferation ~72%.'
+    note: Pre-existing hawkishness distribution before any modifiers. Political_identity
+      modifier will push Republicans toward interventionist, Democrats toward non-interventionist.
+      Military_connection will push toward interventionist across the board.
+  constraints:
+  - type: spec_expression
+    value: null
+    expression: abs(sum(weights) - 1.0) < 0.01
+    reason: Weights must sum to 1
+- name: nuclear_iran_threat_perception
+  type: categorical
+  category: population_specific
+  description: Perceived severity of Iran's nuclear program as a threat to US national
+    security before the strikes (Existential threat, Serious threat, Moderate threat,
+    Overstated threat, Not a threat).
+  scope: individual
+  semantic_type: null
+  identity_type: null
+  display_format: null
+  sampling:
+    strategy: conditional
+    distribution:
+      type: categorical
+      options:
+      - Existential threat
+      - Serious threat
+      - Moderate threat
+      - Overstated threat
+      - Not a threat
+      weights:
+      - 0.18
+      - 0.3
+      - 0.27
+      - 0.16
+      - 0.09
+    formula: null
+    depends_on:
+    - political_identity
+    - primary_info_source
+    - institutional_trust
+    modifiers:
+    - when: political_identity == 'Strong Republican'
+      multiply: null
+      add: null
+      weight_overrides:
+        Existential threat: 0.38
+        Serious threat: 0.4
+        Moderate threat: 0.14
+        Overstated threat: 0.05
+        Not a threat: 0.03
+      probability_override: null
+    - when: political_identity == 'Lean Republican'
+      multiply: null
+      add: null
+      weight_overrides:
+        Existential threat: 0.22
+        Serious threat: 0.42
+        Moderate threat: 0.24
+        Overstated threat: 0.08
+        Not a threat: 0.04
+      probability_override: null
+    - when: political_identity == 'True Independent'
+      multiply: null
+      add: null
+      weight_overrides:
+        Existential threat: 0.14
+        Serious threat: 0.36
+        Moderate threat: 0.3
+        Overstated threat: 0.14
+        Not a threat: 0.06
+      probability_override: null
+    - when: political_identity == 'Lean Democrat'
+      multiply: null
+      add: null
+      weight_overrides:
+        Existential threat: 0.08
+        Serious threat: 0.28
+        Moderate threat: 0.34
+        Overstated threat: 0.22
+        Not a threat: 0.08
+      probability_override: null
+    - when: political_identity == 'Strong Democrat'
+      multiply: null
+      add: null
+      weight_overrides:
+        Existential threat: 0.05
+        Serious threat: 0.18
+        Moderate threat: 0.32
+        Overstated threat: 0.3
+        Not a threat: 0.15
+      probability_override: null
+    - when: primary_info_source == 'Cable/broadcast TV news'
+      multiply: null
+      add: null
+      weight_overrides:
+        Existential threat: 0.24
+        Serious threat: 0.4
+        Moderate threat: 0.22
+        Overstated threat: 0.1
+        Not a threat: 0.04
+      probability_override: null
+    - when: primary_info_source == 'Social media'
+      multiply: null
+      add: null
+      weight_overrides:
+        Existential threat: 0.14
+        Serious threat: 0.26
+        Moderate threat: 0.26
+        Overstated threat: 0.2
+        Not a threat: 0.14
+      probability_override: null
+    - when: primary_info_source == 'Avoids news'
+      multiply: null
+      add: null
+      weight_overrides:
+        Existential threat: 0.1
+        Serious threat: 0.2
+        Moderate threat: 0.25
+        Overstated threat: 0.22
+        Not a threat: 0.23
+      probability_override: null
+    - when: primary_info_source == 'Podcasts'
+      multiply: null
+      add: null
+      weight_overrides:
+        Existential threat: 0.14
+        Serious threat: 0.28
+        Moderate threat: 0.28
+        Overstated threat: 0.2
+        Not a threat: 0.1
+      probability_override: null
+    - when: institutional_trust == 'High trust'
+      multiply: null
+      add: null
+      weight_overrides:
+        Existential threat: 0.22
+        Serious threat: 0.4
+        Moderate threat: 0.26
+        Overstated threat: 0.09
+        Not a threat: 0.03
+      probability_override: null
+    - when: institutional_trust == 'Distrustful/Conspiratorial'
+      multiply: null
+      add: null
+      weight_overrides:
+        Existential threat: 0.16
+        Serious threat: 0.22
+        Moderate threat: 0.22
+        Overstated threat: 0.24
+        Not a threat: 0.16
+      probability_override: null
+  grounding:
+    level: strong
+    method: researched
+    source: 'Marist/NPR/PBS June 2025 (n=1,381): 48% major threat, 39% minor threat,
+      13% no threat. Fox News poll Jun 2025: 73% view Iran as security threat, 78%
+      concerned about nuclear capability. Chicago Council 2024: 53% call Iran nuclear
+      program a critical threat (down from 68% in 2010). Oklahoma NS 2024 survey:
+      70% perceived moderate or higher nuclear conflict risk.'
+    note: Existential vs Serious distinction within the 48% 'major threat' bucket.
+      Republicans (64%) and older adults skew toward existential/serious; Democrats
+      (38%) and independents (45%) more mixed. Calibrated so ~48% total fall in existential+serious
+      matching Marist major threat finding.
+  constraints:
+  - type: spec_expression
+    value: null
+    expression: abs(sum(weights) - 1.0) < 0.01
+    reason: Weights must sum to 1
+- name: portfolio_energy_exposure
+  type: categorical
+  category: population_specific
+  description: Degree to which personal investments are concentrated in energy, defense,
+    or crisis-sensitive sectors (High energy/defense exposure, Moderate exposure,
+    Diversified/low exposure, No investments).
+  scope: individual
+  semantic_type: null
+  identity_type: null
+  display_format: null
+  sampling:
+    strategy: conditional
+    distribution:
+      type: categorical
+      options:
+      - High energy/defense exposure
+      - Moderate exposure
+      - Diversified/low exposure
+      - No investments
+      weights:
+      - 0.07
+      - 0.18
+      - 0.3
+      - 0.45
+    formula: null
+    depends_on:
+    - investment_profile
+    - household_income
+    modifiers:
+    - when: investment_profile == 'No investments'
+      multiply: null
+      add: null
+      weight_overrides:
+        High energy/defense exposure: 0.02
+        Moderate exposure: 0.04
+        Diversified/low exposure: 0.04
+        No investments: 0.9
+      probability_override: null
+    - when: investment_profile == '401k/IRA only'
+      multiply: null
+      add: null
+      weight_overrides:
+        High energy/defense exposure: 0.06
+        Moderate exposure: 0.22
+        Diversified/low exposure: 0.62
+        No investments: 0.1
+      probability_override: null
+    - when: investment_profile == 'Diversified investor'
+      multiply: null
+      add: null
+      weight_overrides:
+        High energy/defense exposure: 0.18
+        Moderate exposure: 0.45
+        Diversified/low exposure: 0.34
+        No investments: 0.03
+      probability_override: null
+    - when: investment_profile == 'Active trader'
+      multiply: null
+      add: null
+      weight_overrides:
+        High energy/defense exposure: 0.38
+        Moderate exposure: 0.4
+        Diversified/low exposure: 0.18
+        No investments: 0.04
+      probability_override: null
+    - when: investment_profile == 'Crypto holder'
+      multiply: null
+      add: null
+      weight_overrides:
+        High energy/defense exposure: 0.14
+        Moderate exposure: 0.26
+        Diversified/low exposure: 0.38
+        No investments: 0.22
+      probability_override: null
+    - when: household_income >= 150000
+      multiply: null
+      add: null
+      weight_overrides:
+        High energy/defense exposure: 0.22
+        Moderate exposure: 0.42
+        Diversified/low exposure: 0.32
+        No investments: 0.04
+      probability_override: null
+    - when: household_income < 40000
+      multiply: null
+      add: null
+      weight_overrides:
+        High energy/defense exposure: 0.03
+        Moderate exposure: 0.05
+        Diversified/low exposure: 0.08
+        No investments: 0.84
+      probability_override: null
+  grounding:
+    level: medium
+    method: extrapolated
+    source: 'Fed Survey of Consumer Finances 2022: ~55% of US adults have some investment
+      exposure (401k, IRA, brokerage). FINRA 2024 National Financial Capability Study:
+      ~53% own stocks or mutual funds. Energy sector represents ~4-5% of S&P 500;
+      most retail investors are broadly diversified. Active traders and crypto holders
+      more likely to have sector bets.'
+    note: No investments base rate ~45% from investment_profile distribution. High
+      energy/defense exposure concentrated among active traders and self-employed
+      in energy-adjacent industries. Modifier should align closely with investment_profile
+      (No investments -> No investments; 401k/IRA only -> mostly diversified/low;
+      active trader -> higher energy/defense probability).
+  constraints:
+  - type: spec_expression
+    value: null
+    expression: abs(sum(weights) - 1.0) < 0.01
+    reason: Weights must sum to 1
+- name: war_escalation_fear
+  type: float
+  category: population_specific
+  description: Level of personal fear that the Iran conflict will escalate into a
+    broader regional or world war (0=no fear, 1=extreme fear).
+  scope: individual
+  semantic_type: null
+  identity_type: null
+  display_format: null
+  sampling:
+    strategy: conditional
+    distribution:
+      type: beta
+      alpha: 3.5
+      beta: 2.0
+      min: 0.0
+      max: 1.0
+      min_formula: null
+      max_formula: null
+    formula: null
+    depends_on:
+    - neuroticism
+    - iran_strike_approval
+    - military_connection
+    modifiers:
+    - when: neuroticism > 0.7
+      multiply: 1.0
+      add: 0.15
+      weight_overrides: null
+      probability_override: null
+    - when: neuroticism < 0.3
+      multiply: 1.0
+      add: -0.12
+      weight_overrides: null
+      probability_override: null
+    - when: iran_strike_approval == 'Strongly disapprove'
+      multiply: 1.0
+      add: 0.22
+      weight_overrides: null
+      probability_override: null
+    - when: iran_strike_approval == 'Somewhat disapprove'
+      multiply: 1.0
+      add: 0.12
+      weight_overrides: null
+      probability_override: null
+    - when: iran_strike_approval == 'Strongly approve'
+      multiply: 1.0
+      add: -0.18
+      weight_overrides: null
+      probability_override: null
+    - when: iran_strike_approval == 'Somewhat approve'
+      multiply: 1.0
+      add: -0.08
+      weight_overrides: null
+      probability_override: null
+    - when: military_connection == 'Active duty'
+      multiply: 1.0
+      add: 0.1
+      weight_overrides: null
+      probability_override: null
+    - when: military_connection == 'Immediate family member'
+      multiply: 1.0
+      add: 0.14
+      weight_overrides: null
+      probability_override: null
+    - when: military_connection == 'Veteran'
+      multiply: 1.0
+      add: 0.05
+      weight_overrides: null
+      probability_override: null
+    - when: military_connection == 'No connection'
+      multiply: 1.0
+      add: 0.08
+      weight_overrides: null
+      probability_override: null
+  grounding:
+    level: strong
+    method: researched
+    source: 'YouGov Jun 2025: 66% say bombing ''somewhat or very likely'' to lead
+      wider war. Marist/NPR/PBS Jun 2025: 75% concerned or very concerned about Iranian
+      retaliation. Reuters/Ipsos Jun 2025: 79% worried Iran may target US civilians,
+      84% worried about the growing conflict. CBS/YouGov: bipartisan concern about
+      wider war.'
+    note: Beta(3.5, 2.0) yields mean ~0.636, reflecting the observed ~66-75% range
+      of elevated fear. Right-skewed toward higher fear, consistent with broad public
+      anxiety across partisan lines. Modifiers for neuroticism (upward), iran_strike_approval
+      (disapprovers more fearful), and military_connection (immediate family upward)
+      will adjust.
+  constraints:
+  - type: hard_min
+    value: 0.0
+    expression: null
+    reason: Fear is bounded at zero
+  - type: hard_max
+    value: 1.0
+    expression: null
+    reason: Fear is bounded at 1
+- name: reservist_or_national_guard
+  type: boolean
+  category: population_specific
+  description: Whether the individual is currently a US military reservist or National
+    Guard member subject to potential mobilization.
+  scope: individual
+  semantic_type: null
+  identity_type: null
+  display_format: null
+  sampling:
+    strategy: conditional
+    distribution:
+      type: boolean
+      probability_true: 0.004
+    formula: null
+    depends_on:
+    - age
+    - military_connection
+    modifiers:
+    - when: military_connection == 'Active duty'
+      multiply: null
+      add: null
+      weight_overrides: null
+      probability_override: 0.35
+    - when: military_connection == 'Veteran'
+      multiply: null
+      add: null
+      weight_overrides: null
+      probability_override: 0.12
+    - when: military_connection == 'Immediate family member'
+      multiply: null
+      add: null
+      weight_overrides: null
+      probability_override: 0.08
+    - when: military_connection == 'Extended family/friend'
+      multiply: null
+      add: null
+      weight_overrides: null
+      probability_override: 0.04
+    - when: military_connection == 'No connection'
+      multiply: null
+      add: null
+      weight_overrides: null
+      probability_override: 0.01
+    - when: age > 55
+      multiply: null
+      add: null
+      weight_overrides: null
+      probability_override: 0.01
+    - when: age >= 18 and age <= 40
+      multiply: null
+      add: null
+      weight_overrides: null
+      probability_override: 0.06
+    - when: age > 60
+      multiply: null
+      add: null
+      weight_overrides: null
+      probability_override: 0.0
+  grounding:
+    level: strong
+    method: researched
+    source: 'DoD 2024 Demographics: ~765,000 total National Guard and Reserve personnel
+      (USAFacts). US adult population ~260M. 765,000/260,000,000 = ~0.29%. Adjusted
+      upward slightly to 0.4% to account for the 18-60 age band in this population
+      (restricting to mobilization-eligible adults).'
+    note: 'Extremely low base rate (~0.4% of adults). Must be conditioned on military_connection:
+      ''Active duty'' and ''Veteran'' have near-zero probability (already served or
+      serving differently); ''Immediate family member'' has elevated probability.
+      Age constraint: reservists must be under mandatory retirement age (~60). The
+      Pentagon calling up 30,000 reservists in Week 5 would affect this small slice.'
+  constraints:
+  - type: expression
+    value: null
+    expression: not (reservist_or_national_guard == True and age > 60)
+    reason: Mandatory retirement age for most reserve components is 60; very few serving
+      reservists are above 60
+- name: crisis_midterm_vote_shift
+  type: categorical
+  category: population_specific
+  description: Direction the Iran crisis has shifted the individual's midterm voting
+    intention compared to pre-crisis baseline (More Republican, Unchanged, More Democratic,
+    Disengaged/withdrawn).
+  scope: individual
+  semantic_type: null
+  identity_type: null
+  display_format: null
+  sampling:
+    strategy: conditional
+    distribution:
+      type: categorical
+      options:
+      - More Republican
+      - Unchanged
+      - More Democratic
+      - Disengaged/withdrawn
+      weights:
+      - 0.22
+      - 0.4
+      - 0.24
+      - 0.14
+    formula: null
+    depends_on:
+    - iran_strike_approval
+    - economic_anxiety
+    - political_identity
+    modifiers:
+    - when: iran_strike_approval == 'Strongly approve'
+      multiply: null
+      add: null
+      weight_overrides:
+        More Republican: 0.62
+        Unchanged: 0.28
+        More Democratic: 0.04
+        Disengaged/withdrawn: 0.06
+      probability_override: null
+    - when: iran_strike_approval == 'Somewhat approve'
+      multiply: null
+      add: null
+      weight_overrides:
+        More Republican: 0.35
+        Unchanged: 0.45
+        More Democratic: 0.1
+        Disengaged/withdrawn: 0.1
+      probability_override: null
+    - when: iran_strike_approval == 'Somewhat disapprove'
+      multiply: null
+      add: null
+      weight_overrides:
+        More Republican: 0.06
+        Unchanged: 0.35
+        More Democratic: 0.4
+        Disengaged/withdrawn: 0.19
+      probability_override: null
+    - when: iran_strike_approval == 'Strongly disapprove'
+      multiply: null
+      add: null
+      weight_overrides:
+        More Republican: 0.03
+        Unchanged: 0.2
+        More Democratic: 0.62
+        Disengaged/withdrawn: 0.15
+      probability_override: null
+    - when: iran_strike_approval == 'No opinion'
+      multiply: null
+      add: null
+      weight_overrides:
+        More Republican: 0.08
+        Unchanged: 0.42
+        More Democratic: 0.08
+        Disengaged/withdrawn: 0.42
+      probability_override: null
+    - when: economic_anxiety > 0.75
+      multiply: null
+      add: null
+      weight_overrides:
+        More Republican: 0.14
+        Unchanged: 0.24
+        More Democratic: 0.38
+        Disengaged/withdrawn: 0.24
+      probability_override: null
+    - when: political_identity == 'True Independent'
+      multiply: null
+      add: null
+      weight_overrides:
+        More Republican: 0.14
+        Unchanged: 0.3
+        More Democratic: 0.2
+        Disengaged/withdrawn: 0.36
+      probability_override: null
+    - when: political_identity == 'Strong Republican'
+      multiply: null
+      add: null
+      weight_overrides:
+        More Republican: 0.55
+        Unchanged: 0.35
+        More Democratic: 0.03
+        Disengaged/withdrawn: 0.07
+      probability_override: null
+    - when: political_identity == 'Strong Democrat'
+      multiply: null
+      add: null
+      weight_overrides:
+        More Republican: 0.02
+        Unchanged: 0.22
+        More Democratic: 0.68
+        Disengaged/withdrawn: 0.08
+      probability_override: null
+  grounding:
+    level: medium
+    method: extrapolated
+    source: 'Historical analogs: rally-around-the-flag effects post-military action
+      (Iraq 2003, post-9/11) typically boost incumbent party 5-10 points initially,
+      then decay as economic costs mount. At Week 8-12 with 8.5% inflation, consumer
+      confidence at 2008 lows, and 400K+ job losses, economic backlash typically dominates.
+      Gallup/Pew historical data on economic voting and war fatigue.'
+    note: 'Base distribution at Week 8-12 reflects decayed rally effect and rising
+      economic discontent. Strong modifiers: iran_strike_approval (strongly approve
+      -> More Republican; strongly disapprove -> More Democratic), economic_anxiety
+      (high anxiety -> More Democratic or Disengaged), political_identity (strong
+      partisans unchanged or reinforced). ''Disengaged/withdrawn'' captures war-weary
+      depressors of turnout.'
+  constraints:
+  - type: spec_expression
+    value: null
+    expression: abs(sum(weights) - 1.0) < 0.01
+    reason: Weights must sum to 1
+- name: protest_participation_propensity
+  type: categorical
+  category: population_specific
+  description: Likelihood of participating in anti-war or pro-strike public demonstrations
+    in response to the crisis (Very likely, Somewhat likely, Unlikely, Would not participate).
+  scope: individual
+  semantic_type: null
+  identity_type: null
+  display_format: null
+  sampling:
+    strategy: conditional
+    distribution:
+      type: categorical
+      options:
+      - Very likely
+      - Somewhat likely
+      - Unlikely
+      - Would not participate
+      weights:
+      - 0.06
+      - 0.12
+      - 0.24
+      - 0.58
+    formula: null
+    depends_on:
+    - political_engagement_level
+    - iran_strike_approval
+    - extraversion
+    modifiers:
+    - when: political_engagement_level == 'Highly engaged partisan'
+      multiply: null
+      add: null
+      weight_overrides:
+        Very likely: 0.28
+        Somewhat likely: 0.3
+        Unlikely: 0.24
+        Would not participate: 0.18
+      probability_override: null
+    - when: political_engagement_level == 'Moderate/occasional participant'
+      multiply: null
+      add: null
+      weight_overrides:
+        Very likely: 0.08
+        Somewhat likely: 0.18
+        Unlikely: 0.38
+        Would not participate: 0.36
+      probability_override: null
+    - when: political_engagement_level == 'Single-issue voter'
+      multiply: null
+      add: null
+      weight_overrides:
+        Very likely: 0.05
+        Somewhat likely: 0.12
+        Unlikely: 0.34
+        Would not participate: 0.49
+      probability_override: null
+    - when: political_engagement_level == 'Disengaged'
+      multiply: null
+      add: null
+      weight_overrides:
+        Very likely: 0.02
+        Somewhat likely: 0.05
+        Unlikely: 0.2
+        Would not participate: 0.73
+      probability_override: null
+    - when: iran_strike_approval == 'Strongly disapprove'
+      multiply: null
+      add: null
+      weight_overrides:
+        Very likely: 0.22
+        Somewhat likely: 0.28
+        Unlikely: 0.28
+        Would not participate: 0.22
+      probability_override: null
+    - when: iran_strike_approval == 'Strongly approve'
+      multiply: null
+      add: null
+      weight_overrides:
+        Very likely: 0.1
+        Somewhat likely: 0.16
+        Unlikely: 0.28
+        Would not participate: 0.46
+      probability_override: null
+    - when: iran_strike_approval == 'No opinion'
+      multiply: null
+      add: null
+      weight_overrides:
+        Very likely: 0.02
+        Somewhat likely: 0.06
+        Unlikely: 0.24
+        Would not participate: 0.68
+      probability_override: null
+    - when: extraversion > 0.7
+      multiply: null
+      add: null
+      weight_overrides:
+        Very likely: 0.18
+        Somewhat likely: 0.26
+        Unlikely: 0.3
+        Would not participate: 0.26
+      probability_override: null
+    - when: extraversion < 0.3
+      multiply: null
+      add: null
+      weight_overrides:
+        Very likely: 0.04
+        Somewhat likely: 0.1
+        Unlikely: 0.28
+        Would not participate: 0.58
+      probability_override: null
+  grounding:
+    level: medium
+    method: extrapolated
+    source: 'Pew Research 2020: ~6% of US adults attended a protest in past year.
+      BLM peak 2020 saw ~15-26M participants (upper bound). Anti-Iraq War protests
+      2003 drew ~500K-3M total. Anti-war sentiment post-Iran strikes produced protests
+      in major cities (scenario text). Typical protest participation in US: 5-10%
+      of adults in high-salience events.'
+    note: 'Base ~18% ''likely'' (very+somewhat) is elevated above peacetime baseline,
+      reflecting the high salience of the Iran conflict. Both anti-war protesters
+      (disapprovers) and pro-strike ralliers (approvers) contribute. Key modifiers:
+      political_engagement_level (highly engaged partisan -> much higher propensity),
+      iran_strike_approval (strong disapprovers lean anti-war protest), extraversion
+      (higher extraversion -> more likely to attend).'
+  constraints:
+  - type: spec_expression
+    value: null
+    expression: abs(sum(weights) - 1.0) < 0.01
+    reason: Weights must sum to 1
+household_config:
+  age_brackets:
+  - - 21
+    - 18-20
+  - - 30
+    - 21-29
+  - - 45
+    - 30-44
+  - - 65
+    - 45-64
+  - - 999
+    - 65-80
+  household_type_weights:
+    18-20:
+      single: 0.88
+      couple: 0.06
+      single_parent: 0.01
+      couple_with_kids: 0.0
+      multi_generational: 0.05
+    21-29:
+      single: 0.53
+      couple: 0.24
+      single_parent: 0.06
+      couple_with_kids: 0.05
+      multi_generational: 0.12
+    30-44:
+      single: 0.22
+      couple: 0.22
+      single_parent: 0.14
+      couple_with_kids: 0.36
+      multi_generational: 0.06
+    45-64:
+      single: 0.28
+      couple: 0.4
+      single_parent: 0.08
+      couple_with_kids: 0.14
+      multi_generational: 0.1
+    65-80:
+      single: 0.38
+      couple: 0.48
+      single_parent: 0.03
+      couple_with_kids: 0.02
+      multi_generational: 0.09
+  same_group_rates:
+    white: 0.91
+    black: 0.83
+    hispanic: 0.82
+    asian: 0.79
+    native_american: 0.54
+    multiracial: 0.38
+  default_same_group_rate: 0.72
+  same_country_rate: 0.95
+  assortative_mating:
+    education_level: 0.64
+    household_income: 0.6
+    political_identity: 0.72
+    religious_engagement: 0.71
+    race_ethnicity: 0.85
+    urban_rural: 0.68
+    us_region: 0.74
+    age: 0.78
+    institutional_trust: 0.58
+    vote_2024_presidential: 0.76
+    primary_info_source: 0.55
+    social_media_behavior: 0.48
+    tech_adoption_posture: 0.45
+    risk_tolerance: 0.42
+    consumer_identity: 0.4
+    openness: 0.35
+    conscientiousness: 0.38
+    agreeableness: 0.36
+    neuroticism: 0.32
+    extraversion: 0.3
+    has_children: 0.8
+    marital_status: 0.88
+    employment_sector: 0.34
+    financial_margin: 0.52
+    economic_anxiety: 0.56
+    investment_profile: 0.5
+    mideast_policy_hawkishness: 0.65
+    iran_strike_approval: 0.68
+    war_escalation_fear: 0.6
+    nuclear_iran_threat_perception: 0.62
+    top_issue_2026: 0.55
+    midterm_turnout_propensity: 0.58
+    political_engagement_level: 0.54
+    military_connection: 0.62
+    reservist_or_national_guard: 0.7
+    energy_cost_burden: 0.46
+    supply_chain_job_exposure: 0.38
+    portfolio_energy_exposure: 0.44
+    job_security_perception: 0.41
+    crisis_midterm_vote_shift: 0.58
+    country_direction_approval: 0.66
+    protest_participation_propensity: 0.5
+    congressional_district_competitiveness: 0.72
+    daily_commute_miles: 0.45
+    household_size: 0.65
+  partner_gender_mode: weighted
+  partner_gender_pair_weights:
+  - left: Male
+    right: Female
+    weight: 0.931
+  - left: Male
+    right: Male
+    weight: 0.031
+  - left: Female
+    right: Female
+    weight: 0.028
+  - left: Male
+    right: Non-binary/Other
+    weight: 0.005
+  - left: Female
+    right: Non-binary/Other
+    weight: 0.005
+  partner_age_gap_mean: -2.3
+  partner_age_gap_std: 4.8
+  min_adult_age: 21
+  min_agent_age: 13
+  child_min_parent_offset: 18
+  child_max_parent_offset: 45
+  max_dependent_child_age: 17
+  elderly_min_offset: 20
+  elderly_max_offset: 45
+  max_elderly_dependent_age: 105
+  life_stages:
+  - max_age: 5
+    label: preschool
+  - max_age: 11
+    label: elementary
+  - max_age: 14
+    label: middle_school
+  - max_age: 18
+    label: high_school
+  adult_stage_label: adult
+  avg_household_size: 2.51
+agent_focus_mode: couples
+identity_dimensions:
+- dimension: political_orientation
+  relevance: The strikes and their aftermath are immediately and intensely partisan
+    — Republicans and Democrats are actively constructing competing narratives about
+    whether the war was justified and who is to blame for the economic fallout, with
+    the 2026 midterms making political identity a primary lens through which every
+    development is processed.
+- dimension: religious_affiliation
+  relevance: The conflict involves a predominantly Muslim nation and activates faith-based
+    moral frameworks around just war, civilian harm, and solidarity — particularly
+    for American Muslims and Iranian-Americans with religious ties, as well as Christian,
+    Jewish, and other communities with differing theological views on military force
+    and Middle East geopolitics.
+- dimension: race_ethnicity
+  relevance: Iranian-Americans and Arab-Americans face heightened vulnerability to
+    xenophobia, profiling, and social hostility during a hot conflict with Iran, while
+    broader Middle Eastern and Muslim communities may experience collective identity
+    threat; racial disparities in economic burden (e.g., food and fuel price spikes)
+    also disproportionately impact communities of color.
+- dimension: citizenship
+  relevance: Iranian nationals, dual citizens, and Iranian-Americans face acute identity
+    threat around national loyalty, potential visa or travel restrictions, family
+    separation from relatives in Iran, and the conflation of ethnic/national origin
+    with enemy status — a historically recurring dynamic in US wartime.
+- dimension: socioeconomic_class
+  relevance: The energy and food price shocks ($6.20+/gallon gas, 15% food price increases,
+    400,000 job losses) fall most heavily on working-class and lower-income Americans
+    for whom fuel and groceries represent a large share of household budgets, making
+    class identity a sharp fault line in how the crisis is experienced and resented.
+- dimension: professional_identity
+  relevance: Military service members and their families face direct life-and-death
+    stakes (23 killed, 47,000+ reservists called up); truckers, airline workers, energy
+    sector employees, and supply chain workers face job losses and surcharges that
+    threaten their occupational identity and livelihood; and foreign policy, intelligence,
+    and diplomatic professionals face questions about institutional competence and
+    moral responsibility.
+- dimension: parental_status
+  relevance: Parents of active-duty service members and reservists face existential
+    fear as 30,000 reservists are called up and casualties mount; parents more broadly
+    are activated by anxiety over the economic future their children will inherit,
+    including 8.5% inflation and an $800 billion crisis cost.
+- dimension: generational_identity
+  relevance: Younger Americans (Gen Z, younger Millennials) who have no adult memory
+    of pre-post-9/11 'forever war' fatigue are confronting a new major conflict during
+    a period of already-elevated economic precarity, while older generations (Boomers,
+    older Gen X) filter the crisis through Cold War, Gulf War, or Iraq War frameworks
+    — producing sharply different intuitions about necessity, risk, and acceptable
+    cost.
+sampling_semantic_roles:
+  marital_roles:
+    attr: marital_status
+    partnered_values:
+    - Married/partnered
+    single_values:
+    - Single
+    - Divorced/separated
+    - Widowed
+  geo_roles:
+    country_attr: country
+    region_attr: us_region
+    urbanicity_attr: urban_rural
+  partner_correlation_roles:
+    race_ethnicity: same_group_rate
+    education_level: same_group_rate
+    religious_engagement: same_group_rate
+    political_identity: same_group_rate
+  school_parent_role:
+    dependents_attr: has_children
+    school_age_values: []
+  religion_roles:
+    religion_attr: religious_engagement
+    secular_values:
+    - Secular/None
+  household_roles:
+    household_size_attr: household_size
