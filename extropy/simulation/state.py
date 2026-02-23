@@ -174,12 +174,16 @@ class StateManager:
             ON exposures(run_id, timestep)
         """
         )
-        cursor.execute(
+        # Legacy DBs may not have force_rereason/info_epoch yet; migration adds them.
+        try:
+            cursor.execute(
+                """
+                CREATE INDEX IF NOT EXISTS idx_exposures_force_epoch
+                ON exposures(run_id, agent_id, force_rereason, info_epoch)
             """
-            CREATE INDEX IF NOT EXISTS idx_exposures_force_epoch
-            ON exposures(run_id, agent_id, force_rereason, info_epoch)
-        """
-        )
+            )
+        except sqlite3.OperationalError:
+            pass
         cursor.execute(
             """
             CREATE INDEX IF NOT EXISTS idx_timeline_timestep

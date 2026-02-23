@@ -119,6 +119,10 @@ For this population, provide statistically grounded values for:
 - Adapt household types and education stages to the local context (e.g., Japanese education system stages differ from US).
 - Be specific to the population described, not generic global averages.
 - Ensure household_type_weights sum to ~1.0 for each age bracket.
+- Young-adult realism guardrail: for the earliest adult bracket (typically ages 18-20),
+  keep partnered household and parent-household shares conservative by default unless
+  strong local evidence supports higher rates. If you set higher rates, ensure they
+  are explicitly justified by cited sources.
 - If data is unavailable for a specific field, use the best available regional or national data.
 
 Return a single JSON object with all fields."""

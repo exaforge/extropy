@@ -13,7 +13,7 @@ It is meant to be reusable team memory for:
 
 This is not a patch plan. It is a contract + current-state reality map.
 
-## Status Update (2026-02-20)
+## Status Update (2026-02-23)
 - Merged sampling order now recomputes topologically across base + extension attributes.
 - Post-household reconciliation now deterministically aligns:
   - marital/partner coherence
@@ -209,25 +209,31 @@ This section describes actual behavior in code today.
 3. load scenario YAML,
 4. load base population referenced by `scenario.meta.base_population`/`population_spec`,
 5. merge `extended_attributes` onto base attributes,
-6. build merged sampling order by appending missing extension names to base order,
+6. build merged sampling order with deterministic topological sort over merged dependencies,
 7. validate merged spec via `validate_spec` (unless `--skip-validation`),
-8. call `sample_population(...)` with scenario `household_config` + `agent_focus_mode`,
-9. save result to `study.db`.
+8. optional strict pre-sample gate (`--strict-gates`) that promotes high-risk warnings,
+9. call `sample_population(...)` with scenario `household_config` + `agent_focus_mode` + `sampling_semantic_roles`,
+10. apply post-sampling deterministic rule-pack gate (impossible/implausible),
+11. save result to `study.db`.
 
 Primary file:
 - `extropy/cli/commands/sample.py`
 
 ### Merge behavior in command
-Current merge is simple list merge:
+Current merge is:
 - `merged_attributes = base_attributes + extended_attributes`
-- `merged_sampling_order = base_order + [extension names not already present]`
+- `merged_sampling_order = topological_sort(merged_dependencies)`
 
-No merged topological recomputation is performed in this command.
+If merged dependencies are cyclic, command fails before sampling and writes versioned invalid JSON diagnostics.
 
 ### Validation gate behavior
 Validation uses population validator (structural errors + semantic warnings):
 - structural failures block sampling unless `--skip-validation`.
 - warnings do not block.
+
+Strict mode behavior (`--strict-gates`):
+- pre-sample: promotes warning categories `CONDITION_VALUE` and `MODIFIER_OVERLAP` to hard block,
+- post-sample: fails if `condition_warnings` are present.
 
 Primary files:
 - `extropy/population/validator/spec.py`
@@ -261,10 +267,10 @@ Primary files:
 
 ### Modifier behavior (actual)
 - Numeric distributions: all matching modifiers stack (`multiply` product + `add` sum), then reclamp to min/max bounds.
-- Categorical: last matching `weight_overrides` wins.
-- Boolean: last matching `probability_override` wins; otherwise multiply/add transforms base probability, then clamp `[0,1]`.
+- Categorical: one deterministic winner is selected via precedence logic (subset/specificity/order), then that rule's `weight_overrides` apply.
+- Boolean: one deterministic winner is selected; apply `probability_override` or winner multiply/add transform, then clamp `[0,1]`.
 
-Modifier condition evaluation failures are logged and ignored for that modifier.
+Modifier condition evaluation failures are logged and surfaced into `stats.condition_warnings` (capped to avoid unbounded growth).
 
 ### Type coercion behavior
 Sampler coerces sampled values to declared `attr.type`:
@@ -280,6 +286,7 @@ Current runtime constraint handling is split:
 - `spec_expression` constraints are not run against agents (treated as spec-level only).
 
 Expression check exceptions are swallowed for the affected constraint evaluation.
+CLI rule-pack treats non-zero expression-constraint violations as impossible and fail-hard.
 
 ### Household sampling behavior
 When household mode is active:
@@ -305,11 +312,10 @@ Promoted dependent agents (minors) undergo normalization using attribute `semant
 This is deterministic rule-based normalization in sampler core.
 
 ### Partner correlation behavior
-For `scope="partner_correlated"`, partner value generation uses:
-- special case `age`: gaussian age-gap logic from `HouseholdConfig`.
-- special case `race/ethnicity`: same-group rates.
-- special case `country`: same-country rate.
-- fallback: assortative-mating table lookup or default same-group rate.
+For correlated partner fields, runtime uses policy resolution:
+- explicit scenario semantic-role override (`sampling_semantic_roles.partner_correlation_roles`) if present,
+- otherwise semantic/identity/default policy resolution (`gaussian_offset`, `same_group_rate`, `same_country_rate`, `same_value_probability`),
+- then deterministic fallback rates from `HouseholdConfig`.
 
 ### Name generation behavior
 Names are generated during sampling, not in `spec`/`scenario` writing.
@@ -330,9 +336,11 @@ Sampler collects:
 - categorical counts,
 - boolean counts,
 - modifier trigger counts,
-- expression constraint violation counts.
+- expression constraint violation counts,
+- condition-evaluation warnings,
+- household reconciliation counters.
 
-Model also has `condition_warnings`, but sampler currently does not populate it.
+CLI post-processing adds rule-pack summary (`pass/warn/fail`) into sampling stats for machine-readable backpressure.
 
 Primary file:
 - `extropy/core/models/sampling.py`
@@ -402,61 +410,43 @@ Agent-level expression violations are counted and exposed in stats (not silently
 
 ## Divergences, Mistakes, and Risk Areas
 
-### 1) Merged sampling order is append-based, not recomputed
-The command appends extension attributes to base sampling order instead of recomputing full merged topological order.
-
-Risk:
-- extension-to-extension dependency order can be fragile if extension list order is not dependency-safe.
-
-### 2) Scenario binder output `sampling_order` is not persisted/used by `sample`
-Scenario creation computes extension sampling order via binder, but `sample` does not consume a dedicated extension order artifact.
-
-Risk:
-- compile-time dependency resolution work may be partially dropped at execution boundary.
-
-### 3) Household activation tied only to `scope="household"`
+### 1) Household activation tied only to `scope="household"`
 Sampler switches to household mode only if at least one household-scoped attribute exists.
 
 Risk:
 - scenario may provide household config/focus mode but not trigger household mode if scope annotations are missing or inconsistent.
 
-### 4) Persona is required as pre-flight for `sample`
+### 2) Persona is required as pre-flight for `sample`
 Current command requires persona config before sampling even though sampler core does not depend on persona content.
 
 Risk:
 - operational coupling can block sampling workflows unrelated to sampler logic.
 
-### 5) Name field shape mismatch risk in NPC partner usage
+### 3) Name field shape mismatch risk in NPC partner usage
 Sampler writes NPC partner fields with `first_name`/`last_name` style semantics, while parts of simulation conversation/contact logic look for `partner_npc.name` in several paths.
 
 Risk:
 - household NPC addressing and partner reference resolution can degrade.
 
-### 6) Partner key mismatch risk in simulation contact paths
+### 4) Partner key mismatch risk in simulation contact paths
 Sampler uses `partner_id`; parts of simulation contact/conversation logic also check `partner_agent_id`.
 
 Risk:
 - some partner-as-agent references may not resolve uniformly.
 
-### 7) Condition warning channel is modeled but unused
-`SamplingStats.condition_warnings` exists in model but is not currently populated by sampler.
+### 5) Expression constraint failures are counted post-hoc, not repaired
+Expression constraints are checked after sampling and can fail-hard via rule-pack.
 
 Risk:
-- reduced observability when modifier conditions fail frequently or unexpectedly.
+- impossible violations fail via rule-pack gate, but sampler does not attempt automated repair/resample before failing.
 
-### 8) Expression constraint failures are counted post-hoc, not gating
-Expression constraints currently contribute diagnostics but do not block run completion.
-
-Risk:
-- samples with significant inconsistency may proceed downstream unless external gates inspect stats.
-
-### 9) Type coercion can mask upstream categorical/schema drift
+### 6) Type coercion can mask upstream categorical/schema drift
 Aggressive coercion (e.g., stripping symbols from numeric-like strings) keeps sampling alive.
 
 Risk:
 - upstream naming/schema mismatches may appear to "work" while distorting semantics.
 
-### 10) Persistence identity uses backward-compat population keying
+### 7) Persistence identity uses backward-compat population keying
 Sample saves population spec under `population_id=scenario_name` backward-compat behavior.
 
 Risk:
@@ -467,7 +457,8 @@ Risk:
 ## How It Can Be Made Better (Direction, Not Patch Plan)
 
 ### Promote merged-order contract as first-class artifact
-Make merged dependency-safe order explicit and enforced at sample runtime.
+Merged dependency-safe order is now explicit and enforced at sample runtime.
+Remaining improvement is surfacing richer diagnostics when dependency-quality is weak upstream.
 
 ### Strengthen mismatch diagnostics
 Expose dedicated machine-readable warnings for token/key mismatches and condition failures.

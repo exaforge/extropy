@@ -12,7 +12,7 @@ Its job is to make one thing unambiguous for people and agents working on the pi
 
 This is not a patch list. It is a stage contract + current-state reality map.
 
-## Status Update (2026-02-20)
+## Status Update (2026-02-23)
 - Scenario creation now enforces non-empty `extended_attributes` as a hard contract.
 - Scenario validation in create-flow is now real validation (not light-pass placeholder).
 - Attribute reference validation uses merged namespace (`base population ∪ scenario extension`).
@@ -20,8 +20,12 @@ This is not a patch list. It is a stage contract + current-state reality map.
   - `seed_exposure.rules`
   - `spread.share_modifiers`
   - `timeline[*].exposure_rules`
+- Sufficiency post-processing now enforces timestep clarity:
+  - timeline markers (for example `week 1`, `month 0`) force `evolving`,
+  - static scenarios must provide an explicit timestep unit (or ask clarification).
 - Household/focus coherence checks are enforced for household-active scenarios.
 - Fail-hard scenario paths now emit versioned invalid artifacts (`*.invalid.vN.yaml` and JSON invalid diagnostics where applicable).
+- Agent-mode insufficiency now returns structured clarification payloads (exit code 2) instead of falling through generic validation errors.
 
 ---
 
@@ -264,8 +268,8 @@ This section describes actual code behavior now.
 3. extension hydration (`hydrate_attributes`),
 4. extension binding (`bind_constraints`),
 5. scenario config generation (`create_scenario_spec`),
-6. post-assembly field assignment for extension+household+focus mode,
-7. save.
+6. metadata finalization (`meta.name`, `meta.base_population`) + re-validation,
+7. save valid artifact or emit versioned invalid artifact and exit non-zero.
 
 Primary orchestration file:
 - `extropy/cli/commands/scenario.py`
@@ -281,7 +285,15 @@ Sufficiency model checks:
 Current behavior characteristics:
 - lenient sufficiency style,
 - user clarification loop supported,
-- inferred fields are mostly advisory for messaging except `agent_focus_mode` which is persisted after compile.
+- deterministic post-processing layers over LLM output:
+  - extracts unit hints from description and inferred duration,
+  - promotes explicit timeline markers to evolving mode,
+  - blocks static scenarios without explicit timestep unit by issuing a clarification question,
+- inferred fields are mostly advisory for messaging except `agent_focus_mode` and unit hints that feed compile defaults.
+
+In agent mode:
+- insufficiency returns structured clarification questions with exit code 2 (`needs_clarification`),
+- `--use-defaults` attempts a no-prompt re-check by applying question defaults.
 
 Primary file:
 - `extropy/scenario/sufficiency.py`
@@ -291,7 +303,6 @@ Scenario uses spec-builder primitives directly:
 - attribute selector in overlay mode with base attributes as context,
 - split hydrator pipeline (independent/derived/conditional/base+modifiers),
 - household config hydration (conditional),
-- name config hydration,
 - dependency binding with expression-based dependency inference.
 
 Primary files:
@@ -329,6 +340,13 @@ Scenario creation-time generation passes `network_summary=None` (no synthetic pl
 - `extropy/scenario/validator.py`
 
 `extropy scenario` checks validation errors before save. On fail-hard paths, it writes a versioned `.invalid` artifact and exits non-zero.
+
+Current validator focus areas include:
+- merged-namespace attribute reference checks (base + extension),
+- expression syntax checks for `when` rules,
+- literal compatibility checks against categorical options and boolean literals,
+- channel/timestep/outcome consistency checks,
+- household + `agent_focus_mode` coherence when household semantics are active.
 
 ### Assembly behavior for extension/household fields
 `extended_attributes`, `household_config`, and `agent_focus_mode` are passed into `create_scenario_spec` and emitted as part of the assembled `ScenarioSpec` contract.
@@ -368,7 +386,7 @@ This is one of the stronger semantic links between scenario and simulation.
 `sample` does:
 - load base population from scenario metadata,
 - merge `extended_attributes` into attributes list,
-- append extended attribute names to base sampling order if missing,
+- recompute merged sampling order with topological sort over merged dependencies,
 - pass scenario `household_config` and `agent_focus_mode` into sampler.
 
 Primary file:
@@ -476,9 +494,9 @@ Future quality gains are mostly about adding richer rule coverage, not wiring.
 Model supports fields like `experience_template` and `extraction_instructions`, but default generation often leaves them null.
 This is schema richness without guaranteed population of semantically useful hooks.
 
-### 6) Sampling order merge semantics are simplistic downstream
-Sample merges extension by appending missing names to base order.
-This can work, but does not guarantee a fully recomputed dependency-optimal merged order contract at this stage boundary.
+### 6) Merged-order correctness now depends on dependency quality
+Downstream now recomputes merged order with topological sort.
+Primary remaining risk is dependency quality from generated attributes (missing/wrong `depends_on`), not append-only ordering.
 
 ### 7) Network intent contract is implicit
 Scenario has spread/exposure semantics, but network config generation is primarily population-driven.

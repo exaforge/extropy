@@ -8,7 +8,11 @@ from pathlib import Path
 from typer.testing import CliRunner
 
 from extropy.cli.app import app
-from extropy.cli.commands.validate import _is_scenario_file
+from extropy.cli.commands.validate import (
+    _canonical_yaml_path_for_invalid,
+    _is_persona_file,
+    _is_scenario_file,
+)
 from extropy.population.network.config import NetworkConfig
 from extropy.storage import open_study_db
 
@@ -55,6 +59,55 @@ class TestValidateCommand:
         assert _is_scenario_file(Path("scenario.yaml"))
         assert _is_scenario_file(Path("foo.scenario.yaml"))
         assert not _is_scenario_file(Path("population.yaml"))
+
+    def test_invalid_filename_detection(self):
+        assert _is_scenario_file(Path("scenario.v1.invalid.v1.yaml"))
+        assert _is_persona_file(Path("persona.v1.invalid.v2.yaml"))
+        assert not _is_persona_file(Path("population.v1.invalid.v1.yaml"))
+
+    def test_invalid_path_canonicalization(self):
+        p = Path("scenario.v4.invalid.v3.yaml")
+        canonical = _canonical_yaml_path_for_invalid(p)
+        assert canonical is not None
+        assert canonical.name == "scenario.v4.yaml"
+
+    def test_validate_promotes_invalid_population_file(self, tmp_path):
+        invalid_pop = tmp_path / "population.v1.invalid.v1.yaml"
+        invalid_pop.write_text("""
+meta:
+  description: Test population
+  geography: USA
+
+grounding:
+  overall: low
+  sources_count: 0
+  strong_count: 0
+  medium_count: 0
+  low_count: 1
+
+attributes:
+  - name: age
+    type: int
+    category: universal
+    description: Age in years
+    sampling:
+      strategy: independent
+      distribution:
+        type: uniform
+        min: 18
+        max: 65
+    grounding:
+      level: low
+      method: estimated
+
+sampling_order:
+  - age
+""")
+
+        result = runner.invoke(app, ["validate", str(invalid_pop)])
+        assert result.exit_code == 0, result.output
+        assert not invalid_pop.exists()
+        assert (tmp_path / "population.v1.yaml").exists()
 
 
 class TestVersionFlag:

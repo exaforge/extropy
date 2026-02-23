@@ -190,19 +190,12 @@ def scenario_command(
         questions = sufficiency_result.questions
 
         if agent_mode:
-            out.error(
-                "Scenario description insufficient",
-                exit_code=ExitCode.CLARIFICATION_NEEDED,
-                questions=[
-                    {
-                        "id": q.id,
-                        "question": q.question,
-                        "type": q.type,
-                        "options": q.options,
-                        "default": q.default,
-                    }
-                    for q in questions
-                ],
+            resume_cmd = (
+                f'extropy scenario "{description}" -o {scenario_name} --use-defaults'
+            )
+            out.needs_clarification(
+                questions=questions,
+                resume_command=resume_cmd,
             )
             raise typer.Exit(out.finish())
 
@@ -450,6 +443,7 @@ def scenario_command(
     # - Scenario configuration (event, exposure, outcomes) will be generated on demand
 
     from ...scenario import create_scenario_spec
+    from ...scenario.validator import validate_scenario
 
     if not agent_mode:
         console.print()
@@ -525,6 +519,16 @@ def scenario_command(
     # Set metadata
     result_spec.meta.name = scenario_name
     result_spec.meta.base_population = f"population.v{pop_version}"
+
+    # Re-validate after metadata finalization.
+    # The initial validation occurs inside create_scenario_spec before CLI-level
+    # metadata (including base_population) is attached.
+    validation_result = validate_scenario(
+        spec=result_spec,
+        population_spec=pop_spec,
+        agent_count=None,
+        network=None,
+    )
 
     # Display Summary
     if not agent_mode:

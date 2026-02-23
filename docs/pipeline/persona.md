@@ -12,7 +12,7 @@ It is designed to be reusable team memory for:
 
 This is not a patch plan. It is a contract + current-state map.
 
-## Status Update (2026-02-20)
+## Status Update (2026-02-23)
 - `extropy validate` now routes persona files (`persona.vN.yaml`) through persona-specific validation.
 - Persona validation now checks:
   - merged-attribute treatment coverage
@@ -23,6 +23,7 @@ This is not a patch plan. It is a contract + current-state map.
   - mixed relative+concrete fallback for float-like relative attributes
   - strict skip of duplicate “Who I Am” group rendering
   - deterministic boolean phrase sanitation for token-like outputs
+- `validate` supports versioned invalid persona artifacts (`persona.vN.invalid.vK.yaml`) and promotes them to canonical path when validation passes.
 - Fail-hard persona generation/validation now emits versioned invalid artifacts.
 
 ---
@@ -280,7 +281,11 @@ Treatment/group assignment is prompt-driven and parsed into:
 - `AttributeTreatment`,
 - `AttributeGroup`.
 
-Current code does not run a dedicated cross-field validator that enforces strict one-to-one treatment/group coverage guarantees beyond what generator outputs.
+Current code runs dedicated cross-field validation (`validate_persona_config`) for:
+- exact treatment coverage over merged attributes,
+- group membership completeness and uniqueness,
+- unknown attribute references in groups,
+- intro-template placeholder reference validity.
 
 ### Stats behavior in code
 Persona command tries to load sampled agents from study DB:
@@ -391,19 +396,17 @@ Runtime path can foreground decision-relevant attributes from scenario outcomes.
 ### 1) `--preview` option is currently not functionally wired
 CLI exposes `--preview/--no-preview`, but current command flow does not implement a distinct preview gate behavior tied to that flag in generation path.
 
-### 2) No dedicated persona validation command/path
-There is no first-class persona validator analogous to spec/scenario validators.
-Quality assurance is mostly schema parsing + generator-local checks.
+### 2) Phrase realism remains mostly prompt-driven
+Structural validation is strong, but naturalness/readability quality (beyond token-like checks) still depends on prompt outputs.
+There is no strict machine score for "human-like narrative quality."
 
-### 3) Uneven enforcement across phrasing types
+### 3) Uneven generation-time enforcement across phrasing types
 Categorical has explicit retry/coverage validation.
 Other phrasing classes rely more on one-shot generation and schema shape.
 
-### 4) Treatment/group coverage is prompt-heavy
-Current flow does not centrally enforce strict invariants such as:
-- every merged attribute appears exactly once in treatments,
-- every treated attribute appears in exactly one group,
-- no unknown attributes in groups.
+### 4) Validation exists, but generation can still fail late
+Coverage issues are caught before save, but they are still discovered post-generation.
+This means failed generations can consume LLM calls before deterministic checks reject output.
 
 ### 5) Operational ordering rigidity
 `sample` requires persona config as a prerequisite even though persona stats can be backfilled later.
@@ -429,13 +432,9 @@ Backpressure for "sounds natural, not templated token noise" is not formalized a
 
 ## How It Can Be Made Better (Direction, Not Patch Plan)
 
-### Add contract-level persona validation
-Establish explicit checks for:
-- treatment coverage,
-- group coverage,
-- phrasing completeness,
-- unknown attribute references,
-- duplicate mappings.
+### Keep contract-level persona validation as hard gate
+Current explicit checks (coverage, group uniqueness, phrasing completeness, intro references)
+should remain non-optional in create and validate flows.
 
 ### Formalize quality bands for phrase realism
 Add machine-checkable heuristics for low-quality phrasing patterns (raw token leakage, template artifacts).
@@ -514,9 +513,9 @@ Current persona stage is directionally strong:
 - renderer is deterministic,
 - simulation integration is substantial.
 
-Main debt is contract enforcement completeness:
-- strong guardrails for categorical coverage,
-- weaker explicit invariants for full config coverage and cross-field consistency.
+Main debt is language-quality enforcement completeness:
+- structural invariants are now strongly enforced,
+- realism/naturalness scoring remains mostly heuristic and prompt-dependent.
 
 Given Extropy goals (realistic population + scenario + persona + network + simulation),
 persona is a high-leverage quality gate and should be treated as such in backpressure design.

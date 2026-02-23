@@ -13,7 +13,7 @@ If a team member or agent forgets prior context, this file should bring them bac
 
 This is not a patch plan and not a code-fix checklist. It is a contract + reality map.
 
-## Status Update (2026-02-20)
+## Status Update (2026-02-23)
 - Spec-stage hydration now runs with `include_household=False`.
 - Household config ownership is enforced at scenario stage; spec no longer does dead household hydration work.
 - Naming is Faker-first at sampling/runtime with deterministic seed and geography routing; CSV remains a safety fallback path.
@@ -281,6 +281,9 @@ Current sufficiency stage:
 Current selector:
 - uses reasoning LLM call with a strict JSON schema,
 - asks model to assign strategy, scope, dependencies, and optional semantic metadata,
+- canonicalizes returned attribute names to snake_case before model object creation,
+- fails fast if two different raw names collapse to the same canonical key,
+- coerces invalid strategy/dependency combos (`independent` + deps -> `conditional`; missing deps on conditional/derived -> `independent`),
 - injects Big Five traits when recommended and missing,
 - may inject `country` attribute for multi-country geographies.
 
@@ -290,8 +293,9 @@ Hydration is split:
 - 2b derived formulas via reasoning call,
 - 2c conditional base distributions via agentic research,
 - 2d conditional modifiers via agentic research,
-- 2e household config via agentic research (conditional trigger),
-- 2f name config via agentic research (skips US population heuristic).
+- 2e household config exists in shared hydrator but is explicitly disabled in `extropy spec` (`include_household=False`).
+
+There is no spec-stage name hydration call in the current flow. Name generation is runtime behavior in sampler/names modules.
 
 Hydration includes fail-fast validation callbacks and retry loops.
 
@@ -314,6 +318,7 @@ Validation currently combines:
 - semantic checks (warnings).
 
 Validation catches many shape and compatibility issues, but does not fully guarantee behavioral realism quality.
+When validation fails, `extropy spec` writes a versioned invalid artifact (`population.vN.invalid.vK.yaml`) and exits non-zero.
 
 ---
 
@@ -326,15 +331,15 @@ Scenario flow currently performs additive extension:
 
 ### Current household ownership in runtime
 Practical runtime ownership today:
-- base `spec` pipeline can research household config,
-- `extropy spec` explicitly ignores/stubs household config for base output,
+- shared hydrator has optional household research capability,
+- `extropy spec` explicitly disables household hydration and does not store household config in base output,
 - scenario stores household config and agent focus mode,
 - sampler consumes scenario-level household config and focus mode.
 
 ### Current merge model before sampling
 `sample` currently:
 - merges base + extended attributes,
-- appends extended names onto base sampling order if missing,
+- recomputes merged sampling order using dependency-aware topological sort over merged attributes,
 - samples with scenario-provided household/focus settings.
 
 This is the effective behavior today.
@@ -381,13 +386,13 @@ Risk:
 - resulting compiled behavior differs from model’s original intent without a hard failure.
 
 ### 4) Extension/sampling order assumptions
-Extension merges are currently append-oriented in CLI flow.
+Extension merge order is now recomputed with topological sort at sample time, but ordering semantics still depend on clean dependency declarations from upstream spec/scenario artifacts.
 
 Risk:
 - cross-layer dependency semantics can be fragile if extension expectations grow.
 
 ### 5) Household ownership ambiguity in build narrative
-Build path can hydrate household config during base flow, but final base stage ignores it and runtime ownership shifts to scenario.
+Shared hydrator internals still expose household research logic. Readers who only inspect hydrator code can misread ownership unless they also check stage wiring in CLI commands.
 
 Risk:
 - conceptual confusion across teams and agents unless boundary is explicit.
