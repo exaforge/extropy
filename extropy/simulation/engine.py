@@ -14,10 +14,8 @@ Implements Phase 0 redesign:
 
 import json
 import logging
-import queue
 import random
 import sqlite3
-import threading
 import time
 import uuid
 from datetime import datetime
@@ -553,25 +551,21 @@ class SimulationEngine:
             total_new_exposures, forced_reason_ids = self._apply_exposures(timestep)
         self.total_exposures += total_new_exposures
 
-        # 2. Chunked reasoning — each chunk has its own transaction
-        agents_reasoned, state_changes, shares_occurred, reasoning_results = (
-            self._reason_agents(timestep, forced_reason_ids=forced_reason_ids)
-        )
+        # 2. Chunked reasoning + in-timestep conversation interleaving
+        (
+            agents_reasoned,
+            state_changes,
+            shares_occurred,
+            reasoning_meta,
+        ) = self._reason_agents(timestep, forced_reason_ids=forced_reason_ids)
+        conversations_executed = reasoning_meta.get("conversations_executed", 0)
+        conversation_state_changes = reasoning_meta.get("conversation_state_changes", 0)
 
-        # 2c. Execute conversations (if fidelity > low)
-        conversations_executed = 0
-        conversation_state_changes = 0
-        if self.config.fidelity != "low" and reasoning_results:
-            conv_results = self._execute_conversations(timestep, reasoning_results)
-            conversations_executed = len(conv_results)
-            conversation_state_changes = self._apply_conversation_overrides(
-                timestep, conv_results
+        if conversations_executed > 0:
+            logger.info(
+                f"[TIMESTEP {timestep}] Conversations: {conversations_executed} executed, "
+                f"{conversation_state_changes} state changes"
             )
-            if conversations_executed > 0:
-                logger.info(
-                    f"[TIMESTEP {timestep}] Conversations: {conversations_executed} executed, "
-                    f"{conversation_state_changes} state changes"
-                )
 
         # 2e. Record social posts from agents who shared
         posts_recorded = self._record_social_posts(timestep)
@@ -603,7 +597,7 @@ class SimulationEngine:
             )
             summary.new_exposures = total_new_exposures
             summary.agents_reasoned = agents_reasoned
-            summary.state_changes = state_changes
+            summary.state_changes = state_changes + conversation_state_changes
             summary.shares_occurred = shares_occurred
 
             self.state_manager.save_timestep_summary(summary)
@@ -679,13 +673,23 @@ class SimulationEngine:
 
     def _reason_agents(
         self, timestep: int, forced_reason_ids: set[str] | None = None
-    ) -> tuple[int, int, int, list[tuple[str, ReasoningResponse | None]]]:
-        """Identify agents needing reasoning, run in chunks, commit per-chunk.
+    ) -> tuple[int, int, int, dict[str, int]]:
+        """Identify agents needing reasoning and process chunk-by-chunk.
+
+        For medium/high fidelity, each reasoning chunk is followed by a
+        conversation pass. This allows within-timestep social feedback to
+        influence later chunks without requiring extra global re-reason rounds.
 
         On resume, agents already processed this timestep are skipped.
 
         Returns:
-            Tuple of (agents_reasoned, state_changes, shares_occurred, reasoning_results).
+            Tuple of (
+                agents_reasoned,
+                state_changes,
+                shares_occurred,
+                metadata with conversation totals for this timestep
+                (conversations_executed, conversation_state_changes),
+            ).
         """
         self._apply_runtime_guardrails(timestep)
         agents_to_reason = self.state_manager.get_agents_to_reason(
@@ -717,7 +721,12 @@ class SimulationEngine:
             )
 
         if not agents_to_reason:
-            return 0, 0, 0, []
+            return (
+                0,
+                0,
+                0,
+                {"conversations_executed": 0, "conversation_state_changes": 0},
+            )
 
         # Create on_agent_done closure for progress tracking
         def _on_agent_done(agent_id: str, result: Any) -> None:
@@ -736,105 +745,41 @@ class SimulationEngine:
                 ):
                     self._log_verbose_summary(self._progress.snapshot())
 
-        # Build contexts and old states
-        contexts = []
-        old_states: dict[str, AgentState] = {}
-        for agent_id in agents_to_reason:
-            old_state = self.state_manager.get_agent_state(agent_id)
-            old_states[agent_id] = old_state
-            context = self._build_reasoning_context(agent_id, old_state, timestep)
-            contexts.append(context)
-
         completed_chunks = self.study_db.get_completed_simulation_chunks(
             self.run_id, timestep
         )
-        totals = {"reasoned": 0, "changes": 0, "shares": 0}
-        all_reasoning_results: list[tuple[str, ReasoningResponse | None]] = []
-        work_queue: queue.Queue[tuple[int, list[tuple[str, Any]], bool] | object] = (
-            queue.Queue(maxsize=self.writer_queue_size)
-        )
-        sentinel = object()
-        writer_error: list[Exception] = []
-
-        def _writer_loop() -> None:
-            chunks_since_checkpoint = 0
-            pending_chunks: list[tuple[int, list[tuple[str, Any]], bool]] = []
-
-            def _flush_pending() -> None:
-                nonlocal chunks_since_checkpoint
-                if not pending_chunks:
-                    return
-
-                with self.state_manager.transaction():
-                    for chunk_index, chunk_results, _is_last_chunk in pending_chunks:
-                        reasoned, changes, shares = self._process_reasoning_chunk(
-                            timestep, chunk_results, old_states
-                        )
-                        totals["reasoned"] += reasoned
-                        totals["changes"] += changes
-                        totals["shares"] += shares
-
-                for chunk_index, _chunk_results, is_last_chunk in pending_chunks:
-                    self.study_db.save_simulation_checkpoint(
-                        run_id=self.run_id,
-                        timestep=timestep,
-                        chunk_index=chunk_index,
-                        status="done",
+        totals = {
+            "reasoned": 0,
+            "changes": 0,
+            "shares": 0,
+            "conversations": 0,
+            "conversation_changes": 0,
+        }
+        chunks_since_checkpoint = 0
+        conversation_counts: dict[str, int] = {}
+        if self.config.fidelity != "low" and completed_chunks:
+            # Resume-safe conversation budgeting: restore per-agent counts
+            # from conversations already saved for this timestep.
+            existing = self.study_db.get_conversations_for_timestep(self.run_id, timestep)
+            for conv in existing:
+                initiator = conv.get("initiator_id")
+                target = conv.get("target_id")
+                target_is_npc = bool(conv.get("target_is_npc"))
+                if initiator:
+                    conversation_counts[initiator] = (
+                        conversation_counts.get(initiator, 0) + 1
                     )
-                    chunks_since_checkpoint += 1
-                    if (
-                        chunks_since_checkpoint >= self.checkpoint_every_chunks
-                        or is_last_chunk
-                    ):
-                        self.study_db.set_run_metadata(
-                            self.run_id,
-                            "last_checkpoint",
-                            f"{timestep}:{chunk_index}",
-                        )
-                        chunks_since_checkpoint = 0
-
-                pending_chunks.clear()
-
-            try:
-                while True:
-                    item = work_queue.get()
-                    try:
-                        if item is sentinel:
-                            _flush_pending()
-                            break
-
-                        chunk_index, chunk_results, is_last_chunk = item
-                        if chunk_index in completed_chunks:
-                            continue
-                        pending_chunks.append(
-                            (chunk_index, chunk_results, is_last_chunk)
-                        )
-                        if (
-                            len(pending_chunks) >= self.db_write_batch_size
-                            or is_last_chunk
-                        ):
-                            _flush_pending()
-                    finally:
-                        work_queue.task_done()
-            except Exception as e:  # pragma: no cover - surfaced to caller
-                writer_error.append(e)
-
-        writer_thread = threading.Thread(
-            target=_writer_loop,
-            name=f"sim-writer-{self.run_id}-{timestep}",
-            daemon=True,
-        )
-        writer_thread.start()
+                if target and not target_is_npc:
+                    conversation_counts[target] = conversation_counts.get(target, 0) + 1
 
         import asyncio
 
         from ..core.providers import close_simulation_provider
 
         async def _run_all_chunks():
+            nonlocal chunks_since_checkpoint
             try:
-                for chunk_start in range(0, len(contexts), self.chunk_size):
-                    if writer_error:
-                        break
+                for chunk_start in range(0, len(agents_to_reason), self.chunk_size):
                     self._apply_runtime_guardrails(timestep)
                     chunk_index = chunk_start // self.chunk_size
                     if chunk_index in completed_chunks:
@@ -842,9 +787,18 @@ class SimulationEngine:
                             f"[TIMESTEP {timestep}] Skipping completed chunk {chunk_index}"
                         )
                         continue
-                    chunk_contexts = contexts[
+                    chunk_agent_ids = agents_to_reason[
                         chunk_start : chunk_start + self.chunk_size
                     ]
+                    old_states: dict[str, AgentState] = {}
+                    chunk_contexts = []
+                    for agent_id in chunk_agent_ids:
+                        old_state = self.state_manager.get_agent_state(agent_id)
+                        old_states[agent_id] = old_state
+                        context = self._build_reasoning_context(
+                            agent_id, old_state, timestep
+                        )
+                        chunk_contexts.append(context)
 
                     reasoning_start = time.time()
                     chunk_results, chunk_usage = await batch_reason_agents_async(
@@ -869,37 +823,59 @@ class SimulationEngine:
                         if chunk_results
                         else f"[TIMESTEP {timestep}] Chunk empty"
                     )
-                    is_last_chunk = chunk_start + self.chunk_size >= len(contexts)
-                    work_queue.put((chunk_index, chunk_results, is_last_chunk))
-                    # Collect results for conversation phase
-                    all_reasoning_results.extend(chunk_results)
+                    is_last_chunk = chunk_start + self.chunk_size >= len(agents_to_reason)
+                    with self.state_manager.transaction():
+                        reasoned, changes, shares = self._process_reasoning_chunk(
+                            timestep, chunk_results, old_states
+                        )
+                    totals["reasoned"] += reasoned
+                    totals["changes"] += changes
+                    totals["shares"] += shares
+
+                    # In-timestep interleaving: run conversations after each
+                    # chunk so later chunks can see updated social state.
+                    if self.config.fidelity != "low" and chunk_results:
+                        conv_results = await self._execute_conversations_async(
+                            timestep,
+                            chunk_results,
+                            conversation_counts=conversation_counts,
+                        )
+                        if conv_results:
+                            conv_changes = self._apply_conversation_overrides(
+                                timestep, conv_results
+                            )
+                            totals["conversations"] += len(conv_results)
+                            totals["conversation_changes"] += conv_changes
+
+                    self.study_db.save_simulation_checkpoint(
+                        run_id=self.run_id,
+                        timestep=timestep,
+                        chunk_index=chunk_index,
+                        status="done",
+                    )
+                    chunks_since_checkpoint += 1
+                    if (
+                        chunks_since_checkpoint >= self.checkpoint_every_chunks
+                        or is_last_chunk
+                    ):
+                        self.study_db.set_run_metadata(
+                            self.run_id,
+                            "last_checkpoint",
+                            f"{timestep}:{chunk_index}",
+                        )
+                        chunks_since_checkpoint = 0
             finally:
                 await close_simulation_provider()
 
         asyncio.run(_run_all_chunks())
-
-        work_queue.put(sentinel)
-        while work_queue.unfinished_tasks > 0:
-            if writer_error:
-                while True:
-                    try:
-                        work_queue.get_nowait()
-                        work_queue.task_done()
-                    except queue.Empty:
-                        break
-                break
-            time.sleep(0.01)
-
-        work_queue.join()
-        writer_thread.join(timeout=1)
-        if writer_error:
-            raise writer_error[0]
-
         return (
             totals["reasoned"],
             totals["changes"],
             totals["shares"],
-            all_reasoning_results,
+            {
+                "conversations_executed": totals["conversations"],
+                "conversation_state_changes": totals["conversation_changes"],
+            },
         )
 
     def _process_reasoning_chunk(
@@ -1139,16 +1115,19 @@ class SimulationEngine:
 
         return agents_reasoned, state_changes, shares_occurred
 
-    def _execute_conversations(
+    async def _execute_conversations_async(
         self,
         timestep: int,
         reasoning_results: list[tuple[str, ReasoningResponse | None]],
+        conversation_counts: dict[str, int] | None = None,
     ) -> list[ConversationResult]:
         """Execute conversations based on talk_to actions from reasoning.
 
         Args:
             timestep: Current simulation timestep
             reasoning_results: List of (agent_id, response) pairs
+            conversation_counts: Optional per-agent conversation counts for
+                enforcing a global per-timestep cap across chunked passes.
 
         Returns:
             List of conversation results
@@ -1167,6 +1146,25 @@ class SimulationEngine:
 
         if not requests:
             return []
+
+        max_per_agent = 1 if self.config.fidelity == "medium" else 2
+        if self.config.fidelity == "low":
+            max_per_agent = 0
+
+        if conversation_counts is not None and max_per_agent > 0:
+            filtered_requests = []
+            for req in requests:
+                if conversation_counts.get(req.initiator_id, 0) >= max_per_agent:
+                    continue
+                if (
+                    not req.target_is_npc
+                    and conversation_counts.get(req.target_id, 0) >= max_per_agent
+                ):
+                    continue
+                filtered_requests.append(req)
+            requests = filtered_requests
+            if not requests:
+                return []
 
         # Prioritize and resolve conflicts
         batches, _deferred = prioritize_and_resolve_conflicts(
@@ -1194,7 +1192,6 @@ class SimulationEngine:
         # Execute all batches (in practice, usually just one batch)
         all_results: list[ConversationResult] = []
 
-        import asyncio
         from ..core.providers import close_simulation_provider
 
         async def _run_conversations():
@@ -1213,7 +1210,19 @@ class SimulationEngine:
             finally:
                 await close_simulation_provider()
 
-        asyncio.run(_run_conversations())
+        await _run_conversations()
+
+        if conversation_counts is not None and max_per_agent > 0:
+            for result in all_results:
+                if not result.messages:
+                    continue
+                conversation_counts[result.initiator_id] = (
+                    conversation_counts.get(result.initiator_id, 0) + 1
+                )
+                if not result.target_is_npc:
+                    conversation_counts[result.target_id] = (
+                        conversation_counts.get(result.target_id, 0) + 1
+                    )
 
         # Save conversations to DB
         for result in all_results:
@@ -1243,6 +1252,34 @@ class SimulationEngine:
 
         logger.info(f"[TIMESTEP {timestep}] Executed {len(all_results)} conversations")
         return all_results
+
+    def _execute_conversations(
+        self,
+        timestep: int,
+        reasoning_results: list[tuple[str, ReasoningResponse | None]],
+        conversation_counts: dict[str, int] | None = None,
+    ) -> list[ConversationResult]:
+        """Synchronous wrapper for conversation execution.
+
+        Use `_execute_conversations_async` from async call paths.
+        """
+        import asyncio
+
+        try:
+            asyncio.get_running_loop()
+        except RuntimeError:
+            return asyncio.run(
+                self._execute_conversations_async(
+                    timestep,
+                    reasoning_results,
+                    conversation_counts=conversation_counts,
+                )
+            )
+
+        raise RuntimeError(
+            "_execute_conversations() cannot be called from an active event loop. "
+            "Use await _execute_conversations_async(...)."
+        )
 
     def _apply_conversation_overrides(
         self,
