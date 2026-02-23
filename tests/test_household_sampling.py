@@ -542,12 +542,12 @@ class TestHouseholdCoherenceNormalization:
             if str(a.get("household_role", "")).startswith("adult_")
         ]
         non_partnered = [
-            a
-            for a in adults
-            if not (a.get("partner_id") or a.get("partner_npc"))
+            a for a in adults if not (a.get("partner_id") or a.get("partner_npc"))
         ]
         assert non_partnered
-        assert all(a.get("marital_status") != "Married/partnered" for a in non_partnered)
+        assert all(
+            a.get("marital_status") != "Married/partnered" for a in non_partnered
+        )
         preserved = sum(
             1
             for a in non_partnered
@@ -567,7 +567,9 @@ class TestHouseholdCoherenceNormalization:
                 identity_type="parental_status",
                 sampling=SamplingConfig(
                     strategy="independent",
-                    distribution=BooleanDistribution(type="boolean", probability_true=0.5),
+                    distribution=BooleanDistribution(
+                        type="boolean", probability_true=0.5
+                    ),
                 ),
                 grounding=GroundingInfo(level="medium", method="estimated"),
             )

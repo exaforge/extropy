@@ -760,7 +760,9 @@ class SimulationEngine:
         if self.config.fidelity != "low" and completed_chunks:
             # Resume-safe conversation budgeting: restore per-agent counts
             # from conversations already saved for this timestep.
-            existing = self.study_db.get_conversations_for_timestep(self.run_id, timestep)
+            existing = self.study_db.get_conversations_for_timestep(
+                self.run_id, timestep
+            )
             for conv in existing:
                 initiator = conv.get("initiator_id")
                 target = conv.get("target_id")
@@ -823,7 +825,9 @@ class SimulationEngine:
                         if chunk_results
                         else f"[TIMESTEP {timestep}] Chunk empty"
                     )
-                    is_last_chunk = chunk_start + self.chunk_size >= len(agents_to_reason)
+                    is_last_chunk = chunk_start + self.chunk_size >= len(
+                        agents_to_reason
+                    )
                     with self.state_manager.transaction():
                         reasoned, changes, shares = self._process_reasoning_chunk(
                             timestep, chunk_results, old_states

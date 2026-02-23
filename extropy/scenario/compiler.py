@@ -416,7 +416,8 @@ def create_scenario_spec(
     if ext_attrs:
         merged_attributes = list(population_spec.attributes) + ext_attrs
         merged_deps: dict[str, list[str]] = {
-            attr.name: list(attr.sampling.depends_on or []) for attr in merged_attributes
+            attr.name: list(attr.sampling.depends_on or [])
+            for attr in merged_attributes
         }
         merged_names = set(merged_deps.keys())
         merged_deps = {

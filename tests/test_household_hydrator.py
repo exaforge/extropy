@@ -7,9 +7,9 @@ def test_household_schema_constrains_assortative_attribute_enum():
         allowed_assortative_attributes=["education_level", "political_identity"]
     )
 
-    attribute_schema = schema["properties"]["assortative_mating"]["items"]["properties"][
-        "attribute"
-    ]
+    attribute_schema = schema["properties"]["assortative_mating"]["items"][
+        "properties"
+    ]["attribute"]
     assert attribute_schema["type"] == "string"
     assert attribute_schema["enum"] == ["education_level", "political_identity"]
 

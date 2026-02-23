@@ -127,7 +127,7 @@ def _extract_gender_options_for_household(
 
     # Prefer semantic metadata over name heuristics.
     candidates: list[AttributeSpec] = []
-    for attr in (context or []):
+    for attr in context or []:
         if attr.identity_type == "gender_identity":
             candidates.append(attr)
     for attr in hydrated_attrs:
@@ -137,7 +137,7 @@ def _extract_gender_options_for_household(
     # Legacy fallback for older specs lacking identity_type metadata.
     if not candidates:
         fallback_names = {"gender", "sex", "gender_identity"}
-        for attr in (context or []):
+        for attr in context or []:
             if attr.name in fallback_names:
                 candidates.append(attr)
         for attr in hydrated_attrs:

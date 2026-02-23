@@ -41,7 +41,10 @@ def choose_partner_gender(
     if not options:
         return None
 
-    if config.partner_gender_mode != "weighted" or not config.partner_gender_pair_weights:
+    if (
+        config.partner_gender_mode != "weighted"
+        or not config.partner_gender_pair_weights
+    ):
         return rng.choice(options)
 
     primary = primary_gender if isinstance(primary_gender, str) else None

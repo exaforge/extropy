@@ -125,7 +125,9 @@ def _coerce_young_adult_education(value: Any, age: int, options: list[str]) -> A
 
     def stage(option: str) -> int:
         token = _normalize_attr_token(option)
-        if any(k in token for k in ("phd", "doctorate", "doctoral", "graduate", "masters")):
+        if any(
+            k in token for k in ("phd", "doctorate", "doctoral", "graduate", "masters")
+        ):
             return 5
         if any(k in token for k in ("bachelor", "ba", "bs")):
             return 4
@@ -935,7 +937,9 @@ def _sample_population_households(
         if parental_status_attrs:
             child_dependents_present = any(
                 isinstance(dep, dict)
-                and _dependent_is_child(dep, child_age_max=config.max_dependent_child_age)
+                and _dependent_is_child(
+                    dep, child_age_max=config.max_dependent_child_age
+                )
                 for dep in dep_dicts
             )
             if not child_dependents_present:
@@ -1059,14 +1063,10 @@ def _sample_partner_agent(
         # Partner-correlated: use assortative mating.
         # Age-like fields and scenario policy overrides are correlated even when
         # scope metadata is incomplete, to prevent unrealistic partner drift.
-        elif (
-            attr_name in primary
-            and (
-                attr.scope == "partner_correlated"
-                or attr.semantic_type == "age"
-                or _resolve_partner_policy_override(attr_name, semantic_roles)
-                is not None
-            )
+        elif attr_name in primary and (
+            attr.scope == "partner_correlated"
+            or attr.semantic_type == "age"
+            or _resolve_partner_policy_override(attr_name, semantic_roles) is not None
         ):
             value = correlate_partner_attribute(
                 attr_name,
@@ -1682,9 +1682,7 @@ def _reconcile_household_coherence(
     marital_attr = _resolve_marital_attr_name(attr_map, semantic_roles)
     household_size_attr = _resolve_household_size_attr_name(attr_map, semantic_roles)
     parental_status_attrs = _resolve_parental_status_attrs(attr_map)
-    child_age_max = (
-        household_config.max_dependent_child_age if household_config else 17
-    )
+    child_age_max = household_config.max_dependent_child_age if household_config else 17
 
     marital_updates = 0
     household_size_updates = 0
