@@ -507,6 +507,41 @@ class StateManager:
         )
         return [row["agent_id"] for row in cursor.fetchall()]
 
+    def get_exposed_agents(
+        self,
+        timestep: int | None = None,
+        info_epoch: int | None = None,
+    ) -> list[str]:
+        """Get distinct agents with recorded exposures, optionally filtered.
+
+        Args:
+            timestep: Optional timestep filter.
+            info_epoch: Optional provenance epoch filter.
+
+        Returns:
+            Distinct agent IDs ordered by ID.
+        """
+        cursor = self.conn.cursor()
+        clauses = ["run_id = ?"]
+        params: list[Any] = [self.run_id]
+        if timestep is not None:
+            clauses.append("timestep = ?")
+            params.append(timestep)
+        if info_epoch is not None:
+            clauses.append("info_epoch = ?")
+            params.append(info_epoch)
+
+        cursor.execute(
+            f"""
+            SELECT DISTINCT agent_id
+            FROM exposures
+            WHERE {" AND ".join(clauses)}
+            ORDER BY agent_id
+        """,
+            params,
+        )
+        return [row["agent_id"] for row in cursor.fetchall()]
+
     def get_all_agent_ids(self) -> list[str]:
         """Get all agent IDs in the database."""
         cursor = self.conn.cursor()

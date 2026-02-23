@@ -17,6 +17,10 @@ This is not a patch plan. It is a contract + current-state reality map.
 - Simulation is now scenario-centric in lookup order (`scenario_id` first, legacy IDs as fallback).
 - Runtime loop supports DB-backed resume/checkpoint behavior at timestep and chunk levels.
 - Timeline events support provenance epochs (`info_epoch`) and forced re-reasoning escalation.
+- Timeline fallback exposure no longer reuses full seed rule sets blindly:
+  - fallback rules are filtered to representative channel rules,
+  - direct timeline exposure is deduplicated per-agent per-event,
+  - direct timeline exposure is capped by intensity (`normal|high|extreme`).
 - Reasoning supports two modes:
   - default two-pass (role-play + classification),
   - optional merged single-pass (`--merged-pass`).
@@ -24,6 +28,11 @@ This is not a patch plan. It is a contract + current-state reality map.
   - `low`: no conversations,
   - `medium`: bounded conversations after chunks,
   - `high`: deeper conversations + extra public-text classification.
+- Runtime now applies deterministic per-timestep budgets:
+  - bounded reasoning candidate set,
+  - bounded conversation count,
+  - novelty gate before conversation execution.
+- Reasoning prompt payload is now trimmed by fidelity (recent exposures + recent memory only).
 - Early convergence behavior is now explicit and overrideable (`auto|on|off`).
 - Runtime exports include `by_timestep.json`, `meta.json`, and conditional conversation/social artifacts.
 - State manager now auto-upgrades legacy simulation tables/columns (including timeline-provenance exposure fields) on startup.
@@ -273,8 +282,8 @@ Each timestep does:
    - seed,
    - timeline event (if this timestep has one),
    - network propagation,
-3. reason selected agents in chunks,
-4. interleave conversations after chunks (medium/high fidelity),
+3. select and cap reasoning candidates, then reason in chunks,
+4. interleave conversations after chunks (medium/high fidelity, novelty + budget gated),
 5. record social posts from sharers,
 6. apply conviction decay to non-reasoned agents,
 7. compute and save timestep summary,
@@ -288,6 +297,12 @@ Timeline exposures carry:
 - `info_epoch`,
 - optional `re_reasoning_intensity` (`normal|high|extreme`).
 
+When a timeline event does not provide explicit `exposure_rules`, runtime fallback is now bounded:
+- prefers rules authored for current timestep (else earliest authored seed step),
+- keeps representative rule(s) per channel rather than all overlapping seed rules,
+- deduplicates direct event exposure per agent,
+- applies an intensity-based direct-exposure cap to prevent saturation spikes.
+
 ### Reasoning behavior
 Default reasoning mode is two-pass:
 1. Pass 1 role-play response (free text + sentiment/conviction/share/action fields).
@@ -298,6 +313,7 @@ Merged mode (`--merged-pass`) combines both in one schema/call.
 Important current behavior:
 - open-ended outcomes are not classified in Pass 2; they remain in free-text reasoning.
 - high fidelity adds separate public-text classification pass for public position.
+- reasoning context is trimmed to recent exposure/memory windows by fidelity to bound token growth.
 
 Primary file:
 - `extropy/simulation/reasoning.py`
@@ -311,12 +327,21 @@ Primary file:
 
 Committed agents are protected from routine multi-touch re-reasoning unless forced by timeline policy.
 
+Additional runtime gating now applies before calls:
+- explicit forced IDs are no longer expanded to all aware agents under `extreme`,
+- forced expansion uses a bounded high-salience subset (directly impacted + nearby connected + sharers),
+- per-timestep reasoning budget caps total LLM calls.
+
 ### Conversation behavior by fidelity
 - `low`: no conversations executed.
 - `medium`: conversations enabled; per-agent cap 1 per timestep; 4-message conversations.
 - `high`: per-agent cap 2 per timestep; 6-message conversations.
 
 Conversation outcomes can override provisional reasoning state.
+
+Conversation execution now also requires:
+- per-timestep global conversation budget not exhausted,
+- novelty gate pass (material shift/uncertainty/share signal from fresh reasoning).
 
 Primary file:
 - `extropy/simulation/conversation.py`
@@ -399,7 +424,7 @@ Open-ended outcomes live in reasoning text, not in structured Pass 2 outcome pay
 `--resume` requires `--run-id`; incorrect run-id usage can lead to user confusion about expected continuation behavior.
 
 ### 6) Prompt/context size grows with memory and history
-High-fidelity prompts include richer memory and context windows, which improves realism but increases token load and cost volatility.
+Prompt growth is now bounded by fidelity-window trims, but high-fidelity runs still carry materially higher token/cost load than low fidelity.
 
 ### 7) Legacy fallback paths still exist
 Simulation still includes legacy lookup fallbacks (`population_id`, `network_id`) which can mask schema drift in older studies.

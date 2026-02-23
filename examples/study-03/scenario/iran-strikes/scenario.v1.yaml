@@ -290,7 +290,26 @@ timeline:
     credibility: 0.95
     ambiguity: 0.28
     emotional_valence: -0.72
-  exposure_rules: null
+  exposure_rules:
+  - channel: military_official_channels
+    when: military_connection in ('Active duty', 'Veteran', 'Immediate family member')
+      or reservist_or_national_guard == True
+    probability: 1.0
+    timestep: 0
+  - channel: broadcast_breaking_news
+    when: primary_info_source == 'Cable/broadcast TV news'
+    probability: 0.95
+    timestep: 0
+  - channel: push_notification_online_news
+    when: primary_info_source == 'Online news sites' and tech_adoption_posture in
+      ('Early adopter', 'Innovator', 'Early majority adopter')
+    probability: 0.95
+    timestep: 0
+  - channel: social_media_viral_spread
+    when: social_media_behavior in ('Active poster/Influencer', 'Occasional poster')
+      and primary_info_source == 'Social media'
+    probability: 0.92
+    timestep: 0
   description: 'Week 1: Iranian missile retaliation kills US troops; gas prices surge
     and markets crash'
   re_reasoning_intensity: extreme
@@ -309,7 +328,29 @@ timeline:
     credibility: 0.94
     ambiguity: 0.28
     emotional_valence: -0.8
-  exposure_rules: null
+  exposure_rules:
+  - channel: push_notification_online_news
+    when: primary_info_source in ('Podcasts', 'Print media') and tech_adoption_posture
+      not in ('Technophobe/Avoider', 'Late majority adopter')
+    probability: 0.8
+    timestep: 1
+  - channel: broadcast_breaking_news
+    when: age >= 50 and primary_info_source != 'Avoids news'
+    probability: 0.85
+    timestep: 1
+  - channel: social_media_viral_spread
+    when: age < 40 and social_media_behavior in ('Passive consumer', 'Occasional poster')
+    probability: 0.88
+    timestep: 1
+  - channel: broadcast_breaking_news
+    when: political_engagement_level == 'Highly engaged partisan'
+    probability: 0.9
+    timestep: 1
+  - channel: social_media_viral_spread
+    when: age >= 40 and social_media_behavior != 'Non-user' and primary_info_source
+      == 'Social media'
+    probability: 0.82
+    timestep: 1
   description: 'Week 3: Iran blockades the Strait of Hormuz; oil hits $140/barrel;
     gas tops $6/gallon nationally'
   re_reasoning_intensity: extreme
@@ -329,7 +370,24 @@ timeline:
     credibility: 0.93
     ambiguity: 0.28
     emotional_valence: -0.85
-  exposure_rules: null
+  exposure_rules:
+  - channel: personal_network_word_of_mouth
+    when: primary_info_source == 'Local news' or social_media_behavior == 'Non-user'
+    probability: 0.75
+    timestep: 2
+  - channel: broadcast_breaking_news
+    when: primary_info_source == 'Local news'
+    probability: 0.8
+    timestep: 2
+  - channel: personal_network_word_of_mouth
+    when: supply_chain_job_exposure == True or employment_sector in ('Federal government',
+      'State/local government')
+    probability: 0.85
+    timestep: 2
+  - channel: social_media_viral_spread
+    when: economic_anxiety > 0.6 and social_media_behavior != 'Non-user'
+    probability: 0.78
+    timestep: 2
   description: 'Week 5: Economic cascade — unemployment spikes, food prices surge,
     oil briefly hits $180/barrel after Iran strikes Saudi oil facilities'
   re_reasoning_intensity: extreme
@@ -350,7 +408,24 @@ timeline:
     credibility: 0.91
     ambiguity: 0.28
     emotional_valence: -0.6
-  exposure_rules: null
+  exposure_rules:
+  - channel: personal_network_word_of_mouth
+    when: primary_info_source == 'Avoids news' and extraversion > 0.5
+    probability: 0.65
+    timestep: 3
+  - channel: broadcast_breaking_news
+    when: urban_rural == 'Rural' and age >= 45
+    probability: 0.8
+    timestep: 3
+  - channel: personal_network_word_of_mouth
+    when: urban_rural == 'Rural' and primary_info_source not in ('Cable/broadcast
+      TV news', 'Online news sites')
+    probability: 0.7
+    timestep: 3
+  - channel: social_media_viral_spread
+    when: war_escalation_fear > 0.7 and social_media_behavior != 'Non-user'
+    probability: 0.85
+    timestep: 3
   description: 'Week 8: Strait partially reopened; Russia and China back Iran; 400,000
     US jobs lost; midterm framing intensifies'
   re_reasoning_intensity: high
@@ -371,7 +446,16 @@ timeline:
     credibility: 0.82
     ambiguity: 0.28
     emotional_valence: -0.7
-  exposure_rules: null
+  exposure_rules:
+  - channel: personal_network_word_of_mouth
+    when: primary_info_source == 'Avoids news' and extraversion <= 0.5
+    probability: 0.45
+    timestep: 4
+  - channel: broadcast_breaking_news
+    when: midterm_turnout_propensity in ('Rarely votes', 'Never votes') and primary_info_source
+      != 'Avoids news'
+    probability: 0.6
+    timestep: 4
   description: 'Week 10: Leaked intelligence report suggests Iran is reconstituting
     uranium enrichment at undisclosed backup sites; ceasefire talks stall'
   re_reasoning_intensity: high
@@ -392,7 +476,11 @@ timeline:
     credibility: 0.93
     ambiguity: 0.28
     emotional_valence: -0.45
-  exposure_rules: null
+  exposure_rules:
+  - channel: personal_network_word_of_mouth
+    when: 'true'
+    probability: 0.55
+    timestep: 5
   description: 'Week 12: Fragile ceasefire reached through Omani/Qatari mediation;
     oil drops to $105; total US economic cost exceeds $800 billion'
   re_reasoning_intensity: high

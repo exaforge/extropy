@@ -376,8 +376,8 @@ extropy simulate -s asi-announcement --early-convergence off
 4. Resolves effective models/rate limits from CLI overrides then config defaults.
 5. Runs simulation loop:
    - seed + timeline + network exposures,
-   - chunked reasoning (two-pass by default, merged with `--merged-pass`),
-   - medium/high conversation interleaving,
+   - chunked reasoning (two-pass by default, merged with `--merged-pass`) with per-timestep reasoning budget,
+   - medium/high conversation interleaving with novelty + per-timestep conversation budget,
    - timestep summary + stopping checks.
 6. Persists run state to canonical `study.db` and writes results artifacts to `results/{scenario}/` (or `--output`).
 
@@ -462,6 +462,8 @@ Precedence:
 - `--early-convergence auto` uses scenario YAML value when set; otherwise runtime auto-rule applies (do not early-stop while future timeline events remain).
 - `low` fidelity skips conversations; `medium` and `high` enable conversations with stricter per-agent caps at lower fidelity.
 - `--retention-lite` drops full raw reasoning payload retention to reduce DB/storage volume.
+- Timeline events without explicit `exposure_rules` use bounded fallback filtering (not full-seed-rule replay).
+- `extreme` re-reasoning is bounded to a high-salience subset, not all aware agents.
 
 ### Failure Behavior
 

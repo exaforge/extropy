@@ -14,6 +14,7 @@ Implements Phase 0 redesign:
 
 import json
 import logging
+import os
 import random
 import sqlite3
 import time
@@ -83,6 +84,32 @@ _CONVICTION_DECAY_RATE = 0.05
 _BOUNDED_CONFIDENCE_RHO = 0.35
 _PRIVATE_ADJUSTMENT_RHO = 0.12
 _PRIVATE_FLIP_CONVICTION = CONVICTION_MAP[ConvictionLevel.FIRM]
+_REASONING_BUDGET_RATIO = {
+    "low": 0.8,
+    "medium": 0.5,
+    "high": 0.45,
+}
+_REASONING_BUDGET_FLOOR = 250
+_CONVERSATION_BUDGET_RATIO = {
+    "low": 0.0,
+    "medium": 0.08,
+    "high": 0.12,
+}
+_CONVERSATION_BUDGET_FLOOR = {
+    "low": 0,
+    "medium": 50,
+    "high": 75,
+}
+_MAX_EXPOSURES_IN_CONTEXT = {
+    "low": 6,
+    "medium": 10,
+    "high": 14,
+}
+_MAX_MEMORY_IN_CONTEXT = {
+    "low": 5,
+    "medium": 8,
+    "high": 12,
+}
 
 
 class _StateTimelineAdapter:
@@ -610,6 +637,223 @@ class SimulationEngine:
 
         return summary
 
+    def _get_reasoning_budget(self, timestep: int) -> int:
+        """Compute per-timestep cap for reasoning calls."""
+        env_cap = os.getenv("EXTROPY_SIM_MAX_REASON_PER_TIMESTEP")
+        if env_cap:
+            try:
+                value = int(env_cap)
+                if value > 0:
+                    return min(len(self.agents), value)
+            except ValueError:
+                pass
+
+        ratio = _REASONING_BUDGET_RATIO.get(self.config.fidelity, 0.5)
+        env_ratio = os.getenv("EXTROPY_SIM_REASON_BUDGET_RATIO")
+        if env_ratio:
+            try:
+                ratio = max(0.05, min(1.0, float(env_ratio)))
+            except ValueError:
+                pass
+
+        budget = max(_REASONING_BUDGET_FLOOR, int(round(len(self.agents) * ratio)))
+        if timestep == 0:
+            # First timestep can legitimately be broader.
+            budget = max(budget, int(round(len(self.agents) * 0.6)))
+        return max(1, min(len(self.agents), budget))
+
+    def _get_conversation_budget(self) -> int:
+        """Compute per-timestep cap for executed conversations."""
+        env_cap = os.getenv("EXTROPY_SIM_MAX_CONVERSATIONS_PER_TIMESTEP")
+        if env_cap:
+            try:
+                value = int(env_cap)
+                if value >= 0:
+                    return min(len(self.agents), value)
+            except ValueError:
+                pass
+
+        ratio = _CONVERSATION_BUDGET_RATIO.get(self.config.fidelity, 0.08)
+        budget = max(
+            _CONVERSATION_BUDGET_FLOOR.get(self.config.fidelity, 0),
+            int(round(len(self.agents) * ratio)),
+        )
+        return max(0, min(len(self.agents), budget))
+
+    def _prioritize_agents_for_reasoning(
+        self,
+        candidates: list[str],
+        timestep: int,
+        forced_reason_ids: set[str],
+    ) -> list[str]:
+        """Rank reasoning candidates by deterministic salience."""
+        exposed_this_step = set(
+            self.state_manager.get_exposed_agents(timestep=timestep)
+        )
+        scored: list[tuple[float, str]] = []
+        for agent_id in candidates:
+            state = self.state_manager.get_agent_state(agent_id)
+            score = 0.0
+            if agent_id in forced_reason_ids:
+                score += 100.0
+            if state.last_reasoning_timestep < 0:
+                score += 50.0
+            if agent_id in exposed_this_step:
+                score += 25.0
+            if state.latest_info_epoch >= timestep:
+                score += 15.0
+            score += min(10.0, float(state.exposure_count))
+            score += min(5.0, float(len(self.adjacency.get(agent_id, []))) * 0.1)
+            scored.append((score, agent_id))
+        scored.sort(key=lambda item: (-item[0], item[1]))
+        return [agent_id for _, agent_id in scored]
+
+    def _select_forced_rereason_ids(
+        self,
+        timestep: int,
+        base_ids: set[str],
+        info_epoch: int | None,
+        intensity: str | None,
+    ) -> set[str]:
+        """Select a bounded high-salience set for explicit forced re-reasoning."""
+        selected = set(base_ids)
+        if info_epoch is None or intensity not in {"high", "extreme"}:
+            return selected
+
+        population_size = len(self.agents)
+        if population_size <= 0:
+            return selected
+
+        target_ratio = 0.15 if intensity == "high" else 0.30
+        min_extra = 1 if intensity == "high" else 2
+        target_budget = min(
+            population_size,
+            max(
+                len(selected),
+                int(round(population_size * target_ratio)),
+                len(selected) + min_extra,
+            ),
+        )
+
+        exposed_this_epoch = set(
+            self.state_manager.get_exposed_agents(
+                timestep=timestep, info_epoch=info_epoch
+            )
+        )
+        aware_agents = set(self.state_manager.get_aware_agents())
+        sharers = set(self.state_manager.get_sharers())
+
+        frontier = set(selected)
+        frontier.update(exposed_this_epoch)
+        one_hop: set[str] = set()
+        for agent_id in frontier:
+            one_hop.update(
+                neighbor for neighbor, _edge in self.adjacency.get(agent_id, [])
+            )
+
+        two_hop: set[str] = set()
+        if intensity == "extreme":
+            for agent_id in one_hop:
+                two_hop.update(
+                    neighbor for neighbor, _edge in self.adjacency.get(agent_id, [])
+                )
+
+        candidate_pool = (frontier | one_hop | two_hop) & aware_agents
+        ranked: list[tuple[float, str]] = []
+        for agent_id in candidate_pool:
+            degree = len(self.adjacency.get(agent_id, []))
+            score = 0.0
+            if agent_id in selected:
+                score += 100.0
+            if agent_id in exposed_this_epoch:
+                score += 35.0
+            if agent_id in sharers:
+                score += 20.0
+            score += min(10.0, float(degree) * 0.2)
+            ranked.append((score, agent_id))
+
+        ranked.sort(key=lambda item: (-item[0], item[1]))
+        for _score, agent_id in ranked:
+            if len(selected) >= target_budget:
+                break
+            selected.add(agent_id)
+
+        return selected
+
+    @staticmethod
+    def _trim_exposure_history(
+        exposures: list[Any],
+        fidelity: str,
+    ) -> list[Any]:
+        """Reduce reasoning exposure payload to recent high-signal entries."""
+        max_items = _MAX_EXPOSURES_IN_CONTEXT.get(fidelity, 10)
+        if len(exposures) <= max_items:
+            return exposures
+        latest_timestep = exposures[-1].timestep if exposures else None
+        latest = [exp for exp in exposures if exp.timestep == latest_timestep]
+        if len(latest) >= max_items:
+            return latest[-max_items:]
+        remaining = max_items - len(latest)
+        prefix = exposures[: -len(latest)] if latest else exposures
+        return prefix[-remaining:] + latest
+
+    @staticmethod
+    def _trim_memory_trace(memory_trace: list[Any], fidelity: str) -> list[Any]:
+        """Reduce reasoning memory payload while keeping near-term continuity."""
+        max_items = _MAX_MEMORY_IN_CONTEXT.get(fidelity, 8)
+        if len(memory_trace) <= max_items:
+            return memory_trace
+        return memory_trace[-max_items:]
+
+    @staticmethod
+    def _has_material_reasoning_shift(
+        old_state: AgentState,
+        response: ReasoningResponse,
+    ) -> bool:
+        """Detect whether a reasoning step changed state enough to justify chat."""
+        if old_state.last_reasoning_timestep < 0:
+            return True
+        if response.conviction is not None and response.conviction <= 0.55:
+            return True
+        old_position = old_state.public_position or old_state.position
+        new_position = response.public_position or response.position
+        if old_position and new_position and old_position != new_position:
+            return True
+        old_sent = (
+            old_state.public_sentiment
+            if old_state.public_sentiment is not None
+            else old_state.sentiment
+        )
+        if old_sent is not None and response.sentiment is not None:
+            if abs(float(response.sentiment) - float(old_sent)) >= 0.08:
+                return True
+        old_conv = (
+            old_state.public_conviction
+            if old_state.public_conviction is not None
+            else old_state.conviction
+        )
+        if old_conv is not None and response.conviction is not None:
+            if abs(float(response.conviction) - float(old_conv)) >= 0.08:
+                return True
+        return bool(response.will_share)
+
+    def _filter_conversation_candidates(
+        self,
+        chunk_results: list[tuple[str, ReasoningResponse | None]],
+        old_states: dict[str, AgentState],
+    ) -> list[tuple[str, ReasoningResponse | None]]:
+        """Filter conversation candidates to requests with meaningful novelty."""
+        filtered: list[tuple[str, ReasoningResponse | None]] = []
+        for agent_id, response in chunk_results:
+            if response is None or not response.actions:
+                continue
+            old_state = old_states.get(agent_id)
+            if old_state is None:
+                continue
+            if self._has_material_reasoning_shift(old_state, response):
+                filtered.append((agent_id, response))
+        return filtered
+
     def _apply_exposures(self, timestep: int) -> tuple[int, set[str]]:
         """Apply seed, timeline, and network exposures for this timestep.
 
@@ -646,12 +890,12 @@ class SimulationEngine:
                 timeline_result.re_reasoning_intensity or "normal"
             )
 
-        forced_reason_ids = set(timeline_result.direct_exposed_agent_ids)
-        if (
-            timeline_result.re_reasoning_intensity == "extreme"
-            and timeline_result.info_epoch is not None
-        ):
-            forced_reason_ids.update(self.state_manager.get_aware_agents())
+        forced_reason_ids = self._select_forced_rereason_ids(
+            timestep=timestep,
+            base_ids=set(timeline_result.direct_exposed_agent_ids),
+            info_epoch=timeline_result.info_epoch,
+            intensity=timeline_result.re_reasoning_intensity,
+        )
 
         new_network = propagate_through_network(
             timestep,
@@ -708,6 +952,22 @@ class SimulationEngine:
                 f"[TIMESTEP {timestep}] Skipping {len(already_done)} already-processed agents"
             )
 
+        forced_ids = forced_reason_ids or set()
+        reasoning_budget = self._get_reasoning_budget(timestep)
+        if len(agents_to_reason) > reasoning_budget:
+            prioritized = self._prioritize_agents_for_reasoning(
+                candidates=agents_to_reason,
+                timestep=timestep,
+                forced_reason_ids=forced_ids,
+            )
+            trimmed = prioritized[:reasoning_budget]
+            dropped = len(agents_to_reason) - len(trimmed)
+            agents_to_reason = trimmed
+            logger.info(
+                f"[TIMESTEP {timestep}] Reasoning budget cap: selected {len(trimmed)} "
+                f"of {len(trimmed) + dropped} candidates (dropped {dropped})"
+            )
+
         logger.info(f"[TIMESTEP {timestep}] Agents to reason: {len(agents_to_reason)}")
 
         # Update progress state for live display (even if 0 agents, so display updates)
@@ -745,6 +1005,7 @@ class SimulationEngine:
                 ):
                     self._log_verbose_summary(self._progress.snapshot())
 
+        conversation_budget = self._get_conversation_budget()
         completed_chunks = self.study_db.get_completed_simulation_chunks(
             self.run_id, timestep
         )
@@ -839,11 +1100,24 @@ class SimulationEngine:
                     # In-timestep interleaving: run conversations after each
                     # chunk so later chunks can see updated social state.
                     if self.config.fidelity != "low" and chunk_results:
-                        conv_results = await self._execute_conversations_async(
-                            timestep,
-                            chunk_results,
-                            conversation_counts=conversation_counts,
+                        remaining_conv_budget = max(
+                            0, conversation_budget - totals["conversations"]
                         )
+                        if remaining_conv_budget > 0:
+                            conversation_candidates = (
+                                self._filter_conversation_candidates(
+                                    chunk_results,
+                                    old_states,
+                                )
+                            )
+                            conv_results = await self._execute_conversations_async(
+                                timestep,
+                                conversation_candidates,
+                                conversation_counts=conversation_counts,
+                                remaining_budget=remaining_conv_budget,
+                            )
+                        else:
+                            conv_results = []
                         if conv_results:
                             conv_changes = self._apply_conversation_overrides(
                                 timestep, conv_results
@@ -1124,6 +1398,7 @@ class SimulationEngine:
         timestep: int,
         reasoning_results: list[tuple[str, ReasoningResponse | None]],
         conversation_counts: dict[str, int] | None = None,
+        remaining_budget: int | None = None,
     ) -> list[ConversationResult]:
         """Execute conversations based on talk_to actions from reasoning.
 
@@ -1132,6 +1407,7 @@ class SimulationEngine:
             reasoning_results: List of (agent_id, response) pairs
             conversation_counts: Optional per-agent conversation counts for
                 enforcing a global per-timestep cap across chunked passes.
+            remaining_budget: Optional global remaining conversation budget.
 
         Returns:
             List of conversation results
@@ -1169,6 +1445,12 @@ class SimulationEngine:
             requests = filtered_requests
             if not requests:
                 return []
+
+        if remaining_budget is not None:
+            if remaining_budget <= 0:
+                return []
+            if len(requests) > remaining_budget:
+                requests = requests[:remaining_budget]
 
         # Prioritize and resolve conflicts
         batches, _deferred = prioritize_and_resolve_conflicts(
@@ -1479,6 +1761,12 @@ class SimulationEngine:
 
         # Get memory trace
         memory_trace = self.state_manager.get_memory_traces(agent_id)
+        trimmed_memory_trace = self._trim_memory_trace(
+            memory_trace, self.config.fidelity
+        )
+        trimmed_exposures = self._trim_exposure_history(
+            state.exposures, self.config.fidelity
+        )
 
         # Derive prior action intent from most recent memory entry
         prior_action_intent = None
@@ -1501,11 +1789,11 @@ class SimulationEngine:
             agent_id=agent_id,
             agent=agent,
             persona=persona,
-            exposures=state.exposures,
+            exposures=trimmed_exposures,
             scenario=self.scenario,
             peer_opinions=peer_opinions,
             current_state=state if state.last_reasoning_timestep >= 0 else None,
-            memory_trace=memory_trace,
+            memory_trace=trimmed_memory_trace,
         )
         # Populate Phase A fields
         ctx.timestep = timestep
