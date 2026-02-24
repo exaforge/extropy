@@ -9,7 +9,6 @@ metadata:
       - extropy
     config_files:
       - ~/.config/extropy/config.json
-      - .env
     environment_variables:
       - OPENAI_API_KEY
       - ANTHROPIC_API_KEY
@@ -32,7 +31,7 @@ metadata:
       - provider API keys via environment variables only
     notes:
       - extropy reads model/provider settings from ~/.config/extropy/config.json
-      - extropy may load .env from the current working directory
+      - do not read raw .env contents unless explicitly requested by the user
 ---
 
 # Extropy Operator
@@ -50,10 +49,10 @@ Run experiments end to end, with strict quality gates and reproducible commands.
 ## Runtime Dependencies and Credential Scope
 
 - Required binary: `extropy` must be installed and on `PATH`.
-- Config files read: `~/.config/extropy/config.json` and project/local `.env` (if present).
+- Config file read: `~/.config/extropy/config.json`.
 - Credentials expected: provider API keys from env vars (`OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `OPENROUTER_API_KEY`, `DEEPSEEK_API_KEY`, `AZURE_API_KEY`/`AZURE_OPENAI_API_KEY`).
 - Azure endpoint vars: `AZURE_ENDPOINT` or `AZURE_OPENAI_ENDPOINT` when using Azure providers.
-- Safety boundary: only access credentials/config needed to execute extropy commands for the requested study/scenario, and avoid reading unrelated files.
+- Safety boundary: only access credentials/config needed to execute extropy commands for the requested study/scenario, do not inspect raw `.env` values, and avoid reading unrelated files.
 
 ## Canonical Pipeline
 

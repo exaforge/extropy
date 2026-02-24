@@ -1,0 +1,34 @@
+interface:
+  display_name: "Extropy Operator"
+  short_description: "Run Extropy CLI pipelines and analyze results"
+  default_prompt: "Use $extropy to run or debug an Extropy study end-to-end with evidence-backed output."
+
+requirements:
+  binaries:
+    - "extropy"
+  env_vars:
+    - "OPENAI_API_KEY"
+    - "ANTHROPIC_API_KEY"
+    - "OPENROUTER_API_KEY"
+    - "DEEPSEEK_API_KEY"
+    - "AZURE_API_KEY"
+    - "AZURE_ENDPOINT"
+    - "AZURE_OPENAI_API_KEY"
+    - "AZURE_OPENAI_ENDPOINT"
+    - "MODELS_FAST"
+    - "MODELS_STRONG"
+    - "SIMULATION_FAST"
+    - "SIMULATION_STRONG"
+    - "SIMULATION_MAX_CONCURRENT"
+    - "SIMULATION_RATE_TIER"
+    - "SIMULATION_RPM_OVERRIDE"
+    - "SIMULATION_TPM_OVERRIDE"
+  config_paths:
+    - "~/.config/extropy/config.json"
+  primary_credentials:
+    - "Provider API keys via environment variables"
+
+policy:
+  allow_implicit_invocation: false
+  credential_scope: "Only use credentials/config required for the requested Extropy task."
+  secret_handling: "Do not read raw .env contents unless explicitly requested."
