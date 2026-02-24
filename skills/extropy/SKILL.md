@@ -3,6 +3,53 @@ name: extropy
 description: "Execution-first operator for Extropy: run pipelines, diagnose failures, and deliver evidence-backed simulation analysis using current CLI contracts."
 allowed-tools: Read, Grep, Glob, Bash, Edit, Write
 argument-hint: "[goal or experiment request]"
+always: false
+source: "https://github.com/exaforge/extropy"
+homepage: "https://github.com/exaforge/extropy"
+required-binaries:
+  - extropy
+required-env-vars:
+  - OPENAI_API_KEY
+  - ANTHROPIC_API_KEY
+  - OPENROUTER_API_KEY
+  - DEEPSEEK_API_KEY
+  - AZURE_API_KEY
+  - AZURE_ENDPOINT
+  - AZURE_OPENAI_API_KEY
+  - AZURE_OPENAI_ENDPOINT
+  - MODELS_FAST
+  - MODELS_STRONG
+  - SIMULATION_FAST
+  - SIMULATION_STRONG
+  - SIMULATION_MAX_CONCURRENT
+  - SIMULATION_RATE_TIER
+  - SIMULATION_RPM_OVERRIDE
+  - SIMULATION_TPM_OVERRIDE
+required-config-files:
+  - ~/.config/extropy/config.json
+primary-credential: "Provider API keys via environment variables"
+required_binaries:
+  - extropy
+required_env_vars:
+  - OPENAI_API_KEY
+  - ANTHROPIC_API_KEY
+  - OPENROUTER_API_KEY
+  - DEEPSEEK_API_KEY
+  - AZURE_API_KEY
+  - AZURE_ENDPOINT
+  - AZURE_OPENAI_API_KEY
+  - AZURE_OPENAI_ENDPOINT
+  - MODELS_FAST
+  - MODELS_STRONG
+  - SIMULATION_FAST
+  - SIMULATION_STRONG
+  - SIMULATION_MAX_CONCURRENT
+  - SIMULATION_RATE_TIER
+  - SIMULATION_RPM_OVERRIDE
+  - SIMULATION_TPM_OVERRIDE
+required_config_files:
+  - ~/.config/extropy/config.json
+primary_credential: "Provider API keys via environment variables"
 metadata:
   requires:
     binaries:
