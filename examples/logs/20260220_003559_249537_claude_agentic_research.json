@@ -1,0 +1,1603 @@
+{
+  "timestamp": "2026-02-20T00:35:59.249572",
+  "function": "agentic_research",
+  "provider": "claude",
+  "request": {
+    "model": "claude-sonnet-4-6",
+    "prompt_length": 12080
+  },
+  "response": {
+    "id": "msg_01VAPcXxHPmkJoaKiVupVr38",
+    "content": [
+      {
+        "citations": null,
+        "text": "[REDACTED_TEXT length=89]",
+        "type": "text",
+        "parsed_output": null
+      },
+      {
+        "id": "srvtoolu_01Bk23LHuViaXrzdbQmbQtcN",
+        "input": {
+          "query": "US adult education level distribution 2024 Census statistics"
+        },
+        "name": "web_search",
+        "type": "server_tool_use",
+        "caller": {
+          "type": "direct"
+        }
+      },
+      {
+        "id": "srvtoolu_01PEW2gFkBE4wKkfQem6jz5a",
+        "input": {
+          "query": "US household income distribution 2024 median statistics"
+        },
+        "name": "web_search",
+        "type": "server_tool_use",
+        "caller": {
+          "type": "direct"
+        }
+      },
+      {
+        "id": "srvtoolu_01K25iYWDbsn9fueHfucgdo5",
+        "input": {
+          "query": "US adult marital status distribution 2024 Census"
+        },
+        "name": "web_search",
+        "type": "server_tool_use",
+        "caller": {
+          "type": "direct"
+        }
+      },
+      {
+        "content": [
+          {
+            "encrypted_content": "[REDACTED_TEXT length=1392]",
+            "page_age": null,
+            "title": "Census Bureau Releases New Educational Attainment Data",
+            "type": "web_search_result",
+            "url": "https://www.census.gov/newsroom/press-releases/2025/educational-attainment-data.html"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=1024]",
+            "page_age": null,
+            "title": "Educational Attainment in the United States: 2024",
+            "type": "web_search_result",
+            "url": "https://www.census.gov/data/tables/2024/demo/educational-attainment/cps-detailed-tables.html"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=3044]",
+            "page_age": null,
+            "title": "Educational Attainment",
+            "type": "web_search_result",
+            "url": "https://www.census.gov/topics/education/educational-attainment.html"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=3672]",
+            "page_age": "September 10, 2025",
+            "title": "US Census Bureau Releases New Educational Attainment Data - Stephen's Lighthouse",
+            "type": "web_search_result",
+            "url": "https://stephenslighthouse.com/2025/09/10/us-census-bureau-releases-new-educational-attainment-data/"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=5500]",
+            "page_age": "January 15, 2025",
+            "title": "Educational Attainment Statistics [2025]: Levels by Demographic",
+            "type": "web_search_result",
+            "url": "https://educationdata.org/education-attainment-statistics"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=6628]",
+            "page_age": "3 weeks ago",
+            "title": "Educational attainment in the United States - Wikipedia",
+            "type": "web_search_result",
+            "url": "https://en.wikipedia.org/wiki/Educational_attainment_in_the_United_States"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=2452]",
+            "page_age": null,
+            "title": "Educational Attainment Tables",
+            "type": "web_search_result",
+            "url": "https://www.census.gov/topics/education/educational-attainment/data/tables.html"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=5184]",
+            "page_age": null,
+            "title": "Educational Attainment, Undergraduate Field of Degree | American Community Survey | U.S. Census Bureau",
+            "type": "web_search_result",
+            "url": "https://www.census.gov/acs/www/about/why-we-ask-each-question/education/"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=4716]",
+            "page_age": "October 13, 2025",
+            "title": "US Population Over 18 in 2025 | Statistics & Facts - The World Data",
+            "type": "web_search_result",
+            "url": "https://theworlddata.com/us-population-over-18/"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=4508]",
+            "page_age": null,
+            "title": "Indicator 27: Educational Attainment",
+            "type": "web_search_result",
+            "url": "https://nces.ed.gov/programs/raceindicators/indicator_rfa.asp"
+          }
+        ],
+        "tool_use_id": "srvtoolu_01Bk23LHuViaXrzdbQmbQtcN",
+        "type": "web_search_tool_result",
+        "caller": {
+          "type": "direct"
+        }
+      },
+      {
+        "content": [
+          {
+            "encrypted_content": "[REDACTED_TEXT length=4404]",
+            "page_age": null,
+            "title": "Income in the United States: 2024",
+            "type": "web_search_result",
+            "url": "https://www.census.gov/library/publications/2025/demo/p60-286.html"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=4080]",
+            "page_age": "January 16, 2026",
+            "title": "Charted: The Distribution of Household Income in America",
+            "type": "web_search_result",
+            "url": "https://www.visualcapitalist.com/distribution-of-household-income-in-america/"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=5256]",
+            "page_age": null,
+            "title": "Income in the United States: 2024 Current Population Reports",
+            "type": "web_search_result",
+            "url": "https://www2.census.gov/library/publications/2025/demo/p60-286.pdf"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=1192]",
+            "page_age": "September 9, 2025",
+            "title": "Real Median Household Income in the United States (MEHOINUSA672N) | FRED | St. Louis Fed",
+            "type": "web_search_result",
+            "url": "https://fred.stlouisfed.org/series/MEHOINUSA672N"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=5476]",
+            "page_age": null,
+            "title": "Income in the United States: 2023 Current Population Reports",
+            "type": "web_search_result",
+            "url": "https://www2.census.gov/library/publications/2024/demo/p60-282.pdf"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=4672]",
+            "page_age": null,
+            "title": "Income in the United States: 2023",
+            "type": "web_search_result",
+            "url": "https://www.census.gov/library/publications/2024/demo/p60-282.html"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=3200]",
+            "page_age": "September 11, 2025",
+            "title": "Here's the U.S. median household income for 2024",
+            "type": "web_search_result",
+            "url": "https://www.cnbc.com/2025/09/11/us-median-household-income-2024.html"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=1752]",
+            "page_age": null,
+            "title": "Household Income Percentile Calculator, US - DQYDJ",
+            "type": "web_search_result",
+            "url": "https://dqydj.com/household-income-percentile-calculator/"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=5656]",
+            "page_age": null,
+            "title": "The Fed - Report on the Economic Well-Being of U.S. Households in 2024 - May 2025 - Income and Expenses",
+            "type": "web_search_result",
+            "url": "https://www.federalreserve.gov/publications/2025-economic-well-being-of-us-households-in-2024-income-and-expenses.htm"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=3828]",
+            "page_age": null,
+            "title": "Household income distribution in the U.S. 2000-2024",
+            "type": "web_search_result",
+            "url": "https://www.statista.com/statistics/758502/percentage-distribution-of-household-income-in-the-us/"
+          }
+        ],
+        "tool_use_id": "srvtoolu_01PEW2gFkBE4wKkfQem6jz5a",
+        "type": "web_search_tool_result",
+        "caller": {
+          "type": "direct"
+        }
+      },
+      {
+        "content": [
+          {
+            "encrypted_content": "[REDACTED_TEXT length=1248]",
+            "page_age": null,
+            "title": "Marital Status in the United States",
+            "type": "web_search_result",
+            "url": "https://www.census.gov/library/visualizations/interactive/marital-status-in-united-states.html"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=1768]",
+            "page_age": null,
+            "title": "Historical Marital Status Tables",
+            "type": "web_search_result",
+            "url": "https://www.census.gov/data/tables/time-series/demo/families/marital.html"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=2800]",
+            "page_age": null,
+            "title": "Marriage and Divorce",
+            "type": "web_search_result",
+            "url": "https://www.census.gov/topics/families/marriage-and-divorce.html"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=5424]",
+            "page_age": null,
+            "title": "Marital Status / Marital History | American Community Survey | U.S. Census Bureau",
+            "type": "web_search_result",
+            "url": "https://www.census.gov/acs/www/about/why-we-ask-each-question/marital/"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=356]",
+            "page_age": null,
+            "title": "B12001: Sex by Marital Status for ... - Census Bureau Table",
+            "type": "web_search_result",
+            "url": "https://data.census.gov/table/ACSDT1Y2024.B12001?q=B12001"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=780]",
+            "page_age": null,
+            "title": "Marital Status in the United States",
+            "type": "web_search_result",
+            "url": "https://statisticalatlas.com/United-States/Marital-Status"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=5348]",
+            "page_age": null,
+            "title": "Marital Status Distribution of U.S. Adults Aged 65 and Older, 1990-2022",
+            "type": "web_search_result",
+            "url": "https://www.bgsu.edu/ncfmr/resources/data/family-profiles/marital-status-distribution-of-u-s--adults-aged-65-and-older--19.html"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=4468]",
+            "page_age": "February 11, 2025",
+            "title": "How has marriage in the US changed over time? | USAFacts",
+            "type": "web_search_result",
+            "url": "https://usafacts.org/articles/state-relationships-marriages-and-living-alone-us/"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=1692]",
+            "page_age": null,
+            "title": "Marital Status - Census Reporter",
+            "type": "web_search_result",
+            "url": "https://censusreporter.org/topics/marital-status/"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=5220]",
+            "page_age": "July 13, 2024",
+            "title": "Majority of Americans Single: Surprise Statistics & Insights",
+            "type": "web_search_result",
+            "url": "https://www.hcmmlaw.com/blog/2024/07/13/majority-americans-now-single-statistics-insights/"
+          }
+        ],
+        "tool_use_id": "srvtoolu_01K25iYWDbsn9fueHfucgdo5",
+        "type": "web_search_tool_result",
+        "caller": {
+          "type": "direct"
+        }
+      },
+      {
+        "id": "srvtoolu_012ZNdnajsefVYJ2QFskwpWu",
+        "input": {
+          "query": "US political party identification 2024 Gallup Democrat Republican Independent percentage"
+        },
+        "name": "web_search",
+        "type": "server_tool_use",
+        "caller": {
+          "type": "direct"
+        }
+      },
+      {
+        "id": "srvtoolu_01TWwaGfK8hVGPvmM2PGzJH6",
+        "input": {
+          "query": "US employment sector distribution 2024 BLS private government self-employed retired percentage"
+        },
+        "name": "web_search",
+        "type": "server_tool_use",
+        "caller": {
+          "type": "direct"
+        }
+      },
+      {
+        "content": [
+          {
+            "encrypted_content": "[REDACTED_TEXT length=5064]",
+            "page_age": "April 3, 2025",
+            "title": "GOP Holds Edge in Party Affiliation for Third Straight Year",
+            "type": "web_search_result",
+            "url": "https://news.gallup.com/poll/655157/gop-holds-edge-party-affiliation-third-straight-year.aspx"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=1456]",
+            "page_age": "September 20, 2007",
+            "title": "Party Affiliation | Gallup Historical Trends",
+            "type": "web_search_result",
+            "url": "https://news.gallup.com/poll/15370/party-affiliation.aspx"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=5480]",
+            "page_age": "March 26, 2025",
+            "title": "Independent Party ID Tied for High; Democratic ID at New Low",
+            "type": "web_search_result",
+            "url": "https://news.gallup.com/poll/548459/independent-party-tied-high-democratic-new-low.aspx"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=4288]",
+            "page_age": "2 weeks ago",
+            "title": "New High of 45% in U.S. Identify as Political Independents",
+            "type": "web_search_result",
+            "url": "https://news.gallup.com/poll/700499/new-high-identify-political-independents.aspx"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=384]",
+            "page_age": "April 24, 2025",
+            "title": "Party affiliation and ideology of US registered voters | Pew Research Center",
+            "type": "web_search_result",
+            "url": "https://www.pewresearch.org/politics/2024/04/09/the-partisanship-and-ideology-of-american-voters/"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=3692]",
+            "page_age": null,
+            "title": "Research Brief: Growing Cohort of Independent Voters Becomes Critical Segment of Electorate | Unite America",
+            "type": "web_search_result",
+            "url": "https://www.uniteamerica.org/articles/research-brief-growing-cohort-of-independent-voters-becomes-critical-segment-of-electorate"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=4280]",
+            "page_age": "July 31, 2025",
+            "title": "Democrats Regain Advantage in Party Affiliation",
+            "type": "web_search_result",
+            "url": "https://news.gallup.com/poll/692978/democrats-regain-advantage-party-affiliation.aspx"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=3108]",
+            "page_age": "December 16, 2025",
+            "title": "Party Affiliation Fact Sheet (NPORS) | Pew Research Center",
+            "type": "web_search_result",
+            "url": "https://www.pewresearch.org/politics/fact-sheet/party-affiliation-fact-sheet-npors/"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=4932]",
+            "page_age": "March 26, 2025",
+            "title": "U.S. Political Parties Historically Polarized Ideologically",
+            "type": "web_search_result",
+            "url": "https://news.gallup.com/poll/655190/political-parties-historically-polarized-ideologically.aspx"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=3828]",
+            "page_age": "January 23, 2025",
+            "title": "Gallup: More Americans identify as Republican than Democrat for third straight year - CatholicVote org",
+            "type": "web_search_result",
+            "url": "https://catholicvote.org/gallup-more-americans-identify-republican-than-democrat/"
+          }
+        ],
+        "tool_use_id": "srvtoolu_012ZNdnajsefVYJ2QFskwpWu",
+        "type": "web_search_tool_result",
+        "caller": {
+          "type": "direct"
+        }
+      },
+      {
+        "content": [
+          {
+            "encrypted_content": "[REDACTED_TEXT length=244]",
+            "page_age": null,
+            "title": "Employment by major industry sector : U.S. Bureau of Labor Statistics",
+            "type": "web_search_result",
+            "url": "https://www.bls.gov/emp/tables/employment-by-major-industry-sector.htm"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=6444]",
+            "page_age": null,
+            "title": "Industry and occupational employment projections overview and highlights, 2024\u201334 : Monthly Labor Review : U.S. Bureau of Labor Statistics",
+            "type": "web_search_result",
+            "url": "https://www.bls.gov/opub/mlr/2026/article/industry-and-occupational-employment-projections-overview.htm"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=4552]",
+            "page_age": null,
+            "title": "Labor Force Characteristics (CPS) : U.S. Bureau of Labor Statistics",
+            "type": "web_search_result",
+            "url": "https://www.bls.gov/cps/lfcharacteristics.htm"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=240]",
+            "page_age": null,
+            "title": "Employment and output by industry : U.S. Bureau of Labor Statistics",
+            "type": "web_search_result",
+            "url": "https://www.bls.gov/emp/tables/industry-employment-and-output.htm"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=376]",
+            "page_age": null,
+            "title": "Self-Employed, BLS - Economic Data Series | FRED | St. Louis Fed",
+            "type": "web_search_result",
+            "url": "https://fred.stlouisfed.org/tags/series?t=bls%3Bself-employed"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=388]",
+            "page_age": null,
+            "title": "Workers, Self-Employed, BLS - Economic Data Series | FRED | St. Louis Fed",
+            "type": "web_search_result",
+            "url": "https://fred.stlouisfed.org/tags/series?t=bls%3Bself-employed%3Bworkers"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=5456]",
+            "page_age": "3 weeks ago",
+            "title": "How Many Americans Are Self-Employed in 2026? (Stats by Industry, Income, and State) - Carry",
+            "type": "web_search_result",
+            "url": "https://carry.com/learn/self-employed-americans"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=6332]",
+            "page_age": null,
+            "title": "Employment and Wages, Annual Averages 2024 : U.S. Bureau of Labor Statistics",
+            "type": "web_search_result",
+            "url": "https://www.bls.gov/cew/publications/employment-and-wages-annual-averages/current/"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=540]",
+            "page_age": null,
+            "title": "Employment by industry",
+            "type": "web_search_result",
+            "url": "https://www.bls.gov/charts/employment-situation/employment-levels-by-industry.htm"
+          },
+          {
+            "encrypted_content": "[REDACTED_TEXT length=260]",
+            "page_age": null,
+            "title": "Employed persons by detailed occupation and age : U.S. Bureau of Labor Statistics",
+            "type": "web_search_result",
+            "url": "https://www.bls.gov/cps/cpsaat11b.htm"
+          }
+        ],
+        "tool_use_id": "srvtoolu_01TWwaGfK8hVGPvmM2PGzJH6",
+        "type": "web_search_tool_result",
+        "caller": {
+          "type": "direct"
+        }
+      },
+      {
+        "citations": null,
+        "text": "[REDACTED_TEXT length=412]",
+        "type": "text",
+        "parsed_output": null
+      },
+      {
+        "id": "toolu_016CdeDz23M67D3DAFgAFq4E",
+        "input": {
+          "attributes": [
+            {
+              "name": "education_level",
+              "distribution": {
+                "type": "categorical",
+                "options": [
+                  "Less than HS",
+                  "HS diploma/GED",
+                  "Some college",
+                  "Bachelor's degree",
+                  "Graduate degree"
+                ],
+                "weights": [
+                  0.09,
+                  0.27,
+                  0.2,
+                  0.24,
+                  0.2
+                ],
+                "mean": null,
+                "std": null,
+                "mean_formula": null,
+                "std_formula": null,
+                "min": null,
+                "max": null,
+                "min_formula": null,
+                "max_formula": null,
+                "alpha": null,
+                "beta": null,
+                "probability_true": null
+              },
+              "constraints": [
+                {
+                  "type": "spec_expression",
+                  "expression": "abs(sum(weights) - 1.0) < 0.001",
+                  "value": null,
+                  "reason": "Weights must sum to 1.0"
+                }
+              ],
+              "grounding": {
+                "level": "strong",
+                "method": "researched",
+                "source": "US Census Bureau CPS 2024; educationdata.org 2025",
+                "note": "~9% less than HS, ~27% HS diploma, ~20% some college/associate, ~24% bachelor's, ~20% graduate. Ages 18-24 skew lower; modifiers will handle age dependency."
+              }
+            },
+            {
+              "name": "household_income",
+              "distribution": {
+                "type": "lognormal",
+                "mean": 83730,
+                "std": 75000,
+                "mean_formula": null,
+                "std_formula": null,
+                "min": 0,
+                "max": 800000,
+                "min_formula": null,
+                "max_formula": null,
+                "alpha": null,
+                "beta": null,
+                "options": null,
+                "weights": null,
+                "probability_true": null
+              },
+              "constraints": [
+                {
+                  "type": "hard_min",
+                  "value": 0,
+                  "expression": null,
+                  "reason": "Income cannot be negative"
+                },
+                {
+                  "type": "hard_max",
+                  "value": 800000,
+                  "expression": null,
+                  "reason": "Caps extreme outliers; 99th percentile US household income approx $500-600k"
+                }
+              ],
+              "grounding": {
+                "level": "strong",
+                "method": "researched",
+                "source": "US Census Bureau Income in the United States: 2024 (P60-286); CNBC Sept 2025",
+                "note": "Median household income $83,730 in 2024. Lognormal captures right-skewed income distribution. Std set wide to capture full range from poverty to affluent."
+              }
+            },
+            {
+              "name": "marital_status",
+              "distribution": {
+                "type": "categorical",
+                "options": [
+                  "Married/partnered",
+                  "Single",
+                  "Divorced/separated",
+                  "Widowed"
+                ],
+                "weights": [
+                  0.49,
+                  0.31,
+                  0.14,
+                  0.06
+                ],
+                "mean": null,
+                "std": null,
+                "mean_formula": null,
+                "std_formula": null,
+                "min": null,
+                "max": null,
+                "min_formula": null,
+                "max_formula": null,
+                "alpha": null,
+                "beta": null,
+                "probability_true": null
+              },
+              "constraints": [
+                {
+                  "type": "spec_expression",
+                  "expression": "abs(sum(weights) - 1.0) < 0.001",
+                  "value": null,
+                  "reason": "Weights must sum to 1.0"
+                }
+              ],
+              "grounding": {
+                "level": "strong",
+                "method": "researched",
+                "source": "USAFacts 2024; Census Bureau marital status data 2024",
+                "note": "47.1% of households headed by married couples in 2024; ~49% adults married/partnered including cohabiting. Single/never-married ~31%, divorced/separated ~14%, widowed ~6%. Age modifiers critical: youn...[truncated]"
+              }
+            },
+            {
+              "name": "household_size",
+              "distribution": {
+                "type": "normal",
+                "mean": 2.53,
+                "std": 1.4,
+                "mean_formula": null,
+                "std_formula": null,
+                "min": 1,
+                "max": 10,
+                "min_formula": null,
+                "max_formula": null,
+                "alpha": null,
+                "beta": null,
+                "options": null,
+                "weights": null,
+                "probability_true": null
+              },
+              "constraints": [
+                {
+                  "type": "hard_min",
+                  "value": 1,
+                  "expression": null,
+                  "reason": "Household must have at least 1 person (respondent)"
+                },
+                {
+                  "type": "hard_max",
+                  "value": 10,
+                  "expression": null,
+                  "reason": "Households of 10+ are extreme outliers (<0.1%)"
+                }
+              ],
+              "grounding": {
+                "level": "strong",
+                "method": "researched",
+                "source": "US Census Bureau ACS 2024; average household size ~2.53",
+                "note": "US average household size is 2.53. Married households average ~3.1, single-person ~1.0. Marital status modifier will shift mean upward for married/partnered."
+              }
+            },
+            {
+              "name": "has_children",
+              "distribution": {
+                "type": "boolean",
+                "probability_true": 0.28,
+                "mean": null,
+                "std": null,
+                "mean_formula": null,
+                "std_formula": null,
+                "min": null,
+                "max": null,
+                "min_formula": null,
+                "max_formula": null,
+                "alpha": null,
+                "beta": null,
+                "options": null,
+                "weights": null
+              },
+              "constraints": [
+                {
+                  "type": "expression",
+                  "expression": "not (has_children and age < 18)",
+                  "value": null,
+                  "reason": "Under-18s cannot have children in household as adult respondents (floor is 18)"
+                }
+              ],
+              "grounding": {
+                "level": "medium",
+                "method": "researched",
+                "source": "Census Bureau CPS 2024; ~28% of households have children under 18",
+                "note": "About 28% of all adults have children under 18 at home. Strong age dependency: near-zero for 18-22, peaks at ~45% for ages 30-45, near-zero for 65+. Marital status also a major modifier."
+              }
+            },
+            {
+              "name": "employment_sector",
+              "distribution": {
+                "type": "categorical",
+                "options": [
+                  "Federal government",
+                  "State/local government",
+                  "Private sector",
+                  "Gig/contract",
+                  "Self-employed",
+                  "Retired",
+                  "Unemployed",
+                  "Not in labor force"
+                ],
+                "weights": [
+                  0.02,
+                  0.13,
+                  0.52,
+                  0.06,
+                  0.07,
+                  0.12,
+                  0.03,
+                  0.05
+                ],
+                "mean": null,
+                "std": null,
+                "mean_formula": null,
+                "std_formula": null,
+                "min": null,
+                "max": null,
+                "min_formula": null,
+                "max_formula": null,
+                "alpha": null,
+                "beta": null,
+                "probability_true": null
+              },
+              "constraints": [
+                {
+                  "type": "spec_expression",
+                  "expression": "abs(sum(weights) - 1.0) < 0.001",
+                  "value": null,
+                  "reason": "Weights must sum to 1.0"
+                }
+              ],
+              "grounding": {
+                "level": "strong",
+                "method": "researched",
+                "source": "BLS Employment and Wages 2024; BLS CPS 2024",
+                "note": "BLS 2024: federal ~3M, state ~4.8M, local ~14.6M employees; private ~132.6M. Self-employed ~10% of employed. Retired and NILF weighted for full adult 18-80 population. Age modifiers critical: retired ...[truncated]"
+              }
+            },
+            {
+              "name": "job_security_perception",
+              "distribution": {
+                "type": "categorical",
+                "options": [
+                  "Very secure",
+                  "Somewhat secure",
+                  "Somewhat insecure",
+                  "Very insecure",
+                  "N/A - not employed"
+                ],
+                "weights": [
+                  0.3,
+                  0.35,
+                  0.13,
+                  0.07,
+                  0.15
+                ],
+                "mean": null,
+                "std": null,
+                "mean_formula": null,
+                "std_formula": null,
+                "min": null,
+                "max": null,
+                "min_formula": null,
+                "max_formula": null,
+                "alpha": null,
+                "beta": null,
+                "probability_true": null
+              },
+              "constraints": [
+                {
+                  "type": "spec_expression",
+                  "expression": "abs(sum(weights) - 1.0) < 0.001",
+                  "value": null,
+                  "reason": "Weights must sum to 1.0"
+                }
+              ],
+              "grounding": {
+                "level": "medium",
+                "method": "extrapolated",
+                "source": "Gallup Job Security surveys; Federal Reserve SHED 2024",
+                "note": "Majority of employed workers report feeling secure. ~20% report some insecurity. N/A bucket covers retired, unemployed, NILF (~15-20% of adult population)."
+              }
+            },
+            {
+              "name": "financial_margin",
+              "distribution": {
+                "type": "categorical",
+                "options": [
+                  "Comfortable savings buffer",
+                  "Modest buffer",
+                  "Paycheck-to-paycheck",
+                  "In debt/deficit"
+                ],
+                "weights": [
+                  0.25,
+                  0.27,
+                  0.33,
+                  0.15
+                ],
+                "mean": null,
+                "std": null,
+                "mean_formula": null,
+                "std_formula": null,
+                "min": null,
+                "max": null,
+                "min_formula": null,
+                "max_formula": null,
+                "alpha": null,
+                "beta": null,
+                "probability_true": null
+              },
+              "constraints": [
+                {
+                  "type": "spec_expression",
+                  "expression": "abs(sum(weights) - 1.0) < 0.001",
+                  "value": null,
+                  "reason": "Weights must sum to 1.0"
+                }
+              ],
+              "grounding": {
+                "level": "strong",
+                "method": "researched",
+                "source": "Federal Reserve SHED 2024; multiple paycheck-to-paycheck surveys 2024",
+                "note": "Approximately 63-66% of Americans live paycheck-to-paycheck per various 2024 surveys. Fed SHED shows ~28% skipped medical care due to cost. Comfortable savers ~25%, modest buffer ~27%, P2P ~33%, defic...[truncated]"
+              }
+            },
+            {
+              "name": "investment_profile",
+              "distribution": {
+                "type": "categorical",
+                "options": [
+                  "No investments",
+                  "401k/IRA only",
+                  "Diversified investor",
+                  "Active trader",
+                  "Crypto holder"
+                ],
+                "weights": [
+                  0.29,
+                  0.38,
+                  0.17,
+                  0.08,
+                  0.08
+                ],
+                "mean": null,
+                "std": null,
+                "mean_formula": null,
+                "std_formula": null,
+                "min": null,
+                "max": null,
+                "min_formula": null,
+                "max_formula": null,
+                "alpha": null,
+                "beta": null,
+                "probability_true": null
+              },
+              "constraints": [
+                {
+                  "type": "spec_expression",
+                  "expression": "abs(sum(weights) - 1.0) < 0.001",
+                  "value": null,
+                  "reason": "Weights must sum to 1.0"
+                }
+              ],
+              "grounding": {
+                "level": "medium",
+                "method": "extrapolated",
+                "source": "Federal Reserve SHED 2024; Gallup Stock Market Ownership 2024",
+                "note": "~55-58% of Americans own stocks (many via retirement accounts). ~29% have no investments. Crypto ownership ~15-20% but as primary profile ~8%. Diversified investor and active trader reflect smaller ed...[truncated]"
+              }
+            },
+            {
+              "name": "primary_info_source",
+              "distribution": {
+                "type": "categorical",
+                "options": [
+                  "Cable/broadcast TV news",
+                  "Social media",
+                  "Online news sites",
+                  "Podcasts",
+                  "Local news",
+                  "Print media",
+                  "Avoids news"
+                ],
+                "weights": [
+                  0.28,
+                  0.25,
+                  0.18,
+                  0.08,
+                  0.09,
+                  0.04,
+                  0.08
+                ],
+                "mean": null,
+                "std": null,
+                "mean_formula": null,
+                "std_formula": null,
+                "min": null,
+                "max": null,
+                "min_formula": null,
+                "max_formula": null,
+                "alpha": null,
+                "beta": null,
+                "probability_true": null
+              },
+              "constraints": [
+                {
+                  "type": "spec_expression",
+                  "expression": "abs(sum(weights) - 1.0) < 0.001",
+                  "value": null,
+                  "reason": "Weights must sum to 1.0"
+                }
+              ],
+              "grounding": {
+                "level": "medium",
+                "method": "extrapolated",
+                "source": "Reuters Institute Digital News Report 2024; Pew Research Media consumption 2024",
+                "note": "TV still largest single source ~28%, social media surging esp. under 35 ~25%, online news ~18%. Podcasts growing ~8%. Print declining ~4%. Age modifiers essential: older adults heavily TV, younger hea...[truncated]"
+              }
+            },
+            {
+              "name": "social_media_behavior",
+              "distribution": {
+                "type": "categorical",
+                "options": [
+                  "Non-user",
+                  "Passive consumer",
+                  "Occasional poster",
+                  "Active poster/Influencer"
+                ],
+                "weights": [
+                  0.16,
+                  0.42,
+                  0.28,
+                  0.14
+                ],
+                "mean": null,
+                "std": null,
+                "mean_formula": null,
+                "std_formula": null,
+                "min": null,
+                "max": null,
+                "min_formula": null,
+                "max_formula": null,
+                "alpha": null,
+                "beta": null,
+                "probability_true": null
+              },
+              "constraints": [
+                {
+                  "type": "spec_expression",
+                  "expression": "abs(sum(weights) - 1.0) < 0.001",
+                  "value": null,
+                  "reason": "Weights must sum to 1.0"
+                }
+              ],
+              "grounding": {
+                "level": "medium",
+                "method": "extrapolated",
+                "source": "Pew Research Social Media Use 2024; Reuters Digital News Report 2024",
+                "note": "~84% of US adults use social media in some form. Most are passive consumers. Active posters ~28-30% of users; influencers a small fraction. Non-users concentrated among older adults 65+."
+              }
+            },
+            {
+              "name": "tech_adoption_posture",
+              "distribution": {
+                "type": "categorical",
+                "options": [
+                  "Technophobe/Avoider",
+                  "Late majority adopter",
+                  "Early majority adopter",
+                  "Early adopter",
+                  "Innovator"
+                ],
+                "weights": [
+                  0.14,
+                  0.26,
+                  0.34,
+                  0.18,
+                  0.08
+                ],
+                "mean": null,
+                "std": null,
+                "mean_formula": null,
+                "std_formula": null,
+                "min": null,
+                "max": null,
+                "min_formula": null,
+                "max_formula": null,
+                "alpha": null,
+                "beta": null,
+                "probability_true": null
+              },
+              "constraints": [
+                {
+                  "type": "spec_expression",
+                  "expression": "abs(sum(weights) - 1.0) < 0.001",
+                  "value": null,
+                  "reason": "Weights must sum to 1.0"
+                }
+              ],
+              "grounding": {
+                "level": "medium",
+                "method": "extrapolated",
+                "source": "Rogers Diffusion of Innovation model applied to US population; Pew Research Tech Adoption 2024",
+                "note": "Loosely follows Rogers' diffusion curve: innovators ~2.5%, early adopters ~13.5%, early majority ~34%, late majority ~34%, laggards ~16%. Adjusted for US digital economy context and 18-80 age range."
+              }
+            },
+            {
+              "name": "religious_engagement",
+              "distribution": {
+                "type": "categorical",
+                "options": [
+                  "Secular/None",
+                  "Nominally affiliated",
+                  "Moderately religious",
+                  "Devout"
+                ],
+                "weights": [
+                  0.29,
+                  0.25,
+                  0.27,
+                  0.19
+                ],
+                "mean": null,
+                "std": null,
+                "mean_formula": null,
+                "std_formula": null,
+                "min": null,
+                "max": null,
+                "min_formula": null,
+                "max_formula": null,
+                "alpha": null,
+                "beta": null,
+                "probability_true": null
+              },
+              "constraints": [
+                {
+                  "type": "spec_expression",
+                  "expression": "abs(sum(weights) - 1.0) < 0.001",
+                  "value": null,
+                  "reason": "Weights must sum to 1.0"
+                }
+              ],
+              "grounding": {
+                "level": "strong",
+                "method": "researched",
+                "source": "Pew Research Religious Landscape Study; Gallup Religion 2024",
+                "note": "~29% identify as religiously unaffiliated (nones). ~25% nominally affiliated but rarely practice. ~27% moderately religious (attend occasionally). ~19% devout (weekly+ attendance). Southeast and Midwe...[truncated]"
+              }
+            },
+            {
+              "name": "political_identity",
+              "distribution": {
+                "type": "categorical",
+                "options": [
+                  "Strong Democrat",
+                  "Lean Democrat",
+                  "True Independent",
+                  "Lean Republican",
+                  "Strong Republican"
+                ],
+                "weights": [
+                  0.18,
+                  0.18,
+                  0.17,
+                  0.2,
+                  0.27
+                ],
+                "mean": null,
+                "std": null,
+                "mean_formula": null,
+                "std_formula": null,
+                "min": null,
+                "max": null,
+                "min_formula": null,
+                "max_formula": null,
+                "alpha": null,
+                "beta": null,
+                "probability_true": null
+              },
+              "constraints": [
+                {
+                  "type": "spec_expression",
+                  "expression": "abs(sum(weights) - 1.0) < 0.001",
+                  "value": null,
+                  "reason": "Weights must sum to 1.0"
+                }
+              ],
+              "grounding": {
+                "level": "strong",
+                "method": "researched",
+                "source": "Gallup Party Affiliation 2024; Pew Research Partisan Identification 2024-2025",
+                "note": "2024 Gallup: 46% R/lean-R, 45% D/lean-D, 43% pure independents. Strong partisans ~28% each side per Pew. True independents (no lean) ~17%. Slight Republican lean for base reflecting 2024 election envi...[truncated]"
+              }
+            },
+            {
+              "name": "political_engagement_level",
+              "distribution": {
+                "type": "categorical",
+                "options": [
+                  "Disengaged",
+                  "Single-issue voter",
+                  "Moderate/occasional participant",
+                  "Highly engaged partisan"
+                ],
+                "weights": [
+                  0.22,
+                  0.18,
+                  0.38,
+                  0.22
+                ],
+                "mean": null,
+                "std": null,
+                "mean_formula": null,
+                "std_formula": null,
+                "min": null,
+                "max": null,
+                "min_formula": null,
+                "max_formula": null,
+                "alpha": null,
+                "beta": null,
+                "probability_true": null
+              },
+              "constraints": [
+                {
+                  "type": "spec_expression",
+                  "expression": "abs(sum(weights) - 1.0) < 0.001",
+                  "value": null,
+                  "reason": "Weights must sum to 1.0"
+                }
+              ],
+              "grounding": {
+                "level": "medium",
+                "method": "extrapolated",
+                "source": "ANES 2024; Pew Research Political Engagement 2024",
+                "note": "About 22% are largely disengaged from politics, 18% single-issue focused. The moderate/occasional majority ~38%. Highly engaged ~22%, consistent with share who always vote in midterms and follow news ...[truncated]"
+              }
+            },
+            {
+              "name": "vote_2024_presidential",
+              "distribution": {
+                "type": "categorical",
+                "options": [
+                  "Trump",
+                  "Harris",
+                  "Third party",
+                  "Did not vote",
+                  "Not eligible"
+                ],
+                "weights": [
+                  0.31,
+                  0.3,
+                  0.02,
+                  0.28,
+                  0.09
+                ],
+                "mean": null,
+                "std": null,
+                "mean_formula": null,
+                "std_formula": null,
+                "min": null,
+                "max": null,
+                "min_formula": null,
+                "max_formula": null,
+                "alpha": null,
+                "beta": null,
+                "probability_true": null
+              },
+              "constraints": [
+                {
+                  "type": "spec_expression",
+                  "expression": "abs(sum(weights) - 1.0) < 0.001",
+                  "value": null,
+                  "reason": "Weights must sum to 1.0"
+                }
+              ],
+              "grounding": {
+                "level": "strong",
+                "method": "researched",
+                "source": "2024 Presidential Election results; US Elections Project turnout data",
+                "note": "Trump won 49.9% of popular vote, Harris 48.4% of votes cast. ~64% of eligible voters voted. ~9% of adults are non-citizens/not eligible. Did-not-vote reflects low turnout among disengaged. Political i...[truncated]"
+              }
+            },
+            {
+              "name": "midterm_turnout_propensity",
+              "distribution": {
+                "type": "categorical",
+                "options": [
+                  "Always votes",
+                  "Sometimes votes",
+                  "Rarely votes",
+                  "Never votes"
+                ],
+                "weights": [
+                  0.35,
+                  0.27,
+                  0.2,
+                  0.18
+                ],
+                "mean": null,
+                "std": null,
+                "mean_formula": null,
+                "std_formula": null,
+                "min": null,
+                "max": null,
+                "min_formula": null,
+                "max_formula": null,
+                "alpha": null,
+                "beta": null,
+                "probability_true": null
+              },
+              "constraints": [
+                {
+                  "type": "spec_expression",
+                  "expression": "abs(sum(weights) - 1.0) < 0.001",
+                  "value": null,
+                  "reason": "Weights must sum to 1.0"
+                }
+              ],
+              "grounding": {
+                "level": "medium",
+                "method": "extrapolated",
+                "source": "US Elections Project midterm turnout data; Pew Research voter typology 2024",
+                "note": "Midterm turnout ~50% of eligible voters (2022 ~46.8%). Always-voters ~35% of adults, sometimes ~27%, rarely ~20%, never ~18%. Age modifier critical: older adults much more consistent voters."
+              }
+            },
+            {
+              "name": "congressional_district_competitiveness",
+              "distribution": {
+                "type": "categorical",
+                "options": [
+                  "Safe Republican",
+                  "Lean Republican",
+                  "Swing district",
+                  "Lean Democrat",
+                  "Safe Democrat"
+                ],
+                "weights": [
+                  0.36,
+                  0.12,
+                  0.1,
+                  0.12,
+                  0.3
+                ],
+                "mean": null,
+                "std": null,
+                "mean_formula": null,
+                "std_formula": null,
+                "min": null,
+                "max": null,
+                "min_formula": null,
+                "max_formula": null,
+                "alpha": null,
+                "beta": null,
+                "probability_true": null
+              },
+              "constraints": [
+                {
+                  "type": "spec_expression",
+                  "expression": "abs(sum(weights) - 1.0) < 0.001",
+                  "value": null,
+                  "reason": "Weights must sum to 1.0"
+                }
+              ],
+              "grounding": {
+                "level": "medium",
+                "method": "extrapolated",
+                "source": "Cook Political Report 2024 district ratings; DCCC/NRCC targeting lists",
+                "note": "Approximately 35-40 truly competitive House districts out of 435 (~10%). Safe R districts slightly outnumber safe D given geographic sorting. Rural/suburban Republican districts vs. urban Democratic s...[truncated]"
+              }
+            },
+            {
+              "name": "top_issue_2026",
+              "distribution": {
+                "type": "categorical",
+                "options": [
+                  "Economy/Jobs",
+                  "Abortion/Reproductive rights",
+                  "Immigration",
+                  "Democracy/Rule of law",
+                  "Healthcare",
+                  "Climate",
+                  "Education",
+                  "AI/Technology"
+                ],
+                "weights": [
+                  0.28,
+                  0.13,
+                  0.15,
+                  0.12,
+                  0.13,
+                  0.07,
+                  0.07,
+                  0.05
+                ],
+                "mean": null,
+                "std": null,
+                "mean_formula": null,
+                "std_formula": null,
+                "min": null,
+                "max": null,
+                "min_formula": null,
+                "max_formula": null,
+                "alpha": null,
+                "beta": null,
+                "probability_true": null
+              },
+              "constraints": [
+                {
+                  "type": "spec_expression",
+                  "expression": "abs(sum(weights) - 1.0) < 0.001",
+                  "value": null,
+                  "reason": "Weights must sum to 1.0"
+                }
+              ],
+              "grounding": {
+                "level": "medium",
+                "method": "extrapolated",
+                "source": "Gallup Most Important Problem 2024-2025; Pew Research Issue Priorities 2024",
+                "note": "Economy/jobs consistently tops issue salience polls ~25-30%. Immigration elevated post-2024 election. Abortion remains salient post-Dobbs. Democracy/rule of law elevated heading into 2026. AI/Tech eme...[truncated]"
+              }
+            },
+            {
+              "name": "country_direction_approval",
+              "distribution": {
+                "type": "categorical",
+                "options": [
+                  "Strongly approve",
+                  "Somewhat approve",
+                  "Somewhat disapprove",
+                  "Strongly disapprove"
+                ],
+                "weights": [
+                  0.22,
+                  0.18,
+                  0.18,
+                  0.42
+                ],
+                "mean": null,
+                "std": null,
+                "mean_formula": null,
+                "std_formula": null,
+                "min": null,
+                "max": null,
+                "min_formula": null,
+                "max_formula": null,
+                "alpha": null,
+                "beta": null,
+                "probability_true": null
+              },
+              "constraints": [
+                {
+                  "type": "spec_expression",
+                  "expression": "abs(sum(weights) - 1.0) < 0.001",
+                  "value": null,
+                  "reason": "Weights must sum to 1.0"
+                }
+              ],
+              "grounding": {
+                "level": "medium",
+                "method": "extrapolated",
+                "source": "Gallup Right/Wrong Direction poll 2025; RealClearPolitics average Feb 2026",
+                "note": "As of early 2026, right-track/wrong-track polls show majority disapprove of country direction (~55-60% wrong track). Strongly disapprove heavily driven by Democrats/independents reacting to Trump seco...[truncated]"
+              }
+            },
+            {
+              "name": "consumer_identity",
+              "distribution": {
+                "type": "categorical",
+                "options": [
+                  "Brand loyal",
+                  "Price/value driven",
+                  "Values/ethics driven",
+                  "Convenience driven"
+                ],
+                "weights": [
+                  0.22,
+                  0.42,
+                  0.18,
+                  0.18
+                ],
+                "mean": null,
+                "std": null,
+                "mean_formula": null,
+                "std_formula": null,
+                "min": null,
+                "max": null,
+                "min_formula": null,
+                "max_formula": null,
+                "alpha": null,
+                "beta": null,
+                "probability_true": null
+              },
+              "constraints": [
+                {
+                  "type": "spec_expression",
+                  "expression": "abs(sum(weights) - 1.0) < 0.001",
+                  "value": null,
+                  "reason": "Weights must sum to 1.0"
+                }
+              ],
+              "grounding": {
+                "level": "medium",
+                "method": "extrapolated",
+                "source": "Nielsen Consumer Research 2024; McKinsey Consumer Pulse 2024",
+                "note": "Price/value is primary driver for plurality of Americans especially post-inflation environment. Brand loyalty declining. Values-driven purchasing elevated among higher-education, younger, liberal cons...[truncated]"
+              }
+            },
+            {
+              "name": "institutional_trust",
+              "distribution": {
+                "type": "categorical",
+                "options": [
+                  "High trust",
+                  "Moderate trust",
+                  "Low trust",
+                  "Distrustful/Conspiratorial"
+                ],
+                "weights": [
+                  0.14,
+                  0.32,
+                  0.34,
+                  0.2
+                ],
+                "mean": null,
+                "std": null,
+                "mean_formula": null,
+                "std_formula": null,
+                "min": null,
+                "max": null,
+                "min_formula": null,
+                "max_formula": null,
+                "alpha": null,
+                "beta": null,
+                "probability_true": null
+              },
+              "constraints": [
+                {
+                  "type": "spec_expression",
+                  "expression": "abs(sum(weights) - 1.0) < 0.001",
+                  "value": null,
+                  "reason": "Weights must sum to 1.0"
+                }
+              ],
+              "grounding": {
+                "level": "strong",
+                "method": "researched",
+                "source": "Gallup Confidence in Institutions 2024; Edelman Trust Barometer 2025",
+                "note": "Institutional trust at historic lows. Gallup 2024: <30% confident in most major institutions. ~14% high trust, ~32% moderate, ~34% low trust, ~20% conspiratorial/distrustful across the board. Politica...[truncated]"
+              }
+            },
+            {
+              "name": "risk_tolerance",
+              "distribution": {
+                "type": "beta",
+                "alpha": 2.5,
+                "beta": 3.0,
+                "mean": null,
+                "std": null,
+                "mean_formula": null,
+                "std_formula": null,
+                "min": 0.0,
+                "max": 1.0,
+                "min_formula": null,
+                "max_formula": null,
+                "options": null,
+                "weights": null,
+                "probability_true": null
+              },
+              "constraints": [
+                {
+                  "type": "hard_min",
+                  "value": 0,
+                  "expression": null,
+                  "reason": "Risk tolerance bounded at 0 (fully risk-averse)"
+                },
+                {
+                  "type": "hard_max",
+                  "value": 1,
+                  "expression": null,
+                  "reason": "Risk tolerance bounded at 1 (fully risk-tolerant)"
+                }
+              ],
+              "grounding": {
+                "level": "medium",
+                "method": "extrapolated",
+                "source": "FINRA Investor Education Foundation 2024; Federal Reserve SHED 2024",
+                "note": "Beta(2.5, 3.0) gives mean ~0.45, slightly below midpoint, reflecting general risk aversion in US population. Right-skewed toward lower risk tolerance. Age and income are key modifiers: younger and wea...[truncated]"
+              }
+            },
+            {
+              "name": "economic_anxiety",
+              "distribution": {
+                "type": "beta",
+                "alpha": 3.5,
+                "beta": 2.5,
+                "mean": null,
+                "std": null,
+                "mean_formula": null,
+                "std_formula": null,
+                "min": 0.0,
+                "max": 1.0,
+                "min_formula": null,
+                "max_formula": null,
+                "options": null,
+                "weights": null,
+                "probability_true": null
+              },
+              "constraints": [
+                {
+                  "type": "hard_min",
+                  "value": 0,
+                  "expression": null,
+                  "reason": "Economic anxiety bounded at 0 (no anxiety)"
+                },
+                {
+                  "type": "hard_max",
+                  "value": 1,
+                  "expression": null,
+                  "reason": "Economic anxiety bounded at 1 (extreme anxiety)"
+                }
+              ],
+              "grounding": {
+                "level": "medium",
+                "method": "extrapolated",
+                "source": "Federal Reserve SHED 2024; Gallup Economic Confidence 2024-2025",
+                "note": "Beta(3.5, 2.5) gives mean ~0.58, above midpoint, reflecting elevated economic anxiety in 2024-2026 environment with inflation, tariffs, and job market uncertainty. Financial margin and job security ar...[truncated]"
+              }
+            }
+          ]
+        },
+        "name": "conditional_base_hydration",
+        "type": "tool_use",
+        "caller": {
+          "type": "direct"
+        }
+      }
+    ],
+    "model": "claude-sonnet-4-6",
+    "role": "assistant",
+    "stop_reason": "tool_use",
+    "stop_sequence": null,
+    "type": "message",
+    "usage": {
+      "cache_creation": {
+        "ephemeral_1h_input_tokens": "[REDACTED_SECRET]",
+        "ephemeral_5m_input_tokens": "[REDACTED_SECRET]"
+      },
+      "cache_creation_input_tokens": "[REDACTED_SECRET]",
+      "cache_read_input_tokens": "[REDACTED_SECRET]",
+      "input_tokens": 105665,
+      "output_tokens": 8838,
+      "server_tool_use": {
+        "web_search_requests": 5,
+        "web_fetch_requests": 0
+      },
+      "service_tier": "standard",
+      "inference_geo": "global"
+    }
+  },
+  "sources_extracted": [
+    "https://statisticalatlas.com/United-States/Marital-Status",
+    "https://www.census.gov/newsroom/press-releases/2025/educational-attainment-data.html",
+    "https://educationdata.org/education-attainment-statistics",
+    "https://www.census.gov/topics/families/marriage-and-divorce.html",
+    "https://www.bgsu.edu/ncfmr/resources/data/family-profiles/marital-status-distribution-of-u-s--adults-aged-65-and-older--19.html",
+    "https://www.bls.gov/emp/tables/industry-employment-and-output.htm",
+    "https://www.census.gov/library/publications/2025/demo/p60-286.html",
+    "https://www.bls.gov/charts/employment-situation/employment-levels-by-industry.htm",
+    "https://www.bls.gov/emp/tables/employment-by-major-industry-sector.htm",
+    "https://news.gallup.com/poll/548459/independent-party-tied-high-democratic-new-low.aspx",
+    "https://news.gallup.com/poll/15370/party-affiliation.aspx",
+    "https://fred.stlouisfed.org/tags/series?t=bls%3Bself-employed",
+    "https://www.uniteamerica.org/articles/research-brief-growing-cohort-of-independent-voters-becomes-critical-segment-of-electorate",
+    "https://www2.census.gov/library/publications/2025/demo/p60-286.pdf",
+    "https://news.gallup.com/poll/692978/democrats-regain-advantage-party-affiliation.aspx",
+    "https://fred.stlouisfed.org/series/MEHOINUSA672N",
+    "https://nces.ed.gov/programs/raceindicators/indicator_rfa.asp",
+    "https://www.census.gov/acs/www/about/why-we-ask-each-question/marital/",
+    "https://catholicvote.org/gallup-more-americans-identify-republican-than-democrat/",
+    "https://data.census.gov/table/ACSDT1Y2024.B12001?q=B12001",
+    "https://www.pewresearch.org/politics/fact-sheet/party-affiliation-fact-sheet-npors/",
+    "https://usafacts.org/articles/state-relationships-marriages-and-living-alone-us/",
+    "https://www.bls.gov/cps/lfcharacteristics.htm",
+    "https://www.census.gov/data/tables/time-series/demo/families/marital.html",
+    "https://fred.stlouisfed.org/tags/series?t=bls%3Bself-employed%3Bworkers",
+    "https://www.census.gov/topics/education/educational-attainment/data/tables.html",
+    "https://stephenslighthouse.com/2025/09/10/us-census-bureau-releases-new-educational-attainment-data/",
+    "https://theworlddata.com/us-population-over-18/",
+    "https://en.wikipedia.org/wiki/Educational_attainment_in_the_United_States",
+    "https://news.gallup.com/poll/655157/gop-holds-edge-party-affiliation-third-straight-year.aspx",
+    "https://www.bls.gov/cps/cpsaat11b.htm",
+    "https://dqydj.com/household-income-percentile-calculator/",
+    "https://www.census.gov/library/visualizations/interactive/marital-status-in-united-states.html",
+    "https://www.census.gov/library/publications/2024/demo/p60-282.html",
+    "https://www2.census.gov/library/publications/2024/demo/p60-282.pdf",
+    "https://www.cnbc.com/2025/09/11/us-median-household-income-2024.html",
+    "https://news.gallup.com/poll/655190/political-parties-historically-polarized-ideologically.aspx",
+    "https://www.bls.gov/cew/publications/employment-and-wages-annual-averages/current/",
+    "https://www.federalreserve.gov/publications/2025-economic-well-being-of-us-households-in-2024-income-and-expenses.htm",
+    "https://www.census.gov/acs/www/about/why-we-ask-each-question/education/",
+    "https://carry.com/learn/self-employed-americans",
+    "https://www.bls.gov/opub/mlr/2026/article/industry-and-occupational-employment-projections-overview.htm",
+    "https://www.pewresearch.org/politics/2024/04/09/the-partisanship-and-ideology-of-american-voters/",
+    "https://censusreporter.org/topics/marital-status/",
+    "https://news.gallup.com/poll/700499/new-high-identify-political-independents.aspx",
+    "https://www.hcmmlaw.com/blog/2024/07/13/majority-americans-now-single-statistics-insights/",
+    "https://www.census.gov/topics/education/educational-attainment.html",
+    "https://www.statista.com/statistics/758502/percentage-distribution-of-household-income-in-the-us/",
+    "https://www.visualcapitalist.com/distribution-of-household-income-in-america/",
+    "https://www.census.gov/data/tables/2024/demo/educational-attainment/cps-detailed-tables.html"
+  ]
+}

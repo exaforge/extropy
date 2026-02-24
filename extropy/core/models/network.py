@@ -97,13 +97,52 @@ class NetworkMetrics(BaseModel):
     degree_assortativity: float
     degree_distribution: dict[int, int] = Field(default_factory=dict)
 
-    def is_valid(self) -> tuple[bool, list[str]]:
+    def is_valid(
+        self, bounds: dict[str, float] | None = None
+    ) -> tuple[bool, list[str]]:
         """Check if metrics are within expected ranges.
 
         Returns:
             Tuple of (is_valid, list of warning messages)
         """
         warnings = []
+
+        if bounds:
+            degree_min = bounds.get("degree_min")
+            degree_max = bounds.get("degree_max")
+            clustering_min = bounds.get("clustering_min")
+            modularity_min = bounds.get("modularity_min")
+            modularity_max = bounds.get("modularity_max")
+            lcc_min = bounds.get("largest_component_min")
+
+            if degree_min is not None and self.avg_degree < degree_min:
+                warnings.append(
+                    f"avg_degree {self.avg_degree:.1f} below target minimum ({degree_min:.2f})"
+                )
+            if degree_max is not None and self.avg_degree > degree_max:
+                warnings.append(
+                    f"avg_degree {self.avg_degree:.1f} above target maximum ({degree_max:.2f})"
+                )
+            if (
+                clustering_min is not None
+                and self.clustering_coefficient < clustering_min
+            ):
+                warnings.append(
+                    f"clustering_coefficient {self.clustering_coefficient:.2f} below target minimum ({clustering_min:.2f})"
+                )
+            if modularity_min is not None and self.modularity < modularity_min:
+                warnings.append(
+                    f"modularity {self.modularity:.2f} below target minimum ({modularity_min:.2f})"
+                )
+            if modularity_max is not None and self.modularity > modularity_max:
+                warnings.append(
+                    f"modularity {self.modularity:.2f} above target maximum ({modularity_max:.2f})"
+                )
+            if lcc_min is not None and self.largest_component_ratio < lcc_min:
+                warnings.append(
+                    f"largest_component_ratio {self.largest_component_ratio:.2f} below target minimum ({lcc_min:.2f})"
+                )
+            return len(warnings) == 0, warnings
 
         if self.avg_degree < 15:
             warnings.append(

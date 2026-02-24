@@ -25,7 +25,6 @@ from extropy.core.models.scenario import (
     ExposureChannel,
     ExposureRule,
     InteractionConfig,
-    InteractionType,
     OutcomeConfig,
     OutcomeDefinition,
     OutcomeType,
@@ -95,14 +94,12 @@ def _make_scenario(
                 ExposureChannel(
                     name="broadcast",
                     description="Broadcast",
-                    reach="broadcast",
                     credibility_modifier=1.0,
                 ),
             ],
             rules=rules,
         ),
         interaction=InteractionConfig(
-            primary_model=InteractionType.PASSIVE_OBSERVATION,
             description="Observe",
         ),
         spread=SpreadConfig(share_probability=share_probability),

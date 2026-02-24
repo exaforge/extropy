@@ -15,6 +15,8 @@ logger = logging.getLogger(__name__)
 def hydrate_household_config(
     population: str,
     geography: str | None = None,
+    allowed_attributes: list[str] | None = None,
+    allowed_gender_values: list[str] | None = None,
     model: str | None = None,
     reasoning_effort: str = "low",
     on_retry: RetryCallback | None = None,
@@ -29,6 +31,8 @@ def hydrate_household_config(
     Args:
         population: Population description (e.g., "Japanese retirees in Osaka")
         geography: Geographic scope (e.g., "Japan")
+        allowed_attributes: Exact merged population attribute names. When provided,
+            assortative_mating.attribute is constrained to this set.
         model: Model to use
         reasoning_effort: "low", "medium", or "high"
         on_retry: Callback for retry notifications
@@ -37,6 +41,26 @@ def hydrate_household_config(
         Tuple of (HouseholdConfig, list of source URLs)
     """
     geo_context = f" in {geography}" if geography else ""
+
+    allowed_text = ""
+    if allowed_attributes:
+        allowed_list = ", ".join(sorted(set(allowed_attributes)))
+        allowed_text = f"""
+14. **Assortative-mating attribute constraint**:
+    - `assortative_mating[].attribute` MUST be one of these exact attribute names:
+      {allowed_list}
+    - Do not invent aliases or alternate labels.
+"""
+
+    gender_text = ""
+    if allowed_gender_values:
+        gender_list = ", ".join(sorted(set(allowed_gender_values)))
+        gender_text = f"""
+15. **Partner gender pair constraint**:
+    - `partner_gender_pair_weights[].left/right` MUST use these exact values:
+      {gender_list}
+    - Treat pairs as unordered (male/female same as female/male).
+"""
 
     prompt = f"""Research household composition data for {population}{geo_context}.
 
@@ -77,7 +101,17 @@ For this population, provide statistically grounded values for:
 
 12. **Average household size**: Mean number of persons per household.
 
-13. **Sources**: List of URLs or citations used.
+13. **Partner gender pairing policy**:
+   - partner_gender_mode: "independent" or "weighted"
+   - partner_gender_pair_weights: Array of objects {{left, right, weight}} where:
+     - left/right are gender-category values from the population
+     - weight is non-negative
+     - weights should sum to ~1.0 across listed pairs
+   - Use "weighted" only when good regional evidence exists; otherwise "independent".
+
+14. **Sources**: List of URLs or citations used.
+{allowed_text}
+{gender_text}
 
 ## Research Guidelines
 
@@ -85,6 +119,10 @@ For this population, provide statistically grounded values for:
 - Adapt household types and education stages to the local context (e.g., Japanese education system stages differ from US).
 - Be specific to the population described, not generic global averages.
 - Ensure household_type_weights sum to ~1.0 for each age bracket.
+- Young-adult realism guardrail: for the earliest adult bracket (typically ages 18-20),
+  keep partnered household and parent-household shares conservative by default unless
+  strong local evidence supports higher rates. If you set higher rates, ensure they
+  are explicitly justified by cited sources.
 - If data is unavailable for a specific field, use the best available regional or national data.
 
 Return a single JSON object with all fields."""
@@ -92,7 +130,10 @@ Return a single JSON object with all fields."""
     try:
         data, sources = agentic_research(
             prompt=prompt,
-            response_schema=build_household_config_schema(),
+            response_schema=build_household_config_schema(
+                allowed_assortative_attributes=allowed_attributes,
+                allowed_gender_values=allowed_gender_values,
+            ),
             schema_name="household_config",
             model=model,
             reasoning_effort=reasoning_effort,
@@ -105,7 +146,11 @@ Return a single JSON object with all fields."""
         return HouseholdConfig(), []
 
     try:
-        config = _parse_household_config(data)
+        config = _parse_household_config(
+            data,
+            allowed_attributes=allowed_attributes,
+            allowed_gender_values=allowed_gender_values,
+        )
         # Merge any sources from the response into the source list
         response_sources = data.get("sources", [])
         all_sources = list(set(sources + [s for s in response_sources if s]))
@@ -118,7 +163,11 @@ Return a single JSON object with all fields."""
         return HouseholdConfig(), sources
 
 
-def _parse_household_config(data: dict) -> HouseholdConfig:
+def _parse_household_config(
+    data: dict,
+    allowed_attributes: list[str] | None = None,
+    allowed_gender_values: list[str] | None = None,
+) -> HouseholdConfig:
     """Parse LLM response into a HouseholdConfig, falling back to defaults for bad fields.
 
     Converts array-of-objects LLM output back to the dict/tuple structures that
@@ -188,13 +237,51 @@ def _parse_household_config(data: dict) -> HouseholdConfig:
             kwargs[field] = int(data[field])
 
     # Assortative mating: [{attribute, correlation}] -> {str: float}
+    allowed_attr_set = set(allowed_attributes or [])
     if "assortative_mating" in data and isinstance(data["assortative_mating"], list):
         mating = {}
         for item in data["assortative_mating"]:
             if isinstance(item, dict) and "attribute" in item and "correlation" in item:
-                mating[str(item["attribute"])] = float(item["correlation"])
+                attr_name = str(item["attribute"])
+                if allowed_attr_set and attr_name not in allowed_attr_set:
+                    continue
+                mating[attr_name] = float(item["correlation"])
         if mating:
             kwargs["assortative_mating"] = mating
+
+    if "partner_gender_mode" in data and isinstance(data["partner_gender_mode"], str):
+        mode = data["partner_gender_mode"].strip().lower()
+        if mode in {"independent", "weighted"}:
+            kwargs["partner_gender_mode"] = mode
+
+    allowed_gender_set = set(allowed_gender_values or [])
+    if "partner_gender_pair_weights" in data and isinstance(
+        data["partner_gender_pair_weights"], list
+    ):
+        pair_weights = []
+        for item in data["partner_gender_pair_weights"]:
+            if not (
+                isinstance(item, dict)
+                and "left" in item
+                and "right" in item
+                and "weight" in item
+            ):
+                continue
+            left = str(item["left"])
+            right = str(item["right"])
+            if allowed_gender_set and (
+                left not in allowed_gender_set or right not in allowed_gender_set
+            ):
+                continue
+            try:
+                weight = float(item["weight"])
+            except Exception:
+                continue
+            if weight < 0:
+                continue
+            pair_weights.append({"left": left, "right": right, "weight": weight})
+        if pair_weights:
+            kwargs["partner_gender_pair_weights"] = pair_weights
 
     # Life stages
     if "life_stages" in data and isinstance(data["life_stages"], list):

@@ -30,7 +30,12 @@ from ..display import (
     display_spec_summary,
     display_validation_result,
 )
-from ..utils import format_elapsed, Output, ExitCode
+from ..utils import (
+    format_elapsed,
+    Output,
+    ExitCode,
+    get_next_invalid_artifact_path,
+)
 
 
 @app.command("spec")
@@ -272,12 +277,10 @@ def spec_command(
                 raise typer.Exit(1)
 
     geography = sufficiency_result.geography
-    agent_focus = sufficiency_result.agent_focus
     geo_str = f", {geography}" if geography else ""
-    focus_str = f", focus: {agent_focus}" if agent_focus else ""
 
     if not agent_mode:
-        console.print(f"[green]✓[/green] Context sufficient{geo_str}{focus_str}")
+        console.print(f"[green]✓[/green] Context sufficient{geo_str}")
 
     # Step 1: Attribute Selection
     console.print()
@@ -352,17 +355,18 @@ def spec_command(
         current_step[0] = step
         current_step[1] = status
 
-    name_config = None
-
     def do_hydration():
-        nonlocal hydrated, sources, warnings, hydration_error, name_config
+        nonlocal hydrated, sources, warnings, hydration_error
         try:
-            hydrated, sources, warnings, _household_config, name_config = (
-                hydrate_attributes(
-                    attributes, description, geography, on_progress=on_progress
-                )
+            hydrated, sources, warnings, _household_config = hydrate_attributes(
+                attributes,
+                description,
+                geography,
+                include_household=False,
+                on_progress=on_progress,
             )
-            # Note: household_config is ignored at spec level - it's set per-scenario
+            # Spec stage intentionally does not hydrate household config.
+            # Household policy is scenario-owned; names are Faker-first at sampler runtime.
         except Exception as e:
             hydration_error = e
         finally:
@@ -424,8 +428,6 @@ def spec_command(
             attributes=bound_attrs,
             sampling_order=sampling_order,
             sources=sources,
-            agent_focus=agent_focus,
-            name_config=name_config,
         )
 
     console.print("[green]✓[/green] Spec assembled")
@@ -435,8 +437,7 @@ def spec_command(
         validation_result = validate_spec(population_spec)
 
     if not display_validation_result(validation_result):
-        # Save with .invalid.yaml suffix so work isn't lost
-        invalid_path = resolved_output.with_suffix(".invalid.yaml")
+        invalid_path = get_next_invalid_artifact_path(resolved_output)
         population_spec.to_yaml(invalid_path)
         console.print()
         console.print(
@@ -473,7 +474,6 @@ def spec_command(
             "Spec saved",
             output=str(resolved_output),
             geography=geography,
-            agent_focus=agent_focus,
             attribute_count=len(population_spec.attributes),
             elapsed_seconds=elapsed,
             study_folder=str(study_ctx.root) if study_ctx else None,

@@ -12,6 +12,7 @@ from extropy.population.network.config import (
     DegreeMultiplierConfig,
     EdgeTypeRule,
     InfluenceFactorConfig,
+    StructuralAttributeRoles,
 )
 from extropy.population.network.similarity import (
     compute_match_score,
@@ -31,6 +32,9 @@ from extropy.population.network.generator import (
     _coverage_needs_escalation,
     _compute_modularity_fast,
     _apply_scale_target_caps,
+    _generate_structural_edges,
+    _resolve_structural_keys_from_config,
+    _evaluate_topology_gate,
 )
 
 _REFERENCE_SENIORITY_LEVELS = {
@@ -820,6 +824,331 @@ class TestGenerateNetwork:
         assert "ladder_stages" in quality
         assert isinstance(quality["ladder_stages"], list)
         assert len(quality["ladder_stages"]) >= 1
+
+    def test_topology_gate_uses_final_graph_metrics(self, monkeypatch):
+        """Strict acceptance should be based on final graph after structural + rewiring."""
+        import extropy.population.network.generator as gen
+
+        agents = [{"_id": f"a{i}"} for i in range(6)]
+
+        def fake_single_pass(
+            agents,
+            agent_ids,
+            similarities,
+            communities,
+            degree_factors,
+            config,
+            intra_scale,
+            inter_scale,
+            rng,
+            structural_pairs=None,
+        ):
+            # Deliberately poor calibration graph.
+            return [], 0.0, 0.0, 0.0, 0.0
+
+        def full_structural_edges(agents, agent_ids, rng):
+            # Dense structural graph that should pass final strict gates.
+            edges = []
+            for i in range(len(agent_ids)):
+                for j in range(i + 1, len(agent_ids)):
+                    edges.append(
+                        Edge(
+                            source=agent_ids[i],
+                            target=agent_ids[j],
+                            weight=1.0,
+                            edge_type="household",
+                            structural=True,
+                            context="household",
+                        )
+                    )
+            return edges
+
+        def no_rewire(agents, agent_ids, edges, edge_set, config, rng, protected_pairs):
+            return edges, edge_set, 0
+
+        monkeypatch.setattr(gen, "_generate_network_single_pass", fake_single_pass)
+        monkeypatch.setattr(gen, "_generate_structural_edges", full_structural_edges)
+        monkeypatch.setattr(gen, "_apply_rewiring", no_rewire)
+        monkeypatch.setattr(
+            gen,
+            "_assign_communities_with_diagnostics",
+            lambda agents,
+            similarities,
+            n_communities,
+            rng,
+            preferred_attrs=None,
+            progress=None: (
+                [0 for _ in agents],
+                {"low_signal": 0.0},
+            ),
+        )
+
+        config = NetworkConfig(
+            avg_degree=5.0,
+            seed=42,
+            candidate_mode="exact",
+            calibration_restarts=1,
+            max_calibration_iterations=1,
+            max_calibration_minutes=1,
+            topology_gate="strict",
+            target_clustering=0.0,
+            target_clustering_tolerance=1.0,
+            target_modularity=0.0,
+            target_modularity_tolerance=1.0,
+        )
+
+        result = generate_network(agents, config)
+        quality = result.meta.get("quality", {})
+
+        assert quality.get("calibration_accepted") is True
+        assert quality.get("accepted") is True
+        assert quality.get("final_metrics", {}).get("edge_count") == 15
+        assert quality.get("final_metrics", {}).get("largest_component_ratio") == 1.0
+        assert result.meta.get("edge_count") == 15
+
+    def test_final_gate_modularity_matches_louvain_metric(self, monkeypatch):
+        """Final gate modularity should use the same method as reported network metrics."""
+        import extropy.population.network.generator as gen
+
+        agents = [{"_id": f"a{i}"} for i in range(6)]
+
+        def fake_single_pass(
+            agents,
+            agent_ids,
+            similarities,
+            communities,
+            degree_factors,
+            config,
+            intra_scale,
+            inter_scale,
+            rng,
+            structural_pairs=None,
+        ):
+            return [], 0.0, 0.0, 0.01, 0.0
+
+        monkeypatch.setattr(gen, "_generate_network_single_pass", fake_single_pass)
+        monkeypatch.setattr(gen, "_compute_modularity_louvain", lambda edges, ids: 0.42)
+        monkeypatch.setattr(
+            gen,
+            "_assign_communities_with_diagnostics",
+            lambda agents,
+            similarities,
+            n_communities,
+            rng,
+            preferred_attrs=None,
+            progress=None: (
+                [0 for _ in agents],
+                {"low_signal": 0.0},
+            ),
+        )
+
+        config = NetworkConfig(
+            avg_degree=4.0,
+            seed=42,
+            candidate_mode="exact",
+            calibration_restarts=1,
+            max_calibration_iterations=1,
+            max_calibration_minutes=1,
+            topology_gate="warn",
+        )
+        result = generate_network(agents, config)
+        final_metrics = result.meta.get("quality", {}).get("final_metrics", {})
+        assert final_metrics.get("modularity") == pytest.approx(0.42)
+
+    def test_rewiring_fallback_preserves_gate_valid_graph(self, monkeypatch):
+        """If rewiring breaks gate-valid metrics, final output should revert pre-rewire."""
+        import extropy.population.network.generator as gen
+
+        agents = [{"_id": f"a{i}"} for i in range(6)]
+
+        def fake_single_pass(
+            agents,
+            agent_ids,
+            similarities,
+            communities,
+            degree_factors,
+            config,
+            intra_scale,
+            inter_scale,
+            rng,
+            structural_pairs=None,
+        ):
+            # Similarity edges intentionally empty; structural graph drives calibration.
+            return [], 0.0, 0.0, 0.0, 0.0
+
+        def full_structural_edges(
+            agents, agent_ids, rng, config=None, target_edge_budget=None
+        ):
+            edges = []
+            for i in range(len(agent_ids)):
+                for j in range(i + 1, len(agent_ids)):
+                    edges.append(
+                        Edge(
+                            source=agent_ids[i],
+                            target=agent_ids[j],
+                            weight=1.0,
+                            edge_type="household",
+                            structural=True,
+                            context="household",
+                        )
+                    )
+            return edges
+
+        def no_structural_rewire(
+            agents, agent_ids, edges, edge_set, config, rng, protected_pairs
+        ):
+            return edges, edge_set, 7
+
+        metric_calls = {"count": 0}
+
+        def fake_gate_metrics(edges, agent_ids, communities, fallback_modularity=0.0):
+            metric_calls["count"] += 1
+            # First call (pre-rewire): pass. Second call (post-rewire): fail on modularity.
+            if metric_calls["count"] == 1:
+                return {
+                    "edge_count": len(edges),
+                    "avg_degree": 5.0,
+                    "clustering": 0.30,
+                    "largest_component_ratio": 1.0,
+                    "modularity": 0.49995,
+                }
+            return {
+                "edge_count": len(edges),
+                "avg_degree": 5.0,
+                "clustering": 0.30,
+                "largest_component_ratio": 1.0,
+                "modularity": 0.51000,
+            }
+
+        monkeypatch.setattr(gen, "_generate_network_single_pass", fake_single_pass)
+        monkeypatch.setattr(gen, "_generate_structural_edges", full_structural_edges)
+        monkeypatch.setattr(gen, "_apply_rewiring", no_structural_rewire)
+        monkeypatch.setattr(gen, "_compute_gate_metrics", fake_gate_metrics)
+        monkeypatch.setattr(
+            gen,
+            "_assign_communities_with_diagnostics",
+            lambda agents,
+            similarities,
+            n_communities,
+            rng,
+            preferred_attrs=None,
+            progress=None: ([0 for _ in agents], {"low_signal": 0.0}),
+        )
+
+        config = NetworkConfig(
+            avg_degree=5.0,
+            seed=42,
+            candidate_mode="exact",
+            calibration_restarts=1,
+            max_calibration_iterations=1,
+            max_calibration_minutes=1,
+            topology_gate="strict",
+            target_clustering=0.22,
+            target_clustering_tolerance=0.08,
+            target_modularity=0.4,
+            target_modularity_tolerance=0.1,
+            target_largest_component_ratio=0.95,
+        )
+
+        result = generate_network(agents, config)
+        quality = result.meta.get("quality", {})
+
+        assert quality.get("accepted") is True
+        assert quality.get("pre_rewire_gate_accepted") is True
+        assert quality.get("post_rewire_gate_accepted") is False
+        assert quality.get("rewire_gate_fallback_used") is True
+        assert quality.get("rewired_count_reverted") == 7
+        assert result.meta.get("rewired_count") == 0
+
+    def test_topology_gate_epsilon_allows_tiny_overflow_only(self):
+        """Gate epsilon should absorb tiny numeric drift but not real misses."""
+        accepted_tiny, _ = _evaluate_topology_gate(
+            metrics={
+                "edge_count": 100,
+                "avg_degree": 12.0,
+                "clustering": 0.20,
+                "modularity": 0.50005,
+                "largest_component_ratio": 1.0,
+            },
+            deg_min=10.0,
+            deg_max=14.0,
+            cluster_min=0.14,
+            mod_min=0.30,
+            mod_max=0.50,
+            lcc_min=0.95,
+            min_edge_floor=50,
+        )
+        rejected_real, _ = _evaluate_topology_gate(
+            metrics={
+                "edge_count": 100,
+                "avg_degree": 12.0,
+                "clustering": 0.20,
+                "modularity": 0.50030,
+                "largest_component_ratio": 1.0,
+            },
+            deg_min=10.0,
+            deg_max=14.0,
+            cluster_min=0.14,
+            mod_min=0.30,
+            mod_max=0.50,
+            lcc_min=0.95,
+            min_edge_floor=50,
+        )
+        assert accepted_tiny is True
+        assert rejected_real is False
+
+    def test_structural_edges_respect_global_budget(self):
+        """Optional structural channels should obey a global edge budget."""
+        rng = random.Random(42)
+        agents = []
+        for i in range(120):
+            agents.append(
+                {
+                    "_id": f"a{i}",
+                    "age": 30 + (i % 20),
+                    "sector_field": f"sector_{i % 6}",
+                    "region_field": f"region_{i % 4}",
+                    "urban_field": "Urban" if i % 2 == 0 else "Suburban",
+                    "religion_field": "FaithA" if i % 3 == 0 else "FaithB",
+                    "dependents_field": [{"age": 10}] if i % 5 == 0 else [],
+                }
+            )
+        agent_ids = [a["_id"] for a in agents]
+        cfg = NetworkConfig(
+            structural_attribute_roles=StructuralAttributeRoles(
+                age="age",
+                sector="sector_field",
+                region="region_field",
+                urbanicity="urban_field",
+                religion="religion_field",
+                dependents="dependents_field",
+            )
+        )
+
+        edges = _generate_structural_edges(
+            agents=agents,
+            agent_ids=agent_ids,
+            rng=rng,
+            config=cfg,
+            target_edge_budget=180,
+        )
+        assert len(edges) <= 180
+
+    def test_resolve_structural_keys_prefers_configured_populated_key(self):
+        """Configured structural role should win over fallback keys when populated."""
+        agents = [
+            {"_id": "a0", "custom_partner": "a1", "partner_id": "a1"},
+            {"_id": "a1", "custom_partner": "a0", "partner_id": "a0"},
+            {"_id": "a2", "partner_id": "a3"},
+            {"_id": "a3", "partner_id": "a2"},
+        ]
+        cfg = NetworkConfig(
+            structural_attribute_roles=StructuralAttributeRoles(
+                partner_id="custom_partner"
+            )
+        )
+        resolved = _resolve_structural_keys_from_config(agents, cfg)
+        assert resolved["partner_id"] == "custom_partner"
 
     def test_generate_network_resume_from_checkpoint_matches_fresh(self, sample_agents):
         """Resuming from a saved similarity checkpoint should match a fresh run."""

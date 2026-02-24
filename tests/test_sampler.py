@@ -25,7 +25,9 @@ from extropy.population.sampler.core import (
     save_sqlite,
     SamplingResult,
     SamplingError,
+    _resolve_country_hint,
 )
+from extropy.core.models.scenario import SamplingSemanticRoles, GeoRoles
 from extropy.population.sampler.distributions import (
     sample_distribution,
     coerce_to_type,
@@ -116,6 +118,30 @@ class TestEvalSafe:
         """Test that missing variables raise FormulaError."""
         with pytest.raises(FormulaError):
             eval_safe("age + 10", {})
+
+
+class TestCountryHintResolution:
+    """Tests for geography hint resolution used in naming."""
+
+    def test_citizenship_status_does_not_override_scope(self):
+        agent = {"citizenship": "non_citizen"}
+        assert _resolve_country_hint(agent, default_geography="India") == "India"
+
+    def test_citizenship_country_parses_when_present(self):
+        agent = {"citizenship": "US citizen"}
+        assert _resolve_country_hint(agent, default_geography=None) == "US"
+
+    def test_semantic_country_attr_precedence(self):
+        agent = {"residence_country": "India", "country": "US"}
+        roles = SamplingSemanticRoles(
+            geo_roles=GeoRoles(country_attr="residence_country")
+        )
+        assert (
+            _resolve_country_hint(
+                agent, default_geography="Canada", semantic_roles=roles
+            )
+            == "India"
+        )
 
 
 class TestEvalFormula:

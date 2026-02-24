@@ -126,17 +126,40 @@ def _format_boolean_value(value: Any, phrasing: BooleanPhrasing) -> str:
 
     # Handle various boolean representations
     if isinstance(value, bool):
-        return phrasing.true_phrase if value else phrasing.false_phrase
+        phrase = phrasing.true_phrase if value else phrasing.false_phrase
+        return _sanitize_boolean_phrase(phrase, value)
     if isinstance(value, str):
-        return (
-            phrasing.true_phrase
-            if value.lower() in ("true", "yes", "1")
-            else phrasing.false_phrase
-        )
+        truthy = value.lower() in ("true", "yes", "1")
+        phrase = phrasing.true_phrase if truthy else phrasing.false_phrase
+        return _sanitize_boolean_phrase(phrase, truthy)
     if isinstance(value, (int, float)):
-        return phrasing.true_phrase if value else phrasing.false_phrase
+        truthy = bool(value)
+        phrase = phrasing.true_phrase if truthy else phrasing.false_phrase
+        return _sanitize_boolean_phrase(phrase, truthy)
 
-    return phrasing.false_phrase
+    return _sanitize_boolean_phrase(phrasing.false_phrase, False)
+
+
+def _sanitize_boolean_phrase(phrase: str, truthy: bool) -> str:
+    """Deterministically sanitize boolean phrases for rendering."""
+    clean = phrase.strip()
+    if not clean:
+        return "I do." if truthy else "I do not."
+
+    raw_token_map = {
+        "true": "I do.",
+        "yes": "I do.",
+        "false": "I do not.",
+        "no": "I do not.",
+    }
+    token_key = clean.lower()
+    if token_key in raw_token_map:
+        return raw_token_map[token_key]
+
+    lowered = clean.lower()
+    if not lowered.startswith(("i ", "i'", "i’m", "i'm", "my ")):
+        clean = f"I {clean[0].lower()}{clean[1:]}" if len(clean) > 1 else f"I {clean}"
+    return clean
 
 
 def _format_categorical_value(value: Any, phrasing: CategoricalPhrasing) -> str:
@@ -196,7 +219,16 @@ def render_attribute(attr_name: str, value: Any, config: PersonaConfig) -> str:
     elif isinstance(phrasing, CategoricalPhrasing):
         return _format_categorical_value(value, phrasing)
     elif isinstance(phrasing, RelativePhrasing):
-        return _format_relative_value(value, phrasing, config)
+        relative = _format_relative_value(value, phrasing, config)
+        concrete = next(
+            (p for p in config.phrasings.concrete if p.attribute == attr_name),
+            None,
+        )
+        if concrete and value is not None:
+            concrete_text = _format_concrete_value(value, concrete)
+            if concrete_text:
+                return f"{relative} ({concrete_text})"
+        return relative
     elif isinstance(phrasing, ConcretePhrasing):
         return _format_concrete_value(value, phrasing)
 
@@ -277,6 +309,86 @@ def _ensure_period(phrase: str) -> str:
     if phrase[-1] not in ".!?":
         return phrase + "."
     return phrase
+
+
+def _join_with_and(items: list[str]) -> str:
+    """Join items with commas and final 'and'."""
+    if not items:
+        return ""
+    if len(items) == 1:
+        return items[0]
+    if len(items) == 2:
+        return f"{items[0]} and {items[1]}"
+    return ", ".join(items[:-1]) + f", and {items[-1]}"
+
+
+def _extract_average_descriptor(phrase: str, attr_name: str) -> str:
+    """Extract readable descriptor from repetitive average-relative phrase."""
+    text = phrase.strip()
+
+    patterns = (
+        r"(?i)about as (.+?) as most people",
+        r"(?i)^(.+?) is about the same as most people",
+    )
+    for pattern in patterns:
+        match = re.search(pattern, text)
+        if match:
+            descriptor = match.group(1).strip(" .")
+            if descriptor:
+                # Keep descriptor as a neutral noun/phrase.
+                if descriptor.lower().startswith("i "):
+                    descriptor = descriptor[2:].strip()
+                if descriptor.lower().startswith("my "):
+                    descriptor = descriptor[3:].strip()
+                if descriptor.lower().startswith("much "):
+                    descriptor = descriptor[5:].strip()
+                return descriptor
+
+    return attr_name.replace("_", " ")
+
+
+def _compact_repetitive_average_relative_phrases(
+    entries: list[tuple[str, str, str | None]],
+) -> list[tuple[str, str, str | None]]:
+    """Collapse repetitive 'about ... as most people' relative phrases.
+
+    Keeps semantics but avoids copy-paste sounding sections when many traits land
+    in the average bucket.
+    """
+    avg_idx: list[int] = []
+    descriptors: list[str] = []
+
+    for idx, (attr_name, phrase, treatment) in enumerate(entries):
+        if treatment != "relative":
+            continue
+        low = phrase.lower()
+        if "as most people" not in low and "same as most people" not in low:
+            continue
+        avg_idx.append(idx)
+        desc = _extract_average_descriptor(phrase, attr_name)
+        if desc and desc not in descriptors:
+            descriptors.append(desc)
+
+    # Only compact when repetition is clearly noisy.
+    if len(avg_idx) < 3 or len(descriptors) < 3:
+        return entries
+
+    summary = (
+        "On these traits, I'm pretty middle-of-the-road: "
+        f"{_join_with_and(descriptors)}."
+    )
+
+    compacted: list[tuple[str, str, str | None]] = []
+    inserted = False
+    for idx, entry in enumerate(entries):
+        if idx in avg_idx:
+            if not inserted:
+                compacted.append(("relative_average_summary", summary, "relative"))
+                inserted = True
+            continue
+        compacted.append(entry)
+
+    return compacted
 
 
 def render_intro(
@@ -589,17 +701,26 @@ def render_persona(
         if not group_obj:
             continue
 
-        # render_intro() already emits "## Who I Am" — skip duplicate
+        # render_intro() already emits "## Who I Am" — skip duplicate entirely
         if group_obj.label == "Who I Am":
-            lines = [""]
-        else:
-            lines = [f"## {group_obj.label}", ""]
-        phrases = []
+            continue
+
+        lines = [f"## {group_obj.label}", ""]
+        phrase_entries: list[tuple[str, str, str | None]] = []
         for attr_name in remaining_attrs:
             value = agent.get(attr_name)
             phrase = render_attribute(attr_name, value, config)
             if phrase:
-                phrases.append(_ensure_period(phrase))
+                treatment = config.get_treatment(attr_name)
+                treatment_type = (
+                    treatment.treatment.value if treatment is not None else None
+                )
+                phrase_entries.append(
+                    (attr_name, _ensure_period(phrase), treatment_type)
+                )
+
+        phrase_entries = _compact_repetitive_average_relative_phrases(phrase_entries)
+        phrases = [phrase for _, phrase, _ in phrase_entries]
 
         if not phrases:
             continue

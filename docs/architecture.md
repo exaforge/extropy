@@ -10,6 +10,28 @@ extropy spec → extropy scenario → extropy persona → extropy sample → ext
 
 All commands operate within a **study folder** — a directory containing `study.db` and scenario subdirectories. Data is keyed by `scenario_id` rather than `population_id`.
 
+## Reference Study Blueprints
+
+These are the canonical study patterns consolidated from prior showcase and study docs.
+
+| Study Type | Population | Scenario Mode | Horizon | Typical Scale |
+|------------|------------|---------------|---------|---------------|
+| ASI announcement + societal transition | National population | Evolving | Monthly, 6 steps | 5,000 agents |
+| Geopolitical shock (for example Iran strikes) | National population | Evolving | Weekly, 12 steps | 5,000 agents |
+| Asset/market mania shock (for example BTC extreme rally) | National population | Evolving | Weekly, 8-12 steps | 5,000 agents |
+| Election projection (house control / state race) | National or state electorate | Static or lightly evolving | Decision-focused | 1,000-5,000 agents |
+
+## Operational Quality Gates
+
+Before moving forward to the next stage, the architecture assumes these checks:
+
+1. `spec` gate: distribution realism and dependency coherence.
+2. `scenario` gate: timeline/outcome consistency and no contradictory rules.
+3. `persona` gate: natural language quality and no contradictory rendering.
+4. `sample` gate: no impossible household or demographic combinations.
+5. `network` gate: topology pass with realistic structural edge mix.
+6. `simulate` gate: expected timestep dynamics, checkpoint integrity, and tracked outputs.
+
 ---
 
 ## Phase 1: Population Creation (`extropy/population/`)
@@ -52,7 +74,7 @@ When `household_mode: true`:
 - Generate correlated partners (shared attributes: location, income correlation)
 - Generate NPC dependents (children, elderly) based on household type
 - Household types: singles, couples, single parents, couples with kids, multi-generational
-- `agent_focus` controls who reasons: `primary`, `couples`, `families`, `all`
+- `agent_focus_mode` controls who reasons: `primary_only`, `couples`, `all`
 
 ### 7. Network Generation (`network/`)
 
@@ -353,8 +375,8 @@ Resolution order: programmatic > env vars > config file > defaults
 |-------|---------|-------------|
 | `fast` | `= models.fast` | Fast model for Pass 2 |
 | `strong` | `= models.strong` | Strong model for Pass 1 |
-| `max_concurrent` | 50 | Max concurrent LLM calls |
-| `rate_tier` | 1 | Provider rate limit tier |
+| `max_concurrent` | `null` (auto from RPM) | Max concurrent LLM calls |
+| `rate_tier` | `null` | Provider rate limit tier |
 
 ### Providers
 

@@ -10,6 +10,8 @@ to proceed with scenario generation. Checks for:
 Mirrors the population spec sufficiency check pattern.
 """
 
+import re
+
 from ..core.llm import simple_call
 from ..core.models import ClarificationQuestion
 
@@ -121,6 +123,139 @@ SCENARIO_SUFFICIENCY_SCHEMA = {
     "additionalProperties": False,
 }
 
+_UNIT_KEYWORD_PATTERNS: dict[str, tuple[str, ...]] = {
+    "hour": (
+        r"\bhour(?:s)?\b",
+        r"\bhr(?:s)?\b",
+        r"\bh\b",
+    ),
+    "day": (
+        r"\bday(?:s)?\b",
+        r"\bdaily\b",
+    ),
+    "week": (
+        r"\bweek(?:s)?\b",
+        r"\bwk(?:s)?\b",
+        r"\bweekly\b",
+    ),
+    "month": (
+        r"\bmonth(?:s)?\b",
+        r"\bmo(?:s)?\b",
+        r"\bmonthly\b",
+    ),
+    "year": (
+        r"\byear(?:s)?\b",
+        r"\byr(?:s)?\b",
+        r"\bannual(?:ly)?\b",
+    ),
+}
+
+_TIMELINE_MARKER_PATTERNS: dict[str, tuple[str, ...]] = {
+    "hour": (r"\bhour\s*[-_ ]?\d+\b", r"\bhr\s*[-_ ]?\d+\b"),
+    "day": (r"\bday\s*[-_ ]?\d+\b",),
+    "week": (r"\bweek\s*[-_ ]?\d+\b", r"\bwk\s*[-_ ]?\d+\b"),
+    "month": (r"\bmonth\s*[-_ ]?\d+\b", r"\bmo\s*[-_ ]?\d+\b"),
+    "year": (r"\byear\s*[-_ ]?\d+\b", r"\byr\s*[-_ ]?\d+\b"),
+}
+
+
+def _extract_unit_candidates(text: str) -> set[str]:
+    """Extract timestep unit candidates from free text."""
+    lowered = text.lower()
+    candidates: set[str] = set()
+    for unit, patterns in _UNIT_KEYWORD_PATTERNS.items():
+        if any(re.search(pattern, lowered) for pattern in patterns):
+            candidates.add(unit)
+    return candidates
+
+
+def _extract_timeline_marker_unit(text: str) -> str | None:
+    """Extract explicit timeline marker unit, e.g. 'month 0', 'week1'."""
+    lowered = text.lower()
+    matches: set[str] = set()
+    for unit, patterns in _TIMELINE_MARKER_PATTERNS.items():
+        if any(re.search(pattern, lowered) for pattern in patterns):
+            matches.add(unit)
+    if len(matches) == 1:
+        return next(iter(matches))
+    return None
+
+
+def _infer_unit_from_duration(duration: str | None) -> str | None:
+    """Infer timestep unit from an inferred duration string."""
+    if not duration:
+        return None
+    candidates = _extract_unit_candidates(duration)
+    if len(candidates) == 1:
+        return next(iter(candidates))
+    return None
+
+
+def _build_timestep_question(default_unit: str | None = None) -> ClarificationQuestion:
+    """Construct deterministic timestep-unit clarification question."""
+    default = (
+        default_unit
+        if default_unit in {"hour", "day", "week", "month", "year"}
+        else "day"
+    )
+    return ClarificationQuestion(
+        id="timestep_unit",
+        question="What timestep unit should this scenario use?",
+        type="single_choice",
+        options=["hour", "day", "week", "month", "year"],
+        default=default,
+    )
+
+
+def _postprocess_sufficiency(
+    *,
+    description: str,
+    result: ScenarioSufficiencyResult,
+) -> ScenarioSufficiencyResult:
+    """Apply deterministic guardrails after LLM sufficiency output."""
+    questions = list(result.questions)
+    explicit_timeline_unit = _extract_timeline_marker_unit(description)
+    unit_candidates = _extract_unit_candidates(description)
+    explicit_unit = None
+    if explicit_timeline_unit:
+        explicit_unit = explicit_timeline_unit
+    elif len(unit_candidates) == 1:
+        explicit_unit = next(iter(unit_candidates))
+
+    inferred_from_duration = _infer_unit_from_duration(result.inferred_duration)
+    inferred_unit = (
+        result.inferred_timestep_unit or inferred_from_duration or explicit_unit
+    )
+
+    inferred_type = result.inferred_scenario_type
+    # Hard hint: timeline markers like "month 0, month 1" imply evolving scenarios.
+    if explicit_timeline_unit and inferred_type != "evolving":
+        inferred_type = "evolving"
+
+    # Static scenarios must explicitly name the timestep unit.
+    if inferred_type == "static" and explicit_unit is None:
+        if not any(q.id == "timestep_unit" for q in questions):
+            questions.append(_build_timestep_question(inferred_unit))
+        return ScenarioSufficiencyResult(
+            sufficient=False,
+            questions=questions,
+            inferred_duration=result.inferred_duration,
+            inferred_timestep_unit=inferred_unit,
+            inferred_scenario_type=inferred_type,
+            has_explicit_outcomes=result.has_explicit_outcomes,
+            inferred_agent_focus_mode=result.inferred_agent_focus_mode,
+        )
+
+    return ScenarioSufficiencyResult(
+        sufficient=result.sufficient,
+        questions=questions,
+        inferred_duration=result.inferred_duration,
+        inferred_timestep_unit=inferred_unit,
+        inferred_scenario_type=inferred_type,
+        has_explicit_outcomes=result.has_explicit_outcomes,
+        inferred_agent_focus_mode=result.inferred_agent_focus_mode,
+    )
+
 
 def check_scenario_sufficiency(
     description: str,
@@ -159,10 +294,15 @@ A sufficient scenario description should have:
    - Static: price change, policy announcement, product feature
    - Evolving: crisis, campaign, gradual adoption, emerging situation
 
-4. **OUTCOMES** (optional but check) — does the description explicitly define outcome measurements?
+4. **TIMESTEP UNIT** — what time unit should simulation steps use (hour/day/week/month/year)?
+   - For evolving scenarios with timeline markers like "month 0, month 1", use that marker unit.
+   - For static scenarios, still pick a concrete unit so downstream simulation cadence is explicit.
+   - If the unit is not clear, ask for clarification.
+
+5. **OUTCOMES** (optional but check) — does the description explicitly define outcome measurements?
    Look for sections like "Outcomes:", numbered outcome lists, or explicit mentions of what to track.
 
-5. **AGENT FOCUS MODE** — who in each household should be a simulated agent?
+6. **AGENT FOCUS MODE** — who in each household should be a simulated agent?
    - "primary_only": Only one adult per household is an agent (partner/kids are background context).
      Use for: opinion polls, consumer behavior, professional studies, most scenarios.
    - "couples": Both partners are agents (kids are background).
@@ -200,7 +340,7 @@ If insufficient, generate structured questions with:
         for i, q in enumerate(raw_questions)
     ]
 
-    return ScenarioSufficiencyResult(
+    llm_result = ScenarioSufficiencyResult(
         sufficient=data.get("sufficient", False),
         questions=questions,
         inferred_duration=data.get("inferred_duration"),
@@ -209,6 +349,7 @@ If insufficient, generate structured questions with:
         has_explicit_outcomes=data.get("has_explicit_outcomes", False),
         inferred_agent_focus_mode=data.get("inferred_agent_focus_mode"),
     )
+    return _postprocess_sufficiency(description=description, result=llm_result)
 
 
 def check_scenario_sufficiency_with_answers(

@@ -17,7 +17,6 @@ from extropy.core.models.scenario import (
     ExposureChannel,
     ExposureRule,
     InteractionConfig,
-    InteractionType,
     OutcomeConfig,
     OutcomeDefinition,
     OutcomeType,
@@ -56,7 +55,6 @@ def _make_scenario(
             ExposureChannel(
                 name="broadcast",
                 description="Mass broadcast",
-                reach="broadcast",
                 credibility_modifier=1.0,
             ),
         ]
@@ -90,7 +88,6 @@ def _make_scenario(
         ),
         seed_exposure=SeedExposure(channels=channels, rules=rules),
         interaction=InteractionConfig(
-            primary_model=InteractionType.PASSIVE_OBSERVATION,
             description="Observe",
         ),
         spread=SpreadConfig(
@@ -170,7 +167,6 @@ class TestGetChannelCredibility:
                 ExposureChannel(
                     name="email",
                     description="Email",
-                    reach="targeted",
                     credibility_modifier=0.8,
                 ),
             ]
@@ -266,7 +262,6 @@ class TestApplySeedExposures:
             ExposureChannel(
                 name="email",
                 description="Email",
-                reach="targeted",
                 credibility_modifier=0.8,
             ),
         ]
@@ -333,13 +328,15 @@ class TestApplyTimelineExposures:
 
         result = apply_timeline_exposures(2, scenario, ten_agents, sm, rng)
 
-        assert result.new_exposure_count == 10
+        # Timeline fallback applies a bounded direct-exposure cap by intensity.
+        assert result.new_exposure_count == 6
         assert result.info_epoch == 2
         assert result.re_reasoning_intensity == "high"
-        assert len(result.direct_exposed_agent_ids) == 10
+        assert len(result.direct_exposed_agent_ids) == 6
         assert result.active_event is not None
 
-        state = sm.get_agent_state("a0")
+        exposed_agent_id = sorted(result.direct_exposed_agent_ids)[0]
+        state = sm.get_agent_state(exposed_agent_id)
         # At least one timeline exposure should carry provenance.
         assert state.exposures[-1].info_epoch == 2
         assert state.exposures[-1].force_rereason is True

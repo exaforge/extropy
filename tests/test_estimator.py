@@ -34,7 +34,6 @@ from extropy.core.models.scenario import (
     ExposureChannel,
     ExposureRule,
     InteractionConfig,
-    InteractionType,
     SpreadConfig,
     OutcomeConfig,
     OutcomeDefinition,
@@ -157,7 +156,6 @@ def small_scenario() -> ScenarioSpec:
                 ExposureChannel(
                     name="email",
                     description="Email broadcast",
-                    reach="broadcast",
                     credibility_modifier=1.0,
                 ),
             ],
@@ -171,7 +169,6 @@ def small_scenario() -> ScenarioSpec:
             ],
         ),
         interaction=InteractionConfig(
-            primary_model=InteractionType.PASSIVE_OBSERVATION,
             description="Social media style observation",
         ),
         spread=SpreadConfig(

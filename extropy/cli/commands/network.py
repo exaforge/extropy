@@ -297,7 +297,7 @@ def network_command(
         and checkpoint.expanduser().resolve() != study_db.expanduser().resolve()
     ):
         out.error("--checkpoint must point to the same canonical file as study.db")
-        raise typer.Exit(1)
+        raise typer.Exit(out.finish())
     checkpoint_db = study_db if (resume_requested or checkpoint is not None) else None
 
     # Load agents
@@ -603,7 +603,10 @@ def network_command(
             console.print(f"  Largest Component: {metrics.largest_component_ratio:.1%}")
             console.print(f"  Degree Assortativity: {metrics.degree_assortativity:.3f}")
 
-            is_valid, warnings = metrics.is_valid()
+            quality_bounds = (result.meta.get("quality", {}) or {}).get("bounds", {})
+            is_valid, warnings = metrics.is_valid(
+                bounds=quality_bounds if quality_bounds else None
+            )
             console.print()
             if is_valid:
                 console.print("[green]✓[/green] All metrics within expected ranges")
@@ -682,6 +685,7 @@ def network_command(
             f"{scenario_name}__{config.quarantine_suffix}__{network_run_id[:12]}"
         )
         gate_deltas = quality_meta.get("gate_deltas", {})
+        final_metrics = quality_meta.get("final_metrics", {})
         out.error(
             "Topology gate strict failed. Saved quarantined artifact; canonical network not overwritten."
         )
@@ -690,8 +694,12 @@ def network_command(
                 f"[yellow]![/yellow] Quarantined network_id={target_network_id}"
             )
             console.print(
-                f"[red]✗[/red] Failed gates with best metrics: {quality_meta.get('best_metrics', {})}"
+                f"[red]✗[/red] Failed gates with final metrics: {final_metrics}"
             )
+            if quality_meta.get("best_metrics"):
+                console.print(
+                    f"[dim]Calibration best metrics: {quality_meta.get('best_metrics', {})}[/dim]"
+                )
             if gate_deltas:
                 console.print(f"[dim]Gate deltas: {gate_deltas}[/dim]")
             console.print(

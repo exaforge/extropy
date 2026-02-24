@@ -118,7 +118,6 @@ class TestCreateScenario:
             ExposureChannel,
             ExposureRule,
             InteractionConfig,
-            InteractionType,
             SpreadConfig,
             OutcomeConfig,
             OutcomeDefinition,
@@ -142,7 +141,6 @@ class TestCreateScenario:
                 ExposureChannel(
                     name="broadcast",
                     description="Mass broadcast",
-                    reach="broadcast",
                     credibility_modifier=1.0,
                 ),
             ],
@@ -155,7 +153,6 @@ class TestCreateScenario:
 
         mock_interaction.return_value = (
             InteractionConfig(
-                primary_model=InteractionType.PASSIVE_OBSERVATION,
                 description="Agents observe each other",
             ),
             SpreadConfig(share_probability=0.3),
@@ -210,7 +207,6 @@ class TestCreateScenario:
             ExposureChannel,
             ExposureRule,
             InteractionConfig,
-            InteractionType,
             SpreadConfig,
             OutcomeConfig,
             OutcomeDefinition,
@@ -232,7 +228,6 @@ class TestCreateScenario:
                 ExposureChannel(
                     name="b",
                     description="Broadcast",
-                    reach="broadcast",
                     credibility_modifier=1.0,
                 )
             ],
@@ -240,7 +235,6 @@ class TestCreateScenario:
         )
         mock_interaction.return_value = (
             InteractionConfig(
-                primary_model=InteractionType.PASSIVE_OBSERVATION,
                 description="Agents observe each other",
             ),
             SpreadConfig(share_probability=0.3),

@@ -9,6 +9,7 @@ from extropy.core.models.population import (
     GroundingInfo,
     NormalDistribution,
     CategoricalDistribution,
+    BooleanDistribution,
     HouseholdType,
     HouseholdConfig,
     Dependent,
@@ -30,14 +31,10 @@ import random
 _DEFAULT_CONFIG = HouseholdConfig()
 
 
-def _make_household_spec(
-    size: int = 100, agent_focus: str | None = "couples"
-) -> PopulationSpec:
+def _make_household_spec(size: int = 100) -> PopulationSpec:
     """Create a minimal spec with household-scoped attributes."""
     return PopulationSpec(
-        meta=SpecMeta(
-            description="Test household spec", size=size, agent_focus=agent_focus
-        ),
+        meta=SpecMeta(description="Test household spec", size=size),
         grounding=GroundingSummary(
             overall="medium",
             sources_count=1,
@@ -114,7 +111,6 @@ def _make_household_spec(
                 category="universal",
                 description="Education",
                 scope="partner_correlated",  # Correlated between partners
-                correlation_rate=0.6,  # ~60% same education
                 sampling=SamplingConfig(
                     strategy="independent",
                     distribution=CategoricalDistribution(
@@ -222,7 +218,7 @@ class TestHouseholdSamplingHelpers:
         """Age correlation uses gaussian offset from HouseholdConfig."""
         rng = random.Random(42)
         partner_age = correlate_partner_attribute(
-            "age", "int", 35, None, rng, _DEFAULT_CONFIG
+            "age", "int", 35, rng, _DEFAULT_CONFIG
         )
         assert isinstance(partner_age, int)
         assert partner_age >= 18
@@ -237,7 +233,6 @@ class TestHouseholdSamplingHelpers:
                 "race_ethnicity",
                 "categorical",
                 "white",
-                None,  # Uses per-group rates from config
                 rng,
                 _DEFAULT_CONFIG,
                 available_options=["white", "black", "hispanic"],
@@ -249,7 +244,7 @@ class TestHouseholdSamplingHelpers:
         assert 0.80 < rate < 0.97, f"Same-race rate {rate:.2f} outside expected range"
 
     def test_correlate_education_assortative(self):
-        """Education uses explicit correlation_rate."""
+        """Education uses household assortative-mating defaults."""
         rng = random.Random(42)
         same_count = 0
         trials = 500
@@ -258,7 +253,6 @@ class TestHouseholdSamplingHelpers:
                 "education_level",
                 "categorical",
                 "bachelors",
-                0.6,  # Explicit correlation rate
                 rng,
                 _DEFAULT_CONFIG,
                 available_options=["high_school", "bachelors", "masters", "doctorate"],
@@ -266,11 +260,11 @@ class TestHouseholdSamplingHelpers:
             if result == "bachelors":
                 same_count += 1
         rate = same_count / trials
-        # Expect ~60% same education
-        assert 0.50 < rate < 0.75, f"Assortative rate {rate:.2f} outside expected range"
+        # Expect moderate assortative matching from default config table
+        assert 0.50 < rate < 0.70, f"Assortative rate {rate:.2f} outside expected range"
 
     def test_correlate_with_default_rate(self):
-        """Unknown attributes use default_same_group_rate when no explicit rate."""
+        """Unknown attributes use default_same_group_rate."""
         rng = random.Random(42)
         same_count = 0
         trials = 500
@@ -279,7 +273,6 @@ class TestHouseholdSamplingHelpers:
                 "some_attribute",
                 "categorical",
                 "value_a",
-                None,  # No explicit rate, uses default
                 rng,
                 _DEFAULT_CONFIG,
                 available_options=["value_a", "value_b", "value_c"],
@@ -292,9 +285,7 @@ class TestHouseholdSamplingHelpers:
 
     def test_generate_dependents_no_kids(self):
         rng = random.Random(42)
-        deps = generate_dependents(
-            HouseholdType.COUPLE, 2, 2, 40, rng, _DEFAULT_CONFIG, name_config=None
-        )
+        deps = generate_dependents(HouseholdType.COUPLE, 2, 2, 40, rng, _DEFAULT_CONFIG)
         assert len(deps) == 0
 
     def test_generate_dependents_with_kids(self):
@@ -306,7 +297,6 @@ class TestHouseholdSamplingHelpers:
             40,
             rng,
             _DEFAULT_CONFIG,
-            name_config=None,
         )
         assert len(deps) == 2
         for d in deps:
@@ -323,11 +313,29 @@ class TestHouseholdSamplingHelpers:
             45,
             rng,
             _DEFAULT_CONFIG,
-            name_config=None,
         )
         assert len(deps) == 2
         relationships = [d.relationship for d in deps]
         assert any(r in ("father", "mother") for r in relationships)
+
+    def test_generate_dependents_caps_elderly_age(self):
+        rng = random.Random(42)
+        config = HouseholdConfig(
+            elderly_min_offset=25,
+            elderly_max_offset=35,
+            max_elderly_dependent_age=100,
+        )
+        deps = generate_dependents(
+            HouseholdType.MULTI_GENERATIONAL,
+            4,
+            2,
+            80,
+            rng,
+            config,
+        )
+        elder_ages = [d.age for d in deps if d.relationship in ("father", "mother")]
+        assert elder_ages
+        assert max(elder_ages) <= 100
 
     def test_estimate_household_count(self):
         assert estimate_household_count(100, _DEFAULT_CONFIG) == 40
@@ -369,6 +377,38 @@ class TestHouseholdPopulationSampling:
                     f"Household-scoped attr 'state' should match: "
                     f"{agent['state']} != {partner['state']}"
                 )
+
+    def test_household_members_share_surname(self):
+        spec = _make_household_spec(size=120)
+        result = sample_population(spec, count=120, seed=7)
+        by_household: dict[str, list[dict]] = {}
+        for agent in result.agents:
+            hid = agent.get("household_id")
+            if isinstance(hid, str):
+                by_household.setdefault(hid, []).append(agent)
+
+        for members in by_household.values():
+            primary = next(
+                (m for m in members if m.get("household_role") == "adult_primary"),
+                members[0],
+            )
+            primary_last = primary.get("last_name")
+            if not primary_last:
+                continue
+
+            for member in members:
+                assert member.get("last_name") == primary_last
+
+            partner_npc = primary.get("partner_npc")
+            if isinstance(partner_npc, dict) and partner_npc.get("last_name"):
+                assert partner_npc.get("last_name") == primary_last
+
+            for dep in primary.get("dependents", []) or []:
+                if not isinstance(dep, dict):
+                    continue
+                dep_name = dep.get("name")
+                if isinstance(dep_name, str) and dep_name.strip():
+                    assert dep_name.split()[-1] == primary_last
 
     def test_dependent_count_matches(self):
         spec = _make_household_spec(size=50)
@@ -457,7 +497,7 @@ class TestCorrelatedDemographics:
         for _ in range(total):
             primary_country = rng.choice(countries)
             partner_country = correlate_partner_attribute(
-                "country", "categorical", primary_country, None, rng, config, countries
+                "country", "categorical", primary_country, rng, config, countries
             )
             if partner_country == primary_country:
                 same_country += 1
@@ -465,3 +505,201 @@ class TestCorrelatedDemographics:
         rate = same_country / total
         # Should be close to 0.95 (within statistical margin)
         assert 0.90 < rate < 0.99, f"Same-country rate {rate:.2%} out of expected range"
+
+
+class TestHouseholdCoherenceNormalization:
+    def test_non_partnered_marital_categories_preserved(self):
+        spec = _make_household_spec(size=500)
+        spec.attributes.append(
+            AttributeSpec(
+                name="marital_status",
+                type="categorical",
+                category="universal",
+                description="Marital status",
+                scope="individual",
+                sampling=SamplingConfig(
+                    strategy="independent",
+                    distribution=CategoricalDistribution(
+                        type="categorical",
+                        options=[
+                            "Married/partnered",
+                            "Single",
+                            "Divorced/separated",
+                            "Widowed",
+                        ],
+                        weights=[0.25, 0.35, 0.25, 0.15],
+                    ),
+                ),
+                grounding=GroundingInfo(level="medium", method="estimated"),
+            )
+        )
+        spec.sampling_order.append("marital_status")
+
+        result = sample_population(spec, count=500, seed=42, agent_focus_mode="couples")
+        adults = [
+            a
+            for a in result.agents
+            if str(a.get("household_role", "")).startswith("adult_")
+        ]
+        non_partnered = [
+            a for a in adults if not (a.get("partner_id") or a.get("partner_npc"))
+        ]
+        assert non_partnered
+        assert all(
+            a.get("marital_status") != "Married/partnered" for a in non_partnered
+        )
+        preserved = sum(
+            1
+            for a in non_partnered
+            if a.get("marital_status") in {"Divorced/separated", "Widowed"}
+        )
+        assert preserved > 0
+
+    def test_has_children_matches_realized_dependents_for_adults(self):
+        spec = _make_household_spec(size=400)
+        spec.attributes.append(
+            AttributeSpec(
+                name="has_children",
+                type="boolean",
+                category="universal",
+                description="Children in household",
+                scope="individual",
+                identity_type="parental_status",
+                sampling=SamplingConfig(
+                    strategy="independent",
+                    distribution=BooleanDistribution(
+                        type="boolean", probability_true=0.5
+                    ),
+                ),
+                grounding=GroundingInfo(level="medium", method="estimated"),
+            )
+        )
+        spec.attributes.append(
+            AttributeSpec(
+                name="marital_status",
+                type="categorical",
+                category="universal",
+                description="Marital status",
+                scope="individual",
+                sampling=SamplingConfig(
+                    strategy="independent",
+                    distribution=CategoricalDistribution(
+                        type="categorical",
+                        options=[
+                            "Married/partnered",
+                            "Single",
+                            "Divorced/separated",
+                            "Widowed",
+                        ],
+                        weights=[0.25, 0.45, 0.2, 0.1],
+                    ),
+                ),
+                grounding=GroundingInfo(level="medium", method="estimated"),
+            )
+        )
+        spec.sampling_order.extend(["has_children", "marital_status"])
+
+        result = sample_population(spec, count=400, seed=42, agent_focus_mode="couples")
+        adults = [
+            a
+            for a in result.agents
+            if str(a.get("household_role", "")).startswith("adult_")
+        ]
+        assert adults
+        for agent in adults:
+            dependents = agent.get("dependents", []) or []
+            has_child_dep = any(
+                isinstance(dep, dict)
+                and (
+                    str(dep.get("relationship", "")).lower()
+                    in {"son", "daughter", "child", "stepchild"}
+                    or (
+                        isinstance(dep.get("age"), (int, float))
+                        and 0 <= int(dep["age"]) <= 17
+                    )
+                )
+                for dep in dependents
+            )
+            assert bool(agent.get("has_children")) == has_child_dep
+
+    def test_young_adult_retired_values_are_normalized(self):
+        spec = _make_individual_spec(size=300)
+        spec.attributes.append(
+            AttributeSpec(
+                name="employment_sector",
+                type="categorical",
+                category="universal",
+                description="Employment sector",
+                semantic_type="employment",
+                sampling=SamplingConfig(
+                    strategy="independent",
+                    distribution=CategoricalDistribution(
+                        type="categorical",
+                        options=["Retired", "Private sector", "Unemployed"],
+                        weights=[0.8, 0.1, 0.1],
+                    ),
+                ),
+                grounding=GroundingInfo(level="low", method="estimated"),
+            )
+        )
+        spec.sampling_order.append("employment_sector")
+        for attr in spec.attributes:
+            if attr.name == "age":
+                attr.sampling.distribution = NormalDistribution(
+                    type="normal",
+                    mean=24,
+                    std=2,
+                    min=18,
+                    max=29,
+                )
+
+        result = sample_population(spec, count=300, seed=42)
+        assert all(a["age"] < 30 for a in result.agents)
+        assert all(a.get("employment_sector") != "Retired" for a in result.agents)
+
+    def test_education_normalization_for_young_adults(self):
+        spec = _make_individual_spec(size=400)
+        spec.attributes.append(
+            AttributeSpec(
+                name="education_level",
+                type="categorical",
+                category="universal",
+                description="Education level",
+                semantic_type="education",
+                sampling=SamplingConfig(
+                    strategy="independent",
+                    distribution=CategoricalDistribution(
+                        type="categorical",
+                        options=[
+                            "HS diploma/GED",
+                            "Some college",
+                            "Bachelor's degree",
+                            "Graduate Degree",
+                        ],
+                        weights=[0.05, 0.05, 0.2, 0.7],
+                    ),
+                ),
+                grounding=GroundingInfo(level="low", method="estimated"),
+            )
+        )
+        spec.sampling_order.append("education_level")
+        for attr in spec.attributes:
+            if attr.name == "age":
+                attr.sampling.distribution = NormalDistribution(
+                    type="normal",
+                    mean=19.5,
+                    std=1.2,
+                    min=18,
+                    max=21,
+                )
+
+        result = sample_population(spec, count=400, seed=42)
+        assert all(a["age"] < 22 for a in result.agents)
+        assert all(a.get("education_level") != "Graduate Degree" for a in result.agents)
+        assert all(
+            not (
+                a["age"] in (18, 19)
+                and a.get("education_level") in {"Bachelor's degree", "Graduate Degree"}
+            )
+            for a in result.agents
+        )

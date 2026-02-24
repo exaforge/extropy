@@ -489,10 +489,13 @@ class TestPromotedDependentNames:
         for dep in promoted:
             first_name = dep.get("first_name")
             assert first_name, "Promoted dependents must have first_name"
+            last_name = dep.get("last_name")
+            assert last_name, "Promoted dependents must have last_name"
 
             hh = households.get(dep["household_id"])
             assert hh is not None
             dependent_names = {d.get("name") for d in hh.get("dependent_data", [])}
-            assert first_name in dependent_names, (
+            full_name = f"{first_name} {last_name}".strip()
+            assert full_name in dependent_names, (
                 "Promoted dependent names should stay aligned with generated dependent records"
             )

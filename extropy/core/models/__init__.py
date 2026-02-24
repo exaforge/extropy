@@ -39,10 +39,8 @@ from .population import (
     HouseholdType,
     Dependent,
     LifeStageThreshold,
+    PartnerGenderPairWeight,
     HouseholdConfig,
-    # Name models
-    NameEntry,
-    NameConfig,
     STANDARD_PERSONALITY_ATTRIBUTES,
 )
 
@@ -65,7 +63,6 @@ from .scenario import (
     ExposureRule,
     SeedExposure,
     # Interaction
-    InteractionType,
     InteractionConfig,
     SpreadModifier,
     SpreadConfig,
@@ -78,6 +75,12 @@ from .scenario import (
     ScenarioSimConfig,
     # Identity
     IdentityDimension,
+    PartnerCorrelationPolicy,
+    MaritalRoles,
+    GeoRoles,
+    SchoolParentRole,
+    ReligionRoles,
+    SamplingSemanticRoles,
     # Scenario
     ScenarioMeta,
     ScenarioSpec,
@@ -158,10 +161,8 @@ __all__ = [
     "HouseholdType",
     "Dependent",
     "LifeStageThreshold",
+    "PartnerGenderPairWeight",
     "HouseholdConfig",
-    # Population - Name models
-    "NameEntry",
-    "NameConfig",
     "STANDARD_PERSONALITY_ATTRIBUTES",
     # Scenario - Event
     "EventType",
@@ -173,7 +174,6 @@ __all__ = [
     "ExposureRule",
     "SeedExposure",
     # Scenario - Interaction
-    "InteractionType",
     "InteractionConfig",
     "SpreadModifier",
     "SpreadConfig",
@@ -189,6 +189,12 @@ __all__ = [
     "ScenarioSpec",
     # Scenario - Identity
     "IdentityDimension",
+    "PartnerCorrelationPolicy",
+    "MaritalRoles",
+    "GeoRoles",
+    "SchoolParentRole",
+    "ReligionRoles",
+    "SamplingSemanticRoles",
     # Validation (shared)
     "Severity",
     "ValidationIssue",

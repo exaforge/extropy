@@ -18,6 +18,7 @@ extropy query summary --json
 ```
 
 **Agent mode behavior:**
+
 - All output is JSON (parseable, no ANSI formatting)
 - Exit codes indicate success/failure (0 = success, non-zero = error)
 - No interactive prompts — commands fail fast if missing required input
@@ -29,20 +30,22 @@ extropy query summary --json
 extropy spec → extropy scenario → extropy persona → extropy sample → extropy network → extropy simulate → extropy results
 ```
 
-| Command | Purpose |
-|---------|---------|
-| `spec` | Create population spec from description |
-| `scenario` | Create scenario with events and outcomes |
-| `persona` | Generate persona rendering config |
-| `sample` | Sample agents from merged spec |
-| `network` | Generate social network |
-| `simulate` | Run simulation |
-| `results` | View results (summary, timeline, segment, agent) |
-| `query` | Export raw data (agents, edges, states, SQL) |
-| `chat` | Chat with simulated agents |
-| `estimate` | Predict simulation cost |
-| `validate` | Validate spec files |
-| `config` | View/set configuration |
+
+| Command    | Purpose                                          |
+| ---------- | ------------------------------------------------ |
+| `spec`     | Create population spec from description          |
+| `scenario` | Create scenario with events and outcomes         |
+| `persona`  | Generate persona rendering config                |
+| `sample`   | Sample agents from merged spec                   |
+| `network`  | Generate social network                          |
+| `simulate` | Run simulation                                   |
+| `results`  | View results (summary, timeline, segment, agent) |
+| `query`    | Export raw data (agents, edges, states, SQL)     |
+| `chat`     | Chat with simulated agents                       |
+| `estimate` | Predict simulation cost                          |
+| `validate` | Validate spec files                              |
+| `config`   | View/set configuration                           |
+
 
 ## Non-Interactive Usage
 
@@ -71,17 +74,19 @@ extropy persona -s ai-adoption -y
 
 ## Exit Codes
 
-| Code | Meaning |
-|------|---------|
-| 0 | Success |
-| 1 | General error / validation failure |
-| 2 | Clarification needed (agent mode) |
-| 3 | File not found |
-| 4 | Sampling error |
-| 5 | Network error |
-| 6 | Simulation error |
-| 7 | Scenario error |
-| 10 | User cancelled |
+
+| Code | Meaning                            |
+| ---- | ---------------------------------- |
+| 0    | Success                            |
+| 1    | General error / validation failure |
+| 2    | Clarification needed (agent mode)  |
+| 3    | File not found                     |
+| 4    | Sampling error                     |
+| 5    | Network error                      |
+| 6    | Simulation error                   |
+| 7    | Scenario error                     |
+| 10   | User cancelled                     |
+
 
 ## Querying Data
 
@@ -150,11 +155,13 @@ export AZURE_ENDPOINT=https://<resource>.services.ai.azure.com/
 
 All commands accept:
 
-| Flag | Purpose |
-|------|---------|
-| `--json` | JSON output (overrides cli.mode) |
-| `--cost` | Show cost summary after command |
-| `--study PATH` | Explicit study folder path |
+
+| Flag           | Purpose                          |
+| -------------- | -------------------------------- |
+| `--json`       | JSON output (overrides cli.mode) |
+| `--cost`       | Show cost summary after command  |
+| `--study PATH` | Explicit study folder path       |
+
 
 ## Study Folder Structure
 
@@ -197,3 +204,4 @@ extropy results --json
 extropy query agents --to agents.jsonl
 extropy query states --to states.jsonl
 ```
+

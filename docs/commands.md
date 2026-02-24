@@ -8,8 +8,6 @@ Complete reference for all Extropy CLI commands, flags, and options.
 
 ```
 extropy spec ──> extropy scenario ──> extropy persona ──> extropy sample ──> extropy network ──> extropy simulate ──> extropy results
-                                                                                                      │
-                                                                                               extropy estimate
 ```
 
 All commands operate within a **study folder** — a directory containing `study.db` and scenario subdirectories. Commands auto-detect the study folder from the current working directory.
@@ -35,7 +33,6 @@ All commands support these global options:
 
 | Flag | Description |
 |------|-------------|
-| `--json` | Output machine-readable JSON instead of human-friendly text |
 | `--version` | Show version and exit |
 | `--cost` | Show cost summary after command completes |
 | `--study PATH` | Study folder path (auto-detected from cwd if not specified) |
@@ -61,6 +58,19 @@ cd surgeons && extropy spec "add income distribution"
 extropy spec "farmers" -o my-spec.yaml
 ```
 
+### What `spec` does in current flow
+
+1. Runs sufficiency check (may ask clarifications; in agent mode returns structured questions).
+2. Selects attributes (strategy, scope, dependencies, semantic metadata).
+3. Runs split hydration for distributions/formulas/modifiers.
+4. Binds constraints + computes dependency-safe sampling order.
+5. Builds and validates `PopulationSpec`.
+6. Saves versioned output YAML.
+
+**Stage ownership notes:**
+- Spec stage does **not** persist household config (household modeling is scenario-owned).
+- Name generation is **not** part of spec generation; names are generated at sampling/runtime.
+
 ### Arguments
 
 | Name | Type | Required | Description |
@@ -75,6 +85,11 @@ extropy spec "farmers" -o my-spec.yaml
 | `--yes` | `-y` | flag | false | Skip confirmation prompts |
 | `--answers` | | string | | JSON with pre-supplied clarification answers (for agent mode) |
 | `--use-defaults` | | flag | false | Use defaults for ambiguous values instead of prompting |
+
+### Validation Failure Behavior
+
+- If spec validation fails, CLI writes a versioned invalid artifact next to target output (`population.v1.yaml` -> `population.v1.invalid.v1.yaml`, then `.v2`, `.v3`, ...).
+- Command exits non-zero after writing the invalid artifact.
 
 ---
 
@@ -92,25 +107,33 @@ extropy scenario "AI diagnostic tool adoption" -o ai-adoption
 extropy scenario "vaccine mandate" -o vaccine @pop:v1
 
 # Rebase existing scenario to new population
-extropy scenario ai-adoption --rebase @pop:v2
+extropy scenario "rebase marker" -o ai-adoption --rebase @pop:v2
 ```
 
 ### What the Scenario Command Does
 
-1. **Discovers scenario-specific attributes** — Uses LLM to identify attributes relevant to this scenario that don't exist in the base population (e.g., `technology_anxiety`, `job_automation_exposure` for an AI scenario)
-2. **Researches distributions** — Hydrates new attributes with realistic distributions, just like the spec command
-3. **Generates household config** — Determines if/how household dynamics matter for this scenario
-4. **Creates event definition** — The triggering event (type, content, source, credibility)
-5. **Configures exposure rules** — How agents initially encounter the event (channels, targeting, timing)
-6. **Defines outcomes** — What to measure (categorical, boolean, open-ended responses)
-7. **Sets simulation parameters** — Timesteps, timeline mode (static vs evolving), stopping conditions
+1. **Runs sufficiency check** — infers duration/type/unit/focus hints and asks clarifications if needed
+2. **Discovers scenario-specific attributes** — identifies extension attributes not already in base population
+3. **Hydrates extension + household config** — researches distributions and scenario household semantics
+4. **Binds constraints** — validates dependencies and sampling order for extension attrs
+5. **Compiles scenario dynamics** — builds event, exposure, interaction/spread, timeline, and outcomes
+6. **Validates scenario contract** — deterministic checks before save (base+extended refs, literals, channels, timeline, outcomes)
+7. **Saves versioned artifact** — `scenario/{name}/scenario.vN.yaml` (or versioned `.invalid` on fail-hard)
+
+### Sufficiency Behavior
+
+- Sufficiency is intentionally lenient, but deterministic post-processing adds guardrails:
+  - explicit timeline markers (for example `week 1`, `month 0`) force evolving mode
+  - static scenarios must have an explicit timestep unit (or trigger a clarification question)
+- In agent mode, insufficiency returns structured questions with exit code `2`.
+- `--use-defaults` retries sufficiency automatically using defaults from those clarification questions.
 
 ### Arguments
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
 | `description` | string | yes | Scenario description (what event/situation to simulate) |
-| `population_ref` | string | no | Population version reference: `@pop:v1`, `@pop:latest`, or path to YAML |
+| `population_ref` | string | no | Population version reference: `@pop:v1` or `@pop:latest` |
 
 ### Options
 
@@ -119,6 +142,9 @@ extropy scenario ai-adoption --rebase @pop:v2
 | `--output` | `-o` | string | required | Scenario name (creates `scenario/{name}/scenario.v1.yaml`) |
 | `--rebase` | | string | | Rebase existing scenario to new population version (e.g. `@pop:v2`) |
 | `--timeline` | | string | `auto` | Timeline mode: `auto` (LLM decides), `static` (single event), `evolving` (multi-event) |
+| `--timestep-unit` | | string | inferred | Override timestep unit: `hour`, `day`, `week`, `month`, `year` |
+| `--max-timesteps` | | int | inferred | Override simulation horizon |
+| `--use-defaults` | | flag | false | Auto-answer sufficiency clarifications with defaults |
 | `--yes` | `-y` | flag | false | Skip confirmation prompts |
 
 ### Scenario Spec Contents
@@ -133,6 +159,15 @@ The generated `scenario.v1.yaml` includes:
 - **`spread`** — How information propagates through the network
 - **`outcomes`** — What to measure from each agent
 - **`simulation`** — Timestep config, stopping conditions, convergence settings
+- **`household_config` + `agent_focus_mode`** — Scenario-owned household semantics for sample stage
+- **`sampling_semantic_roles`** — Scenario-level semantic role mappings used by sampling/runtime checks
+- **`identity_dimensions`** (optional) — Identity activation hints consumed by simulation prompts
+
+### Validation Failure Behavior
+
+- If no scenario extension attributes are discovered, scenario creation hard-fails and writes a versioned JSON invalid artifact.
+- If compile fails mid-pipeline, scenario creation hard-fails and writes a versioned JSON invalid artifact.
+- If final scenario validation fails, CLI writes versioned YAML invalid artifact (`scenario.vN.invalid.vK.yaml`) and exits non-zero.
 
 ---
 
@@ -151,16 +186,34 @@ extropy persona -s ai-adoption@v1
 extropy persona -s ai-adoption --show
 ```
 
+### What `persona` does in current flow
+
+1. Resolves scenario and loads `scenario.vN.yaml`.
+2. Loads referenced base population and merges `extended_attributes`.
+3. Runs persona generation pipeline (structure, boolean/categorical/relative/concrete phrasings).
+4. Validates generated config against merged attributes (`validate_persona_config`).
+5. Saves versioned output YAML (`persona.vN.yaml`).
+
+Notes:
+- If sampled agents already exist, persona generation computes `population_stats` at generation time.
+- If not, stats can be backfilled later at simulation runtime.
+
 ### Options
 
 | Flag | Short | Type | Default | Description |
 |------|-------|------|---------|-------------|
 | `--scenario` | `-s` | string | auto | Scenario name (auto-selects if only one exists) |
 | `--output` | `-o` | path | | Output file (default: `scenario/{name}/persona.vN.yaml`) |
-| `--preview/--no-preview` | | flag | true | Show a sample persona before saving |
+| `--preview/--no-preview` | | flag | true | Reserved flag (currently not used as a separate generation gate) |
 | `--agent` | | int | 0 | Which agent to use for preview |
 | `--yes` | `-y` | flag | false | Skip confirmation prompts |
 | `--show` | | flag | false | Preview existing persona config without regenerating |
+
+### Validation Failure Behavior
+
+- If generation fails, CLI writes a versioned JSON invalid artifact and exits non-zero.
+- If persona validation fails, CLI writes versioned YAML invalid artifact (`persona.vN.invalid.vK.yaml`) and exits non-zero.
+- `extropy validate persona.vN.yaml` (or `.invalid`) runs persona-specific validation against merged base+extended attributes.
 
 ---
 
@@ -174,6 +227,16 @@ extropy sample -s ai-adoption -n 1000 --seed 42 --report
 extropy sample -n 500  # auto-selects scenario if only one exists
 ```
 
+### What `sample` does in current flow
+
+1. Resolves scenario and requires persona config pre-flight.
+2. Loads base population + scenario extension and builds merged spec.
+3. Recomputes merged sampling order via topological sort.
+4. Validates merged spec.
+5. Samples agents using scenario household config/focus/semantic roles.
+6. Runs deterministic post-sample rule-pack gate.
+7. Saves agents and run metadata to `study.db`.
+
 ### Options
 
 | Flag | Short | Type | Default | Description |
@@ -183,15 +246,24 @@ extropy sample -n 500  # auto-selects scenario if only one exists
 | `--seed` | | int | random | Random seed for reproducibility |
 | `--report` | `-r` | flag | false | Show distribution summaries and stats |
 | `--skip-validation` | | flag | false | Skip validator errors |
+| `--strict-gates` | | flag | false | Promote high-risk warnings and post-sample condition warnings to fail-hard |
 
 **Exit codes:** 0 = Success, 1 = Validation error, 3 = File not found, 4 = Sampling error
 
 Sampling process:
 1. Loads scenario's `base_population` spec
 2. Merges with scenario's `extended_attributes`
-3. Validates the merged spec
-4. Samples agents
-5. Saves to `study.db` keyed by `scenario_id`
+3. Recomputes merged dependency order (topological sort)
+4. Validates the merged spec
+5. Samples agents
+6. Applies rule-pack gate (`impossible`/`implausible`)
+7. Saves to `study.db` keyed by `scenario_id`
+
+### Validation/Gate Failure Behavior
+
+- Missing persona config blocks sampling pre-flight.
+- Merged-order cycles or merged-spec validation failures write versioned JSON invalid artifacts and exit non-zero.
+- Post-sampling gate failure writes versioned JSON invalid artifact (`sample.invalid.vN.json`) and exits non-zero.
 
 ---
 
@@ -206,6 +278,20 @@ extropy network -s ai-adoption --no-generate-config        # Flat network, no si
 extropy network -s ai-adoption -c custom-network.yaml      # Load custom config
 ```
 
+### What `network` does in current flow
+
+1. Resolves study + scenario and verifies sampled agents exist.
+2. Loads scenario + base population and builds merged attribute context (base + extension) for config generation.
+3. Resolves config in this order:
+   - explicit `--network-config`
+   - latest auto-detected `scenario/<name>/*.network-config.yaml`
+   - LLM-generated config (`--generate-config`, default)
+   - empty config fallback (`--no-generate-config`)
+4. Applies CLI overrides, quality profile defaults, and resource auto-tuning.
+5. Generates network (with metrics unless `--no-metrics`).
+6. Evaluates topology gate and persists result to `study.db`.
+7. Optionally exports a non-canonical JSON copy with `--output`.
+
 ### Options
 
 | Flag | Short | Type | Default | Description |
@@ -215,9 +301,9 @@ extropy network -s ai-adoption -c custom-network.yaml      # Load custom config
 | `--network-config` | `-c` | path | | Custom network config YAML file |
 | `--save-config` | | path | | Save the (generated or loaded) network config to YAML |
 | `--generate-config` | | flag | true | Generate network config via LLM from population spec (default: enabled) |
-| `--avg-degree` | | float | 20.0 | Target average degree (connections per agent) |
-| `--rewire-prob` | | float | 0.05 | Watts-Strogatz rewiring probability |
-| `--seed` | | int | random | Random seed for reproducibility |
+| `--avg-degree` | | float | unset | Override target average degree (otherwise keep config value) |
+| `--rewire-prob` | | float | unset | Override rewiring probability (otherwise keep config value) |
+| `--seed` | | int | unset | Override config seed (if unset, generator picks seed) |
 | `--validate` | | flag | false | Print validation metrics |
 | `--no-metrics` | | flag | false | Skip computing node metrics (faster) |
 
@@ -229,14 +315,14 @@ extropy network -s ai-adoption -c custom-network.yaml      # Load custom config
 | `--candidate-mode` | string | `blocked` | Similarity candidate mode: `exact`, `blocked` |
 | `--candidate-pool-multiplier` | float | 12.0 | Blocked mode candidate pool size as multiple of avg_degree |
 | `--block-attr` | string (repeatable) | auto | Blocking attribute(s). If omitted, auto-selects top attributes |
-| `--similarity-workers` | int | 1 | Worker processes for similarity computation |
+| `--similarity-workers` | int | 0 | Worker processes for similarity computation (`0` = auto) |
 | `--similarity-chunk-size` | int | 64 | Row chunk size for similarity worker tasks |
 
 #### Checkpointing
 
 | Flag | Type | Default | Description |
 |------|------|---------|-------------|
-| `--checkpoint` | path | | DB path for similarity checkpointing (must be study.db) |
+| `--checkpoint` | path | | DB path for checkpointing (must resolve to the same file as `study.db`) |
 | `--resume` | flag | false | Resume similarity and calibration checkpoints from study.db |
 | `--checkpoint-every` | int | 250 | Write checkpoint every N processed similarity rows |
 
@@ -247,6 +333,19 @@ extropy network -s ai-adoption -c custom-network.yaml      # Load custom config
 | `--resource-mode` | string | `auto` | Resource tuning mode: `auto`, `manual` |
 | `--safe-auto-workers/--unsafe-auto-workers` | flag | true | Conservative auto tuning for laptops/VMs |
 | `--max-memory-gb` | float | | Optional memory budget cap for auto resource tuning |
+
+### Validation/Gate Failure Behavior
+
+- Missing sampled agents blocks network generation pre-flight.
+- Invalid option values (`quality_profile`, `candidate_mode`, `topology_gate`, checkpoint mismatch) exit non-zero.
+- Strict topology-gate failures (`quality.accepted=false` with strict gate and `N>=50`) exit non-zero:
+  - by default, command saves a quarantined network artifact and does not report canonical success,
+  - if quarantine is disabled via advanced flag, command still exits non-zero.
+
+### Notes
+
+- Generated configs can be auto-saved into `scenario/<name>/network-config.seed*.yaml`.
+- Use `extropy query network-status <network_run_id>` to inspect calibration/progress records.
 
 ---
 
@@ -260,6 +359,22 @@ extropy simulate -s ai-adoption --seed 42 --strong anthropic/claude-sonnet-4-6
 extropy simulate -s ai-adoption --fidelity high
 extropy simulate -s asi-announcement --early-convergence off
 ```
+
+### What `simulate` does in current flow
+
+1. Resolves study folder and scenario.
+2. Pre-flight checks required upstream artifacts:
+   - sampled agents exist for scenario,
+   - network edges exist for scenario,
+   - persona config exists for scenario.
+3. Validates runtime flags (`--resume`/`--run-id`, `--resource-mode`, `--early-convergence`).
+4. Resolves effective models/rate limits from CLI overrides then config defaults.
+5. Runs simulation loop:
+   - seed + timeline + network exposures,
+   - chunked reasoning (two-pass by default, merged with `--merged-pass`) with per-timestep reasoning budget,
+   - medium/high conversation interleaving with novelty + per-timestep conversation budget,
+   - timestep summary + stopping checks.
+6. Persists run state to canonical `study.db` and writes results artifacts to `results/{scenario}/` (or `--output`).
 
 ### Options
 
@@ -334,6 +449,23 @@ Precedence:
 | `--quiet` | `-q` | flag | false | Suppress progress output |
 | `--verbose` | `-v` | flag | false | Show detailed logs |
 | `--debug` | | flag | false | Show debug-level logs (very verbose) |
+
+### Runtime Notes
+
+- `--resume` requires an explicit `--run-id`.
+- Scenario lookup is scenario-name first, with legacy id fallback for older studies.
+- `--early-convergence auto` uses scenario YAML value when set; otherwise runtime auto-rule applies (do not early-stop while future timeline events remain).
+- `low` fidelity skips conversations; `medium` and `high` enable conversations with stricter per-agent caps at lower fidelity.
+- `--retention-lite` drops full raw reasoning payload retention to reduce DB/storage volume.
+- Timeline events without explicit `exposure_rules` use bounded fallback filtering (not full-seed-rule replay).
+- `extreme` re-reasoning is bounded to a high-salience subset, not all aware agents.
+
+### Failure Behavior
+
+- Missing study folder/scenario/persona/agents/network fails pre-flight and exits non-zero.
+- Invalid flag values (for example bad `--resource-mode` or `--early-convergence`) fail fast and exit non-zero.
+- Runtime exceptions mark the simulation run as `failed` in `simulation_runs` and return non-zero.
+- Successful completion updates run status to `completed` or `stopped` (when a stop condition ends early).
 
 ---
 
@@ -490,28 +622,6 @@ extropy query sql "SELECT * FROM agent_states LIMIT 10" --format json
 | `--format` | string | `table` | Output format: `table`, `json`, `jsonl` |
 
 Only `SELECT`, `WITH`, and `EXPLAIN` queries are allowed.
-
----
-
-## extropy estimate
-
-Predict simulation cost without making API calls.
-
-```bash
-extropy estimate -s ai-adoption
-extropy estimate -s ai-adoption --strong openai/gpt-5
-extropy estimate -s ai-adoption --strong openai/gpt-5 --fast openai/gpt-5-mini -v
-```
-
-### Options
-
-| Flag | Short | Type | Default | Description |
-|------|-------|------|---------|-------------|
-| `--scenario` | `-s` | string | auto | Scenario name |
-| `--strong` | | string | config | Strong model for Pass 1 |
-| `--fast` | | string | config | Fast model for Pass 2 |
-| `--threshold` | `-t` | int | 3 | Multi-touch threshold |
-| `--verbose` | `-v` | flag | false | Show per-timestep breakdown |
 
 ---
 
@@ -681,9 +791,6 @@ extropy persona -s congestion-tax -y
 extropy sample -s congestion-tax -n 500 --seed 42
 extropy network -s congestion-tax --seed 42
 
-# Estimate cost before running
-extropy estimate -s congestion-tax
-
 # Run simulation
 extropy simulate -s congestion-tax --seed 42
 
@@ -709,4 +816,38 @@ extropy config show
 extropy config set simulation.strong anthropic/claude-sonnet-4-6
 extropy config set cli.mode agent  # for AI harnesses
 extropy config set cli.mode human  # for terminal users (default)
+```
+
+---
+
+## Reference Study Recipes
+
+### ASI (Evolving, Monthly, 6 timesteps)
+
+```bash
+extropy scenario "ASI announcement with escalating social/economic impacts over 6 months" \
+  --timeline evolving \
+  --timestep-unit month \
+  --max-timesteps 6 \
+  -o asi-announcement -y
+
+extropy persona -s asi-announcement -y
+extropy sample -s asi-announcement -n 5000 --seed 42
+extropy network -s asi-announcement --seed 42
+extropy simulate -s asi-announcement --seed 42 --fidelity high --early-convergence off
+```
+
+### Iran Strikes (Evolving, Weekly, 12 timesteps)
+
+```bash
+extropy scenario "US strikes on Iran with 12-week escalation and partial de-escalation timeline" \
+  --timeline evolving \
+  --timestep-unit week \
+  --max-timesteps 12 \
+  -o iran-strikes -y
+
+extropy persona -s iran-strikes -y
+extropy sample -s iran-strikes -n 5000 --seed 42
+extropy network -s iran-strikes --seed 42
+extropy simulate -s iran-strikes --seed 42 --fidelity high --early-convergence off
 ```

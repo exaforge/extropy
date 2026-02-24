@@ -27,6 +27,11 @@ from .state import StateManager
 logger = logging.getLogger(__name__)
 
 _SOFT_SATURATION_MAX = 0.97
+_TIMELINE_EVENT_DIRECT_EXPOSURE_CAP = {
+    "normal": 0.35,
+    "high": 0.55,
+    "extreme": 0.75,
+}
 
 
 @dataclass(frozen=True)
@@ -38,6 +43,60 @@ class TimelineExposureResult:
     direct_exposed_agent_ids: set[str]
     info_epoch: int | None
     re_reasoning_intensity: str | None
+
+
+def _timeline_intensity(value: str | None) -> str:
+    if value in {"normal", "high", "extreme"}:
+        return value
+    return "normal"
+
+
+def _timeline_direct_exposure_cap(total_agents: int, intensity: str | None) -> int:
+    """Compute a deterministic cap for direct timeline exposures in one timestep."""
+    if total_agents <= 0:
+        return 0
+    ratio = _TIMELINE_EVENT_DIRECT_EXPOSURE_CAP[_timeline_intensity(intensity)]
+    return max(1, int(round(total_agents * ratio)))
+
+
+def _rule_specificity_score(rule: ExposureRule) -> tuple[int, float]:
+    """Prefer more specific rule conditions, then higher probability."""
+    cond = (rule.when or "").strip().lower()
+    if cond in {"", "1", "true"}:
+        return (0, float(rule.probability))
+    # Length is a cheap proxy for condition specificity without schema coupling.
+    return (len(cond), float(rule.probability))
+
+
+def _select_timeline_fallback_rules(
+    timestep: int,
+    scenario: ScenarioSpec,
+) -> list[ExposureRule]:
+    """Select bounded fallback rules when timeline event rules are not defined.
+
+    Policy:
+    - Prefer seed rules explicitly authored for this timestep.
+    - Otherwise fall back to the earliest authored seed step.
+    - In either case, keep at most one representative rule per channel
+      (most specific, then highest probability) to avoid rule fan-out.
+    """
+    if not scenario.seed_exposure.rules:
+        return []
+
+    rules = [r for r in scenario.seed_exposure.rules if r.timestep == timestep]
+    if not rules:
+        min_step = min(rule.timestep for rule in scenario.seed_exposure.rules)
+        rules = [r for r in scenario.seed_exposure.rules if r.timestep == min_step]
+
+    by_channel: dict[str, ExposureRule] = {}
+    for rule in rules:
+        existing = by_channel.get(rule.channel)
+        if existing is None or _rule_specificity_score(rule) > _rule_specificity_score(
+            existing
+        ):
+            by_channel[rule.channel] = rule
+
+    return list(by_channel.values())
 
 
 def _soft_saturate_probability(raw_probability: float) -> float:
@@ -221,23 +280,36 @@ def apply_timeline_exposures(
     if active_event.exposure_rules is not None:
         rules = active_event.exposure_rules
     else:
-        # Reuse seed exposure rules but substitute with timeline event content
-        rules = scenario.seed_exposure.rules
+        # Use a bounded fallback subset when timeline-specific rules are absent.
+        rules = _select_timeline_fallback_rules(timestep, scenario)
 
     new_exposures = 0
     event_content = active_event.event.content
     event_credibility = active_event.event.credibility
     info_epoch = active_event.timestep
     intensity = active_event.re_reasoning_intensity or "normal"
+    direct_exposure_cap = _timeline_direct_exposure_cap(len(agents), intensity)
     direct_exposed_agent_ids: set[str] = set()
+    shuffled_indices = list(range(len(agents)))
+    rng.shuffle(shuffled_indices)
 
     for rule in rules:
+        if new_exposures >= direct_exposure_cap:
+            break
         # For timeline events, ignore the rule's timestep field — we're applying now
         # (Rules are designed for t=0 seed exposure but we reuse them for timeline)
         channel_credibility = get_channel_credibility(scenario, rule.channel)
 
-        for i, agent in enumerate(agents):
+        for i in shuffled_indices:
+            if new_exposures >= direct_exposure_cap:
+                break
+            agent = agents[i]
             agent_id = agent.get("_id", str(i))
+
+            # Prevent one timeline event from directly re-exposing the same agent
+            # through many overlapping fallback rules.
+            if agent_id in direct_exposed_agent_ids:
+                continue
 
             # Evaluate the "when" condition (skip timestep check since we're applying now)
             when_cond = rule.when.lower()

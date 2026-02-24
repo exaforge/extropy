@@ -28,7 +28,6 @@ from extropy.core.models.scenario import (
     ExposureChannel,
     ExposureRule,
     InteractionConfig,
-    InteractionType,
     OutcomeConfig,
     OutcomeDefinition,
     OutcomeType,
@@ -74,7 +73,6 @@ def minimal_scenario():
                 ExposureChannel(
                     name="broadcast",
                     description="Mass broadcast channel",
-                    reach="broadcast",
                     credibility_modifier=1.0,
                 ),
             ],
@@ -88,7 +86,6 @@ def minimal_scenario():
             ],
         ),
         interaction=InteractionConfig(
-            primary_model=InteractionType.PASSIVE_OBSERVATION,
             description="Agents observe each other's public statements",
         ),
         spread=SpreadConfig(

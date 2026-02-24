@@ -11,7 +11,6 @@ from extropy.core.models.scenario import (
     ExposureChannel,
     ExposureRule,
     SeedExposure,
-    InteractionType,
     InteractionConfig,
     SpreadModifier,
     SpreadConfig,
@@ -105,21 +104,19 @@ class TestExposureChannel:
         channel = ExposureChannel(
             name="email_notification",
             description="Official email from administration",
-            reach="broadcast",
             credibility_modifier=1.0,
         )
         assert channel.name == "email_notification"
-        assert channel.reach == "broadcast"
 
-    def test_channel_reach_options(self):
-        """Test different reach options."""
-        for reach in ["broadcast", "targeted", "organic"]:
-            channel = ExposureChannel(
-                name="test",
-                description="Test",
-                reach=reach,
-            )
-            assert channel.reach == reach
+    def test_channel_creation_without_reach(self):
+        """Channel model no longer includes reach field."""
+        channel = ExposureChannel(
+            name="test",
+            description="Test",
+            credibility_modifier=0.9,
+        )
+        assert channel.name == "test"
+        assert channel.credibility_modifier == 0.9
 
 
 class TestExposureRule:
@@ -185,19 +182,14 @@ class TestInteractionConfig:
     def test_interaction_config_creation(self):
         """Test creating interaction config."""
         config = InteractionConfig(
-            primary_model=InteractionType.PASSIVE_OBSERVATION,
-            secondary_model=InteractionType.DIRECT_CONVERSATION,
             description="Social media style with some direct discussions",
         )
-        assert config.primary_model == InteractionType.PASSIVE_OBSERVATION
-        assert config.secondary_model == InteractionType.DIRECT_CONVERSATION
+        assert "social media" in config.description.lower()
 
     def test_all_interaction_types(self):
-        """Test all interaction types."""
-        assert InteractionType.PASSIVE_OBSERVATION.value == "passive_observation"
-        assert InteractionType.DIRECT_CONVERSATION.value == "direct_conversation"
-        assert InteractionType.BROADCAST_RESPONSE.value == "broadcast_response"
-        assert InteractionType.DELIBERATIVE.value == "deliberative"
+        """Interaction type enum was removed; description remains informational."""
+        config = InteractionConfig(description="informational only")
+        assert config.description == "informational only"
 
 
 class TestSpreadConfig:
@@ -387,7 +379,6 @@ class TestScenarioSpec:
                 ],
             ),
             interaction=InteractionConfig(
-                primary_model=InteractionType.PASSIVE_OBSERVATION,
                 description="Social media style observation",
             ),
             spread=SpreadConfig(share_probability=0.3),
@@ -491,13 +482,11 @@ class TestComplexScenarios:
             ExposureChannel(
                 name="meeting",
                 description="Staff meeting",
-                reach="targeted",
                 credibility_modifier=0.95,
             ),
             ExposureChannel(
                 name="word_of_mouth",
                 description="Informal discussion",
-                reach="organic",
                 credibility_modifier=0.7,
             ),
         ]
@@ -618,7 +607,6 @@ class TestComplexScenarios:
                     ExposureChannel(
                         name="meeting",
                         description="Department meeting",
-                        reach="targeted",
                         credibility_modifier=0.95,
                     ),
                 ],
@@ -635,8 +623,6 @@ class TestComplexScenarios:
                 ],
             ),
             interaction=InteractionConfig(
-                primary_model=InteractionType.PASSIVE_OBSERVATION,
-                secondary_model=InteractionType.DIRECT_CONVERSATION,
                 description="Surgeons observe peer reactions and discuss informally",
             ),
             spread=SpreadConfig(
@@ -673,5 +659,4 @@ class TestComplexScenarios:
         assert spec.meta.name == "ai_tool_full_scenario"
         assert spec.event.type == EventType.ANNOUNCEMENT
         assert len(spec.seed_exposure.channels) == 2
-        assert spec.interaction.secondary_model == InteractionType.DIRECT_CONVERSATION
         assert spec.simulation.seed == 42

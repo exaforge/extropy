@@ -1,0 +1,881 @@
+population_description: 'Nationally representative US adult population (18-80). Must
+  capture the demographic, economic, and attitudinal fault lines that drive divergent
+  responses to major national events — especially technology disruption, economic
+  shocks, cultural controversies, and electoral behavior in the 2026 midterm elections.
+
+
+  Beyond standard demographics (age, gender, race/ethnicity, education, income, geography),
+  prioritize attributes that determine how people process and react to news, make
+  decisions under uncertainty, and vote:
+
+
+  - technology adoption posture and digital literacy (technophobe to early adopter)
+
+  - media ecosystem and primary information sources (cable news, social media, podcasts,
+  local news, none)
+
+  - institutional trust (government, corporations, media, science, financial system)
+
+  - financial margin and economic anxiety (savings buffer, debt load, paycheck-to-paycheck
+  status)
+
+  - employment sector and job security perception (federal/state government, private
+  sector, gig, self-employed, retired)
+
+  - consumer identity and brand relationship (brand loyal, price-driven, values-driven)
+
+  - social media behavior and influence (passive consumer, active poster, influencer,
+  non-user)
+
+  - investment and financial literacy (no investments, 401k only, active trader, crypto
+  holder)
+
+  - religious engagement and worldview (secular, moderate, devout, denomination)
+
+  - political identity and engagement level (strong partisan, moderate, disengaged,
+  single-issue)
+
+  - 2024 presidential vote (Trump, Harris, third party, didn’t vote, not eligible)
+
+  - congressional district competitiveness (safe R, safe D, swing district)
+
+  - midterm turnout propensity (always, sometimes, rarely, never)
+
+  - issue salience for 2026 (economy/jobs, abortion/reproductive rights, immigration,
+  democracy/rule of law, healthcare, climate, education, AI/technology)
+
+  - approval of current direction (strongly approve to strongly disapprove)
+
+
+  Geographic distribution should span urban/suburban/rural across major US regions
+  (Northeast, Southeast, Midwest, Southwest, West Coast), with realistic correlation
+  structure between attributes.'
+created_at: '2026-02-20T03:41:31.767751'
+intro_template: I'm a {age}-year-old {gender} living in a {urban_rural} area of the
+  {us_region}, where I work in the {employment_sector} sector and bring home around
+  {household_income} a year. My household of {household_size} reflects who I am —
+  {race_ethnicity}, {marital_status}, with a {financial_margin} financial situation
+  that shapes how I see just about everything. When it comes to the big questions
+  facing the country — from AI to the economy to the next election — I come at it
+  as someone who {political_identity} and gets most of my news and information from
+  {primary_info_source}.
+treatments:
+- attribute: country
+  treatment: concrete
+  group: demographics
+- attribute: age
+  treatment: concrete
+  group: demographics
+- attribute: gender
+  treatment: concrete
+  group: demographics
+- attribute: race_ethnicity
+  treatment: concrete
+  group: demographics
+- attribute: us_region
+  treatment: concrete
+  group: geography
+- attribute: urban_rural
+  treatment: concrete
+  group: geography
+- attribute: openness
+  treatment: relative
+  group: personality
+- attribute: conscientiousness
+  treatment: relative
+  group: personality
+- attribute: extraversion
+  treatment: relative
+  group: personality
+- attribute: agreeableness
+  treatment: relative
+  group: personality
+- attribute: neuroticism
+  treatment: relative
+  group: personality
+- attribute: education_level
+  treatment: concrete
+  group: demographics
+- attribute: household_income
+  treatment: concrete
+  group: economics
+- attribute: marital_status
+  treatment: concrete
+  group: demographics
+- attribute: household_size
+  treatment: concrete
+  group: demographics
+- attribute: has_children
+  treatment: relative
+  group: demographics
+- attribute: employment_sector
+  treatment: concrete
+  group: economics
+- attribute: job_security_perception
+  treatment: relative
+  group: economics
+- attribute: financial_margin
+  treatment: concrete
+  group: economics
+- attribute: investment_profile
+  treatment: concrete
+  group: economics
+- attribute: primary_info_source
+  treatment: concrete
+  group: media_and_information
+- attribute: social_media_behavior
+  treatment: concrete
+  group: media_and_information
+- attribute: tech_adoption_posture
+  treatment: relative
+  group: media_and_information
+- attribute: religious_engagement
+  treatment: concrete
+  group: values_and_identity
+- attribute: political_identity
+  treatment: concrete
+  group: political_profile
+- attribute: political_engagement_level
+  treatment: relative
+  group: political_profile
+- attribute: vote_2024_presidential
+  treatment: concrete
+  group: political_profile
+- attribute: midterm_turnout_propensity
+  treatment: concrete
+  group: political_profile
+- attribute: congressional_district_competitiveness
+  treatment: concrete
+  group: political_profile
+- attribute: top_issue_2026
+  treatment: concrete
+  group: political_profile
+- attribute: country_direction_approval
+  treatment: concrete
+  group: political_profile
+- attribute: consumer_identity
+  treatment: concrete
+  group: values_and_identity
+- attribute: institutional_trust
+  treatment: relative
+  group: values_and_identity
+- attribute: risk_tolerance
+  treatment: relative
+  group: personality
+- attribute: economic_anxiety
+  treatment: relative
+  group: economics
+- attribute: personal_health_stake
+  treatment: concrete
+  group: asi_and_technology
+- attribute: asi_threat_perception
+  treatment: concrete
+  group: asi_and_technology
+- attribute: job_displacement_vulnerability
+  treatment: relative
+  group: asi_and_technology
+- attribute: asi_adoption_intent
+  treatment: concrete
+  group: asi_and_technology
+- attribute: asi_governance_stance
+  treatment: concrete
+  group: asi_and_technology
+- attribute: economic_abundance_belief
+  treatment: relative
+  group: asi_and_technology
+- attribute: information_verification_behavior
+  treatment: concrete
+  group: media_and_information
+- attribute: human_purpose_anxiety
+  treatment: relative
+  group: asi_and_technology
+- attribute: redistribution_support
+  treatment: concrete
+  group: political_profile
+- attribute: geopolitical_competition_concern
+  treatment: concrete
+  group: asi_and_technology
+- attribute: asi_credibility_assessment
+  treatment: concrete
+  group: asi_and_technology
+groups:
+- name: demographics
+  label: Who I Am
+  attributes:
+  - country
+  - age
+  - gender
+  - race_ethnicity
+  - education_level
+  - marital_status
+  - household_size
+  - has_children
+- name: geography
+  label: Where I Live
+  attributes:
+  - us_region
+  - urban_rural
+- name: economics
+  label: My Financial Life
+  attributes:
+  - household_income
+  - employment_sector
+  - job_security_perception
+  - financial_margin
+  - investment_profile
+  - economic_anxiety
+- name: personality
+  label: How I Think & Feel
+  attributes:
+  - openness
+  - conscientiousness
+  - extraversion
+  - agreeableness
+  - neuroticism
+  - risk_tolerance
+- name: values_and_identity
+  label: My Values & Identity
+  attributes:
+  - religious_engagement
+  - consumer_identity
+  - institutional_trust
+- name: media_and_information
+  label: How I Get & Process Information
+  attributes:
+  - primary_info_source
+  - social_media_behavior
+  - tech_adoption_posture
+  - information_verification_behavior
+- name: political_profile
+  label: My Political World
+  attributes:
+  - political_identity
+  - political_engagement_level
+  - vote_2024_presidential
+  - midterm_turnout_propensity
+  - congressional_district_competitiveness
+  - top_issue_2026
+  - country_direction_approval
+  - redistribution_support
+- name: asi_and_technology
+  label: My View on AI & the Future
+  attributes:
+  - personal_health_stake
+  - asi_threat_perception
+  - job_displacement_vulnerability
+  - asi_adoption_intent
+  - asi_governance_stance
+  - economic_abundance_belief
+  - human_purpose_anxiety
+  - geopolitical_competition_concern
+  - asi_credibility_assessment
+phrasings:
+  boolean:
+  - attribute: has_children
+    true_phrase: I have at least one child under 18 living in my household.
+    false_phrase: I don't have any children under 18 living in my household.
+  categorical:
+  - attribute: country
+    phrases:
+      United States: I live in the United States
+    null_options: []
+    null_phrase: null
+    fallback: null
+  - attribute: gender
+    phrases:
+      Male: I identify as male
+      Female: I identify as female
+      Non-binary/Other: I identify outside the traditional male/female categories
+    null_options: []
+    null_phrase: null
+    fallback: null
+  - attribute: race_ethnicity
+    phrases:
+      White non-Hispanic: I identify as White, non-Hispanic
+      Black: I identify as Black or African American
+      Hispanic/Latino: I identify as Hispanic or Latino
+      Asian: I identify as Asian or Asian American
+      Other/Multiracial: I identify as multiracial or with a background that doesn't
+        fit neatly into standard categories
+    null_options: []
+    null_phrase: null
+    fallback: null
+  - attribute: us_region
+    phrases:
+      Northeast: I live in the Northeast part of the country
+      Southeast: I live in the Southeast
+      Midwest: I'm based in the Midwest
+      Southwest: I live in the Southwest
+      West Coast: I'm on the West Coast
+    null_options: []
+    null_phrase: null
+    fallback: null
+  - attribute: urban_rural
+    phrases:
+      Urban: I live in a city
+      Suburban: I live in the suburbs
+      Rural: I live in a rural area, away from major cities
+    null_options: []
+    null_phrase: null
+    fallback: null
+  - attribute: education_level
+    phrases:
+      Less than HS: I didn't finish high school
+      HS diploma/GED: I graduated high school or earned my GED
+      Some college: I attended some college but didn't finish a degree
+      Bachelor's degree: I have a four-year college degree
+      Graduate degree: I have a graduate or professional degree beyond a bachelor's
+    null_options: []
+    null_phrase: null
+    fallback: null
+  - attribute: marital_status
+    phrases:
+      Married/partnered: I'm married or in a committed partnership
+      Single: I'm currently single and not in a long-term relationship
+      Divorced/separated: I'm divorced or separated
+      Widowed: I've lost my spouse or partner
+    null_options: []
+    null_phrase: null
+    fallback: null
+  - attribute: employment_sector
+    phrases:
+      Federal government: I work for the federal government
+      State/local government: I work for a state or local government agency
+      Private sector: I work for a private company or corporation
+      Gig/contract: I do gig work or contract jobs — there's no single employer
+      Self-employed: I'm self-employed and run my own business
+      Retired: I'm retired and no longer working
+      Unemployed: I'm currently out of work and looking for a job
+      Not in labor force: I'm not currently working or looking for work — I'm a caregiver,
+        student, or otherwise out of the workforce
+    null_options:
+    - Retired
+    - Unemployed
+    - Not in labor force
+    null_phrase: I don't currently have a traditional job or employer
+    fallback: null
+  - attribute: job_security_perception
+    phrases:
+      Very secure: I feel very secure in my job — I'm not worried about losing it
+      Somewhat secure: My job feels mostly stable, though nothing's guaranteed
+      Somewhat insecure: I have some real concerns about my job security
+      Very insecure: I'm genuinely worried I could lose my job soon
+      N/A - not employed: Job security isn't something I think about — I'm not in
+        the workforce right now
+    null_options:
+    - N/A - not employed
+    null_phrase: Job security isn't something I think about — I'm not in the workforce
+      right now
+    fallback: null
+  - attribute: financial_margin
+    phrases:
+      Comfortable savings buffer: I have a solid savings cushion and feel financially
+        stable
+      Modest buffer: I have some savings, but not a lot of room for unexpected expenses
+      Paycheck-to-paycheck: I'm basically living paycheck to paycheck with little
+        left over
+      In debt/deficit: I'm carrying more debt than I can comfortably manage — I'm
+        in the red
+    null_options: []
+    null_phrase: null
+    fallback: null
+  - attribute: investment_profile
+    phrases:
+      No investments: I don't have any investments or market accounts
+      401k/IRA only: My only investments are a retirement account like a 401k or IRA
+      Diversified investor: I have a diversified portfolio across stocks, bonds, and
+        other assets beyond just retirement accounts
+      Active trader: I actively trade stocks or other securities on a regular basis
+      Crypto holder: I hold cryptocurrency as part of my financial strategy
+    null_options:
+    - No investments
+    null_phrase: I don't have any investments or market accounts
+    fallback: null
+  - attribute: primary_info_source
+    phrases:
+      Cable/broadcast TV news: I get most of my news from cable or broadcast television
+      Social media: Social media is where I mostly find out what's going on in the
+        world
+      Online news sites: I mainly follow the news through websites and digital news
+        outlets
+      Podcasts: Podcasts are my main way of staying informed
+      Local news: I rely mainly on local TV, radio, or newspapers for my news
+      Print media: I still primarily read print newspapers or magazines to stay informed
+      Avoids news: Honestly, I try to tune out the news as much as possible
+    null_options:
+    - Avoids news
+    null_phrase: Honestly, I try to tune out the news as much as possible
+    fallback: null
+  - attribute: social_media_behavior
+    phrases:
+      Non-user: I don't use social media at all
+      Passive consumer: I scroll through social media but rarely post or comment
+      Occasional poster: I post on social media sometimes, but I'm not super active
+      Active poster/Influencer: I post regularly and engage heavily on social media
+        — building or maintaining an audience is part of how I operate
+    null_options:
+    - Non-user
+    null_phrase: I don't use social media at all
+    fallback: null
+  - attribute: tech_adoption_posture
+    phrases:
+      Technophobe/Avoider: I actively avoid new technology whenever I can — it's not
+        for me
+      Late majority adopter: I wait until a technology is well-established and widely
+        used before I bother with it
+      Early majority adopter: Once I see that something works and people around me
+        are using it, I'm willing to try it
+      Early adopter: I tend to get into new technology pretty early — I like staying
+        ahead of the curve
+      Innovator: I'm usually among the very first to try cutting-edge technology —
+        I love being at the frontier
+    null_options: []
+    null_phrase: null
+    fallback: null
+  - attribute: religious_engagement
+    phrases:
+      Secular/None: I don't practice any religion and don't consider myself religious
+      Nominally affiliated: I loosely identify with a religion but don't really practice
+        it
+      Moderately religious: Faith plays a meaningful role in my life, though I'm not
+        strictly observant
+      Devout: My faith is central to who I am and shapes how I live my life
+    null_options:
+    - Secular/None
+    null_phrase: I don't practice any religion and don't consider myself religious
+    fallback: null
+  - attribute: political_identity
+    phrases:
+      Strong Democrat: I'm a committed Democrat — I strongly identify with the party
+        and its values
+      Lean Democrat: I generally lean Democratic, though I don't think of myself as
+        a hardcore partisan
+      True Independent: I'm genuinely independent — I don't align with either party
+      Lean Republican: I tend to lean Republican, though I'm not a die-hard party
+        loyalist
+      Strong Republican: I'm a committed Republican — I strongly identify with the
+        party and its values
+    null_options: []
+    null_phrase: null
+    fallback: null
+  - attribute: political_engagement_level
+    phrases:
+      Disengaged: I really don't follow politics closely — it feels distant from my
+        daily life
+      Single-issue voter: There's one issue that drives almost all of my political
+        engagement
+      Moderate/occasional participant: I pay attention to politics and vote, but I'm
+        not deeply involved beyond that
+      Highly engaged partisan: I'm very politically active — I follow politics closely
+        and do more than just vote
+    null_options:
+    - Disengaged
+    null_phrase: I really don't follow politics closely — it feels distant from my
+      daily life
+    fallback: null
+  - attribute: vote_2024_presidential
+    phrases:
+      Trump: I voted for Donald Trump in the 2024 presidential election
+      Harris: I voted for Kamala Harris in the 2024 presidential election
+      Third party: I voted for a third-party candidate in the 2024 presidential race
+      Did not vote: I didn't vote in the 2024 presidential election
+      Not eligible: I wasn't eligible to vote in the 2024 presidential election
+    null_options:
+    - Did not vote
+    - Not eligible
+    null_phrase: I didn't cast a ballot in the 2024 presidential race
+    fallback: null
+  - attribute: midterm_turnout_propensity
+    phrases:
+      Always votes: I vote in every midterm election — it's something I always do
+      Sometimes votes: I vote in midterms sometimes, depending on how much I care
+        about what's on the ballot
+      Rarely votes: I rarely vote in midterm elections — it doesn't usually feel worth
+        it
+      Never votes: I don't vote in midterm elections
+    null_options: []
+    null_phrase: null
+    fallback: null
+  - attribute: congressional_district_competitiveness
+    phrases:
+      Safe Republican: My congressional district is solidly Republican — there's no
+        real competition
+      Lean Republican: My district tilts Republican, but it's not a total lock
+      Swing district: I live in a genuine swing district where either party could
+        win
+      Lean Democrat: My district tends to go Democratic, though it's not completely
+        safe
+      Safe Democrat: My congressional district is solidly Democratic — the outcome
+        is pretty predictable
+    null_options: []
+    null_phrase: null
+    fallback: null
+  - attribute: top_issue_2026
+    phrases:
+      Economy/Jobs: The economy and jobs are the issues I care most about going into
+        2026
+      Abortion/Reproductive rights: Abortion and reproductive rights are my top concern
+        for the 2026 elections
+      Immigration: Immigration is the issue driving my vote more than anything else
+        in 2026
+      Democracy/Rule of law: Protecting democracy and the rule of law is my single
+        biggest priority for 2026
+      Healthcare: Healthcare — its cost and access — is what I care about most heading
+        into 2026
+      Climate: Climate change is the issue I'm most focused on for the 2026 elections
+      Education: Education policy is the issue I care most about as we head into 2026
+      AI/Technology: The regulation and impact of AI and new technology is my top
+        concern for 2026
+    null_options: []
+    null_phrase: null
+    fallback: null
+  - attribute: country_direction_approval
+    phrases:
+      Strongly approve: I strongly approve of the direction the country is headed
+        right now
+      Somewhat approve: I think things are generally moving in the right direction,
+        even if not perfectly
+      Somewhat disapprove: I'm not happy with the direction the country is going,
+        though it's not all bad
+      Strongly disapprove: I strongly disapprove of the direction this country is
+        headed — things are going very wrong
+    null_options: []
+    null_phrase: null
+    fallback: null
+  - attribute: consumer_identity
+    phrases:
+      Brand loyal: I tend to stick with the brands I trust — I'm not constantly switching
+      Price/value driven: Price and value for money are what drive my buying decisions
+        more than anything else
+      Values/ethics driven: I try to buy from companies whose ethics and values align
+        with mine, even if it costs more
+      Convenience driven: Convenience is king for me — I buy whatever is easiest and
+        fastest
+    null_options: []
+    null_phrase: null
+    fallback: null
+  - attribute: institutional_trust
+    phrases:
+      High trust: I generally trust major institutions — government, media, science,
+        and corporations — to act in good faith
+      Moderate trust: I have moderate trust in institutions — I believe in them but
+        know they're flawed
+      Low trust: I have pretty low trust in most major institutions — I think they
+        frequently let people down
+      Distrustful/Conspiratorial: I deeply distrust most major institutions and believe
+        a lot of what we're told is manipulated or hidden from us
+    null_options: []
+    null_phrase: null
+    fallback: null
+  - attribute: personal_health_stake
+    phrases:
+      No personal stake: I don't have a particular personal or family health reason
+        to care about medical breakthroughs
+      Mild interest: I'm generally interested in medical advances, though nothing
+        urgent personally drives that interest
+      Significant - managing chronic illness: I or someone close to me is managing
+        a serious chronic illness, so medical breakthroughs matter a lot to us
+      Critical - terminal or degenerative diagnosis: I or a family member has a terminal
+        or degenerative diagnosis — medical breakthroughs could be genuinely life-or-death
+        for us
+    null_options:
+    - No personal stake
+    null_phrase: I don't have a particular personal or family health reason to care
+      about medical breakthroughs
+    fallback: null
+  - attribute: asi_threat_perception
+    phrases:
+      Existential threat: I see advanced AI as an existential threat to humanity —
+        this could go very badly for all of us
+      Serious risk/concern: I think advanced AI poses serious risks and society needs
+        to take those dangers much more seriously
+      Cautiously optimistic: I'm cautiously optimistic about advanced AI — I see real
+        benefits, but also real risks that need managing
+      Enthusiastically positive: I'm excited about what advanced AI can do — I think
+        the benefits far outweigh the risks
+      Indifferent/uncertain: Honestly, I'm not sure what to think about advanced AI
+        — I haven't formed a strong view either way
+    null_options:
+    - Indifferent/uncertain
+    null_phrase: Honestly, I'm not sure what to think about advanced AI — I haven't
+      formed a strong view either way
+    fallback: null
+  - attribute: job_displacement_vulnerability
+    phrases:
+      High - core tasks fully automatable: Most of what I do for work could realistically
+        be automated by AI — I'm in a high-risk position
+      Moderate - partial displacement likely: Some of my work could be taken over
+        by AI, though I don't think I'd be fully replaced
+      Low - physical/relational job: My work is physical or deeply relational in ways
+        that are hard to automate — I feel fairly insulated from AI displacement
+      Already displaced: AI or automation has already disrupted my career or cost
+        me work
+      Not employed: I'm not currently employed, so job displacement from AI isn't
+        something I'm facing right now
+    null_options:
+    - Not employed
+    null_phrase: I'm not currently employed, so job displacement from AI isn't something
+      I'm facing right now
+    fallback: null
+  - attribute: asi_adoption_intent
+    phrases:
+      Already using heavily: I'm already using advanced AI tools heavily in my daily
+        life or work
+      Planning to adopt soon: I plan to start integrating AI tools into my life or
+        work pretty soon
+      Curious but hesitant: I'm curious about AI tools but haven't committed to using
+        them — I'm still on the fence
+      Resistant but may be forced: I'm resistant to using AI tools, but I can see
+        that I might not have a choice for long
+      Actively refusing: I'm actively choosing not to use AI tools and intend to keep
+        it that way
+    null_options: []
+    null_phrase: null
+    fallback: null
+  - attribute: asi_governance_stance
+    phrases:
+      No regulation - let it run: I think AI should be left alone to develop without
+        government interference
+      Light-touch industry self-regulation: I prefer the industry regulate itself
+        with minimal government involvement
+      Moderate government oversight: I support reasonable government oversight of
+        AI to manage risks without strangling innovation
+      Heavy international regulation: I think AI needs strong international regulation
+        and coordination to prevent catastrophic misuse
+      Halt/moratorium until safe: I believe development of the most powerful AI systems
+        should be paused until we can prove it's safe
+    null_options: []
+    null_phrase: null
+    fallback: null
+  - attribute: information_verification_behavior
+    phrases:
+      Accepts information uncritically: I generally take information at face value
+        without digging into whether it's accurate
+      Relies on trusted outlets: I stick to a handful of sources I trust and don't
+        feel the need to verify beyond that
+      Cross-references multiple sources: When something seems important, I check it
+        against multiple sources before I accept it as true
+      Uses ASI tools to fact-check: I actually use AI tools to help me verify and
+        fact-check information I come across
+      Deep skeptic - trusts very little: I'm skeptical of almost everything I read
+        or hear — I trust very little of what's out there
+    null_options: []
+    null_phrase: null
+    fallback: null
+  - attribute: redistribution_support
+    phrases:
+      Strongly supports aggressive redistribution: I strongly support bold redistribution
+        policies — things like UBI, wealth taxes, or public ownership of AI — to make
+        sure everyone benefits
+      Supports moderate redistribution: I support some redistribution to share the
+        gains from AI more broadly, even if I don't go as far as full public ownership
+      Prefers market-led distribution: I think the market should determine who benefits
+        from AI — redistribution creates more problems than it solves
+      Opposes redistribution: I'm opposed to redistribution — government taking and
+        reallocating wealth is fundamentally wrong to me
+      Uncertain: I genuinely haven't made up my mind about how the benefits of AI
+        should be distributed across society
+    null_options:
+    - Uncertain
+    null_phrase: I genuinely haven't made up my mind about how the benefits of AI
+      should be distributed across society
+    fallback: null
+  - attribute: geopolitical_competition_concern
+    phrases:
+      Very concerned - sees it as primary threat: The US-China race on AI is what
+        I see as the most serious geopolitical threat we face right now
+      Somewhat concerned: I'm somewhat concerned about AI competition with China and
+        its national security implications
+      Mildly concerned: The geopolitics of AI is on my radar, but it's not something
+        I worry about deeply
+      Not concerned: I'm not particularly concerned about US-China AI competition
+        — it doesn't feel like a major issue to me
+      Views competition as beneficial: I actually think competition between the US
+        and China on AI will drive better outcomes for everyone
+    null_options: []
+    null_phrase: null
+    fallback: null
+  - attribute: asi_credibility_assessment
+    phrases:
+      Fully credible: I believe the AI milestones and breakthroughs we're hearing
+        about are real and credible
+      Mostly credible: I think most of what's being claimed about AI advances is genuine,
+        even if details get spun
+      Skeptical - likely overhyped: I think a lot of the AI breakthrough news is overhyped
+        and the reality is more mundane than advertised
+      Conspiracy - staged or manipulated: I'm skeptical that what we're being shown
+        about AI is real — I think some of it is staged or manipulated for political
+        or commercial purposes
+      Uninformed - unaware of events: I honestly haven't been following the news about
+        AI milestones closely enough to have an opinion
+    null_options:
+    - Uninformed - unaware of events
+    null_phrase: I honestly haven't been following the news about AI milestones closely
+      enough to have an opinion
+    fallback: null
+  relative:
+  - attribute: openness
+    labels:
+      much_below: I'm far less open to new ideas and experiences than most people
+      below: I'm a bit less curious and open to new experiences than the average person
+      average: I'm about as open to new ideas and experiences as most people
+      above: I'm more curious and receptive to new ideas than most people
+      much_above: I'm far more open to new experiences and unconventional ideas than
+        almost anyone I know
+  - attribute: conscientiousness
+    labels:
+      much_below: I'm far less organized and self-disciplined than most people
+      below: I'm a bit less structured and goal-oriented than the average person
+      average: I'm about as organized and disciplined as most people
+      above: I'm more disciplined and detail-oriented than most people
+      much_above: I'm far more organized, driven, and self-disciplined than almost
+        anyone I know
+  - attribute: extraversion
+    labels:
+      much_below: I'm far more introverted and reserved than most people
+      below: I'm a bit more quiet and reserved in social situations than the average
+        person
+      average: I'm about as social and outgoing as most people
+      above: I'm more energized by social situations and more assertive than most
+        people
+      much_above: I'm far more outgoing, sociable, and energized by people than almost
+        anyone I know
+  - attribute: agreeableness
+    labels:
+      much_below: I'm far less concerned with keeping the peace and accommodating
+        others than most people
+      below: I'm a bit more skeptical and less inclined toward social harmony than
+        the average person
+      average: I'm about as cooperative and empathetic as most people
+      above: I'm more empathetic and cooperative than most people
+      much_above: I'm far more agreeable, empathetic, and focused on harmony than
+        almost anyone I know
+  - attribute: neuroticism
+    labels:
+      much_below: I'm far more emotionally stable and stress-resistant than most people
+      below: I'm a bit more emotionally steady and less anxious than the average person
+      average: I experience about as much stress and emotional ups and downs as most
+        people
+      above: I tend to feel more anxious and emotionally reactive than most people
+      much_above: I experience far more emotional instability, anxiety, and stress
+        than most people
+  - attribute: has_children
+    labels:
+      much_below: Unlike most people my age, I have no children and family life plays
+        almost no role in my daily priorities
+      below: I'm less likely than the average person to have young kids at home shaping
+        my day-to-day life
+      average: My household situation with children is pretty typical compared to
+        most people
+      above: I'm more likely than most people to have children at home driving my
+        daily decisions
+      much_above: I have significantly more children at home than most people, which
+        dominates my priorities and concerns
+  - attribute: job_security_perception
+    labels:
+      much_below: I feel far less secure in my job than most working people
+      below: I feel a bit more uncertain about my job stability than the average worker
+      average: My sense of job security is about the same as most working people
+      above: I feel more secure in my job than most working people
+      much_above: I feel far more confident in my job stability than almost any working
+        person I know
+  - attribute: tech_adoption_posture
+    labels:
+      much_below: I avoid new technology far more than most people and am often the
+        last to adopt anything new
+      below: I'm a bit slower and more cautious about adopting new technology than
+        the average person
+      average: I adopt new technology at about the same pace as most people
+      above: I pick up new technology faster and more eagerly than most people
+      much_above: I'm far ahead of most people when it comes to embracing and experimenting
+        with new technology
+  - attribute: political_engagement_level
+    labels:
+      much_below: I'm far less politically engaged or interested than most people
+      below: I'm a bit less politically active and informed than the average person
+      average: My level of political engagement is about the same as most people
+      above: I'm more politically active and informed than most people
+      much_above: I'm far more politically engaged, vocal, and involved than almost
+        anyone I know
+  - attribute: institutional_trust
+    labels:
+      much_below: I trust major institutions far less than most people — I'm deeply
+        skeptical of government, media, and corporations
+      below: I'm more skeptical of institutions like government and the media than
+        the average person
+      average: I'm about as trusting of major institutions as most people
+      above: I generally trust institutions like government, science, and the media
+        more than most people
+      much_above: I have far more faith in major institutions than most people — I
+        trust them significantly more than average
+  - attribute: risk_tolerance
+    labels:
+      much_below: I'm far more risk-averse than most people when it comes to financial,
+        social, and life decisions
+      below: I'm a bit more cautious and risk-averse than the average person
+      average: My willingness to take on risk is about the same as most people
+      above: I'm more comfortable taking risks than most people
+      much_above: I'm far more willing to take bold risks than almost anyone I know
+  - attribute: economic_anxiety
+    labels:
+      much_below: I feel far less worried about economic conditions than most people
+        — finances are barely on my radar
+      below: I'm a bit less anxious about economic conditions than the average person
+      average: My level of economic worry is about the same as most people
+      above: I feel more anxious about economic conditions — personal and national
+        — than most people
+      much_above: I feel far more economically anxious and financially stressed than
+        almost anyone I know
+  - attribute: job_displacement_vulnerability
+    labels:
+      much_below: My job is far more exposed to automation and AI displacement than
+        most people's
+      below: My job is a bit more at risk from automation than the average worker's
+      average: My exposure to job displacement from technology is about the same as
+        most workers
+      above: My job is more insulated from automation and AI displacement than most
+        people's
+      much_above: My job is far more secure from automation risk than almost any worker
+        I know
+  - attribute: economic_abundance_belief
+    labels:
+      much_below: I'm far more skeptical than most people that AI-driven abundance
+        will ever actually reach or benefit me
+      below: I'm a bit less convinced than the average person that new technologies
+        will meaningfully improve my material life
+      average: My belief that technological progress will benefit me personally is
+        about the same as most people's
+      above: I'm more optimistic than most people that AI and technology will genuinely
+        improve my economic situation
+      much_above: I'm far more confident than almost anyone that AI-driven abundance
+        will transform my life for the better
+  - attribute: human_purpose_anxiety
+    labels:
+      much_below: I feel far less existential anxiety about AI replacing human meaning
+        and purpose than most people — I find it mostly liberating
+      below: I'm a bit less troubled than the average person by questions of human
+        purpose in an AI-driven world
+      average: My level of anxiety about human meaning and purpose in an AI world
+        is about the same as most people's
+      above: I feel more unsettled than most people about what human purpose and identity
+        look like when machines can do our thinking
+      much_above: I feel far more deeply destabilized by questions of human meaning
+        and purpose in an AI world than almost anyone I know
+  concrete:
+  - attribute: age
+    template: I'm {value} years old.
+    format_spec: .0f
+    prefix: ''
+    suffix: ''
+  - attribute: household_income
+    template: My household brings in about {value} a year before taxes.
+    format_spec: ',.0f'
+    prefix: $
+    suffix: ''
+  - attribute: household_size
+    template: There are {value} people living in my household.
+    format_spec: .0f
+    prefix: ''
+    suffix: ''
+population_stats:
+  stats: {}

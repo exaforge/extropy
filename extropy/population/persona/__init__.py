@@ -22,6 +22,7 @@ from .config import (
 from .generator import generate_persona_config, PersonaConfigError
 from .renderer import render_persona, render_persona_section, preview_persona
 from .stats import compute_population_stats
+from .validator import validate_persona_config
 
 __all__ = [
     # Config models
@@ -45,4 +46,6 @@ __all__ = [
     "preview_persona",
     # Stats
     "compute_population_stats",
+    # Validator
+    "validate_persona_config",
 ]

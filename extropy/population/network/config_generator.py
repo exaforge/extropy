@@ -20,6 +20,7 @@ from .config import (
     DegreeMultiplierConfig,
     EdgeTypeRule,
     InfluenceFactorConfig,
+    StructuralAttributeRoles,
 )
 
 logger = logging.getLogger(__name__)
@@ -208,6 +209,33 @@ NETWORK_CONFIG_SCHEMA = {
     "additionalProperties": False,
 }
 
+STRUCTURAL_ROLE_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "household_id": {"type": ["string", "null"]},
+        "partner_id": {"type": ["string", "null"]},
+        "age": {"type": ["string", "null"]},
+        "sector": {"type": ["string", "null"]},
+        "region": {"type": ["string", "null"]},
+        "urbanicity": {"type": ["string", "null"]},
+        "religion": {"type": ["string", "null"]},
+        "dependents": {"type": ["string", "null"]},
+        "reasoning": {"type": "string"},
+    },
+    "required": [
+        "household_id",
+        "partner_id",
+        "age",
+        "sector",
+        "region",
+        "urbanicity",
+        "religion",
+        "dependents",
+        "reasoning",
+    ],
+    "additionalProperties": False,
+}
+
 
 def _build_prompt(
     population_spec: PopulationSpec,
@@ -216,7 +244,8 @@ def _build_prompt(
     """Build the prompt for network config generation."""
     # Summarize population attributes
     attr_lines = []
-    for attr in population_spec.attributes:
+    max_prompt_attrs = 50
+    for attr in population_spec.attributes[:max_prompt_attrs]:
         line = f"  - {attr.name} ({attr.type})"
         if attr.category:
             line += f" [{attr.category}]"
@@ -234,6 +263,10 @@ def _build_prompt(
                 if dist_mean is not None:
                     line += f" (mean={dist_mean})"
         attr_lines.append(line)
+    if len(population_spec.attributes) > max_prompt_attrs:
+        attr_lines.append(
+            f"  - ... ({len(population_spec.attributes) - max_prompt_attrs} more attributes omitted)"
+        )
 
     attr_summary = "\n".join(attr_lines)
 
@@ -294,7 +327,299 @@ IMPORTANT:
 - For within_n match type, you MUST provide ordinal_levels mapping
 - For edge type conditions, use a_{{attribute}} and b_{{attribute}} syntax
 - For degree_multipliers condition_value, use the same type as the attribute (boolean/number/string)
+    """
+
+
+def _extract_sample_value(
+    agents_sample: list[dict] | None, attr_name: str
+) -> object | None:
+    """Return a representative non-null sample value for an attribute."""
+    if not agents_sample:
+        return None
+    for agent in agents_sample:
+        value = agent.get(attr_name)
+        if value is None:
+            continue
+        if isinstance(value, str) and not value.strip():
+            continue
+        return value
+    return None
+
+
+def _score_structural_role_candidate(
+    *,
+    role_name: str,
+    attr,
+    sample_value: object | None,
+) -> float:
+    """Deterministic score for assigning an attribute to a structural role."""
+    name = attr.name.lower()
+    desc = (attr.description or "").lower()
+    semantic = (attr.semantic_type or "").lower()
+    identity = (attr.identity_type or "").lower()
+    scope = (attr.scope or "").lower()
+    attr_type = (attr.type or "").lower()
+    text = f"{name} {desc}"
+
+    def has_any(*tokens: str) -> bool:
+        return any(token in text for token in tokens)
+
+    score = 0.0
+    if role_name == "household_id":
+        if "household" in name:
+            score += 3.0
+        if name.endswith("_id"):
+            score += 1.5
+        if scope == "household":
+            score += 1.5
+        if has_any("household", "co-resid", "home"):
+            score += 1.0
+        if attr_type == "boolean":
+            score -= 2.0
+
+    elif role_name == "partner_id":
+        if has_any("partner", "spouse", "husband", "wife"):
+            score += 3.0
+        if name.endswith("_id"):
+            score += 2.0
+        if has_any("agent id", "spouse id", "partner id"):
+            score += 1.5
+        if attr_type == "boolean":
+            score -= 2.0
+        if isinstance(sample_value, str) and (
+            sample_value.startswith("agent_") or sample_value.startswith("a")
+        ):
+            score += 1.0
+
+    elif role_name == "age":
+        if name == "age":
+            score += 6.0
+        if semantic == "age":
+            score += 3.0
+        if has_any("age", "years old", "years_old", "current age"):
+            score += 2.0
+        if attr_type in {"int", "float"}:
+            score += 1.0
+
+    elif role_name == "sector":
+        if semantic in {"employment", "occupation"}:
+            score += 3.0
+        if has_any("employment", "sector", "occupation", "industry", "profession"):
+            score += 2.5
+        if identity == "professional_identity":
+            score += 1.5
+        if attr_type == "boolean":
+            score -= 1.5
+
+    elif role_name == "region":
+        if has_any("region", "state", "province", "county", "city", "country"):
+            score += 3.0
+        if has_any("geography", "location", "district", "zip", "postal"):
+            score += 1.5
+        if scope == "household":
+            score += 0.5
+
+    elif role_name == "urbanicity":
+        if has_any("urban", "rural", "suburban", "metro", "urbanicity"):
+            score += 4.0
+        if has_any("population density", "city type"):
+            score += 1.0
+
+    elif role_name == "religion":
+        if identity == "religious_affiliation":
+            score += 3.0
+        if has_any("relig", "faith", "church", "denomination", "congregation"):
+            score += 2.5
+        if semantic == "occupation":
+            score -= 1.0
+
+    elif role_name == "dependents":
+        if has_any("dependents", "children", "child", "household_members"):
+            score += 3.0
+        if has_any("has_children", "child_present"):
+            score += 0.5
+        if isinstance(sample_value, list):
+            score += 4.0
+        elif isinstance(sample_value, bool):
+            # Boolean parental flags are not structural dependent records.
+            score -= 4.0
+        if attr_type == "boolean":
+            score -= 2.0
+
+    return score
+
+
+def _resolve_structural_roles_deterministic(
+    population_spec: PopulationSpec,
+    agents_sample: list[dict] | None = None,
+) -> tuple[dict[str, str | None], dict[str, list[str]]]:
+    """Resolve role mapping deterministically; return ambiguous slots for tie-break."""
+    roles = [
+        "household_id",
+        "partner_id",
+        "age",
+        "sector",
+        "region",
+        "urbanicity",
+        "religion",
+        "dependents",
+    ]
+    resolved: dict[str, str | None] = {role: None for role in roles}
+    ambiguous: dict[str, list[str]] = {}
+
+    for role in roles:
+        scored: list[tuple[float, str]] = []
+        for attr in population_spec.attributes:
+            sample_value = _extract_sample_value(agents_sample, attr.name)
+            score = _score_structural_role_candidate(
+                role_name=role,
+                attr=attr,
+                sample_value=sample_value,
+            )
+            if score <= 0:
+                continue
+            scored.append((score, attr.name))
+
+        if not scored:
+            resolved[role] = None
+            continue
+
+        scored.sort(key=lambda item: (-item[0], item[1]))
+        best_score, best_attr = scored[0]
+        second_score = scored[1][0] if len(scored) > 1 else -999.0
+        margin = best_score - second_score
+
+        # Confident deterministic pick.
+        if best_score >= 3.5 and margin >= 0.8:
+            resolved[role] = best_attr
+            continue
+
+        # Ambiguous: keep deterministic suggestion but ask LLM to tie-break.
+        resolved[role] = best_attr
+        ambiguous[role] = [name for _, name in scored[:3]]
+
+    return resolved, ambiguous
+
+
+def _build_structural_role_prompt(
+    population_spec: PopulationSpec,
+    *,
+    locked_roles: dict[str, str | None] | None = None,
+    ambiguous_candidates: dict[str, list[str]] | None = None,
+) -> str:
+    """Build structural-role prompt with full-schema visibility."""
+    attribute_names = [attr.name for attr in population_spec.attributes]
+    attr_lines = "\n".join(f"- {name}" for name in attribute_names)
+
+    locked_lines = ""
+    if locked_roles:
+        fixed = [
+            f"- {role}: {value}"
+            for role, value in locked_roles.items()
+            if value is not None and role not in (ambiguous_candidates or {})
+        ]
+        if fixed:
+            locked_lines = "\nLocked role assignments (do not change):\n" + "\n".join(
+                fixed
+            )
+
+    ambiguous_lines = ""
+    if ambiguous_candidates:
+        parts = []
+        for role, candidates in ambiguous_candidates.items():
+            options = ", ".join(candidates) if candidates else "null"
+            parts.append(f"- {role}: choose one of [{options}] or null")
+        ambiguous_lines = (
+            "\nAmbiguous roles to decide (only choose from listed options):\n"
+            + "\n".join(parts)
+        )
+
+    return f"""Map structural network roles to exact attribute names from this population.
+
+Population: {population_spec.meta.description}
+Geography/context: {population_spec.meta.geography or "unspecified"}
+
+Available attribute names:
+{attr_lines}
+{locked_lines}
+{ambiguous_lines}
+
+Roles to map (return exact attribute name or null):
+- household_id: household grouping identifier
+- partner_id: partner/spouse agent id reference
+- age: person's age
+- sector: occupation/employment sector
+- region: location bucket (state/province/country/region)
+- urbanicity: urban/rural style location bucket
+- religion: faith/religious affiliation
+- dependents: list of children/dependents
+
+Rules:
+- NEVER invent names; choose only from Available attribute names.
+- If role is not represented, return null.
+- Keep this mapping pragmatic for structural edges: partner, household, coworker, neighbor, congregation, school_parent.
+- For roles listed as ambiguous above, choose only from those candidate options or null.
+- Keep locked roles unchanged.
 """
+
+
+def _generate_structural_attribute_roles(
+    population_spec: PopulationSpec,
+    model: str | None = None,
+    agents_sample: list[dict] | None = None,
+) -> StructuralAttributeRoles:
+    """Resolve structural-role mapping deterministically, with LLM tie-break fallback."""
+    role_names = (
+        "household_id",
+        "partner_id",
+        "age",
+        "sector",
+        "region",
+        "urbanicity",
+        "religion",
+        "dependents",
+    )
+    deterministic_roles, ambiguous = _resolve_structural_roles_deterministic(
+        population_spec=population_spec,
+        agents_sample=agents_sample,
+    )
+
+    # If deterministic resolution is confident, skip LLM entirely.
+    if not ambiguous:
+        return StructuralAttributeRoles.model_validate(deterministic_roles)
+
+    prompt = _build_structural_role_prompt(
+        population_spec,
+        locked_roles=deterministic_roles,
+        ambiguous_candidates=ambiguous,
+    )
+    data = reasoning_call(
+        prompt=prompt,
+        response_schema=STRUCTURAL_ROLE_SCHEMA,
+        schema_name="structural_roles",
+        model=model,
+        reasoning_effort="low",
+        max_retries=1,
+    )
+
+    known_attrs = {attr.name for attr in population_spec.attributes}
+    roles: dict[str, str | None] = {}
+    for role_name in role_names:
+        locked = deterministic_roles.get(role_name)
+        value = data.get(role_name)
+        if role_name in ambiguous:
+            allowed = set(ambiguous[role_name])
+            if (
+                isinstance(value, str)
+                and value in known_attrs
+                and (not allowed or value in allowed)
+            ):
+                roles[role_name] = value
+            else:
+                roles[role_name] = locked
+        else:
+            roles[role_name] = locked
+    return StructuralAttributeRoles.model_validate(roles)
 
 
 def _validate_config(data: dict, population_spec: PopulationSpec) -> list[str]:
@@ -523,11 +848,9 @@ def generate_network_config(
 ) -> NetworkConfig:
     """Generate a NetworkConfig from a population spec using LLM reasoning.
 
-    The LLM analyzes the population's attributes and determines:
-    - Which attributes create social connections (homophily weights)
-    - Who are the natural hubs (degree multipliers)
-    - What types of relationships exist (edge type rules)
-    - Who influences whom (influence factors)
+    Uses two focused LLM calls:
+    1) core network config (weights, multipliers, edge rules, influence, avg degree)
+    2) structural attribute role mapping (household/partner/region/etc.)
 
     Args:
         population_spec: The population specification with attribute definitions
@@ -553,13 +876,24 @@ def generate_network_config(
     )
 
     config = _convert_to_network_config(data, population_spec)
+    config = config.model_copy(
+        update={
+            "structural_attribute_roles": _generate_structural_attribute_roles(
+                population_spec,
+                model=model,
+                agents_sample=agents_sample,
+            )
+        }
+    )
 
     logger.info(
         f"[NetworkConfigGen] Generated config: "
         f"{len(config.attribute_weights)} weights, "
         f"{len(config.degree_multipliers)} multipliers, "
         f"{len(config.edge_type_rules)} edge rules, "
-        f"{len(config.influence_factors)} influence factors"
+        f"{len(config.influence_factors)} influence factors, "
+        f"structural roles="
+        f"{sum(1 for v in config.structural_attribute_roles.model_dump().values() if v)}"
     )
 
     return config

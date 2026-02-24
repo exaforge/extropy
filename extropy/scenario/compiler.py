@@ -11,9 +11,11 @@ Orchestrates the full scenario compilation pipeline:
 import re
 from datetime import datetime
 from pathlib import Path
+from typing import Literal
 
 from ..core.models import (
     IdentityDimension,
+    HouseholdConfig,
     PopulationSpec,
     ScenarioMeta,
     ScenarioSimConfig,
@@ -26,7 +28,9 @@ from .parser import parse_scenario
 from .exposure import generate_seed_exposure
 from .interaction import determine_interaction_model
 from .timeline import generate_timeline_and_outcomes
+from .sampling_semantics import generate_sampling_semantic_roles
 from ..utils.callbacks import StepProgressCallback
+from ..utils import topological_sort
 from .validator import validate_scenario
 from ..storage import open_study_db
 
@@ -335,6 +339,8 @@ def create_scenario(
     )
 
     # Assemble full spec
+    sampling_semantic_roles = generate_sampling_semantic_roles(population_spec)
+
     spec = ScenarioSpec(
         meta=meta,
         event=event,
@@ -345,6 +351,7 @@ def create_scenario(
         outcomes=outcome_config,
         simulation=simulation_config,
         background_context=background_context,
+        sampling_semantic_roles=sampling_semantic_roles,
     )
 
     # =========================================================================
@@ -371,6 +378,8 @@ def create_scenario_spec(
     description: str,
     population_spec: PopulationSpec,
     extended_attributes: list | None = None,
+    household_config: HouseholdConfig | None = None,
+    agent_focus_mode: Literal["primary_only", "couples", "all"] | None = None,
     on_progress: StepProgressCallback | None = None,
     timeline_mode: str | None = None,
     timestep_unit_override: str | None = None,
@@ -387,6 +396,8 @@ def create_scenario_spec(
         description: Natural language scenario description
         population_spec: Loaded population spec
         extended_attributes: Optional list of extended AttributeSpecs from scenario
+        household_config: Optional household configuration for scenario-owned household semantics
+        agent_focus_mode: Household agent scope (primary_only/couples/all)
         on_progress: Optional callback(step, status) for progress updates
         timeline_mode: Timeline mode override. None = auto-detect.
         timestep_unit_override: CLI override for timestep unit (e.g. "month").
@@ -400,23 +411,37 @@ def create_scenario_spec(
         if on_progress:
             on_progress(step, status)
 
+    ext_attrs = list(extended_attributes or [])
+    merged_population = population_spec
+    if ext_attrs:
+        merged_attributes = list(population_spec.attributes) + ext_attrs
+        merged_deps: dict[str, list[str]] = {
+            attr.name: list(attr.sampling.depends_on or [])
+            for attr in merged_attributes
+        }
+        merged_names = set(merged_deps.keys())
+        merged_deps = {
+            name: [dep for dep in deps if dep in merged_names]
+            for name, deps in merged_deps.items()
+        }
+        merged_population = PopulationSpec(
+            meta=population_spec.meta.model_copy(),
+            grounding=population_spec.grounding,
+            attributes=merged_attributes,
+            sampling_order=topological_sort(merged_deps),
+        )
+
     # Step 1: Parse scenario description
     progress("1/5", "Parsing event definition...")
-    event = parse_scenario(description, population_spec)
+    event = parse_scenario(description, merged_population)
 
-    # Step 2: Generate seed exposure (generic, without network specifics)
+    # Step 2: Generate seed exposure without assumed edge types.
     progress("2/5", "Generating seed exposure rules...")
-
-    # Create a minimal network summary - exposure will use generic rules
-    # Node count isn't needed for generic rules; will be determined at sample time
-    generic_network_summary = {
-        "edge_types": ["colleague", "friend", "family"],  # Generic types
-    }
 
     seed_exposure = generate_seed_exposure(
         event,
-        population_spec,
-        generic_network_summary,
+        merged_population,
+        None,
     )
 
     # Step 3: Determine interaction model
@@ -424,8 +449,8 @@ def create_scenario_spec(
 
     interaction_config, spread_config = determine_interaction_model(
         event,
-        population_spec,
-        generic_network_summary,
+        merged_population,
+        None,
     )
 
     # Step 4: Generate timeline, outcomes, and background context
@@ -444,7 +469,7 @@ def create_scenario_spec(
         )
     )
 
-    # Step 5: Detect identity dimensions
+    # Step 5: Detect identity dimensions + sampling semantics
     progress("5/5", "Detecting identity dimensions...")
 
     identity_dimensions = _detect_identity_dimensions(
@@ -452,6 +477,7 @@ def create_scenario_spec(
         event_content=event.content,
         background_context=background_context,
     )
+    sampling_semantic_roles = generate_sampling_semantic_roles(merged_population)
 
     # Assemble scenario spec
     scenario_name = _generate_scenario_name(description)
@@ -473,16 +499,18 @@ def create_scenario_spec(
         simulation=simulation_config,
         background_context=background_context,
         identity_dimensions=identity_dimensions if identity_dimensions else None,
+        sampling_semantic_roles=sampling_semantic_roles,
+        extended_attributes=ext_attrs,
+        household_config=household_config,
+        agent_focus_mode=agent_focus_mode,
     )
 
-    # Store extended attributes if provided
-    if extended_attributes:
-        spec.extended_attributes = extended_attributes
-
-    # Light validation (no agents/network to validate against)
-    from ..core.models.validation import ValidationResult as VResult
-
-    validation_result = VResult(valid=True, errors=[], warnings=[])
+    validation_result = validate_scenario(
+        spec=spec,
+        population_spec=merged_population,
+        agent_count=None,
+        network=None,
+    )
 
     return spec, validation_result
 

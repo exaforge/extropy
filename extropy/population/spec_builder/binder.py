@@ -13,7 +13,6 @@ from ...core.models import (
     SpecMeta,
     GroundingSummary,
     SamplingConfig,
-    NameConfig,
 )
 from ...utils import topological_sort, extract_names_from_expression
 
@@ -139,7 +138,6 @@ def bind_constraints(
             category=attr.category,
             description=attr.description,
             scope=attr.scope,
-            correlation_rate=attr.correlation_rate,
             semantic_type=attr.semantic_type,
             identity_type=attr.identity_type,
             display_format=attr.display_format,
@@ -194,8 +192,6 @@ def build_spec(
     attributes: list[AttributeSpec],
     sampling_order: list[str],
     sources: list[str],
-    agent_focus: str | None = None,
-    name_config: NameConfig | None = None,
 ) -> PopulationSpec:
     """
     Assemble the final PopulationSpec from all components.
@@ -206,8 +202,6 @@ def build_spec(
         attributes: List of AttributeSpec
         sampling_order: Order for sampling
         sources: List of source URLs from research
-        agent_focus: Who the study agents represent (natural language)
-        name_config: LLM-researched name frequency tables (None = use bundled CSVs)
 
     Returns:
         Complete PopulationSpec ready for YAML export
@@ -215,9 +209,7 @@ def build_spec(
     meta = SpecMeta(
         description=description,
         geography=geography,
-        agent_focus=agent_focus,
         created_at=datetime.now(),
-        name_config=name_config,
     )
 
     grounding = _compute_grounding_summary(attributes, sources)

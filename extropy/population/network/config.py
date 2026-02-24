@@ -94,6 +94,23 @@ class InfluenceFactorConfig(BaseModel):
     description: str = ""
 
 
+class StructuralAttributeRoles(BaseModel):
+    """Attribute roles used for deterministic structural edge generation.
+
+    Each field should reference an attribute name from the sampled agent schema,
+    or be null when unavailable for a given population.
+    """
+
+    household_id: str | None = None
+    partner_id: str | None = None
+    age: str | None = None
+    sector: str | None = None
+    region: str | None = None
+    urbanicity: str | None = None
+    religion: str | None = None
+    dependents: str | None = None
+
+
 class NetworkConfig(BaseModel):
     """Complete configuration for network generation.
 
@@ -123,6 +140,7 @@ class NetworkConfig(BaseModel):
         degree_multipliers: Multipliers for degree correction
         edge_type_rules: Rules for inferring edge types (evaluated by priority)
         influence_factors: Factors for computing asymmetric influence weights
+        structural_attribute_roles: Attribute-role mapping for structural edges
         default_edge_type: Fallback edge type when no rule matches
         ordinal_levels: Global ordinal level mappings (keyed by attribute name).
             Used by within_n match type when AttributeWeightConfig.ordinal_levels is None.
@@ -175,6 +193,9 @@ class NetworkConfig(BaseModel):
     degree_multipliers: list[DegreeMultiplierConfig] = Field(default_factory=list)
     edge_type_rules: list[EdgeTypeRule] = Field(default_factory=list)
     influence_factors: list[InfluenceFactorConfig] = Field(default_factory=list)
+    structural_attribute_roles: StructuralAttributeRoles = Field(
+        default_factory=StructuralAttributeRoles
+    )
     default_edge_type: str = "peer"
     ordinal_levels: dict[str, dict[str, int]] = Field(default_factory=dict)
     generated_from: str | None = None

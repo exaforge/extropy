@@ -31,6 +31,7 @@ Extropy creates synthetic populations grounded in real-world distributions, conn
 ```bash
 pip install extropy-run
 export OPENAI_API_KEY=sk-...
+# or: ANTHROPIC_API_KEY=... / AZURE_OPENAI_API_KEY=...
 ```
 
 Requires Python 3.11+. [uv](https://github.com/astral-sh/uv) recommended.
@@ -61,7 +62,7 @@ extropy results segment income
 ## How It Works
 
 1. **Population** — LLM discovers attributes, researches real-world distributions, samples agents
-2. **Network** — Connects agents by similarity; edge types affect information flow
+2. **Network** — Builds structural + similarity edges; edge types affect information flow
 3. **Two-pass reasoning** — Agent role-plays reaction, then classifier extracts outcomes
 4. **Propagation** — Opinions spread through network; agents update after hearing from peers
 
@@ -79,9 +80,9 @@ extropy results segment income
 | Similarity edges | Acquaintances and online contacts from attribute similarity |
 | Small-world | Calibrated clustering coefficient and path lengths |
 | **Simulation** | |
-| Two-pass reasoning | Role-play first, classify second — eliminates central tendency bias |
+| Two-pass reasoning | Role-play first, classify second — reduces schema anchoring in outcome extraction |
 | Conversations | Agents talk to each other; both update state independently |
-| Memory | Full reasoning history with emotional trajectory |
+| Memory | Persistent memory traces with fidelity-based prompt trimming |
 | Conviction | Affects sharing probability and flip resistance |
 | THINK vs SAY | Internal monologue separate from public statement |
 | Timeline events | New information injected at specified timesteps |

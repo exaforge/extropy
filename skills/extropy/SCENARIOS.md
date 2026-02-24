@@ -14,7 +14,7 @@ Not a survey. Not a poll. A simulation of collective human behavior.
 
 Any country or region. Examples:
 - US (bundled SSA + Census name data)
-- Japan, India, Brazil, UK, Germany (provide NameConfig or let LLM research)
+- Japan, India, Brazil, UK, Germany (Faker locale routing + CSV fallback handles naming)
 - Multi-region (agents distributed across cities, states, countries)
 
 Extropy doesn't care about geography - it cares about attributes and distributions. Define `state`, `city`, `region` as attributes with your desired distribution.
@@ -308,7 +308,7 @@ Use this skill when users ask:
 
 | Question | Answer |
 |----------|--------|
-| Can I simulate non-US populations? | Yes, any country with appropriate NameConfig |
+| Can I simulate non-US populations? | Yes, any country with Faker locale routing + CSV fallback |
 | Can I model families? | Yes, `household_mode: true` with configurable `agent_focus` |
 | Can I have evolving events? | Yes, use timeline with multiple events |
 | Can I get open-ended responses? | Yes, `type: open_ended` outcomes |

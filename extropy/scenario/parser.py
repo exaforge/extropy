@@ -103,12 +103,19 @@ def parse_scenario(
         >>> event.source
         'Netflix'
     """
+    attribute_lines = [
+        f"- {attr.name} ({attr.type}): {attr.description}"
+        for attr in population_spec.attributes
+    ]
+    if not attribute_lines:
+        attribute_lines = ["- (no attributes available)"]
+
     population_context = f"""
 Population: {population_spec.meta.description}
 Geography: {population_spec.meta.geography or "Not specified"}
 
 Key attributes:
-{chr(10).join(f"- {attr.name}: {attr.description}" for attr in population_spec.attributes[:10])}
+{chr(10).join(attribute_lines)}
 """
 
     prompt = f"""## Task

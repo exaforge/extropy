@@ -18,6 +18,8 @@ Example:
 from __future__ import annotations
 
 import json
+import re
+from pathlib import Path
 from typing import Any
 
 from pydantic import BaseModel, PrivateAttr, ConfigDict
@@ -263,6 +265,58 @@ def grounding_indicator(level: str) -> str:
     return indicators.get(level, "[dim]Unknown[/dim]")
 
 
+def get_next_invalid_artifact_path(
+    target_path: Path | str,
+    *,
+    stem: str | None = None,
+    extension: str | None = None,
+) -> Path:
+    """Compute the next versioned invalid-artifact path.
+
+    Examples:
+        scenario.v1.yaml -> scenario.v1.invalid.v1.yaml
+        scenario.v1.yaml -> scenario.v1.invalid.v2.yaml (if v1 already exists)
+        stem="sample", extension=".json" -> sample.invalid.vN.json
+    """
+    target = Path(target_path)
+    parent = target.parent
+    parent.mkdir(parents=True, exist_ok=True)
+
+    base_stem = stem if stem is not None else target.stem
+    suffix = extension if extension is not None else target.suffix
+    if suffix and not suffix.startswith("."):
+        suffix = f".{suffix}"
+
+    pattern = re.compile(
+        rf"^{re.escape(base_stem)}\.invalid\.v(?P<version>\d+){re.escape(suffix)}$"
+    )
+    max_version = 0
+    for existing in parent.iterdir():
+        if not existing.is_file():
+            continue
+        match = pattern.match(existing.name)
+        if not match:
+            continue
+        max_version = max(max_version, int(match.group("version")))
+
+    next_version = max_version + 1
+    return parent / f"{base_stem}.invalid.v{next_version}{suffix}"
+
+
+def save_invalid_json_artifact(
+    payload: dict[str, Any],
+    target_path: Path | str,
+    *,
+    stem: str | None = None,
+    extension: str = ".json",
+) -> Path:
+    """Save a versioned invalid artifact as JSON and return its path."""
+    path = get_next_invalid_artifact_path(target_path, stem=stem, extension=extension)
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(payload, f, indent=2, default=str)
+    return path
+
+
 def format_validation_for_json(result) -> dict[str, Any]:
     """Convert ValidationResult to JSON-serializable dict."""
     return {
@@ -343,5 +397,14 @@ def format_sampling_stats_for_json(stats, spec) -> dict[str, Any]:
     # Constraint violations
     if stats.constraint_violations:
         result["constraint_violations"] = stats.constraint_violations
+
+    if stats.condition_warnings:
+        result["condition_warnings"] = stats.condition_warnings
+
+    if stats.reconciliation_counts:
+        result["reconciliation_counts"] = stats.reconciliation_counts
+
+    if stats.rule_pack:
+        result["rule_pack"] = stats.rule_pack
 
     return result

@@ -53,6 +53,8 @@ Thumbs.db
 
 austin/
 examples/
+# Keep ad-hoc analysis dumps out of git even if examples are partially unignored later.
+examples/**/analysis/
 
 # Simulation artifacts
 *.sqlite

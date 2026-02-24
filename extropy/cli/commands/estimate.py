@@ -7,7 +7,7 @@ from ..study import StudyContext, detect_study_folder, resolve_scenario
 from ..utils import Output, ExitCode
 
 
-@app.command("estimate")
+@app.command("estimate", hidden=True)
 def estimate_command(
     scenario: str = typer.Option(
         None,
@@ -43,6 +43,15 @@ def estimate_command(
         extropy estimate -s ai-adoption --strong openai/gpt-5
         extropy estimate -s ai-adoption --strong openai/gpt-5 --fast openai/gpt-5-mini -v
     """
+    out = Output(console=console)
+    out.error(
+        "Estimate is temporarily disabled pending timeline-aware convergence parity. See issue #112.",
+        exit_code=ExitCode.VALIDATION_ERROR,
+    )
+    raise typer.Exit(out.finish())
+
+    # NOTE: Existing estimator implementation is intentionally retained below
+    # (temporarily unreachable) while #112 is addressed.
     from ...config import get_config
     from ...core.models import ScenarioSpec, PopulationSpec
     from ...simulation.estimator import estimate_simulation_cost

@@ -174,12 +174,30 @@ def _sample_lognormal(
         else mean * 0.5
     )
 
-    # Lognormal requires mean > 0
+    # Resolve min/max bounds - formula takes precedence over static
+    min_bound = _resolve_optional_param(
+        dist.min, getattr(dist, "min_formula", None), agent
+    )
+    max_bound = _resolve_optional_param(
+        dist.max, getattr(dist, "max_formula", None), agent
+    )
+
+    # Degenerate/invalid cases should degrade deterministically instead of crashing.
+    # Common case: formula intentionally returns 0 for not-applicable agents.
     if mean <= 0:
-        raise ValueError(
-            f"Lognormal distribution requires mean > 0, got {mean}. "
-            "Check the distribution parameters or formula."
-        )
+        value = 0.0
+        if min_bound is not None:
+            value = max(value, min_bound)
+        if max_bound is not None:
+            value = min(value, max_bound)
+        return value
+    if std <= 0:
+        value = mean
+        if min_bound is not None:
+            value = max(value, min_bound)
+        if max_bound is not None:
+            value = min(value, max_bound)
+        return value
 
     # Convert from actual mean/std to log-space mu/sigma
     # mu = log(mean^2 / sqrt(mean^2 + std^2))
@@ -190,14 +208,6 @@ def _sample_lognormal(
     sigma = math.sqrt(math.log(1 + variance / mean_sq))
 
     value = rng.lognormvariate(mu, sigma)
-
-    # Resolve min/max bounds - formula takes precedence over static
-    min_bound = _resolve_optional_param(
-        dist.min, getattr(dist, "min_formula", None), agent
-    )
-    max_bound = _resolve_optional_param(
-        dist.max, getattr(dist, "max_formula", None), agent
-    )
 
     # Apply clamping
     if min_bound is not None:

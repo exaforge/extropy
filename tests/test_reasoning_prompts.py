@@ -21,7 +21,6 @@ from extropy.core.models.scenario import (
     ExposureChannel,
     ExposureRule,
     InteractionConfig,
-    InteractionType,
     OutcomeConfig,
     OutcomeDefinition,
     OutcomeType,
@@ -66,7 +65,6 @@ def _make_scenario(**overrides):
                 ExposureChannel(
                     name="broadcast",
                     description="Broadcast",
-                    reach="broadcast",
                     credibility_modifier=1.0,
                 )
             ],
@@ -77,7 +75,6 @@ def _make_scenario(**overrides):
             ],
         ),
         interaction=InteractionConfig(
-            primary_model=InteractionType.PASSIVE_OBSERVATION,
             description="Observe",
         ),
         spread=SpreadConfig(share_probability=0.3),
@@ -410,7 +407,6 @@ class TestPhaseAPromptFeatures:
                     ExposureChannel(
                         name="app_notification",
                         description="App Notification",
-                        reach="broadcast",
                         experience_template="I got a push notification from {channel_name}",
                     )
                 ],

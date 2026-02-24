@@ -1,0 +1,792 @@
+population_description: 'Nationally representative US adult population (18-80). Must
+  capture the demographic, economic, and attitudinal fault lines that drive divergent
+  responses to major national events — especially technology disruption, economic
+  shocks, cultural controversies, and electoral behavior in the 2026 midterm elections.
+
+
+  Beyond standard demographics (age, gender, race/ethnicity, education, income, geography),
+  prioritize attributes that determine how people process and react to news, make
+  decisions under uncertainty, and vote:
+
+
+  - technology adoption posture and digital literacy (technophobe to early adopter)
+
+  - media ecosystem and primary information sources (cable news, social media, podcasts,
+  local news, none)
+
+  - institutional trust (government, corporations, media, science, financial system)
+
+  - financial margin and economic anxiety (savings buffer, debt load, paycheck-to-paycheck
+  status)
+
+  - employment sector and job security perception (federal/state government, private
+  sector, gig, self-employed, retired)
+
+  - consumer identity and brand relationship (brand loyal, price-driven, values-driven)
+
+  - social media behavior and influence (passive consumer, active poster, influencer,
+  non-user)
+
+  - investment and financial literacy (no investments, 401k only, active trader, crypto
+  holder)
+
+  - religious engagement and worldview (secular, moderate, devout, denomination)
+
+  - political identity and engagement level (strong partisan, moderate, disengaged,
+  single-issue)
+
+  - 2024 presidential vote (Trump, Harris, third party, didn’t vote, not eligible)
+
+  - congressional district competitiveness (safe R, safe D, swing district)
+
+  - midterm turnout propensity (always, sometimes, rarely, never)
+
+  - issue salience for 2026 (economy/jobs, abortion/reproductive rights, immigration,
+  democracy/rule of law, healthcare, climate, education, AI/technology)
+
+  - approval of current direction (strongly approve to strongly disapprove)
+
+
+  Geographic distribution should span urban/suburban/rural across major US regions
+  (Northeast, Southeast, Midwest, Southwest, West Coast), with realistic correlation
+  structure between attributes.'
+created_at: '2026-02-22T20:21:48.339585'
+intro_template: I'm a {age}-year-old {gender} living in a {urban_rural} part of the
+  {us_region}, where I work in the {employment_sector} sector and identify politically
+  as {political_identity}. My top concern heading into 2026 is {top_issue_2026}, and
+  I'd describe my financial situation as {financial_margin}. When it comes to the
+  recent US airstrikes on Iran, I {iran_strike_approval} — a stance shaped by my broader
+  view that Iran's nuclear program is {nuclear_iran_threat_perception}.
+treatments:
+- attribute: country
+  treatment: concrete
+  group: demographics
+- attribute: age
+  treatment: concrete
+  group: demographics
+- attribute: gender
+  treatment: concrete
+  group: demographics
+- attribute: race_ethnicity
+  treatment: concrete
+  group: demographics
+- attribute: us_region
+  treatment: concrete
+  group: demographics
+- attribute: urban_rural
+  treatment: concrete
+  group: demographics
+- attribute: education_level
+  treatment: concrete
+  group: demographics
+- attribute: marital_status
+  treatment: concrete
+  group: demographics
+- attribute: household_size
+  treatment: concrete
+  group: demographics
+- attribute: has_children
+  treatment: concrete
+  group: demographics
+- attribute: openness
+  treatment: relative
+  group: personality
+- attribute: conscientiousness
+  treatment: relative
+  group: personality
+- attribute: extraversion
+  treatment: relative
+  group: personality
+- attribute: agreeableness
+  treatment: relative
+  group: personality
+- attribute: neuroticism
+  treatment: relative
+  group: personality
+- attribute: risk_tolerance
+  treatment: relative
+  group: personality
+- attribute: household_income
+  treatment: concrete
+  group: economic_financial
+- attribute: financial_margin
+  treatment: concrete
+  group: economic_financial
+- attribute: investment_profile
+  treatment: concrete
+  group: economic_financial
+- attribute: economic_anxiety
+  treatment: relative
+  group: economic_financial
+- attribute: energy_cost_burden
+  treatment: concrete
+  group: economic_financial
+- attribute: portfolio_energy_exposure
+  treatment: concrete
+  group: economic_financial
+- attribute: employment_sector
+  treatment: concrete
+  group: work_livelihood
+- attribute: job_security_perception
+  treatment: concrete
+  group: work_livelihood
+- attribute: daily_commute_miles
+  treatment: concrete
+  group: work_livelihood
+- attribute: supply_chain_job_exposure
+  treatment: concrete
+  group: work_livelihood
+- attribute: consumer_identity
+  treatment: concrete
+  group: work_livelihood
+- attribute: primary_info_source
+  treatment: concrete
+  group: media_information
+- attribute: social_media_behavior
+  treatment: concrete
+  group: media_information
+- attribute: tech_adoption_posture
+  treatment: concrete
+  group: media_information
+- attribute: institutional_trust
+  treatment: relative
+  group: media_information
+- attribute: political_identity
+  treatment: concrete
+  group: political_civic
+- attribute: political_engagement_level
+  treatment: concrete
+  group: political_civic
+- attribute: vote_2024_presidential
+  treatment: concrete
+  group: political_civic
+- attribute: midterm_turnout_propensity
+  treatment: concrete
+  group: political_civic
+- attribute: congressional_district_competitiveness
+  treatment: concrete
+  group: political_civic
+- attribute: top_issue_2026
+  treatment: concrete
+  group: political_civic
+- attribute: country_direction_approval
+  treatment: concrete
+  group: political_civic
+- attribute: crisis_midterm_vote_shift
+  treatment: concrete
+  group: political_civic
+- attribute: religious_engagement
+  treatment: concrete
+  group: identity_worldview
+- attribute: military_connection
+  treatment: concrete
+  group: identity_worldview
+- attribute: reservist_or_national_guard
+  treatment: concrete
+  group: identity_worldview
+- attribute: iran_strike_approval
+  treatment: concrete
+  group: iran_crisis_response
+- attribute: mideast_policy_hawkishness
+  treatment: concrete
+  group: iran_crisis_response
+- attribute: nuclear_iran_threat_perception
+  treatment: concrete
+  group: iran_crisis_response
+- attribute: war_escalation_fear
+  treatment: relative
+  group: iran_crisis_response
+- attribute: protest_participation_propensity
+  treatment: concrete
+  group: iran_crisis_response
+groups:
+- name: demographics
+  label: Who I Am
+  attributes:
+  - country
+  - age
+  - gender
+  - race_ethnicity
+  - us_region
+  - urban_rural
+  - education_level
+  - marital_status
+  - household_size
+  - has_children
+- name: personality
+  label: How I Think & Feel
+  attributes:
+  - openness
+  - conscientiousness
+  - extraversion
+  - agreeableness
+  - neuroticism
+  - risk_tolerance
+- name: economic_financial
+  label: My Financial Life
+  attributes:
+  - household_income
+  - financial_margin
+  - investment_profile
+  - economic_anxiety
+  - energy_cost_burden
+  - portfolio_energy_exposure
+- name: work_livelihood
+  label: Work & Livelihood
+  attributes:
+  - employment_sector
+  - job_security_perception
+  - daily_commute_miles
+  - supply_chain_job_exposure
+  - consumer_identity
+- name: media_information
+  label: How I Stay Informed
+  attributes:
+  - primary_info_source
+  - social_media_behavior
+  - tech_adoption_posture
+  - institutional_trust
+- name: political_civic
+  label: My Politics & Civic Life
+  attributes:
+  - political_identity
+  - political_engagement_level
+  - vote_2024_presidential
+  - midterm_turnout_propensity
+  - congressional_district_competitiveness
+  - top_issue_2026
+  - country_direction_approval
+  - crisis_midterm_vote_shift
+- name: identity_worldview
+  label: Faith, Service & Worldview
+  attributes:
+  - religious_engagement
+  - military_connection
+  - reservist_or_national_guard
+- name: iran_crisis_response
+  label: The Iran Crisis & Me
+  attributes:
+  - iran_strike_approval
+  - mideast_policy_hawkishness
+  - nuclear_iran_threat_perception
+  - war_escalation_fear
+  - protest_participation_propensity
+phrasings:
+  boolean:
+  - attribute: has_children
+    true_phrase: I have at least one child under 18 living at home with me.
+    false_phrase: I don't have any children under 18 living in my household.
+  - attribute: supply_chain_job_exposure
+    true_phrase: My job is in an industry directly hit by supply chain disruptions
+      or energy price swings — like trucking, aviation, retail, manufacturing, or
+      agriculture.
+    false_phrase: My work isn't in a field that's directly exposed to supply chain
+      disruptions or energy price shocks.
+  - attribute: reservist_or_national_guard
+    true_phrase: I'm currently serving as a US military reservist or National Guard
+      member, which means I could be called up for mobilization.
+    false_phrase: I'm not currently a military reservist or National Guard member.
+  categorical:
+  - attribute: country
+    phrases:
+      United States: I live in the United States.
+    null_options: []
+    null_phrase: null
+    fallback: null
+  - attribute: gender
+    phrases:
+      Male: I identify as male.
+      Female: I identify as female.
+      Non-binary/Other: I identify outside the traditional male/female binary.
+    null_options: []
+    null_phrase: null
+    fallback: null
+  - attribute: race_ethnicity
+    phrases:
+      White non-Hispanic: I identify as White, non-Hispanic.
+      Black: I identify as Black or African American.
+      Hispanic/Latino: I identify as Hispanic or Latino.
+      Asian: I identify as Asian or Asian American.
+      Other/Multiracial: I identify as multiracial or with a racial background not
+        listed above.
+    null_options: []
+    null_phrase: null
+    fallback: null
+  - attribute: us_region
+    phrases:
+      Northeast: I live in the Northeast part of the country.
+      Southeast: I live in the Southeast part of the country.
+      Midwest: I live in the Midwest.
+      Southwest: I live in the Southwest.
+      West Coast: I live on the West Coast.
+    null_options: []
+    null_phrase: null
+    fallback: null
+  - attribute: urban_rural
+    phrases:
+      Urban: I live in a city.
+      Suburban: I live in the suburbs.
+      Rural: I live in a rural area or small town.
+    null_options: []
+    null_phrase: null
+    fallback: null
+  - attribute: education_level
+    phrases:
+      Less than HS: I did not finish high school.
+      HS diploma/GED: My highest education is a high school diploma or GED.
+      Some college: I attended college but didn't finish a degree.
+      Bachelor's degree: I have a four-year college degree.
+      Graduate degree: I hold a graduate or professional degree.
+    null_options: []
+    null_phrase: null
+    fallback: null
+  - attribute: marital_status
+    phrases:
+      Married/partnered: I'm married or in a committed partnership.
+      Single: I'm currently single and not in a partnership.
+      Divorced/separated: I'm divorced or separated.
+      Widowed: I've lost my spouse and am widowed.
+    null_options: []
+    null_phrase: null
+    fallback: null
+  - attribute: employment_sector
+    phrases:
+      Federal government: I work for the federal government.
+      State/local government: I work for a state or local government agency.
+      Private sector: I work for a private company or corporation.
+      Gig/contract: I do gig work or contract jobs — no single employer.
+      Self-employed: I run my own business or work for myself.
+      Retired: I'm retired and no longer working.
+      Unemployed: I'm currently unemployed and looking for work.
+      Not in labor force: I'm not currently working or looking for work.
+    null_options: []
+    null_phrase: null
+    fallback: null
+  - attribute: job_security_perception
+    phrases:
+      Very secure: I feel very secure in my job — I'm not worried about losing it.
+      Somewhat secure: I feel reasonably secure at work, though there's some uncertainty.
+      Somewhat insecure: I'm a bit worried about my job stability.
+      Very insecure: I feel very insecure — I could lose my job at any time.
+      N/A - not employed: Job security isn't something I think about — I'm not currently
+        employed.
+    null_options:
+    - N/A - not employed
+    null_phrase: This doesn't really apply to me since I'm not currently working.
+    fallback: null
+  - attribute: financial_margin
+    phrases:
+      Comfortable savings buffer: I have solid savings and feel financially comfortable.
+      Modest buffer: I have a little saved up, but not a ton of cushion.
+      Paycheck-to-paycheck: I'm living paycheck to paycheck — there's not much left
+        over.
+      In debt/deficit: I'm in the red — spending more than I'm bringing in and carrying
+        debt.
+    null_options: []
+    null_phrase: null
+    fallback: null
+  - attribute: investment_profile
+    phrases:
+      No investments: I don't have any investments — no stocks, no retirement accounts,
+        nothing.
+      401k/IRA only: I have a retirement account like a 401k or IRA, but that's about
+        it.
+      Diversified investor: I have a diversified portfolio — stocks, bonds, retirement
+        accounts, maybe real estate.
+      Active trader: I actively trade stocks and follow the markets closely.
+      Crypto holder: I hold cryptocurrency as a meaningful part of my finances.
+    null_options:
+    - No investments
+    null_phrase: I don't have any investments to speak of.
+    fallback: null
+  - attribute: primary_info_source
+    phrases:
+      Cable/broadcast TV news: I mainly get my news from cable or broadcast television.
+      Social media: I mostly get my news through social media feeds.
+      Online news sites: I mainly read news on websites and digital news outlets.
+      Podcasts: Podcasts are my primary way of staying informed.
+      Local news: I rely mostly on local TV, radio, or newspapers for my news.
+      Print media: I still get most of my news from print newspapers or magazines.
+      Avoids news: Honestly, I try to avoid the news as much as possible.
+    null_options:
+    - Avoids news
+    null_phrase: I don't really follow the news — I try to tune it out.
+    fallback: null
+  - attribute: social_media_behavior
+    phrases:
+      Non-user: I don't use social media at all.
+      Passive consumer: I scroll through social media but rarely post anything myself.
+      Occasional poster: I post on social media every now and then, but I'm not super
+        active.
+      Active poster/Influencer: I post regularly and have a real presence on social
+        media.
+    null_options:
+    - Non-user
+    null_phrase: Social media isn't part of my life — I don't have any accounts.
+    fallback: null
+  - attribute: tech_adoption_posture
+    phrases:
+      Technophobe/Avoider: I avoid new technology whenever I can — it's not for me.
+      Late majority adopter: I wait until technology is well-proven before I try it.
+      Early majority adopter: I adopt new technology once it's become mainstream and
+        reliable.
+      Early adopter: I like to try out new technology pretty early — before most people
+        catch on.
+      Innovator: I'm on the cutting edge — I seek out new technology before it even
+        hits the mainstream.
+    null_options: []
+    null_phrase: null
+    fallback: null
+  - attribute: religious_engagement
+    phrases:
+      Secular/None: I'm not religious and don't identify with any faith tradition.
+      Nominally affiliated: I identify with a religion culturally, but I'm not very
+        active in practicing it.
+      Moderately religious: My faith is important to me and I practice it regularly,
+        though I'm not devout.
+      Devout: My faith is central to my life — I'm deeply committed to my religious
+        practice.
+    null_options:
+    - Secular/None
+    null_phrase: Religion isn't part of my life — I don't follow any faith.
+    fallback: null
+  - attribute: political_identity
+    phrases:
+      Strong Democrat: I'm a committed Democrat — I strongly identify with the party.
+      Lean Democrat: I lean toward the Democrats, though I don't always vote the party
+        line.
+      True Independent: I'm a true independent — I don't feel at home in either party.
+      Lean Republican: I lean Republican, though I'm not a die-hard partisan.
+      Strong Republican: I'm a committed Republican — I strongly identify with the
+        party.
+    null_options: []
+    null_phrase: null
+    fallback: null
+  - attribute: political_engagement_level
+    phrases:
+      Disengaged: I don't pay much attention to politics — it just doesn't feel relevant
+        to my life.
+      Single-issue voter: There's one issue I care deeply about, and that drives everything
+        for me politically.
+      Moderate/occasional participant: I follow politics somewhat and vote, but I'm
+        not obsessively engaged.
+      Highly engaged partisan: I'm very politically active — I follow politics closely
+        and get involved beyond just voting.
+    null_options: []
+    null_phrase: null
+    fallback: null
+  - attribute: vote_2024_presidential
+    phrases:
+      Trump: I voted for Donald Trump in the 2024 presidential election.
+      Harris: I voted for Kamala Harris in the 2024 presidential election.
+      Third party: I voted for a third-party candidate in 2024 — not Trump or Harris.
+      Did not vote: I didn't vote in the 2024 presidential election.
+      Not eligible: I wasn't eligible to vote in the 2024 election.
+    null_options:
+    - Did not vote
+    - Not eligible
+    null_phrase: I didn't cast a ballot in the last presidential election.
+    fallback: null
+  - attribute: midterm_turnout_propensity
+    phrases:
+      Always votes: I vote in every election, including midterms — I never miss one.
+      Sometimes votes: I vote in midterms sometimes, depending on what's at stake.
+      Rarely votes: I rarely vote in midterm elections — it's just not something I
+        usually do.
+      Never votes: I don't vote in midterm elections.
+    null_options: []
+    null_phrase: null
+    fallback: null
+  - attribute: congressional_district_competitiveness
+    phrases:
+      Safe Republican: My congressional district is solidly Republican — there's no
+        real contest.
+      Lean Republican: My district tends to lean Republican but isn't completely out
+        of reach for Democrats.
+      Swing district: I live in a genuine swing district where either party could
+        win.
+      Lean Democrat: My district leans Democratic, though Republicans have a shot.
+      Safe Democrat: My congressional district is solidly Democratic — it's not really
+        competitive.
+    null_options: []
+    null_phrase: null
+    fallback: null
+  - attribute: top_issue_2026
+    phrases:
+      Economy/Jobs: The economy and jobs are the number one issue for me going into
+        2026.
+      Abortion/Reproductive rights: Abortion and reproductive rights are the most
+        important issue to me in 2026.
+      Immigration: Immigration is the top issue on my mind heading into the midterms.
+      Democracy/Rule of law: Protecting democracy and the rule of law is what matters
+        most to me in 2026.
+      Healthcare: Healthcare is the single most important issue for me in the 2026
+        elections.
+      Climate: Climate change is the top priority for me going into 2026.
+      Education: Education is the issue I care most about heading into the midterms.
+      AI/Technology: Artificial intelligence and technology policy are the biggest
+        issues for me in 2026.
+    null_options: []
+    null_phrase: null
+    fallback: null
+  - attribute: country_direction_approval
+    phrases:
+      Strongly approve: I strongly approve of the direction the country is headed
+        right now.
+      Somewhat approve: I generally think the country is moving in the right direction,
+        though not perfectly.
+      Somewhat disapprove: I'm not happy with the direction things are going in this
+        country.
+      Strongly disapprove: I strongly disapprove of where this country is headed —
+        things are going the wrong way.
+    null_options: []
+    null_phrase: null
+    fallback: null
+  - attribute: consumer_identity
+    phrases:
+      Brand loyal: I stick with the brands I trust — loyalty matters a lot when I
+        shop.
+      Price/value driven: I always look for the best price or value — that's what
+        drives my purchases.
+      Values/ethics driven: I try to buy from companies whose values align with mine,
+        even if it costs more.
+      Convenience driven: Convenience is king for me — I buy whatever is easiest and
+        fastest.
+    null_options: []
+    null_phrase: null
+    fallback: null
+  - attribute: institutional_trust
+    phrases:
+      High trust: I generally trust major institutions — government, media, science,
+        and corporations.
+      Moderate trust: I have mixed trust in institutions — some I trust more than
+        others.
+      Low trust: I'm pretty skeptical of most institutions these days.
+      Distrustful/Conspiratorial: I don't trust the government, media, or big institutions
+        at all — they're not being straight with us.
+    null_options: []
+    null_phrase: null
+    fallback: null
+  - attribute: military_connection
+    phrases:
+      Active duty: I'm currently serving in the military.
+      Veteran: I'm a veteran — I served in the military.
+      Immediate family member: Someone in my immediate family is a veteran or currently
+        serving.
+      Extended family/friend: I have close friends or extended family who have served.
+      No connection: I don't have any personal connection to the military.
+    null_options:
+    - No connection
+    null_phrase: I don't have any close ties to the military.
+    fallback: null
+  - attribute: iran_strike_approval
+    phrases:
+      Strongly approve: I strongly approve of the US airstrikes against Iran — it
+        was the right call.
+      Somewhat approve: I somewhat approve of the airstrikes, even if I have some
+        reservations.
+      Somewhat disapprove: I'm not really on board with the Iran airstrikes — more
+        harm than good.
+      Strongly disapprove: I strongly disapprove of the airstrikes against Iran —
+        it was a serious mistake.
+      No opinion: I honestly don't have a strong opinion on the Iran airstrikes.
+    null_options:
+    - No opinion
+    null_phrase: I don't have a clear view on the airstrikes — I'm not sure what to
+      think.
+    fallback: null
+  - attribute: energy_cost_burden
+    phrases:
+      Severe hardship: The spike in energy prices is causing real financial pain in
+        my household.
+      Moderate hardship: Rising energy costs are putting a noticeable strain on my
+        budget.
+      Minor inconvenience: Higher energy prices are annoying but not really hurting
+        me financially.
+      Minimal impact: The energy price increases barely affect me — my finances are
+        fine.
+    null_options: []
+    null_phrase: null
+    fallback: null
+  - attribute: mideast_policy_hawkishness
+    phrases:
+      Strongly interventionist: I strongly believe the US should use military force
+        to shape events in the Middle East when necessary.
+      Moderately interventionist: I think the US should be willing to intervene militarily
+        in the Middle East in serious situations.
+      Neutral/Uncertain: I don't have a firm view on when the US should or shouldn't
+        intervene militarily in the Middle East.
+      Moderately non-interventionist: I'm generally skeptical of US military involvement
+        in the Middle East.
+      Strongly non-interventionist: I strongly oppose US military intervention in
+        the Middle East — we need to stay out.
+    null_options: []
+    null_phrase: null
+    fallback: null
+  - attribute: nuclear_iran_threat_perception
+    phrases:
+      Existential threat: Iran's nuclear program is an existential threat to the United
+        States — we can't ignore it.
+      Serious threat: I see Iran's nuclear ambitions as a serious threat to our national
+        security.
+      Moderate threat: Iran's nuclear program is a real concern, but I wouldn't call
+        it a critical threat.
+      Overstated threat: I think the threat from Iran's nuclear program has been blown
+        out of proportion.
+      Not a threat: I don't see Iran's nuclear program as a meaningful threat to the
+        US.
+    null_options: []
+    null_phrase: null
+    fallback: null
+  - attribute: portfolio_energy_exposure
+    phrases:
+      High energy/defense exposure: A significant chunk of my investments is in energy
+        or defense stocks — this crisis directly affects my portfolio.
+      Moderate exposure: I have some exposure to energy and defense in my investments,
+        but it's not dominant.
+      Diversified/low exposure: My investments are well-diversified, so I have very
+        little direct exposure to energy or defense.
+      No investments: I don't have any investments, so market moves from this crisis
+        don't affect me directly.
+    null_options:
+    - No investments
+    null_phrase: I don't have any investments, so the market impact of this crisis
+      doesn't hit me directly.
+    fallback: null
+  - attribute: crisis_midterm_vote_shift
+    phrases:
+      More Republican: The Iran crisis has pushed me toward voting Republican in the
+        midterms more than I would have otherwise.
+      Unchanged: The Iran crisis hasn't really changed how I plan to vote in the midterms.
+      More Democratic: The way this Iran situation has been handled has pushed me
+        toward voting Democratic.
+      Disengaged/withdrawn: All of this has made me less motivated to vote at all
+        — I feel like checking out.
+    null_options: []
+    null_phrase: null
+    fallback: null
+  - attribute: protest_participation_propensity
+    phrases:
+      Very likely: I'm very likely to show up at a protest or demonstration over the
+        Iran strikes.
+      Somewhat likely: I might participate in a protest over this — I'm seriously
+        considering it.
+      Unlikely: I probably won't join any protests over the Iran situation, even if
+        I have opinions about it.
+      Would not participate: I wouldn't participate in protests over this — that's
+        just not something I do.
+    null_options: []
+    null_phrase: null
+    fallback: null
+  relative:
+  - attribute: openness
+    labels:
+      much_below: I'm far less open to new ideas and experiences than most people
+      below: I tend to be a bit more set in my ways than the average person
+      average: I'm about as open to new ideas and experiences as most people
+      above: I'm more curious and receptive to new ideas than most people
+      much_above: I'm far more open to new experiences and unconventional thinking
+        than almost anyone I know
+  - attribute: conscientiousness
+    labels:
+      much_below: I'm far less organized and self-disciplined than most people
+      below: I tend to be a bit less focused and disciplined than the average person
+      average: I'm about as organized and goal-oriented as most people
+      above: I'm more disciplined and detail-oriented than most people
+      much_above: I'm far more organized, driven, and self-disciplined than almost
+        anyone I know
+  - attribute: extraversion
+    labels:
+      much_below: I'm far more introverted and reserved than most people
+      below: I tend to be a bit quieter and less socially driven than the average
+        person
+      average: I'm about as outgoing and social as most people
+      above: I'm more sociable and energized by people than most
+      much_above: I'm far more extroverted and socially energized than almost anyone
+        I know
+  - attribute: agreeableness
+    labels:
+      much_below: I'm far more skeptical and confrontational in my dealings with others
+        than most people
+      below: I tend to be a bit less accommodating and cooperative than the average
+        person
+      average: I'm about as cooperative and empathetic as most people
+      above: I'm more empathetic and willing to go along with others than most people
+      much_above: I'm far more agreeable, trusting, and harmonious in my relationships
+        than almost anyone I know
+  - attribute: neuroticism
+    labels:
+      much_below: I'm far more emotionally stable and stress-resistant than most people
+      below: I tend to be a bit calmer and less anxious than the average person
+      average: I handle stress and emotional ups and downs about as well as most people
+      above: I tend to feel stress and anxiety more intensely than most people
+      much_above: I experience emotional distress and anxiety far more intensely than
+        almost anyone I know
+  - attribute: risk_tolerance
+    labels:
+      much_below: I'm far more risk-averse than most people — I avoid uncertainty
+        in financial, social, and political decisions whenever I can
+      below: I tend to be a bit more cautious about taking risks than the average
+        person
+      average: I'm about as willing to take risks as most people
+      above: I'm more comfortable taking risks in financial, social, and political
+        situations than most people
+      much_above: I'm far more willing to embrace risk and uncertainty than almost
+        anyone I know
+  - attribute: economic_anxiety
+    labels:
+      much_below: I feel far less worried about economic conditions — personal or
+        national — than most people
+      below: I tend to be a bit less anxious about economic issues than the average
+        person
+      average: I feel about as much economic worry as most people
+      above: I feel more anxious about personal and national economic conditions than
+        most people
+      much_above: Economic uncertainty weighs on me far more heavily than it seems
+        to for almost anyone else I know
+  - attribute: institutional_trust
+    labels:
+      much_below: I trust institutions far less than most people — I'm deeply skeptical
+        or distrustful of government, media, science, and corporations
+      below: I'm more skeptical of major institutions like government and media than
+        the average person
+      average: I'm about as trusting of major institutions as most people
+      above: I generally trust institutions like government, science, and the media
+        more than most people
+      much_above: I have far more faith in major institutions — government, science,
+        media, corporations — than almost anyone I know
+  - attribute: war_escalation_fear
+    labels:
+      much_below: I'm far less worried than most people that the Iran conflict will
+        escalate into a broader war
+      below: I'm somewhat less concerned than the average person about the Iran conflict
+        spiraling into a wider war
+      average: I feel about as much concern as most people that the Iran conflict
+        could escalate into a larger war
+      above: I'm more fearful than most people that the Iran conflict will escalate
+        into a broader regional or world war
+      much_above: I'm far more fearful than almost anyone I know that the Iran conflict
+        will spiral into a catastrophic wider war
+  concrete:
+  - attribute: age
+    template: I'm {value} years old.
+    format_spec: .0f
+    prefix: ''
+    suffix: ''
+  - attribute: household_size
+    template: There are {value} people living in my household.
+    format_spec: .0f
+    prefix: ''
+    suffix: ''
+  - attribute: household_income
+    template: My household brings in about {value} a year before taxes.
+    format_spec: ',.0f'
+    prefix: $
+    suffix: ''
+  - attribute: daily_commute_miles
+    template: My round-trip commute is about {value} every workday.
+    format_spec: .1f
+    prefix: ''
+    suffix: ' miles'
+population_stats:
+  stats: {}

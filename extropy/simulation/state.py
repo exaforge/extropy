@@ -174,12 +174,16 @@ class StateManager:
             ON exposures(run_id, timestep)
         """
         )
-        cursor.execute(
+        # Legacy DBs may not have force_rereason/info_epoch yet; migration adds them.
+        try:
+            cursor.execute(
+                """
+                CREATE INDEX IF NOT EXISTS idx_exposures_force_epoch
+                ON exposures(run_id, agent_id, force_rereason, info_epoch)
             """
-            CREATE INDEX IF NOT EXISTS idx_exposures_force_epoch
-            ON exposures(run_id, agent_id, force_rereason, info_epoch)
-        """
-        )
+            )
+        except sqlite3.OperationalError:
+            pass
         cursor.execute(
             """
             CREATE INDEX IF NOT EXISTS idx_timeline_timestep
@@ -500,6 +504,41 @@ class StateManager:
         cursor.execute(
             "SELECT agent_id FROM agent_states WHERE run_id = ? AND aware = 1 AND will_share = 1",
             (self.run_id,),
+        )
+        return [row["agent_id"] for row in cursor.fetchall()]
+
+    def get_exposed_agents(
+        self,
+        timestep: int | None = None,
+        info_epoch: int | None = None,
+    ) -> list[str]:
+        """Get distinct agents with recorded exposures, optionally filtered.
+
+        Args:
+            timestep: Optional timestep filter.
+            info_epoch: Optional provenance epoch filter.
+
+        Returns:
+            Distinct agent IDs ordered by ID.
+        """
+        cursor = self.conn.cursor()
+        clauses = ["run_id = ?"]
+        params: list[Any] = [self.run_id]
+        if timestep is not None:
+            clauses.append("timestep = ?")
+            params.append(timestep)
+        if info_epoch is not None:
+            clauses.append("info_epoch = ?")
+            params.append(info_epoch)
+
+        cursor.execute(
+            f"""
+            SELECT DISTINCT agent_id
+            FROM exposures
+            WHERE {" AND ".join(clauses)}
+            ORDER BY agent_id
+        """,
+            params,
         )
         return [row["agent_id"] for row in cursor.fetchall()]
 

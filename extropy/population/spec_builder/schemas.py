@@ -245,13 +245,30 @@ def build_conditional_base_schema() -> dict:
     }
 
 
-def build_household_config_schema() -> dict:
+def build_household_config_schema(
+    allowed_assortative_attributes: list[str] | None = None,
+    allowed_gender_values: list[str] | None = None,
+) -> dict:
     """Build JSON schema for household config hydration.
 
     Uses array-of-objects patterns instead of dict/tuple schemas for LLM compatibility.
     Both Anthropic and OpenAI structured outputs require additionalProperties: false
     (not a schema) and don't support tuple-style array items.
     """
+    attribute_schema: dict = {"type": "string"}
+    if allowed_assortative_attributes:
+        # Constrain to exact merged attribute names to avoid silent runtime ignores.
+        attribute_schema = {
+            "type": "string",
+            "enum": sorted(set(allowed_assortative_attributes)),
+        }
+    gender_value_schema: dict = {"type": "string"}
+    if allowed_gender_values:
+        gender_value_schema = {
+            "type": "string",
+            "enum": sorted(set(allowed_gender_values)),
+        }
+
     return {
         "type": "object",
         "properties": {
@@ -312,10 +329,27 @@ def build_household_config_schema() -> dict:
                 "items": {
                     "type": "object",
                     "properties": {
-                        "attribute": {"type": "string"},
+                        "attribute": attribute_schema,
                         "correlation": {"type": "number"},
                     },
                     "required": ["attribute", "correlation"],
+                    "additionalProperties": False,
+                },
+            },
+            "partner_gender_mode": {
+                "type": "string",
+                "enum": ["independent", "weighted"],
+            },
+            "partner_gender_pair_weights": {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "left": gender_value_schema,
+                        "right": gender_value_schema,
+                        "weight": {"type": "number"},
+                    },
+                    "required": ["left", "right", "weight"],
                     "additionalProperties": False,
                 },
             },
@@ -353,6 +387,8 @@ def build_household_config_schema() -> dict:
             "same_group_rates",
             "default_same_group_rate",
             "assortative_mating",
+            "partner_gender_mode",
+            "partner_gender_pair_weights",
             "partner_age_gap_mean",
             "partner_age_gap_std",
             "min_adult_age",
@@ -364,35 +400,6 @@ def build_household_config_schema() -> dict:
             "life_stages",
             "adult_stage_label",
             "avg_household_size",
-            "sources",
-        ],
-        "additionalProperties": False,
-    }
-
-
-def build_name_config_schema() -> dict:
-    """Build JSON schema for name config hydration."""
-    name_entry = {
-        "type": "object",
-        "properties": {
-            "name": {"type": "string"},
-            "weight": {"type": "number"},
-        },
-        "required": ["name", "weight"],
-        "additionalProperties": False,
-    }
-    return {
-        "type": "object",
-        "properties": {
-            "male_first_names": {"type": "array", "items": name_entry},
-            "female_first_names": {"type": "array", "items": name_entry},
-            "last_names": {"type": "array", "items": name_entry},
-            "sources": {"type": "array", "items": {"type": "string"}},
-        },
-        "required": [
-            "male_first_names",
-            "female_first_names",
-            "last_names",
             "sources",
         ],
         "additionalProperties": False,
