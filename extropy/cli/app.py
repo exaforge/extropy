@@ -90,14 +90,6 @@ def _print_cost_footer() -> None:
 
 @app.callback()
 def main_callback(
-    json_output: Annotated[
-        bool,
-        typer.Option(
-            "--json",
-            help="Output machine-readable JSON instead of human-friendly text",
-            is_eager=True,
-        ),
-    ] = False,
     version: Annotated[
         bool,
         typer.Option(
@@ -126,12 +118,11 @@ def main_callback(
 ):
     """Extropy: Population simulation engine for agent-based modeling.
 
-    Use --json for machine-readable output suitable for scripting and AI tools.
     Use --cost to show token usage and cost summary after each command.
     Use --study to specify a study folder (otherwise auto-detected from cwd).
     """
     global _json_mode, _show_cost, _study_path
-    _json_mode = json_output
+    _json_mode = False
     _study_path = study
 
     # Determine if cost footer should be shown: --cost flag or config setting
