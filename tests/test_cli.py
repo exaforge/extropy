@@ -5,9 +5,11 @@ import os
 import sqlite3
 from pathlib import Path
 
+import pytest
 from typer.testing import CliRunner
 
 from extropy.cli.app import app
+from extropy.config import ExtropyConfig, configure, reset_config
 from extropy.cli.commands.validate import (
     _canonical_yaml_path_for_invalid,
     _is_persona_file,
@@ -17,6 +19,17 @@ from extropy.population.network.config import NetworkConfig
 from extropy.storage import open_study_db
 
 runner = CliRunner()
+
+
+@pytest.fixture(autouse=True)
+def _force_human_cli_mode():
+    """Keep CLI tests deterministic regardless local ~/.config/extropy/config.json."""
+    reset_config()
+    cfg = ExtropyConfig()
+    cfg.cli.mode = "human"
+    configure(cfg)
+    yield
+    reset_config()
 
 
 class TestConfigCommand:

@@ -297,7 +297,7 @@ def network_command(
         and checkpoint.expanduser().resolve() != study_db.expanduser().resolve()
     ):
         out.error("--checkpoint must point to the same canonical file as study.db")
-        raise typer.Exit(1)
+        raise typer.Exit(out.finish())
     checkpoint_db = study_db if (resume_requested or checkpoint is not None) else None
 
     # Load agents
