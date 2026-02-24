@@ -1,207 +1,176 @@
 # AGENTS.md
 
-Instructions for AI agents and automation tools using the Extropy CLI.
+Operational guide for AI agents and automation tools using the Extropy CLI.
 
-## Agent Mode
+## Automation Mode
 
-Set agent mode for structured JSON output and non-interactive operation:
+Use agent mode for machine-readable output and non-interactive behavior:
 
 ```bash
 extropy config set cli.mode agent
 ```
 
-Or use the `--json` flag per-command:
-
-```bash
-extropy results --json
-extropy query summary --json
-```
-
-**Agent mode behavior:**
-
-- All output is JSON (parseable, no ANSI formatting)
-- Exit codes indicate success/failure (0 = success, non-zero = error)
-- No interactive prompts — commands fail fast if missing required input
-- Clarification requests return exit code 2 with structured error
+Agent mode behavior:
+- JSON output shape from command handlers
+- deterministic exit codes
+- no interactive prompt loops (clarification requests return exit code `2`)
 
 ## CLI Pipeline
 
 ```bash
-extropy spec → extropy scenario → extropy persona → extropy sample → extropy network → extropy simulate → extropy results
+extropy spec -> extropy scenario -> extropy persona -> extropy sample -> extropy network -> extropy simulate -> extropy results
 ```
 
-
-| Command    | Purpose                                          |
-| ---------- | ------------------------------------------------ |
-| `spec`     | Create population spec from description          |
-| `scenario` | Create scenario with events and outcomes         |
-| `persona`  | Generate persona rendering config                |
-| `sample`   | Sample agents from merged spec                   |
-| `network`  | Generate social network                          |
-| `simulate` | Run simulation                                   |
-| `results`  | View results (summary, timeline, segment, agent) |
-| `query`    | Export raw data (agents, edges, states, SQL)     |
-| `chat`     | Chat with simulated agents                       |
-| `estimate` | Predict simulation cost                          |
-| `validate` | Validate spec files                              |
-| `config`   | View/set configuration                           |
-
+| Command | Purpose |
+|---------|---------|
+| `spec` | Create/iterate `population.vN.yaml` |
+| `scenario` | Create/iterate `scenario/{name}/scenario.vN.yaml` |
+| `persona` | Generate `persona.vN.yaml` for a scenario |
+| `sample` | Sample agents from merged base + extended attributes |
+| `network` | Build social graph for sampled agents |
+| `simulate` | Run timestep simulation |
+| `results` | Read run outcomes (`summary`, `timeline`, `segment`, `agent`) |
+| `query` | Export/query raw DB-backed entities |
+| `chat` | Chat with simulated agents (`list`, `ask`) |
+| `validate` | Validate population/scenario/persona YAML |
+| `config` | View/set configuration |
 
 ## Non-Interactive Usage
 
-### Pre-supplying answers
-
-For `spec` command, use `--answers` to skip clarification prompts:
+### Pre-supply clarifications
 
 ```bash
-extropy spec "German surgeons" -o surgeons --answers '{"location": "Bavaria"}'
-```
-
-Or use `--use-defaults` to accept default values:
-
-```bash
+extropy spec "German surgeons" -o surgeons --answers '{"location":"Bavaria"}'
 extropy spec "German surgeons" -o surgeons --use-defaults
 ```
 
 ### Skip confirmations
 
-Use `-y` / `--yes` to skip confirmation prompts:
-
 ```bash
-extropy scenario "AI adoption" -o ai-adoption -y
-extropy persona -s ai-adoption -y
+extropy scenario "AI adoption in radiology" -o ai-radiology -y
+extropy persona -s ai-radiology -y
 ```
 
 ## Exit Codes
 
-
-| Code | Meaning                            |
-| ---- | ---------------------------------- |
-| 0    | Success                            |
-| 1    | General error / validation failure |
-| 2    | Clarification needed (agent mode)  |
-| 3    | File not found                     |
-| 4    | Sampling error                     |
-| 5    | Network error                      |
-| 6    | Simulation error                   |
-| 7    | Scenario error                     |
-| 10   | User cancelled                     |
-
+| Code | Meaning |
+|------|---------|
+| `0` | Success |
+| `1` | Validation/general error |
+| `2` | Clarification required (agent mode) |
+| `3` | File/study/scenario not found |
+| `4` | Sampling error |
+| `5` | Network error |
+| `6` | Simulation error |
+| `7` | Scenario error |
+| `10` | User cancelled |
 
 ## Querying Data
 
-Export raw data for downstream processing:
-
 ```bash
-# Agents as JSONL (auto-resolves scenario from latest run)
+# study/entity summary
+extropy query summary
+
+# agents / edges / states export (JSONL)
 extropy query agents --to agents.jsonl
-
-# Explicit scenario
-extropy query agents -s congestion-tax --to agents.jsonl
-
-# Network edges
 extropy query edges --to edges.jsonl
-
-# Simulation states
 extropy query states --to states.jsonl
 
-# Arbitrary SQL (read-only)
-extropy query sql "SELECT * FROM agent_states WHERE aware = 1" --format json
+# read-only SQL
+extropy query sql "SELECT run_id, status FROM simulation_runs ORDER BY started_at DESC LIMIT 5" --format json
 ```
 
 ## Chat API
 
-Non-interactive chat for automation:
-
 ```bash
-extropy chat ask \
-  --agent-id agent_042 \
-  --prompt "What changed your mind?" \
-  --json
+# list recent runs and sample agents
+extropy chat list
+
+# non-interactive chat turn
+extropy chat ask --run-id <run_id> --agent-id <agent_id> --prompt "What changed your mind?"
 ```
 
-List available agents:
-
-```bash
-extropy chat list --json
-```
-
-**Note:** The interactive REPL (`extropy chat`) requires a TTY and is not suitable for automation. Use `extropy chat ask` instead.
+Note: REPL chat mode is not for automation. Use `chat ask`.
 
 ## Configuration Keys
 
 ```bash
-extropy config set cli.mode agent           # Enable agent mode globally
-extropy config set models.strong openai/gpt-5
-extropy config set models.fast openai/gpt-5-mini
-extropy config set simulation.strong anthropic/claude-sonnet-4-6
-extropy config set show_cost true           # Show cost after commands
+# output behavior
+extropy config set cli.mode agent
+
+# pipeline models (spec/scenario/persona)
+extropy config set models.fast anthropic/claude-sonnet-4-6
+extropy config set models.strong anthropic/claude-sonnet-4-6
+
+# simulation models (reasoning/classification)
+extropy config set simulation.strong azure/gpt-5-mini
+extropy config set simulation.fast azure/gpt-5-mini
+
+# runtime controls
+extropy config set simulation.rate_tier 2
+extropy config set show_cost true
 ```
 
 ## Environment Variables
 
-Required API keys (set at least one):
+Set at least one provider key used by your configured models:
 
 ```bash
 export OPENAI_API_KEY=sk-...
 export ANTHROPIC_API_KEY=sk-ant-...
 export OPENROUTER_API_KEY=sk-or-...
 export DEEPSEEK_API_KEY=sk-...
+
+# Azure (supported names)
 export AZURE_API_KEY=...
 export AZURE_ENDPOINT=https://<resource>.services.ai.azure.com/
+# Legacy aliases still supported:
+# AZURE_OPENAI_API_KEY, AZURE_OPENAI_ENDPOINT
 ```
 
 ## Global Flags
 
-All commands accept:
-
-
-| Flag           | Purpose                          |
-| -------------- | -------------------------------- |
-| `--json`       | JSON output (overrides cli.mode) |
-| `--cost`       | Show cost summary after command  |
-| `--study PATH` | Explicit study folder path       |
-
+| Flag | Purpose |
+|------|---------|
+| `--version` | Print version and exit |
+| `--cost` | Show command cost footer |
+| `--study PATH` | Explicit study folder path |
 
 ## Study Folder Structure
 
 ```
 my-study/
-├── study.db                    # Canonical SQLite store
-├── population.v1.yaml          # Base population spec
+├── study.db
+├── population.v1.yaml
 ├── scenario/
 │   └── my-scenario/
-│       ├── scenario.v1.yaml    # Scenario spec
-│       └── persona.v1.yaml     # Persona config
+│       ├── scenario.v1.yaml
+│       └── persona.v1.yaml
 └── results/
-    └── my-scenario/            # Simulation outputs
+    └── my-scenario/
 ```
 
 ## Typical Automation Flow
 
 ```bash
-# Create study folder and setup agent mode
+# 1) Create study + base population
 extropy spec "Austin TX commuters" -o my-study --use-defaults
 cd my-study
 extropy config set cli.mode agent
 
-# Build scenario
-extropy scenario "Congestion tax response" -o congestion-tax -y
+# 2) Build scenario + persona
+extropy scenario "Congestion pricing response" -o congestion-tax -y
 extropy persona -s congestion-tax -y
 
-# Sample agents and generate network (LLM config by default)
-extropy sample -s congestion-tax -n 500 --seed 42
-extropy network -s congestion-tax --seed 42
+# 3) Sample and network
+extropy sample -s congestion-tax -n 500 --seed 42 --strict-gates
+extropy network -s congestion-tax --seed 42 --quality-profile balanced --validate
 
-# Estimate before running
-extropy estimate -s congestion-tax --json
+# 4) Simulate
+extropy simulate -s congestion-tax --seed 42 --fidelity medium
 
-# Run simulation
-extropy simulate -s congestion-tax --seed 42
-
-# Extract results
-extropy results --json
-extropy query agents --to agents.jsonl
+# 5) Read outputs
+extropy results -s congestion-tax summary
+extropy results -s congestion-tax timeline
 extropy query states --to states.jsonl
 ```
-

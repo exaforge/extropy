@@ -762,7 +762,8 @@ cd austin && extropy chat ask --prompt "What changed your mind?"
 |----------|-------------|
 | `OPENAI_API_KEY` | OpenAI API key |
 | `ANTHROPIC_API_KEY` | Anthropic (Claude) API key |
-| `AZURE_OPENAI_API_KEY` | Azure OpenAI API key |
+| `AZURE_API_KEY` | Azure API key (preferred) |
+| `AZURE_OPENAI_API_KEY` | Azure API key (legacy alias) |
 | `OPENROUTER_API_KEY` | OpenRouter API key |
 | `DEEPSEEK_API_KEY` | DeepSeek API key |
 
@@ -770,9 +771,8 @@ cd austin && extropy chat ask --prompt "What changed your mind?"
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `AZURE_OPENAI_ENDPOINT` | | Azure OpenAI endpoint URL |
-| `AZURE_OPENAI_API_VERSION` | `2025-03-01-preview` | Azure API version |
-| `AZURE_OPENAI_DEPLOYMENT` | | Azure deployment name |
+| `AZURE_ENDPOINT` | | Azure endpoint URL (preferred) |
+| `AZURE_OPENAI_ENDPOINT` | | Azure endpoint URL (legacy alias) |
 
 ---
 
