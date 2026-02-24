@@ -28,9 +28,10 @@ Extropy creates synthetic populations grounded in real-world distributions, conn
 
 ## Development Notice
 
-- Extropy is still in active development and behavior may change between versions.
-- For reliable execution and triage, we strongly recommend running Extropy through an agentic harness (for example: Codex or Claude Code) rather than manual ad-hoc CLI usage.
-- Simulation can be expensive at scale (especially high-fidelity, multi-timestep runs). Start with small runs first; we recommend beginning at around `500` agents before scaling up.
+> [!CAUTION]
+> "Extropy is still in active development and behavior may change between versions."
+> For reliable execution and triage, we strongly recommend running Extropy through an agentic harness (for example: Codex or Claude Code) rather than manual ad-hoc CLI usage.
+> Simulation can be expensive at scale (especially high-fidelity, multi-timestep runs). Start with small runs first; we recommend beginning at around `500` agents before scaling up.
 
 ## Install
 
