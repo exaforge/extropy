@@ -3,6 +3,36 @@ name: extropy
 description: "Execution-first operator for Extropy: run pipelines, diagnose failures, and deliver evidence-backed simulation analysis using current CLI contracts."
 allowed-tools: Read, Grep, Glob, Bash, Edit, Write
 argument-hint: "[goal or experiment request]"
+metadata:
+  requires:
+    binaries:
+      - extropy
+    config_files:
+      - ~/.config/extropy/config.json
+      - .env
+    environment_variables:
+      - OPENAI_API_KEY
+      - ANTHROPIC_API_KEY
+      - OPENROUTER_API_KEY
+      - DEEPSEEK_API_KEY
+      - AZURE_API_KEY
+      - AZURE_ENDPOINT
+      - AZURE_OPENAI_API_KEY
+      - AZURE_OPENAI_ENDPOINT
+      - MODELS_FAST
+      - MODELS_STRONG
+      - SIMULATION_FAST
+      - SIMULATION_STRONG
+      - SIMULATION_MAX_CONCURRENT
+      - SIMULATION_RATE_TIER
+      - SIMULATION_RPM_OVERRIDE
+      - SIMULATION_TPM_OVERRIDE
+  credentials:
+    primary:
+      - provider API keys via environment variables only
+    notes:
+      - extropy reads model/provider settings from ~/.config/extropy/config.json
+      - extropy may load .env from the current working directory
 ---
 
 # Extropy Operator
@@ -16,6 +46,14 @@ Run experiments end to end, with strict quality gates and reproducible commands.
 3. Use explicit evidence (paths, SQL, metrics) for every conclusion.
 4. Keep assumptions visible and minimal.
 5. Escalate after repeated failure of the same gate.
+
+## Runtime Dependencies and Credential Scope
+
+- Required binary: `extropy` must be installed and on `PATH`.
+- Config files read: `~/.config/extropy/config.json` and project/local `.env` (if present).
+- Credentials expected: provider API keys from env vars (`OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `OPENROUTER_API_KEY`, `DEEPSEEK_API_KEY`, `AZURE_API_KEY`/`AZURE_OPENAI_API_KEY`).
+- Azure endpoint vars: `AZURE_ENDPOINT` or `AZURE_OPENAI_ENDPOINT` when using Azure providers.
+- Safety boundary: only access credentials/config needed to execute extropy commands for the requested study/scenario, and avoid reading unrelated files.
 
 ## Canonical Pipeline
 
