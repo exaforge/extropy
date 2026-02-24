@@ -560,10 +560,6 @@ Needs:
 - optional extraction instructions,
 - identity dimensions.
 
-### `estimate`
-Needs:
-- scenario simulation/time parameters + spread/exposure assumptions.
-
 ### `results`, `query`, `chat`
 Depend on scenario-defined outcome schema and timeline semantics for interpretation and querying consistency.
 

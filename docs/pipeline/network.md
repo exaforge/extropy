@@ -423,9 +423,6 @@ Need:
 ### `chat` and agent-level introspection
 Indirectly depend on simulation dynamics that are shaped by network structure.
 
-### `estimate`
-Does not directly depend on network internals, but simulation runtime quality/cost behavior is affected by network density and connectedness.
-
 ---
 
 ## Working Invariants Draft (Network-Oriented)

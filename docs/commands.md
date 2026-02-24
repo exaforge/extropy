@@ -8,8 +8,6 @@ Complete reference for all Extropy CLI commands, flags, and options.
 
 ```
 extropy spec ──> extropy scenario ──> extropy persona ──> extropy sample ──> extropy network ──> extropy simulate ──> extropy results
-                                                                                                      │
-                                                                                               extropy estimate
 ```
 
 All commands operate within a **study folder** — a directory containing `study.db` and scenario subdirectories. Commands auto-detect the study folder from the current working directory.
@@ -35,12 +33,9 @@ All commands support these global options:
 
 | Flag | Description |
 |------|-------------|
-| `--json` | Output machine-readable JSON instead of human-friendly text |
 | `--version` | Show version and exit |
 | `--cost` | Show cost summary after command completes |
 | `--study PATH` | Study folder path (auto-detected from cwd if not specified) |
-
-**Note:** These are root-level Typer options. Place them before the subcommand, e.g. `extropy --json spec "Austin commuters" -o study`.
 
 ---
 
@@ -630,28 +625,6 @@ Only `SELECT`, `WITH`, and `EXPLAIN` queries are allowed.
 
 ---
 
-## extropy estimate
-
-Predict simulation cost without making API calls.
-
-```bash
-extropy estimate -s ai-adoption
-extropy estimate -s ai-adoption --strong openai/gpt-5
-extropy estimate -s ai-adoption --strong openai/gpt-5 --fast openai/gpt-5-mini -v
-```
-
-### Options
-
-| Flag | Short | Type | Default | Description |
-|------|-------|------|---------|-------------|
-| `--scenario` | `-s` | string | auto | Scenario name |
-| `--strong` | | string | config | Strong model for Pass 1 |
-| `--fast` | | string | config | Fast model for Pass 2 |
-| `--threshold` | `-t` | int | 3 | Multi-touch threshold |
-| `--verbose` | `-v` | flag | false | Show per-timestep breakdown |
-
----
-
 ## extropy validate
 
 Validate a population or scenario spec.
@@ -818,9 +791,6 @@ extropy persona -s congestion-tax -y
 extropy sample -s congestion-tax -n 500 --seed 42
 extropy network -s congestion-tax --seed 42
 
-# Estimate cost before running
-extropy estimate -s congestion-tax
-
 # Run simulation
 extropy simulate -s congestion-tax --seed 42
 
@@ -846,4 +816,38 @@ extropy config show
 extropy config set simulation.strong anthropic/claude-sonnet-4-6
 extropy config set cli.mode agent  # for AI harnesses
 extropy config set cli.mode human  # for terminal users (default)
+```
+
+---
+
+## Reference Study Recipes
+
+### ASI (Evolving, Monthly, 6 timesteps)
+
+```bash
+extropy scenario "ASI announcement with escalating social/economic impacts over 6 months" \
+  --timeline evolving \
+  --timestep-unit month \
+  --max-timesteps 6 \
+  -o asi-announcement -y
+
+extropy persona -s asi-announcement -y
+extropy sample -s asi-announcement -n 5000 --seed 42
+extropy network -s asi-announcement --seed 42
+extropy simulate -s asi-announcement --seed 42 --fidelity high --early-convergence off
+```
+
+### Iran Strikes (Evolving, Weekly, 12 timesteps)
+
+```bash
+extropy scenario "US strikes on Iran with 12-week escalation and partial de-escalation timeline" \
+  --timeline evolving \
+  --timestep-unit week \
+  --max-timesteps 12 \
+  -o iran-strikes -y
+
+extropy persona -s iran-strikes -y
+extropy sample -s iran-strikes -n 5000 --seed 42
+extropy network -s iran-strikes --seed 42
+extropy simulate -s iran-strikes --seed 42 --fidelity high --early-convergence off
 ```
