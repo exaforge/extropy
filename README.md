@@ -1,11 +1,11 @@
 <p align="center">
-  <img src="assets/logo.png" alt="Extropy" width="600">
+  <img src="https://raw.githubusercontent.com/exaforge/extropy/main/assets/logo.png" alt="Extropy" width="600">
 </p>
 
 <p align="center">
   <a href="https://github.com/exaforge/extropy/actions/workflows/test.yml"><img src="https://github.com/exaforge/extropy/actions/workflows/test.yml/badge.svg" alt="CI"></a>
-  <a href="https://pypi.org/project/extropy-run/"><img src="https://img.shields.io/pypi/v/extropy-run.svg" alt="PyPI"></a>
-  <a href="https://pypi.org/project/extropy-run/"><img src="https://img.shields.io/pypi/pyversions/extropy-run.svg" alt="Python"></a>
+  <a href="https://pypi.org/project/extropy-run/"><img src="https://img.shields.io/pypi/v/extropy-run?cacheSeconds=300" alt="PyPI"></a>
+  <a href="https://pypi.org/project/extropy-run/"><img src="https://img.shields.io/pypi/pyversions/extropy-run?cacheSeconds=300" alt="Python"></a>
   <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License"></a>
 </p>
 
