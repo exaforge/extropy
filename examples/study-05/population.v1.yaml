@@ -1,0 +1,2914 @@
+meta:
+  description: 'Adults in Virginia''s 2nd congressional district (Hampton Roads —
+    Virginia Beach, Norfolk, Eastern Shore). Demographically representative of a competitive
+    swing district with heavy military presence.
+
+
+    Key population characteristics:
+
+    - Military connection (active duty, veteran, military spouse, defense contractor,
+    civilian)
+
+    - Mix of suburban Virginia Beach, urban Norfolk, rural Eastern Shore
+
+    - Racially diverse (significant Black population in Norfolk, white-majority suburbs)
+
+    - Split politically — district went 50.7% R / 49.3% D in 2024
+
+
+    Beyond standard demographics (age, gender, race, education, income, sub-geography
+    within district), prioritize attributes that determine how people process political
+    messaging and make voting decisions:
+
+    - Military/veteran status and connection to defense economy
+
+    - Healthcare access and cost burden (VA/Tricare, employer, ACA, uninsured)
+
+    - Political identity, partisanship strength, and 2024 vote
+
+    - Trust in institutions (Congress, VA system, military, media, local government)
+
+    - Issue salience ranking (healthcare, veterans benefits, cost of living, immigration,
+    abortion, education)
+
+    - Media diet and primary news sources (local TV, social media, military community
+    networks, talk radio, podcasts)
+
+    - Economic security (savings buffer, paycheck-to-paycheck, military pension, dual
+    income)
+
+    - Political engagement level (always votes, occasional, checked out)'
+  geography: Virginia's 2nd Congressional District (Hampton Roads — Virginia Beach,
+    Norfolk, Eastern Shore), USA
+  created_at: '2026-02-25T21:21:48.501139'
+  version: '1.0'
+  persona_template: null
+  scenario_description: null
+grounding:
+  overall: medium
+  sources_count: 107
+  strong_count: 9
+  medium_count: 24
+  low_count: 3
+  sources:
+  - https://www.washingtonpost.com/elections/results/2024/11/05/virginia-house-district-2/
+  - https://grokipedia.com/page/Virginia's_2nd_congressional_district
+  - https://issuu.com/757alliance/docs/vbded_community_profile_2023
+  - https://www.wtkr.com/news/military/the-militarys-impact-on-hampton-roads
+  - https://veteran.com/bah-rates-state/virginia/
+  - https://www.hrpdcva.gov/Archive/ViewFile/Item/233
+  - https://www.ghrconnects.org/demographicdata?id=281263&sectionId=936
+  - https://statisticalatlas.com/congressional-district/Virginia/Congressional-District-2/Overview
+  - https://today.yougov.com/politics/articles/49552-trust-in-media-2024-which-news-outlets-americans-trust
+  - https://www.vhcf.org/data/
+  - https://www.military.com/base-guide/hampton-roads-military-bases/housing
+  - https://www.odu.edu/social-science-research-center/life-in-hampton-roads/politics
+  - https://en.wikipedia.org/wiki/Politics_of_Virginia
+  - https://en.wikipedia.org/wiki/Virginia's_2nd_congressional_district
+  - https://www.census.gov/content/dam/Census/library/publications/2023/acs/acsbr-015.pdf
+  - https://www.hopkinsusfhp.org/johns-hopkins-us-family-health-plan-expands-to-southeastern-virginia/
+  - https://www.zipdatamaps.com/politics/national/district/map-of-virginia-2nd-congressional-district
+  - https://datausa.io/profile/geo/hampton-va/
+  - https://usafacts.org/topics/veterans/state/virginia/
+  - https://www.militarybenefit.org/get-educated/tricare-health-insurance-veterans/
+  - https://www.va.gov/vetdata/veteran_population.asp
+  - https://legalclarity.org/virginia-2nd-congressional-district-map-and-legal-history/
+  - https://www.ghrconnects.org/demographicdata/index/view?id=2419&localeId=2995
+  - https://www.huduser.gov/portal/publications/pdf/VirginiaBeachNorfolkNewportNewsVA-NC-CHMA-24.pdf
+  - https://valoannetwork.com/norfolk-guide/
+  - https://www.odu.edu/article/life-hampton-roads-2022-politics-and-political-opinions
+  - https://www.point2homes.com/US/Neighborhood/VA/Virginia-Beach-Demographics.html
+  - http://censusreporter.org/profiles/31000US47260-virginia-beach-chesapeake-norfolk-va-nc-metro-area/
+  - https://www.odu.edu/article/2024-life-hampton-roads-survey-politics-and-political-opinions
+  - https://www2.census.gov/library/publications/2025/demo/acsbr-024.pdf
+  - https://s3.us-east-1.amazonaws.com/virginia-beach-departments-docs/housing/AboutUs/PlansReports/2024-VB-Housing-Study-Full-Report-FINAL.pdf
+  - https://whro.org/news/local-news/33458-how-the-military-impacts-the-hampton-roads-housing-market
+  - https://www.virginia-demographics.com/hampton-demographics
+  - https://bestneighborhood.org/race-in-hampton-va/
+  - https://datacommons.org/place/geoId/51810
+  - https://www.census.gov/library/stories/2023/03/education-and-racial-disparities-in-health-insurance-coverage.html
+  - https://usmilitary.org/veteran-benefits-state/virginia/
+  - https://housing.virginiabeach.gov/initiatives/housing-study
+  - https://www.odu.edu/social-science-research-center/life-in-hampton-roads/politics-2025
+  - https://www.odu.edu/social-science-research-center/life-in-hampton-roads
+  - https://www.ghrconnects.org/indicators/index/view?indicatorId=5329&localeId=2991&comparisonId=7231
+  - https://valoannetwork.com/va-loan-guides/virginia/
+  - https://whosmy.virginiageneralassembly.gov/
+  - https://usafacts.org/data/topics/people-society/population-and-demographics/our-changing-population/state/virginia/county/hampton-city/
+  - https://virginia.ourstates.org/city/virginia-beach
+  - https://datausa.io/profile/geo/hampton-city-va
+  - https://www.moaa.org/micro/caregiver/department-of-veterans-affairs/veteran-and-caregiver-health/champva-and-tricare/
+  - https://www.vhcf.org/wp-content/uploads/2025/04/Profile-of-Virginias-Uninsured-1-April-2025.pdf
+  - https://myarmybenefits.us.army.mil/Benefit-Library/Federal-Benefits/TRICARE-and-VA-Dual-Eligibility?serv=128
+  - https://www.military.com/base-guide/hampton-roads-military-bases
+  - https://www.norfolknavalhousing.com/bah-rates
+  - https://www.elections.virginia.gov/resultsreports/registration-statistics/
+  - https://www.ghrconnects.org/demographicdata?id=3002
+  - https://www.healthcare.gov/veterans/
+  - https://www.hampton.gov/90/Demographics
+  - https://worldpopulationreview.com/us-cities/virginia/hampton
+  - https://www.hampton.gov/DocumentCenter/View/41442/Tab-28---Comparative-and-Statistical-Data-PDF
+  - https://www.homeporthr.com/
+  - https://tricare.mil/GettingCare/FindDoctor/AllProviderDirectories/VAFacilities
+  - https://vaperforms.virginia.gov/healthFamily_healthInsurance.cfm
+  - https://cahealthadvocates.org/other-health-insurance/tricare-for-life-tfl-veterans-affairs-va-benefits/
+  - https://www.vpap.org/visuals/visual/federal-workforce-by-congressional-district/
+  - https://virginiaworks.com/_docs/Local-Area-Profiles/5115000456.pdf
+  - https://www.census.gov/newsroom/press-releases/2023/acs-health-insurance-coverage.html
+  - https://www.vada.virginia.gov/archive/2024/
+  - https://www.navylifema.com/programs/b3ac69cd-e5d1-4eff-a9ad-70f9b1bed86e
+  - http://censusreporter.org/profiles/50000US5102-congressional-district-2-va/
+  - https://www.vhcf.org/data/profile-of-virginias-uninsured/
+  - https://en.wikipedia.org/wiki/Virginia's_congressional_districts
+  - https://data.virginia.gov/dataset/virginia-congressional-district-map-series
+  - https://www.vpap.org/visuals/vamaps/voter-turnout/
+  - https://ballotpedia.org/Virginia's_2nd_Congressional_District_election,_2024
+  - https://www.norfolk.gov/DocumentCenter/View/50269/Norfolk_and_MSA_Demographic_Fact_Sheet_June-2019
+  - https://virginiabeach.gov/connect/blog/2024-virginia-beach-housing-study-now-available
+  - https://www.norfolk.gov/DocumentCenter/View/61542/18-Norfolk-Statistical-Information
+  - https://tricare.mil/Plans/HealthPlans/TFL/TFL_VA
+  - https://www.whro.org/local-news/2022-10-31/how-the-military-impacts-the-hampton-roads-housing-market
+  - https://www.hrpdcva.gov/ArchiveCenter/ViewFile/Item/242
+  - http://censusreporter.org/profiles/16000US5182000-virginia-beach-va/
+  - https://www.odu.edu/sites/default/files/2024/documents/2023-lihr-politics-opinions.pdf
+  - https://www.vpap.org/offices/us-representative-2/district/
+  - https://www.navylifema.com/programs/f27d89a7-9536-41c2-a299-bc78acbdf767
+  - https://www.militarybyowner.com/va/norfolk-naval-base/
+  - https://s3.us-east-1.amazonaws.com/virginia-beach-departments-docs/housing/AboutUs/PlansReports/2024-VB-Housing-Study-Consumer-Report.pdf
+  - https://www.hrmffa.org/about-us?view=category&layout=blog&id=8
+  - https://www.ghrconnects.org/demographicdata?id=3002&sectionId=936
+  - https://hampton.va.gov/
+  - https://www.census.gov/quickfacts/fact/table/virginiabeachcityvirginia,norfolkcityvirginia,chesapeakecityvirginia,arlingtoncountyvirginia,richmondcityvirginia,newportnewscityvirginia/AFN120217
+  - https://www.marching2more.com/post/your-essential-2025-pcs-housing-guide-for-hampton-roads-military-families
+  - https://www.odu.edu/sites/default/files/2025/documents/2024-lihr-report-final.pdf
+  - https://www.odu.edu/article/survey-of-hampton-roads-residents-shows-spanberger-ahead-partisanship-growing
+  - https://www.vpm.org/news/2022-11-09/how-the-military-impacts-the-hampton-roads-housing-market
+  - https://www.va.gov/VADODHEALTH/TRICARE.asp
+  - https://veritasx.com/norfolk-city-virginia-demographics.html
+  - https://www.elections.virginia.gov/resultsreports/election-results/
+  - https://installations.militaryonesource.mil/military-installation/naval-support-activity-hampton-roads-northwest-annex/housing/housing
+  - https://ballotpedia.org/Virginia's_2nd_Congressional_District
+  - https://www.ghrconnects.org/indicators/index/view?indicatorId=526&localeId=49
+  - https://www.pilotonline.com/2024/11/05/hampton-roads-hits-the-polls-for-election-day/
+  - https://www.census.gov/mycd/
+  - https://www.ghrconnects.org/demographicdata?id=281263
+  - https://independentvoterproject.org/voter-stats/va
+  - https://ffr.cnic.navy.mil/Navy-Housing/Housing-By-Region/Mid-Atlantic/NSA-Hampton-Roads/
+  - https://www.odu.edu/sites/default/files/2024/documents/politics-final.pdf
+  - https://www.ghrconnects.org/demographicdata?id=49&sectionId=935
+  - https://www.norfolk.gov/2667/Office-of-Veteran-Services-and-Military-
+  - https://installations.militaryonesource.mil/military-installation/naval-support-activity-hampton-roads-northwest-annex/housing/government-housing
+attributes:
+- name: age
+  type: int
+  category: universal
+  description: Age of the adult resident in years (18+)
+  scope: individual
+  semantic_type: age
+  identity_type: null
+  display_format: number
+  sampling:
+    strategy: independent
+    distribution:
+      type: normal
+      mean: 42.0
+      std: 15.0
+      min: 18.0
+      max: 95.0
+      mean_formula: null
+      std_formula: null
+      min_formula: null
+      max_formula: null
+    formula: null
+    depends_on: []
+    modifiers: []
+  grounding:
+    level: strong
+    method: researched
+    source: censusreporter.org ACS 2024 5-year data for Congressional District 2,
+      VA; Hampton Roads LWDA XIV demographic profile
+    note: Median age for Hampton Roads is approximately 37–39; military presence skews
+      younger (active duty 18–35 heavy), but large veteran/retiree population adds
+      right tail. Mean ~42 reflects full adult distribution including seniors. Slight
+      right skew in actuality — normal is a reasonable approximation for simulation.
+  constraints:
+  - type: hard_min
+    value: 18.0
+    expression: null
+    reason: Adults only; minimum voting/survey age
+  - type: hard_max
+    value: 100.0
+    expression: null
+    reason: Biologically plausible upper limit for living adults
+- name: gender
+  type: categorical
+  category: universal
+  description: Gender identity of the individual (Male, Female, Non-binary/Other)
+  scope: individual
+  semantic_type: null
+  identity_type: gender_identity
+  display_format: null
+  sampling:
+    strategy: independent
+    distribution:
+      type: categorical
+      options:
+      - Male
+      - Female
+      - Non-binary/Other
+      weights:
+      - 0.492
+      - 0.494
+      - 0.014
+    formula: null
+    depends_on: []
+    modifiers: []
+  grounding:
+    level: strong
+    method: researched
+    source: U.S. Census Bureau ACS 2023 QuickFacts Virginia Beach city, Norfolk city;
+      Hampton Roads LWDA XIV profile (virginiaworks.com)
+    note: Hampton Roads is nearly gender-balanced. Heavy military presence (predominantly
+      male active duty) is offset by military spouses (predominantly female) and the
+      broader civilian population. Non-binary/Other estimated from national surveys
+      (~1.4% of adults self-identify as non-binary, Pew Research 2022).
+  constraints:
+  - type: spec_expression
+    value: null
+    expression: abs(sum(weights) - 1.0) < 0.001
+    reason: Categorical weights must sum to 1
+- name: race_ethnicity
+  type: categorical
+  category: universal
+  description: 'Race/ethnicity: White Non-Hispanic, Black/African American, Hispanic/Latino,
+    Asian/Pacific Islander, Multiracial/Other'
+  scope: partner_correlated
+  semantic_type: null
+  identity_type: race_ethnicity
+  display_format: null
+  sampling:
+    strategy: independent
+    distribution:
+      type: categorical
+      options:
+      - White Non-Hispanic
+      - Black/African American
+      - Hispanic/Latino
+      - Asian/Pacific Islander
+      - Multiracial/Other
+      weights:
+      - 0.575
+      - 0.215
+      - 0.08
+      - 0.055
+      - 0.075
+    formula: null
+    depends_on: []
+    modifiers: []
+  grounding:
+    level: strong
+    method: researched
+    source: LegalClarity.org citing district demographics (60% White, 22% Black, 7.5%
+      Hispanic); Hampton Roads LWDA XIV 2010 Census (978K White, 528K Black, 57K Asian,
+      89K Hispanic of any race out of 1.66M total); censusreporter.org CD2-VA ACS
+      2024
+    note: 'District-level figure (~60% White, 22% Black, 7.5% Hispanic) from multiple
+      sources. Asian/PI slightly higher than state average due to Navy/defense contractor
+      workforce. Multiracial higher than national avg reflecting military family demographics.
+      Note: current district excludes Norfolk proper (which is ~45% Black) so district
+      Black % is lower than Norfolk-only figures.'
+  constraints:
+  - type: spec_expression
+    value: null
+    expression: abs(sum(weights) - 1.0) < 0.001
+    reason: Categorical weights must sum to 1
+- name: sub_geography
+  type: categorical
+  category: universal
+  description: 'Sub-district geography: Virginia Beach Suburbs, Norfolk Urban, Chesapeake/Suffolk,
+    Eastern Shore Rural'
+  scope: household
+  semantic_type: null
+  identity_type: null
+  display_format: null
+  sampling:
+    strategy: independent
+    distribution:
+      type: categorical
+      options:
+      - Virginia Beach Suburbs
+      - Norfolk Urban
+      - Chesapeake/Suffolk
+      - Eastern Shore Rural
+      weights:
+      - 0.5
+      - 0.15
+      - 0.31
+      - 0.04
+    formula: null
+    depends_on: []
+    modifiers: []
+  grounding:
+    level: medium
+    method: researched
+    source: Ballotpedia VA-2 district profile; LegalClarity.org ('Virginia Beach holds
+      the majority of registered voters'); Wikipedia VA-2 geography; grokipedia.com
+      (~790K total population)
+    note: 'Virginia Beach (~460K pop, largest city; Virginia Beach Suburbs covers
+      residential areas outside the military base corridor). Note: the current post-2021
+      redistricted VA-2 does NOT include Norfolk city proper — Norfolk weight reflects
+      only the small portion within district boundaries. Chesapeake partial + Suffolk
+      full + Isle of Wight ≈ 31%. Eastern Shore (Accomack + Northampton) ~50K people
+      ≈ 4% of district.'
+  constraints:
+  - type: spec_expression
+    value: null
+    expression: abs(sum(weights) - 1.0) < 0.001
+    reason: Categorical weights must sum to 1
+- name: education_level
+  type: categorical
+  category: universal
+  description: 'Highest educational attainment: Less than HS, HS Diploma/GED, Some
+    College, Associate''s, Bachelor''s, Graduate Degree'
+  scope: partner_correlated
+  semantic_type: education
+  identity_type: null
+  display_format: null
+  sampling:
+    strategy: independent
+    distribution:
+      type: categorical
+      options:
+      - Less than HS
+      - HS Diploma/GED
+      - Some College
+      - Associate's
+      - Bachelor's
+      - Graduate Degree
+      weights:
+      - 0.08
+      - 0.24
+      - 0.22
+      - 0.1
+      - 0.24
+      - 0.12
+    formula: null
+    depends_on: []
+    modifiers: []
+  grounding:
+    level: strong
+    method: researched
+    source: Norfolk 2023 ACS via veritasx.com (Less than HS 10.4%, HS 24.9%, Some
+      College/AA 32.1%, Bachelor's 19.3%, Graduate 13.4%); censusreporter.org CD2
+      ACS 2024
+    note: Norfolk figures used as anchor; Virginia Beach suburbs have higher BA+ rates.
+      Associate's degree split out from 'Some College' category per district breakdown.
+      Military service members often have some college + professional training. District-wide
+      BA+ rate estimated ~36%, higher than Norfolk alone due to suburban VB and defense
+      contractor workforce. Some College split into Some College + Associate's per
+      census categories.
+  constraints:
+  - type: spec_expression
+    value: null
+    expression: abs(sum(weights) - 1.0) < 0.001
+    reason: Categorical weights must sum to 1
+- name: military_connection
+  type: categorical
+  category: population_specific
+  description: 'Relationship to the military: Active Duty, Veteran, Military Spouse/Dependent,
+    Defense Contractor, No Military Connection'
+  scope: individual
+  semantic_type: null
+  identity_type: null
+  display_format: null
+  sampling:
+    strategy: independent
+    distribution:
+      type: categorical
+      options:
+      - Active Duty
+      - Veteran
+      - Military Spouse/Dependent
+      - Defense Contractor
+      - No Military Connection
+      weights:
+      - 0.1
+      - 0.17
+      - 0.1
+      - 0.07
+      - 0.56
+    formula: null
+    depends_on: []
+    modifiers: []
+  grounding:
+    level: strong
+    method: researched
+    source: censusreporter.org CD2 ACS 2024 (15.1% veteran status); HRMFFA.org (125K
+      military dependents, ~220K veterans in broader Hampton Roads); wtkr.com (Naval
+      Station Norfolk 46K active duty + 21K civilians; JEB Little Creek 18K); Virginia
+      DAVA (130K active duty statewide, concentrated in Hampton Roads)
+    note: 'ACS shows 15.1% with veteran status in the district. Active duty: Naval
+      Station Norfolk alone has 46K; JEB Little Creek ~18K; scaling to district adult
+      pop (~590K) gives ~10-12% active duty. Military spouses/dependents conservatively
+      ~10%. Defense contractors: large employers include Huntington Ingalls, Leidos,
+      SAIC, General Dynamics — estimated 7% of adult workforce. ''No military connection''
+      is residual at 56%, but even civilians are deeply embedded in military economy.'
+  constraints:
+  - type: spec_expression
+    value: null
+    expression: abs(sum(weights) - 1.0) < 0.001
+    reason: Categorical weights must sum to 1
+- name: party_affiliation
+  type: categorical
+  category: population_specific
+  description: 'Registered or self-identified party: Republican, Democrat, Independent/No
+    Party, Other'
+  scope: partner_correlated
+  semantic_type: null
+  identity_type: political_orientation
+  display_format: null
+  sampling:
+    strategy: independent
+    distribution:
+      type: categorical
+      options:
+      - Republican
+      - Democrat
+      - Independent/No Party
+      - Other
+      weights:
+      - 0.29
+      - 0.34
+      - 0.33
+      - 0.04
+    formula: null
+    depends_on: []
+    modifiers: []
+  grounding:
+    level: strong
+    method: researched
+    source: 'ODU Life in Hampton Roads Survey 2024 (odu.edu): 25.5% Democrat, 19.8%
+      Republican, 38.3% Independent; 2024 congressional election result 50.7% R /
+      49.3% D; Cook PVI EVEN heading into 2026'
+    note: ODU 2024 survey of Hampton Roads residents shows strong independent lean
+      (38.3%) with Democrats slightly outnumbering Republicans in party ID, yet Republicans
+      winning the 2024 congressional race. Virginia does not have party registration,
+      so these are self-ID figures. Weights adjusted upward for both parties slightly
+      vs. ODU survey to account for leaners and to align with the near-50/50 actual
+      vote. Independent/No Party remains the modal category.
+  constraints:
+  - type: spec_expression
+    value: null
+    expression: abs(sum(weights) - 1.0) < 0.001
+    reason: Categorical weights must sum to 1
+- name: religious_affiliation
+  type: categorical
+  category: population_specific
+  description: 'Religious affiliation: Protestant/Evangelical, Catholic, Other Christian,
+    Non-Christian Faith, None/Secular'
+  scope: partner_correlated
+  semantic_type: null
+  identity_type: religious_affiliation
+  display_format: null
+  sampling:
+    strategy: independent
+    distribution:
+      type: categorical
+      options:
+      - Protestant/Evangelical
+      - Catholic
+      - Other Christian
+      - Non-Christian Faith
+      - None/Secular
+      weights:
+      - 0.38
+      - 0.12
+      - 0.1
+      - 0.07
+      - 0.33
+    formula: null
+    depends_on: []
+    modifiers: []
+  grounding:
+    level: medium
+    method: extrapolated
+    source: Pew Research Center 2014/2023 Religious Landscape Study for Virginia/South
+      Atlantic region; PRRI 2023 American Values Atlas (Virginia); ODU Life in Hampton
+      Roads survey background
+    note: 'Virginia South Atlantic region: ~47% Protestant, ~13% Catholic, ~6% Other
+      Christian, ~5% non-Christian, ~29% None (Pew 2014, updated trends to 2023 show
+      secular growth). Hampton Roads has a historically strong Baptist/evangelical
+      community (Black church tradition in Norfolk + white evangelical in VB suburbs).
+      Military community slightly more religiously affiliated than civilian average.
+      None/Secular growing nationally, especially among younger active duty. Estimates
+      reflect 2023-level secular growth trend.'
+  constraints:
+  - type: spec_expression
+    value: null
+    expression: abs(sum(weights) - 1.0) < 0.001
+    reason: Categorical weights must sum to 1
+- name: openness
+  type: float
+  category: personality
+  description: 'Big Five openness to experience: curiosity, creativity, and receptiveness
+    to new ideas'
+  scope: individual
+  semantic_type: null
+  identity_type: null
+  display_format: null
+  sampling:
+    strategy: independent
+    distribution:
+      type: normal
+      mean: 0.5
+      std: 0.17
+      min: 0.0
+      max: 1.0
+      mean_formula: null
+      std_formula: null
+      min_formula: null
+      max_formula: null
+    formula: null
+    depends_on: []
+    modifiers: []
+  grounding:
+    level: medium
+    method: extrapolated
+    source: Big Five meta-analyses (McCrae & Costa; Soto & John 2017 norming study);
+      Gerber et al. 2011 APSR (political correlates of Big Five); Hatemi et al. military
+      personality studies
+    note: Population-level Big Five scores center near 0.5 on a normalized 0-1 scale.
+      Openness is slightly lower in this district than national average due to military
+      community norms (discipline/tradition-orientation) and rural Eastern Shore population.
+      Mean slightly below 0.50 would be realistic (~0.47) but 0.50 is used as conservative
+      center. Military populations show modestly lower openness in research literature.
+  constraints:
+  - type: hard_min
+    value: 0.0
+    expression: null
+    reason: Normalized Big Five score floor
+  - type: hard_max
+    value: 1.0
+    expression: null
+    reason: Normalized Big Five score ceiling
+- name: conscientiousness
+  type: float
+  category: personality
+  description: 'Big Five conscientiousness: discipline, reliability, and goal-directed
+    behavior'
+  scope: individual
+  semantic_type: null
+  identity_type: null
+  display_format: null
+  sampling:
+    strategy: independent
+    distribution:
+      type: normal
+      mean: 0.58
+      std: 0.16
+      min: 0.0
+      max: 1.0
+      mean_formula: null
+      std_formula: null
+      min_formula: null
+      max_formula: null
+    formula: null
+    depends_on: []
+    modifiers: []
+  grounding:
+    level: medium
+    method: extrapolated
+    source: Soto & John 2017 Big Five norming; Braun et al. military conscientiousness
+      studies; Gerber et al. 2011 APSR conscientiousness-partisan link
+    note: Military populations consistently score higher on conscientiousness than
+      civilian norms in research literature (discipline, rule-following, reliability).
+      Mean shifted up ~0.08 above national population center (~0.50) to reflect the
+      military-heavy population. Veterans and active duty tend to maintain elevated
+      conscientiousness scores. Applies to full district with civilian dilution.
+  constraints:
+  - type: hard_min
+    value: 0.0
+    expression: null
+    reason: Normalized Big Five score floor
+  - type: hard_max
+    value: 1.0
+    expression: null
+    reason: Normalized Big Five score ceiling
+- name: extraversion
+  type: float
+  category: personality
+  description: 'Big Five extraversion: sociability, assertiveness, and positive affect'
+  scope: individual
+  semantic_type: null
+  identity_type: null
+  display_format: null
+  sampling:
+    strategy: independent
+    distribution:
+      type: normal
+      mean: 0.5
+      std: 0.17
+      min: 0.0
+      max: 1.0
+      mean_formula: null
+      std_formula: null
+      min_formula: null
+      max_formula: null
+    formula: null
+    depends_on: []
+    modifiers: []
+  grounding:
+    level: low
+    method: estimated
+    source: Soto & John 2017 population norms; general Big Five literature
+    note: 'No region-specific extraversion data found for Hampton Roads. Using population
+      average. Military culture has mixed extraversion effects: leadership roles favor
+      extraversion, but technical/operational roles (submarines, intelligence) do
+      not. Coastal Virginia civilian community is moderate. Using national population
+      center as best estimate.'
+  constraints:
+  - type: hard_min
+    value: 0.0
+    expression: null
+    reason: Normalized Big Five score floor
+  - type: hard_max
+    value: 1.0
+    expression: null
+    reason: Normalized Big Five score ceiling
+- name: agreeableness
+  type: float
+  category: personality
+  description: 'Big Five agreeableness: cooperativeness, empathy, and social harmony
+    orientation'
+  scope: individual
+  semantic_type: null
+  identity_type: null
+  display_format: null
+  sampling:
+    strategy: independent
+    distribution:
+      type: normal
+      mean: 0.55
+      std: 0.16
+      min: 0.0
+      max: 1.0
+      mean_formula: null
+      std_formula: null
+      min_formula: null
+      max_formula: null
+    formula: null
+    depends_on: []
+    modifiers: []
+  grounding:
+    level: low
+    method: estimated
+    source: Soto & John 2017 population norms; Southern US regional personality research
+      (Rentfrow et al. 2013)
+    note: Virginia falls in a region (South Atlantic) associated with slightly above-average
+      agreeableness in Rentfrow et al.'s geographic personality research. Military
+      communities emphasize unit cohesion which may elevate agreeableness; however
+      combat/mission-focused culture can dampen it. Mean slightly above 0.50 reflects
+      Southern regional norms and community orientation.
+  constraints:
+  - type: hard_min
+    value: 0.0
+    expression: null
+    reason: Normalized Big Five score floor
+  - type: hard_max
+    value: 1.0
+    expression: null
+    reason: Normalized Big Five score ceiling
+- name: neuroticism
+  type: float
+  category: personality
+  description: 'Big Five neuroticism: emotional volatility, anxiety, and stress reactivity'
+  scope: individual
+  semantic_type: null
+  identity_type: null
+  display_format: null
+  sampling:
+    strategy: independent
+    distribution:
+      type: normal
+      mean: 0.46
+      std: 0.17
+      min: 0.0
+      max: 1.0
+      mean_formula: null
+      std_formula: null
+      min_formula: null
+      max_formula: null
+    formula: null
+    depends_on: []
+    modifiers: []
+  grounding:
+    level: medium
+    method: extrapolated
+    source: Rentfrow et al. 2013 geographic personality mapping; military mental health
+      research (RAND 2014 on veteran PTSD prevalence ~11-20%); Soto & John 2017
+    note: 'Military populations selected for emotional stability (lower neuroticism)
+      through screening and training. However, PTSD and combat stress elevate neuroticism
+      in veteran subgroup (RAND estimates 11-20% of post-9/11 vets with PTSD). Net
+      effect on district: slightly below national average. Southern US also slightly
+      lower neuroticism regionally (Rentfrow et al.). Mean set at 0.46, slightly below
+      population midpoint.'
+  constraints:
+  - type: hard_min
+    value: 0.0
+    expression: null
+    reason: Normalized Big Five score floor
+  - type: hard_max
+    value: 1.0
+    expression: null
+    reason: Normalized Big Five score ceiling
+- name: authoritarian_orientation
+  type: float
+  category: personality
+  description: Disposition toward order, hierarchy, and rule-following versus autonomy
+    — highly relevant in a military-connected community
+  scope: individual
+  semantic_type: null
+  identity_type: null
+  display_format: null
+  sampling:
+    strategy: independent
+    distribution:
+      type: normal
+      mean: 0.58
+      std: 0.18
+      min: 0.0
+      max: 1.0
+      mean_formula: null
+      std_formula: null
+      min_formula: null
+      max_formula: null
+    formula: null
+    depends_on: []
+    modifiers: []
+  grounding:
+    level: medium
+    method: extrapolated
+    source: Stenner 2005 'The Authoritarian Dynamic'; Hetherington & Weiler 2009;
+      Altemeyer RWA scale military research; Duckitt et al. military vs. civilian
+      authoritarianism comparisons
+    note: Authoritarian orientation (disposition toward order, hierarchy, rule-following)
+      is measurably higher in military populations than civilian populations across
+      multiple studies. Heavy military presence in this district — both active duty
+      and veterans — shifts the district mean above the national civilian norm (~0.50).
+      Suburban VB and rural Eastern Shore also trend more conservative/traditional
+      on this dimension. Mean 0.58 reflects this upward shift. High variance (0.18)
+      reflects diversity between rural traditionalists, urban Norfolk progressives,
+      and military members.
+  constraints:
+  - type: hard_min
+    value: 0.0
+    expression: null
+    reason: Normalized scale floor — minimum authoritarian orientation
+  - type: hard_max
+    value: 1.0
+    expression: null
+    reason: Normalized scale ceiling — maximum authoritarian orientation
+- name: household_income
+  type: int
+  category: universal
+  description: Annual household income in USD before taxes
+  scope: household
+  semantic_type: null
+  identity_type: null
+  display_format: currency
+  sampling:
+    strategy: conditional
+    distribution:
+      type: lognormal
+      mean: 85000.0
+      std: 52000.0
+      min: 8000.0
+      max: 500000.0
+      mean_formula: null
+      std_formula: null
+      min_formula: null
+      max_formula: null
+    formula: null
+    depends_on:
+    - education_level
+    - military_connection
+    modifiers:
+    - when: military_connection == 'Active Duty'
+      multiply: 0.92
+      add: 0.0
+      weight_overrides: null
+      probability_override: null
+    - when: military_connection == 'Veteran'
+      multiply: 1.02
+      add: 2000.0
+      weight_overrides: null
+      probability_override: null
+    - when: military_connection == 'Military Spouse/Dependent'
+      multiply: 0.95
+      add: 0.0
+      weight_overrides: null
+      probability_override: null
+    - when: military_connection == 'Defense Contractor'
+      multiply: 1.2
+      add: 10000.0
+      weight_overrides: null
+      probability_override: null
+    - when: military_connection == 'No Military Connection'
+      multiply: 0.97
+      add: 0.0
+      weight_overrides: null
+      probability_override: null
+    - when: education_level == 'Less than HS'
+      multiply: 0.62
+      add: 0.0
+      weight_overrides: null
+      probability_override: null
+    - when: education_level == 'HS Diploma/GED'
+      multiply: 0.78
+      add: 0.0
+      weight_overrides: null
+      probability_override: null
+    - when: education_level == 'Some College'
+      multiply: 0.88
+      add: 0.0
+      weight_overrides: null
+      probability_override: null
+    - when: education_level == "Associate's"
+      multiply: 0.95
+      add: 0.0
+      weight_overrides: null
+      probability_override: null
+    - when: education_level == "Bachelor's"
+      multiply: 1.15
+      add: 0.0
+      weight_overrides: null
+      probability_override: null
+    - when: education_level == 'Graduate Degree'
+      multiply: 1.38
+      add: 0.0
+      weight_overrides: null
+      probability_override: null
+  grounding:
+    level: strong
+    method: researched
+    source: Hampton Roads Economic Monthly Oct 2024 (HRPDC); LegalClarity VA-2 district
+      profile; Point2Homes ACS 2019-2023
+    note: Hampton Roads metro median HHI ~$80,610 (2023); VA-2 district median ~$91,821.
+      Lognormal suits right-skewed income. Base mean ~$85K reflects blended district;
+      modifiers for education and military connection will shift substantially.
+  constraints:
+  - type: hard_min
+    value: 8000.0
+    expression: null
+    reason: Below federal poverty line floor for a single adult; essentially no adults
+      at zero income in survey population
+  - type: hard_max
+    value: 500000.0
+    expression: null
+    reason: Top-code extreme outliers; district is middle-class, not ultra-high-income
+- name: marital_status
+  type: categorical
+  category: universal
+  description: 'Current marital status: Married, Single, Divorced/Separated, Widowed,
+    Partnered/Cohabiting'
+  scope: individual
+  semantic_type: null
+  identity_type: null
+  display_format: null
+  sampling:
+    strategy: conditional
+    distribution:
+      type: categorical
+      options:
+      - Married
+      - Single
+      - Divorced/Separated
+      - Widowed
+      - Partnered/Cohabiting
+      weights:
+      - 0.5
+      - 0.22
+      - 0.16
+      - 0.06
+      - 0.06
+    formula: null
+    depends_on:
+    - age
+    modifiers:
+    - when: age < 30
+      multiply: null
+      add: null
+      weight_overrides:
+        Married: 0.18
+        Single: 0.62
+        Divorced/Separated: 0.06
+        Widowed: 0.01
+        Partnered/Cohabiting: 0.13
+      probability_override: null
+    - when: age >= 30 and age < 45
+      multiply: null
+      add: null
+      weight_overrides:
+        Married: 0.52
+        Single: 0.22
+        Divorced/Separated: 0.13
+        Widowed: 0.02
+        Partnered/Cohabiting: 0.11
+      probability_override: null
+    - when: age >= 45 and age < 65
+      multiply: null
+      add: null
+      weight_overrides:
+        Married: 0.57
+        Single: 0.13
+        Divorced/Separated: 0.2
+        Widowed: 0.05
+        Partnered/Cohabiting: 0.05
+      probability_override: null
+    - when: age >= 65
+      multiply: null
+      add: null
+      weight_overrides:
+        Married: 0.53
+        Single: 0.07
+        Divorced/Separated: 0.14
+        Widowed: 0.22
+        Partnered/Cohabiting: 0.04
+      probability_override: null
+  grounding:
+    level: medium
+    method: researched
+    source: ACS 2019-2023 Hampton Roads MSA; Census Reporter VA-2 profile; military
+      marriage rate literature (~65% of active duty married)
+    note: Military communities skew married vs. national average. Base reflects blended
+      population; age modifier will shift toward Single at younger ages and Widowed
+      at older ages. Widowed elevated vs. national due to older veteran cohort.
+  constraints:
+  - type: spec_expression
+    value: null
+    expression: abs(sum(weights) - 1.0) < 0.001
+    reason: Weights must sum to 1
+- name: household_size
+  type: int
+  category: universal
+  description: Total number of people living in the household
+  scope: household
+  semantic_type: null
+  identity_type: null
+  display_format: number
+  sampling:
+    strategy: conditional
+    distribution:
+      type: normal
+      mean: 2.6
+      std: 1.3
+      min: 1.0
+      max: 8.0
+      mean_formula: null
+      std_formula: null
+      min_formula: null
+      max_formula: null
+    formula: null
+    depends_on:
+    - marital_status
+    - age
+    modifiers:
+    - when: marital_status == 'Married'
+      multiply: 1.15
+      add: 0.4
+      weight_overrides: null
+      probability_override: null
+    - when: marital_status == 'Single'
+      multiply: 0.75
+      add: -0.3
+      weight_overrides: null
+      probability_override: null
+    - when: marital_status == 'Divorced/Separated'
+      multiply: 0.9
+      add: 0.0
+      weight_overrides: null
+      probability_override: null
+    - when: marital_status == 'Widowed'
+      multiply: 0.8
+      add: -0.2
+      weight_overrides: null
+      probability_override: null
+    - when: marital_status == 'Partnered/Cohabiting'
+      multiply: 1.0
+      add: 0.2
+      weight_overrides: null
+      probability_override: null
+    - when: age < 35
+      multiply: 1.05
+      add: 0.2
+      weight_overrides: null
+      probability_override: null
+    - when: age >= 65
+      multiply: 0.85
+      add: -0.3
+      weight_overrides: null
+      probability_override: null
+  grounding:
+    level: strong
+    method: researched
+    source: 'Point2Homes ACS 2023: Virginia Beach avg household 2 persons; Census
+      Reporter VA-2; Hampton Roads Economic Monthly'
+    note: Virginia Beach avg HH size ~2.5; military families with dependents skew
+      larger. Single adults pull mean down. Marital status modifier will shift mean;
+      married adds ~1.0 persons, single subtracts.
+  constraints:
+  - type: hard_min
+    value: 1.0
+    expression: null
+    reason: Cannot have fewer than 1 person in a household
+  - type: hard_max
+    value: 8.0
+    expression: null
+    reason: Very large households are rare; cap at 8 to avoid unrealistic extremes
+- name: employment_status
+  type: categorical
+  category: universal
+  description: 'Current employment status: Employed Full-Time, Employed Part-Time,
+    Self-Employed, Unemployed, Retired, Disabled/Not Working'
+  scope: individual
+  semantic_type: employment
+  identity_type: null
+  display_format: null
+  sampling:
+    strategy: conditional
+    distribution:
+      type: categorical
+      options:
+      - Employed Full-Time
+      - Employed Part-Time
+      - Self-Employed
+      - Unemployed
+      - Retired
+      - Disabled/Not Working
+      weights:
+      - 0.52
+      - 0.1
+      - 0.07
+      - 0.05
+      - 0.2
+      - 0.06
+    formula: null
+    depends_on:
+    - age
+    - military_connection
+    modifiers:
+    - when: age < 30 and military_connection == 'Active Duty'
+      multiply: null
+      add: null
+      weight_overrides:
+        Employed Full-Time: 0.88
+        Employed Part-Time: 0.04
+        Self-Employed: 0.01
+        Unemployed: 0.04
+        Retired: 0.0
+        Disabled/Not Working: 0.03
+      probability_override: null
+    - when: age < 30 and military_connection != 'Active Duty'
+      multiply: null
+      add: null
+      weight_overrides:
+        Employed Full-Time: 0.5
+        Employed Part-Time: 0.22
+        Self-Employed: 0.04
+        Unemployed: 0.14
+        Retired: 0.01
+        Disabled/Not Working: 0.09
+      probability_override: null
+    - when: age >= 30 and age < 55 and military_connection == 'Active Duty'
+      multiply: null
+      add: null
+      weight_overrides:
+        Employed Full-Time: 0.93
+        Employed Part-Time: 0.02
+        Self-Employed: 0.01
+        Unemployed: 0.02
+        Retired: 0.0
+        Disabled/Not Working: 0.02
+      probability_override: null
+    - when: age >= 30 and age < 55 and military_connection != 'Active Duty'
+      multiply: null
+      add: null
+      weight_overrides:
+        Employed Full-Time: 0.64
+        Employed Part-Time: 0.12
+        Self-Employed: 0.08
+        Unemployed: 0.07
+        Retired: 0.03
+        Disabled/Not Working: 0.06
+      probability_override: null
+    - when: age >= 55 and age < 65 and military_connection == 'Veteran'
+      multiply: null
+      add: null
+      weight_overrides:
+        Employed Full-Time: 0.48
+        Employed Part-Time: 0.1
+        Self-Employed: 0.08
+        Unemployed: 0.05
+        Retired: 0.22
+        Disabled/Not Working: 0.07
+      probability_override: null
+    - when: age >= 55 and age < 65 and military_connection != 'Veteran' and military_connection
+        != 'Active Duty'
+      multiply: null
+      add: null
+      weight_overrides:
+        Employed Full-Time: 0.52
+        Employed Part-Time: 0.12
+        Self-Employed: 0.09
+        Unemployed: 0.07
+        Retired: 0.12
+        Disabled/Not Working: 0.08
+      probability_override: null
+    - when: age >= 65
+      multiply: null
+      add: null
+      weight_overrides:
+        Employed Full-Time: 0.13
+        Employed Part-Time: 0.1
+        Self-Employed: 0.06
+        Unemployed: 0.03
+        Retired: 0.6
+        Disabled/Not Working: 0.08
+      probability_override: null
+  grounding:
+    level: medium
+    method: researched
+    source: ACS 2023 Hampton Roads; Virginia Beach employment rate 95.7% (Point2Homes);
+      BLS Virginia data; veteran disability rates
+    note: 'Virginia Beach employment rate ~95.7% of labor force. Retired share elevated
+      due to veteran/retiree population. Disabled/Not Working captures VA disability
+      recipients. Age modifier critical: retired near-zero under 50, dominant over
+      65.'
+  constraints:
+  - type: spec_expression
+    value: null
+    expression: abs(sum(weights) - 1.0) < 0.001
+    reason: Weights must sum to 1
+- name: occupation
+  type: categorical
+  category: universal
+  description: 'Occupational sector: Military/Defense, Government/Federal Civilian,
+    Healthcare, Retail/Service, Education, Trades/Construction, Professional/Business,
+    Other'
+  scope: individual
+  semantic_type: occupation
+  identity_type: professional_identity
+  display_format: null
+  sampling:
+    strategy: conditional
+    distribution:
+      type: categorical
+      options:
+      - Military/Defense
+      - Government/Federal Civilian
+      - Healthcare
+      - Retail/Service
+      - Education
+      - Trades/Construction
+      - Professional/Business
+      - Other
+      weights:
+      - 0.18
+      - 0.12
+      - 0.12
+      - 0.18
+      - 0.07
+      - 0.1
+      - 0.14
+      - 0.09
+    formula: null
+    depends_on:
+    - employment_status
+    - education_level
+    modifiers:
+    - when: employment_status == 'Employed Full-Time' and education_level in ['Less
+        than HS', 'HS Diploma/GED', 'Some College']
+      multiply: null
+      add: null
+      weight_overrides:
+        Military/Defense: 0.18
+        Government/Federal Civilian: 0.09
+        Healthcare: 0.08
+        Retail/Service: 0.28
+        Education: 0.05
+        Trades/Construction: 0.2
+        Professional/Business: 0.06
+        Other: 0.06
+      probability_override: null
+    - when: employment_status == 'Employed Full-Time' and education_level in ["Associate's",
+        "Bachelor's"]
+      multiply: null
+      add: null
+      weight_overrides:
+        Military/Defense: 0.16
+        Government/Federal Civilian: 0.15
+        Healthcare: 0.14
+        Retail/Service: 0.12
+        Education: 0.1
+        Trades/Construction: 0.08
+        Professional/Business: 0.2
+        Other: 0.05
+      probability_override: null
+    - when: employment_status == 'Employed Full-Time' and education_level == 'Graduate
+        Degree'
+      multiply: null
+      add: null
+      weight_overrides:
+        Military/Defense: 0.12
+        Government/Federal Civilian: 0.18
+        Healthcare: 0.2
+        Retail/Service: 0.04
+        Education: 0.16
+        Trades/Construction: 0.02
+        Professional/Business: 0.24
+        Other: 0.04
+      probability_override: null
+    - when: employment_status == 'Self-Employed'
+      multiply: null
+      add: null
+      weight_overrides:
+        Military/Defense: 0.04
+        Government/Federal Civilian: 0.02
+        Healthcare: 0.1
+        Retail/Service: 0.18
+        Education: 0.05
+        Trades/Construction: 0.25
+        Professional/Business: 0.28
+        Other: 0.08
+      probability_override: null
+    - when: employment_status == 'Employed Part-Time'
+      multiply: null
+      add: null
+      weight_overrides:
+        Military/Defense: 0.05
+        Government/Federal Civilian: 0.06
+        Healthcare: 0.14
+        Retail/Service: 0.35
+        Education: 0.14
+        Trades/Construction: 0.08
+        Professional/Business: 0.12
+        Other: 0.06
+      probability_override: null
+    - when: employment_status in ['Retired', 'Unemployed', 'Disabled/Not Working']
+      multiply: null
+      add: null
+      weight_overrides:
+        Military/Defense: 0.05
+        Government/Federal Civilian: 0.05
+        Healthcare: 0.05
+        Retail/Service: 0.1
+        Education: 0.05
+        Trades/Construction: 0.05
+        Professional/Business: 0.05
+        Other: 0.6
+      probability_override: null
+  grounding:
+    level: medium
+    method: researched
+    source: Hampton Roads Economic Development Alliance; Norfolk demographic fact
+      sheet; Hampton Roads largest employers (US Navy, Huntington Ingalls, Sentara
+      Health, government)
+    note: Military/Defense dominates Hampton Roads labor market (Navy, HII, defense
+      contractors). Healthcare is major employer (Sentara, EVMS). Federal civilian
+      share elevated vs. national. Education includes large military-adjacent workforce.
+      Conditioned on employment_status (not applicable for Retired/Unemployed).
+  constraints:
+  - type: spec_expression
+    value: null
+    expression: abs(sum(weights) - 1.0) < 0.001
+    reason: Weights must sum to 1
+- name: housing_tenure
+  type: categorical
+  category: universal
+  description: Whether the household owns or rents their home (Own, Rent, Military
+    Housing/BAH)
+  scope: household
+  semantic_type: null
+  identity_type: null
+  display_format: null
+  sampling:
+    strategy: conditional
+    distribution:
+      type: categorical
+      options:
+      - Own
+      - Rent
+      - Military Housing/BAH
+      weights:
+      - 0.57
+      - 0.31
+      - 0.12
+    formula: null
+    depends_on:
+    - household_income
+    - military_connection
+    modifiers:
+    - when: military_connection == 'Active Duty' and household_income < 60000
+      multiply: null
+      add: null
+      weight_overrides:
+        Own: 0.1
+        Rent: 0.3
+        Military Housing/BAH: 0.6
+      probability_override: null
+    - when: military_connection == 'Active Duty' and household_income >= 60000
+      multiply: null
+      add: null
+      weight_overrides:
+        Own: 0.25
+        Rent: 0.35
+        Military Housing/BAH: 0.4
+      probability_override: null
+    - when: military_connection == 'Military Spouse/Dependent'
+      multiply: null
+      add: null
+      weight_overrides:
+        Own: 0.22
+        Rent: 0.33
+        Military Housing/BAH: 0.45
+      probability_override: null
+    - when: military_connection == 'Veteran' and household_income >= 75000
+      multiply: null
+      add: null
+      weight_overrides:
+        Own: 0.72
+        Rent: 0.26
+        Military Housing/BAH: 0.02
+      probability_override: null
+    - when: military_connection == 'Veteran' and household_income < 75000
+      multiply: null
+      add: null
+      weight_overrides:
+        Own: 0.52
+        Rent: 0.45
+        Military Housing/BAH: 0.03
+      probability_override: null
+    - when: military_connection == 'Defense Contractor' and household_income >= 90000
+      multiply: null
+      add: null
+      weight_overrides:
+        Own: 0.75
+        Rent: 0.24
+        Military Housing/BAH: 0.01
+      probability_override: null
+    - when: military_connection == 'No Military Connection' and household_income >=
+        90000
+      multiply: null
+      add: null
+      weight_overrides:
+        Own: 0.7
+        Rent: 0.29
+        Military Housing/BAH: 0.01
+      probability_override: null
+    - when: military_connection == 'No Military Connection' and household_income <
+        90000
+      multiply: null
+      add: null
+      weight_overrides:
+        Own: 0.48
+        Rent: 0.51
+        Military Housing/BAH: 0.01
+      probability_override: null
+  grounding:
+    level: medium
+    method: researched
+    source: Hampton (VA) homeownership 55.6% (DataUSA 2023); Virginia Beach median
+      HH income $90K+ supports ownership; WHRO BAH/housing analysis; Census Reporter
+      VA-2
+    note: Homeownership ~55-65% in the district. Military Housing/BAH category covers
+      active duty using on-base housing or BAH to rent. Income modifier will strongly
+      shift Own vs Rent. Active duty connection strongly boosts Military Housing/BAH.
+  constraints:
+  - type: spec_expression
+    value: null
+    expression: abs(sum(weights) - 1.0) < 0.001
+    reason: Weights must sum to 1
+- name: military_branch
+  type: categorical
+  category: population_specific
+  description: 'Branch of service for active duty, veterans, or spouses: Navy, Army,
+    Air Force/Space Force, Marines, Coast Guard, National Guard/Reserve, N/A'
+  scope: individual
+  semantic_type: null
+  identity_type: null
+  display_format: null
+  sampling:
+    strategy: conditional
+    distribution:
+      type: categorical
+      options:
+      - Navy
+      - Army
+      - Air Force/Space Force
+      - Marines
+      - Coast Guard
+      - National Guard/Reserve
+      - N/A
+      weights:
+      - 0.38
+      - 0.1
+      - 0.1
+      - 0.1
+      - 0.04
+      - 0.08
+      - 0.2
+    formula: null
+    depends_on:
+    - military_connection
+    modifiers:
+    - when: military_connection == 'Active Duty'
+      multiply: null
+      add: null
+      weight_overrides:
+        Navy: 0.52
+        Army: 0.12
+        Air Force/Space Force: 0.14
+        Marines: 0.12
+        Coast Guard: 0.04
+        National Guard/Reserve: 0.06
+        N/A: 0.0
+      probability_override: null
+    - when: military_connection == 'Veteran'
+      multiply: null
+      add: null
+      weight_overrides:
+        Navy: 0.4
+        Army: 0.22
+        Air Force/Space Force: 0.16
+        Marines: 0.12
+        Coast Guard: 0.04
+        National Guard/Reserve: 0.06
+        N/A: 0.0
+      probability_override: null
+    - when: military_connection == 'Military Spouse/Dependent'
+      multiply: null
+      add: null
+      weight_overrides:
+        Navy: 0.5
+        Army: 0.14
+        Air Force/Space Force: 0.14
+        Marines: 0.12
+        Coast Guard: 0.04
+        National Guard/Reserve: 0.06
+        N/A: 0.0
+      probability_override: null
+    - when: military_connection == 'Defense Contractor'
+      multiply: null
+      add: null
+      weight_overrides:
+        Navy: 0.1
+        Army: 0.05
+        Air Force/Space Force: 0.05
+        Marines: 0.03
+        Coast Guard: 0.01
+        National Guard/Reserve: 0.06
+        N/A: 0.7
+      probability_override: null
+    - when: military_connection == 'No Military Connection'
+      multiply: null
+      add: null
+      weight_overrides:
+        Navy: 0.0
+        Army: 0.0
+        Air Force/Space Force: 0.0
+        Marines: 0.0
+        Coast Guard: 0.0
+        National Guard/Reserve: 0.0
+        N/A: 1.0
+      probability_override: null
+  grounding:
+    level: medium
+    method: researched
+    source: Military.com Hampton Roads base guide; Norfolk demographic fact sheet
+      (Navy Mid-Atlantic Region); DoD installation presence data
+    note: Navy dominates Hampton Roads — Naval Station Norfolk is the world's largest
+      naval base. Joint Base Langley-Eustis adds Army/Air Force. Marines at various
+      installations. N/A applies to defense contractors and military spouses with
+      no personal service. Conditioned on military_connection != No Military Connection.
+  constraints:
+  - type: spec_expression
+    value: null
+    expression: abs(sum(weights) - 1.0) < 0.001
+    reason: Weights must sum to 1
+- name: years_of_service
+  type: int
+  category: population_specific
+  description: Total years served in the military (0 if no military connection)
+  scope: individual
+  semantic_type: null
+  identity_type: null
+  display_format: number
+  sampling:
+    strategy: conditional
+    distribution:
+      type: normal
+      mean: 8.0
+      std: 7.0
+      min: 0.0
+      max: null
+      mean_formula: min(age - 18, 8) if age < 30 else 8
+      std_formula: null
+      min_formula: null
+      max_formula: age - 18
+    formula: null
+    depends_on:
+    - military_connection
+    - age
+    modifiers:
+    - when: military_connection == 'No Military Connection'
+      multiply: 0.0
+      add: 0.0
+      weight_overrides: null
+      probability_override: null
+    - when: military_connection == 'Defense Contractor'
+      multiply: 0.0
+      add: 0.0
+      weight_overrides: null
+      probability_override: null
+    - when: military_connection == 'Active Duty'
+      multiply: 1.0
+      add: 0.0
+      weight_overrides: null
+      probability_override: null
+    - when: military_connection == 'Veteran' and age >= 45
+      multiply: 1.1
+      add: 2.0
+      weight_overrides: null
+      probability_override: null
+    - when: military_connection == 'Military Spouse/Dependent'
+      multiply: 0.0
+      add: 0.0
+      weight_overrides: null
+      probability_override: null
+  grounding:
+    level: medium
+    method: extrapolated
+    source: DoD manpower statistics; typical active duty career length; Hampton Roads
+      veteran age distribution
+    note: Mean ~8 years reflects mix of short-service (3-6 yr enlistments) and career
+      military (20+ yr). Bimodal reality (short enlistment vs. retirement-eligible)
+      flattened to normal base; modifiers for age and military_connection type will
+      adjust. Zero for No Military Connection.
+  constraints:
+  - type: hard_min
+    value: 0.0
+    expression: null
+    reason: Zero for non-military; minimum service for military connection is at least
+      1 year
+  - type: expression
+    value: null
+    expression: years_of_service <= age - 18
+    reason: Cannot have served more years than possible given adult age (starting
+      at 18)
+- name: receives_military_pension
+  type: boolean
+  category: population_specific
+  description: Whether the individual receives a military retirement pension (20+
+    years of service)
+  scope: individual
+  semantic_type: null
+  identity_type: null
+  display_format: null
+  sampling:
+    strategy: conditional
+    distribution:
+      type: boolean
+      probability_true: 0.2
+    formula: null
+    depends_on:
+    - military_connection
+    - years_of_service
+    modifiers:
+    - when: military_connection == 'No Military Connection'
+      multiply: null
+      add: null
+      weight_overrides: null
+      probability_override: 0.0
+    - when: military_connection == 'Military Spouse/Dependent'
+      multiply: null
+      add: null
+      weight_overrides: null
+      probability_override: 0.05
+    - when: military_connection == 'Defense Contractor'
+      multiply: null
+      add: null
+      weight_overrides: null
+      probability_override: 0.0
+    - when: military_connection == 'Active Duty' and years_of_service >= 20
+      multiply: null
+      add: null
+      weight_overrides: null
+      probability_override: 0.9
+    - when: military_connection == 'Active Duty' and years_of_service < 20
+      multiply: null
+      add: null
+      weight_overrides: null
+      probability_override: 0.02
+    - when: military_connection == 'Veteran' and years_of_service >= 20
+      multiply: null
+      add: null
+      weight_overrides: null
+      probability_override: 0.88
+    - when: military_connection == 'Veteran' and years_of_service < 20
+      multiply: null
+      add: null
+      weight_overrides: null
+      probability_override: 0.04
+  grounding:
+    level: medium
+    method: extrapolated
+    source: DoD retirement statistics; ~17% of veterans receive military retirement
+      pay nationally; Hampton Roads elevated retiree concentration
+    note: 'Base rate ~20% given elevated retiree population in Hampton Roads. Hard
+      constraint: only possible with 20+ years of service. No Military Connection
+      always False. Active duty under ~38 unlikely unless early retirement scenario.'
+  constraints:
+  - type: expression
+    value: null
+    expression: receives_military_pension == False or years_of_service >= 20
+    reason: Military pension requires 20+ years of service
+- name: healthcare_coverage
+  type: categorical
+  category: population_specific
+  description: 'Primary healthcare coverage type: TRICARE/VA, Employer-Sponsored,
+    ACA/Marketplace, Medicaid, Medicare, Uninsured'
+  scope: household
+  semantic_type: null
+  identity_type: null
+  display_format: null
+  sampling:
+    strategy: conditional
+    distribution:
+      type: categorical
+      options:
+      - TRICARE/VA
+      - Employer-Sponsored
+      - ACA/Marketplace
+      - Medicaid
+      - Medicare
+      - Uninsured
+      weights:
+      - 0.32
+      - 0.38
+      - 0.08
+      - 0.08
+      - 0.09
+      - 0.05
+    formula: null
+    depends_on:
+    - military_connection
+    - employment_status
+    - household_income
+    modifiers:
+    - when: military_connection == 'Active Duty'
+      multiply: null
+      add: null
+      weight_overrides:
+        TRICARE/VA: 0.93
+        Employer-Sponsored: 0.04
+        ACA/Marketplace: 0.01
+        Medicaid: 0.01
+        Medicare: 0.0
+        Uninsured: 0.01
+      probability_override: null
+    - when: military_connection == 'Veteran' and employment_status == 'Employed Full-Time'
+      multiply: null
+      add: null
+      weight_overrides:
+        TRICARE/VA: 0.4
+        Employer-Sponsored: 0.45
+        ACA/Marketplace: 0.05
+        Medicaid: 0.03
+        Medicare: 0.05
+        Uninsured: 0.02
+      probability_override: null
+    - when: military_connection == 'Veteran' and employment_status == 'Retired'
+      multiply: null
+      add: null
+      weight_overrides:
+        TRICARE/VA: 0.58
+        Employer-Sponsored: 0.08
+        ACA/Marketplace: 0.04
+        Medicaid: 0.06
+        Medicare: 0.22
+        Uninsured: 0.02
+      probability_override: null
+    - when: military_connection == 'Military Spouse/Dependent'
+      multiply: null
+      add: null
+      weight_overrides:
+        TRICARE/VA: 0.72
+        Employer-Sponsored: 0.18
+        ACA/Marketplace: 0.04
+        Medicaid: 0.03
+        Medicare: 0.01
+        Uninsured: 0.02
+      probability_override: null
+    - when: military_connection == 'Defense Contractor' and household_income >= 80000
+      multiply: null
+      add: null
+      weight_overrides:
+        TRICARE/VA: 0.05
+        Employer-Sponsored: 0.88
+        ACA/Marketplace: 0.03
+        Medicaid: 0.01
+        Medicare: 0.02
+        Uninsured: 0.01
+      probability_override: null
+    - when: military_connection == 'No Military Connection' and employment_status
+        == 'Employed Full-Time' and household_income >= 60000
+      multiply: null
+      add: null
+      weight_overrides:
+        TRICARE/VA: 0.01
+        Employer-Sponsored: 0.8
+        ACA/Marketplace: 0.07
+        Medicaid: 0.04
+        Medicare: 0.05
+        Uninsured: 0.03
+      probability_override: null
+    - when: military_connection == 'No Military Connection' and household_income <
+        40000
+      multiply: null
+      add: null
+      weight_overrides:
+        TRICARE/VA: 0.01
+        Employer-Sponsored: 0.28
+        ACA/Marketplace: 0.18
+        Medicaid: 0.3
+        Medicare: 0.08
+        Uninsured: 0.15
+      probability_override: null
+  grounding:
+    level: medium
+    method: researched
+    source: 'VA-2 district: 15.1% veteran rate (Census Reporter); TRICARE covers active
+      duty + dependents + retirees; ACS uninsured rate VA ~8%; healthcare.gov veterans
+      coverage guidance'
+    note: TRICARE/VA share ~32% reflects heavy military/veteran presence — far above
+      national ~6%. Employer-sponsored is largest single category for civilians. Uninsured
+      ~5% below national average due to military coverage and strong employment. Medicare
+      elevated due to retired veteran cohort. Military connection strongly shifts
+      toward TRICARE/VA.
+  constraints:
+  - type: spec_expression
+    value: null
+    expression: abs(sum(weights) - 1.0) < 0.001
+    reason: Weights must sum to 1
+- name: healthcare_cost_burden
+  type: categorical
+  category: population_specific
+  description: 'Self-reported healthcare cost burden: No Burden, Manageable, Significant
+    Strain, Crisis-Level'
+  scope: household
+  semantic_type: null
+  identity_type: null
+  display_format: null
+  sampling:
+    strategy: conditional
+    distribution:
+      type: categorical
+      options:
+      - No Burden
+      - Manageable
+      - Significant Strain
+      - Crisis-Level
+      weights:
+      - 0.3
+      - 0.38
+      - 0.22
+      - 0.1
+    formula: null
+    depends_on:
+    - healthcare_coverage
+    - household_income
+    modifiers:
+    - when: healthcare_coverage == 'TRICARE/VA'
+      multiply: null
+      add: null
+      weight_overrides:
+        No Burden: 0.52
+        Manageable: 0.35
+        Significant Strain: 0.1
+        Crisis-Level: 0.03
+      probability_override: null
+    - when: healthcare_coverage == 'Employer-Sponsored' and household_income >= 80000
+      multiply: null
+      add: null
+      weight_overrides:
+        No Burden: 0.38
+        Manageable: 0.42
+        Significant Strain: 0.16
+        Crisis-Level: 0.04
+      probability_override: null
+    - when: healthcare_coverage == 'Employer-Sponsored' and household_income < 80000
+      multiply: null
+      add: null
+      weight_overrides:
+        No Burden: 0.22
+        Manageable: 0.4
+        Significant Strain: 0.28
+        Crisis-Level: 0.1
+      probability_override: null
+    - when: healthcare_coverage == 'ACA/Marketplace'
+      multiply: null
+      add: null
+      weight_overrides:
+        No Burden: 0.14
+        Manageable: 0.34
+        Significant Strain: 0.36
+        Crisis-Level: 0.16
+      probability_override: null
+    - when: healthcare_coverage == 'Medicaid'
+      multiply: null
+      add: null
+      weight_overrides:
+        No Burden: 0.28
+        Manageable: 0.38
+        Significant Strain: 0.24
+        Crisis-Level: 0.1
+      probability_override: null
+    - when: healthcare_coverage == 'Medicare'
+      multiply: null
+      add: null
+      weight_overrides:
+        No Burden: 0.26
+        Manageable: 0.38
+        Significant Strain: 0.26
+        Crisis-Level: 0.1
+      probability_override: null
+    - when: healthcare_coverage == 'Uninsured'
+      multiply: null
+      add: null
+      weight_overrides:
+        No Burden: 0.06
+        Manageable: 0.16
+        Significant Strain: 0.38
+        Crisis-Level: 0.4
+      probability_override: null
+  grounding:
+    level: medium
+    method: extrapolated
+    source: KFF Health Care Cost Survey 2023; ACS Virginia data; TRICARE/VA low-cost
+      coverage for military community
+    note: Nationally ~40% report healthcare as significant financial burden. VA-2
+      skews slightly better due to TRICARE/VA low-premium coverage. TRICARE/VA users
+      shift toward No Burden; uninsured and ACA marketplace users shift toward Significant
+      Strain/Crisis.
+  constraints:
+  - type: spec_expression
+    value: null
+    expression: abs(sum(weights) - 1.0) < 0.001
+    reason: Weights must sum to 1
+- name: economic_security
+  type: categorical
+  category: population_specific
+  description: 'Economic buffer status: Comfortable Savings, Month-to-Month, Paycheck-to-Paycheck,
+    In Debt/Struggling'
+  scope: household
+  semantic_type: null
+  identity_type: null
+  display_format: null
+  sampling:
+    strategy: conditional
+    distribution:
+      type: categorical
+      options:
+      - Comfortable Savings
+      - Month-to-Month
+      - Paycheck-to-Paycheck
+      - In Debt/Struggling
+      weights:
+      - 0.28
+      - 0.28
+      - 0.29
+      - 0.15
+    formula: null
+    depends_on:
+    - household_income
+    - receives_military_pension
+    modifiers:
+    - when: household_income >= 120000 and receives_military_pension == True
+      multiply: null
+      add: null
+      weight_overrides:
+        Comfortable Savings: 0.72
+        Month-to-Month: 0.2
+        Paycheck-to-Paycheck: 0.06
+        In Debt/Struggling: 0.02
+      probability_override: null
+    - when: household_income >= 120000 and receives_military_pension == False
+      multiply: null
+      add: null
+      weight_overrides:
+        Comfortable Savings: 0.58
+        Month-to-Month: 0.28
+        Paycheck-to-Paycheck: 0.11
+        In Debt/Struggling: 0.03
+      probability_override: null
+    - when: household_income >= 75000 and household_income < 120000 and receives_military_pension
+        == True
+      multiply: null
+      add: null
+      weight_overrides:
+        Comfortable Savings: 0.5
+        Month-to-Month: 0.32
+        Paycheck-to-Paycheck: 0.14
+        In Debt/Struggling: 0.04
+      probability_override: null
+    - when: household_income >= 75000 and household_income < 120000 and receives_military_pension
+        == False
+      multiply: null
+      add: null
+      weight_overrides:
+        Comfortable Savings: 0.36
+        Month-to-Month: 0.38
+        Paycheck-to-Paycheck: 0.2
+        In Debt/Struggling: 0.06
+      probability_override: null
+    - when: household_income >= 45000 and household_income < 75000
+      multiply: null
+      add: null
+      weight_overrides:
+        Comfortable Savings: 0.16
+        Month-to-Month: 0.34
+        Paycheck-to-Paycheck: 0.36
+        In Debt/Struggling: 0.14
+      probability_override: null
+    - when: household_income < 45000
+      multiply: null
+      add: null
+      weight_overrides:
+        Comfortable Savings: 0.06
+        Month-to-Month: 0.22
+        Paycheck-to-Paycheck: 0.4
+        In Debt/Struggling: 0.32
+      probability_override: null
+  grounding:
+    level: medium
+    method: extrapolated
+    source: Bankrate 2023 Emergency Savings Report (~57% Americans paycheck-to-paycheck
+      or worse); Hampton Roads cost-of-living; military pension stability literature
+    note: Paycheck-to-Paycheck nationally ~57% combined with struggling. VA-2 median
+      income ~$91K moderates this somewhat. Military pension recipients strongly shift
+      toward Comfortable Savings. Lower income quintiles shift toward In Debt/Struggling.
+      Junior enlisted skew Paycheck-to-Paycheck.
+  constraints:
+  - type: spec_expression
+    value: null
+    expression: abs(sum(weights) - 1.0) < 0.001
+    reason: Weights must sum to 1
+- name: dual_income_household
+  type: boolean
+  category: population_specific
+  description: Whether two or more adults in the household contribute income
+  scope: household
+  semantic_type: null
+  identity_type: null
+  display_format: null
+  sampling:
+    strategy: conditional
+    distribution:
+      type: boolean
+      probability_true: 0.48
+    formula: null
+    depends_on:
+    - marital_status
+    - household_size
+    modifiers:
+    - when: marital_status == 'Married' and household_size >= 2
+      multiply: null
+      add: null
+      weight_overrides: null
+      probability_override: 0.68
+    - when: marital_status == 'Partnered/Cohabiting' and household_size >= 2
+      multiply: null
+      add: null
+      weight_overrides: null
+      probability_override: 0.6
+    - when: marital_status == 'Single'
+      multiply: null
+      add: null
+      weight_overrides: null
+      probability_override: 0.08
+    - when: marital_status == 'Divorced/Separated'
+      multiply: null
+      add: null
+      weight_overrides: null
+      probability_override: 0.14
+    - when: marital_status == 'Widowed'
+      multiply: null
+      add: null
+      weight_overrides: null
+      probability_override: 0.05
+  grounding:
+    level: medium
+    method: extrapolated
+    source: BLS American Time Use Survey 2023; ACS two-earner household rates; military
+      spouse employment literature (~55% of mil spouses employed)
+    note: Nationally ~48% of married couple households are dual income. In military
+      context, frequent PCS moves suppress military spouse employment. Single adults
+      default False. Married modifier boosts probability significantly; divorced/single
+      pulls toward False.
+  constraints:
+  - type: expression
+    value: null
+    expression: dual_income_household == False or household_size >= 2
+    reason: Dual income requires at least 2 people in household
+- name: partisanship_strength
+  type: categorical
+  category: population_specific
+  description: 'Strength of partisan identification: Strong, Moderate, Lean/Weak,
+    True Independent'
+  scope: individual
+  semantic_type: null
+  identity_type: null
+  display_format: null
+  sampling:
+    strategy: conditional
+    distribution:
+      type: categorical
+      options:
+      - Strong
+      - Moderate
+      - Lean/Weak
+      - True Independent
+      weights:
+      - 0.33
+      - 0.27
+      - 0.22
+      - 0.18
+    formula: null
+    depends_on:
+    - party_affiliation
+    modifiers:
+    - when: party_affiliation == 'Republican'
+      multiply: null
+      add: null
+      weight_overrides:
+        Strong: 0.46
+        Moderate: 0.3
+        Lean/Weak: 0.18
+        True Independent: 0.06
+      probability_override: null
+    - when: party_affiliation == 'Democrat'
+      multiply: null
+      add: null
+      weight_overrides:
+        Strong: 0.42
+        Moderate: 0.32
+        Lean/Weak: 0.2
+        True Independent: 0.06
+      probability_override: null
+    - when: party_affiliation == 'Independent/No Party'
+      multiply: null
+      add: null
+      weight_overrides:
+        Strong: 0.04
+        Moderate: 0.18
+        Lean/Weak: 0.38
+        True Independent: 0.4
+      probability_override: null
+    - when: party_affiliation == 'Other'
+      multiply: null
+      add: null
+      weight_overrides:
+        Strong: 0.1
+        Moderate: 0.22
+        Lean/Weak: 0.36
+        True Independent: 0.32
+      probability_override: null
+  grounding:
+    level: medium
+    method: extrapolated
+    source: Pew Research political typology; ANES partisan strength data; competitive
+      swing district literature; VA-2 2024 result 50.7R/49.3D
+    note: 'In a district decided by ~1.4 points, a meaningful True Independent/Lean
+      cohort is required. Strong partisans anchor each party. Party affiliation modifier:
+      Republican/Democrat → higher Strong probability; Independent/No Party → True
+      Independent dominant.'
+  constraints:
+  - type: spec_expression
+    value: null
+    expression: abs(sum(weights) - 1.0) < 0.001
+    reason: Weights must sum to 1
+- name: vote_2024
+  type: categorical
+  category: population_specific
+  description: '2024 presidential vote choice: Trump/Republican, Harris/Democrat,
+    Third Party, Did Not Vote'
+  scope: individual
+  semantic_type: null
+  identity_type: null
+  display_format: null
+  sampling:
+    strategy: conditional
+    distribution:
+      type: categorical
+      options:
+      - Trump/Republican
+      - Harris/Democrat
+      - Third Party
+      - Did Not Vote
+      weights:
+      - 0.38
+      - 0.37
+      - 0.03
+      - 0.22
+    formula: null
+    depends_on:
+    - party_affiliation
+    - partisanship_strength
+    modifiers:
+    - when: party_affiliation == 'Republican' and partisanship_strength == 'Strong'
+      multiply: null
+      add: null
+      weight_overrides:
+        Trump/Republican: 0.92
+        Harris/Democrat: 0.03
+        Third Party: 0.02
+        Did Not Vote: 0.03
+      probability_override: null
+    - when: party_affiliation == 'Republican' and partisanship_strength == 'Moderate'
+      multiply: null
+      add: null
+      weight_overrides:
+        Trump/Republican: 0.8
+        Harris/Democrat: 0.1
+        Third Party: 0.04
+        Did Not Vote: 0.06
+      probability_override: null
+    - when: party_affiliation == 'Republican' and partisanship_strength == 'Lean/Weak'
+      multiply: null
+      add: null
+      weight_overrides:
+        Trump/Republican: 0.65
+        Harris/Democrat: 0.18
+        Third Party: 0.08
+        Did Not Vote: 0.09
+      probability_override: null
+    - when: party_affiliation == 'Democrat' and partisanship_strength == 'Strong'
+      multiply: null
+      add: null
+      weight_overrides:
+        Trump/Republican: 0.03
+        Harris/Democrat: 0.91
+        Third Party: 0.02
+        Did Not Vote: 0.04
+      probability_override: null
+    - when: party_affiliation == 'Democrat' and partisanship_strength == 'Moderate'
+      multiply: null
+      add: null
+      weight_overrides:
+        Trump/Republican: 0.09
+        Harris/Democrat: 0.78
+        Third Party: 0.04
+        Did Not Vote: 0.09
+      probability_override: null
+    - when: party_affiliation == 'Democrat' and partisanship_strength == 'Lean/Weak'
+      multiply: null
+      add: null
+      weight_overrides:
+        Trump/Republican: 0.16
+        Harris/Democrat: 0.62
+        Third Party: 0.08
+        Did Not Vote: 0.14
+      probability_override: null
+    - when: party_affiliation == 'Independent/No Party' and partisanship_strength
+        == 'True Independent'
+      multiply: null
+      add: null
+      weight_overrides:
+        Trump/Republican: 0.32
+        Harris/Democrat: 0.3
+        Third Party: 0.14
+        Did Not Vote: 0.24
+      probability_override: null
+    - when: party_affiliation == 'Independent/No Party' and partisanship_strength
+        == 'Lean/Weak'
+      multiply: null
+      add: null
+      weight_overrides:
+        Trump/Republican: 0.38
+        Harris/Democrat: 0.38
+        Third Party: 0.1
+        Did Not Vote: 0.14
+      probability_override: null
+    - when: party_affiliation == 'Other'
+      multiply: null
+      add: null
+      weight_overrides:
+        Trump/Republican: 0.26
+        Harris/Democrat: 0.22
+        Third Party: 0.3
+        Did Not Vote: 0.22
+      probability_override: null
+  grounding:
+    level: strong
+    method: researched
+    source: 'VA-2 2024 election result: 50.7% R / 49.3% D (per context); Virginia
+      overall 51.8% Harris / 46.1% Trump (DataUSA); national turnout ~63%'
+    note: VA-2 went 50.7R/49.3D, but base distribution before partisanship modifiers
+      reflects slight R lean. Did Not Vote ~22% reflects realistic turnout in a competitive
+      but non-presidential-year-level engagement district. Third party <3% consistent
+      with 2024 national pattern. Partisanship_strength modifier will be critical.
+  constraints:
+  - type: spec_expression
+    value: null
+    expression: abs(sum(weights) - 1.0) < 0.001
+    reason: Weights must sum to 1
+- name: political_engagement
+  type: categorical
+  category: population_specific
+  description: 'Voting and civic engagement level: Always Votes, Occasional Voter,
+    Rarely Votes, Disengaged/Checked Out'
+  scope: individual
+  semantic_type: null
+  identity_type: null
+  display_format: null
+  sampling:
+    strategy: conditional
+    distribution:
+      type: categorical
+      options:
+      - Always Votes
+      - Occasional Voter
+      - Rarely Votes
+      - Disengaged/Checked Out
+      weights:
+      - 0.42
+      - 0.28
+      - 0.16
+      - 0.14
+    formula: null
+    depends_on:
+    - party_affiliation
+    - age
+    modifiers:
+    - when: party_affiliation == 'Republican' and age >= 45
+      multiply: null
+      add: null
+      weight_overrides:
+        Always Votes: 0.68
+        Occasional Voter: 0.22
+        Rarely Votes: 0.07
+        Disengaged/Checked Out: 0.03
+      probability_override: null
+    - when: party_affiliation == 'Republican' and age < 45
+      multiply: null
+      add: null
+      weight_overrides:
+        Always Votes: 0.46
+        Occasional Voter: 0.32
+        Rarely Votes: 0.14
+        Disengaged/Checked Out: 0.08
+      probability_override: null
+    - when: party_affiliation == 'Democrat' and age >= 45
+      multiply: null
+      add: null
+      weight_overrides:
+        Always Votes: 0.65
+        Occasional Voter: 0.23
+        Rarely Votes: 0.08
+        Disengaged/Checked Out: 0.04
+      probability_override: null
+    - when: party_affiliation == 'Democrat' and age < 45
+      multiply: null
+      add: null
+      weight_overrides:
+        Always Votes: 0.42
+        Occasional Voter: 0.34
+        Rarely Votes: 0.15
+        Disengaged/Checked Out: 0.09
+      probability_override: null
+    - when: party_affiliation == 'Independent/No Party' and age >= 45
+      multiply: null
+      add: null
+      weight_overrides:
+        Always Votes: 0.45
+        Occasional Voter: 0.3
+        Rarely Votes: 0.15
+        Disengaged/Checked Out: 0.1
+      probability_override: null
+    - when: party_affiliation == 'Independent/No Party' and age < 45
+      multiply: null
+      add: null
+      weight_overrides:
+        Always Votes: 0.26
+        Occasional Voter: 0.32
+        Rarely Votes: 0.24
+        Disengaged/Checked Out: 0.18
+      probability_override: null
+    - when: party_affiliation == 'Other'
+      multiply: null
+      add: null
+      weight_overrides:
+        Always Votes: 0.28
+        Occasional Voter: 0.34
+        Rarely Votes: 0.22
+        Disengaged/Checked Out: 0.16
+      probability_override: null
+  grounding:
+    level: medium
+    method: extrapolated
+    source: Virginia voter turnout data; Hampton Roads voter participation rate (Hampton
+      FY24 budget supplement); Pew civic engagement research
+    note: 'Competitive swing districts tend to have slightly higher turnout than average.
+      Military community has strong civic participation norm but frequent relocation
+      can suppress registration/voting. Age modifier increases Always Votes for 45+.
+      Party affiliation modifier: Strong partisans are near-always voters.'
+  constraints:
+  - type: spec_expression
+    value: null
+    expression: abs(sum(weights) - 1.0) < 0.001
+    reason: Weights must sum to 1
+- name: top_issue
+  type: categorical
+  category: population_specific
+  description: 'Single most important issue to this voter: Veterans Benefits, Healthcare,
+    Cost of Living, Immigration, Abortion/Reproductive Rights, Education, Defense/National
+    Security, Economy/Jobs'
+  scope: individual
+  semantic_type: null
+  identity_type: null
+  display_format: null
+  sampling:
+    strategy: conditional
+    distribution:
+      type: categorical
+      options:
+      - Veterans Benefits
+      - Healthcare
+      - Cost of Living
+      - Immigration
+      - Abortion/Reproductive Rights
+      - Education
+      - Defense/National Security
+      - Economy/Jobs
+      weights:
+      - 0.14
+      - 0.13
+      - 0.18
+      - 0.12
+      - 0.1
+      - 0.07
+      - 0.11
+      - 0.15
+    formula: null
+    depends_on:
+    - party_affiliation
+    - military_connection
+    modifiers:
+    - when: party_affiliation == 'Republican' and military_connection in ['Active
+        Duty', 'Veteran', 'Military Spouse/Dependent', 'Defense Contractor']
+      multiply: null
+      add: null
+      weight_overrides:
+        Veterans Benefits: 0.18
+        Healthcare: 0.08
+        Cost of Living: 0.16
+        Immigration: 0.22
+        Abortion/Reproductive Rights: 0.03
+        Education: 0.04
+        Defense/National Security: 0.22
+        Economy/Jobs: 0.07
+      probability_override: null
+    - when: party_affiliation == 'Republican' and military_connection == 'No Military
+        Connection'
+      multiply: null
+      add: null
+      weight_overrides:
+        Veterans Benefits: 0.05
+        Healthcare: 0.1
+        Cost of Living: 0.22
+        Immigration: 0.28
+        Abortion/Reproductive Rights: 0.03
+        Education: 0.06
+        Defense/National Security: 0.12
+        Economy/Jobs: 0.14
+      probability_override: null
+    - when: party_affiliation == 'Democrat' and military_connection in ['Active Duty',
+        'Veteran', 'Military Spouse/Dependent']
+      multiply: null
+      add: null
+      weight_overrides:
+        Veterans Benefits: 0.22
+        Healthcare: 0.2
+        Cost of Living: 0.16
+        Immigration: 0.06
+        Abortion/Reproductive Rights: 0.14
+        Education: 0.1
+        Defense/National Security: 0.08
+        Economy/Jobs: 0.04
+      probability_override: null
+    - when: party_affiliation == 'Democrat' and military_connection == 'No Military
+        Connection'
+      multiply: null
+      add: null
+      weight_overrides:
+        Veterans Benefits: 0.06
+        Healthcare: 0.26
+        Cost of Living: 0.2
+        Immigration: 0.06
+        Abortion/Reproductive Rights: 0.2
+        Education: 0.14
+        Defense/National Security: 0.04
+        Economy/Jobs: 0.04
+      probability_override: null
+    - when: party_affiliation == 'Independent/No Party' and military_connection in
+        ['Active Duty', 'Veteran', 'Military Spouse/Dependent', 'Defense Contractor']
+      multiply: null
+      add: null
+      weight_overrides:
+        Veterans Benefits: 0.2
+        Healthcare: 0.14
+        Cost of Living: 0.22
+        Immigration: 0.12
+        Abortion/Reproductive Rights: 0.06
+        Education: 0.06
+        Defense/National Security: 0.14
+        Economy/Jobs: 0.06
+      probability_override: null
+    - when: party_affiliation == 'Independent/No Party' and military_connection ==
+        'No Military Connection'
+      multiply: null
+      add: null
+      weight_overrides:
+        Veterans Benefits: 0.06
+        Healthcare: 0.2
+        Cost of Living: 0.28
+        Immigration: 0.14
+        Abortion/Reproductive Rights: 0.12
+        Education: 0.1
+        Defense/National Security: 0.06
+        Economy/Jobs: 0.04
+      probability_override: null
+  grounding:
+    level: medium
+    method: extrapolated
+    source: LegalClarity VA-2 analysis (defense/veteran affairs central); Gallup 2024
+      issue salience polling; Pew Research 2024 voter priorities; VA-2 district context
+    note: Cost of Living and Economy/Jobs lead for general population given inflation
+      concerns. Veterans Benefits elevated above national average due to 15%+ veteran
+      population. Defense/National Security elevated due to military economy dependence.
+      Abortion elevated for Democrat-leaning women; Immigration for Republican-leaning
+      voters. Party and military_connection modifiers will be large.
+  constraints:
+  - type: spec_expression
+    value: null
+    expression: abs(sum(weights) - 1.0) < 0.001
+    reason: Weights must sum to 1
+- name: primary_news_source
+  type: categorical
+  category: population_specific
+  description: 'Primary source of political news: Local TV (WAVY/WVEC), National Cable
+    (Fox/CNN/MSNBC), Social Media, Talk Radio, Military/Veteran Networks, Online/Podcasts,
+    Does Not Follow News'
+  scope: individual
+  semantic_type: null
+  identity_type: null
+  display_format: null
+  sampling:
+    strategy: conditional
+    distribution:
+      type: categorical
+      options:
+      - Local TV (WAVY/WVEC)
+      - National Cable (Fox/CNN/MSNBC)
+      - Social Media
+      - Talk Radio
+      - Military/Veteran Networks
+      - Online/Podcasts
+      - Does Not Follow News
+      weights:
+      - 0.22
+      - 0.23
+      - 0.2
+      - 0.08
+      - 0.07
+      - 0.12
+      - 0.08
+    formula: null
+    depends_on:
+    - party_affiliation
+    - age
+    modifiers:
+    - when: party_affiliation == 'Republican' and age >= 50
+      multiply: null
+      add: null
+      weight_overrides:
+        Local TV (WAVY/WVEC): 0.22
+        National Cable (Fox/CNN/MSNBC): 0.32
+        Social Media: 0.1
+        Talk Radio: 0.18
+        Military/Veteran Networks: 0.08
+        Online/Podcasts: 0.08
+        Does Not Follow News: 0.02
+      probability_override: null
+    - when: party_affiliation == 'Republican' and age < 50
+      multiply: null
+      add: null
+      weight_overrides:
+        Local TV (WAVY/WVEC): 0.12
+        National Cable (Fox/CNN/MSNBC): 0.22
+        Social Media: 0.26
+        Talk Radio: 0.12
+        Military/Veteran Networks: 0.1
+        Online/Podcasts: 0.16
+        Does Not Follow News: 0.02
+      probability_override: null
+    - when: party_affiliation == 'Democrat' and age >= 50
+      multiply: null
+      add: null
+      weight_overrides:
+        Local TV (WAVY/WVEC): 0.28
+        National Cable (Fox/CNN/MSNBC): 0.3
+        Social Media: 0.12
+        Talk Radio: 0.05
+        Military/Veteran Networks: 0.05
+        Online/Podcasts: 0.16
+        Does Not Follow News: 0.04
+      probability_override: null
+    - when: party_affiliation == 'Democrat' and age < 50
+      multiply: null
+      add: null
+      weight_overrides:
+        Local TV (WAVY/WVEC): 0.12
+        National Cable (Fox/CNN/MSNBC): 0.18
+        Social Media: 0.34
+        Talk Radio: 0.04
+        Military/Veteran Networks: 0.06
+        Online/Podcasts: 0.22
+        Does Not Follow News: 0.04
+      probability_override: null
+    - when: party_affiliation == 'Independent/No Party' and age < 40
+      multiply: null
+      add: null
+      weight_overrides:
+        Local TV (WAVY/WVEC): 0.08
+        National Cable (Fox/CNN/MSNBC): 0.12
+        Social Media: 0.38
+        Talk Radio: 0.06
+        Military/Veteran Networks: 0.08
+        Online/Podcasts: 0.22
+        Does Not Follow News: 0.06
+      probability_override: null
+    - when: party_affiliation == 'Independent/No Party' and age >= 40
+      multiply: null
+      add: null
+      weight_overrides:
+        Local TV (WAVY/WVEC): 0.22
+        National Cable (Fox/CNN/MSNBC): 0.24
+        Social Media: 0.18
+        Talk Radio: 0.1
+        Military/Veteran Networks: 0.08
+        Online/Podcasts: 0.14
+        Does Not Follow News: 0.04
+      probability_override: null
+  grounding:
+    level: medium
+    method: extrapolated
+    source: Pew Research 2024 news consumption; Nielsen local TV ratings Virginia
+      markets; Reuters/Oxford Digital News Report 2023; military community media use
+      studies
+    note: Local TV (WAVY NBC 10, WVEC ABC 13) remains dominant in Hampton Roads market.
+      National cable elevated in politically engaged population. Social Media primary
+      source for under-35. Military/Veteran Networks (Stars and Stripes, Task & Purpose,
+      MOAA) niche but meaningful here. Age modifier shifts toward Social Media for
+      youth, Local TV for 55+.
+  constraints:
+  - type: spec_expression
+    value: null
+    expression: abs(sum(weights) - 1.0) < 0.001
+    reason: Weights must sum to 1
+- name: social_media_political_use
+  type: boolean
+  category: population_specific
+  description: Whether the individual regularly uses social media as a political information
+    source
+  scope: individual
+  semantic_type: null
+  identity_type: null
+  display_format: null
+  sampling:
+    strategy: conditional
+    distribution:
+      type: boolean
+      probability_true: 0.48
+    formula: null
+    depends_on:
+    - age
+    - primary_news_source
+    modifiers:
+    - when: age < 35 and primary_news_source == 'Social Media'
+      multiply: null
+      add: null
+      weight_overrides: null
+      probability_override: 0.88
+    - when: age < 35 and primary_news_source != 'Social Media'
+      multiply: null
+      add: null
+      weight_overrides: null
+      probability_override: 0.52
+    - when: age >= 35 and age < 55 and primary_news_source == 'Social Media'
+      multiply: null
+      add: null
+      weight_overrides: null
+      probability_override: 0.75
+    - when: age >= 35 and age < 55 and primary_news_source != 'Social Media'
+      multiply: null
+      add: null
+      weight_overrides: null
+      probability_override: 0.36
+    - when: age >= 55 and primary_news_source == 'Social Media'
+      multiply: null
+      add: null
+      weight_overrides: null
+      probability_override: 0.6
+    - when: age >= 55 and primary_news_source != 'Social Media'
+      multiply: null
+      add: null
+      weight_overrides: null
+      probability_override: 0.2
+  grounding:
+    level: medium
+    method: extrapolated
+    source: 'Pew Research 2023: ~48% of US adults regularly get news from social media;
+      younger cohorts 60-70%, older cohorts 20-30%'
+    note: 'Base rate ~48% consistent with Pew 2023 national data. Strong age gradient:
+      under 35 ~65%, over 55 ~25%. Social Media primary_news_source boosts probability
+      to ~90%. Military community may be slightly below average given OPSEC culture.'
+  constraints: []
+- name: va_system_user
+  type: boolean
+  category: population_specific
+  description: Whether the individual uses the VA healthcare or benefits system
+  scope: individual
+  semantic_type: null
+  identity_type: null
+  display_format: null
+  sampling:
+    strategy: conditional
+    distribution:
+      type: boolean
+      probability_true: 0.18
+    formula: null
+    depends_on:
+    - military_connection
+    - healthcare_coverage
+    modifiers:
+    - when: military_connection == 'Veteran' and healthcare_coverage == 'TRICARE/VA'
+      multiply: null
+      add: null
+      weight_overrides: null
+      probability_override: 0.94
+    - when: military_connection == 'Veteran' and healthcare_coverage != 'TRICARE/VA'
+      multiply: null
+      add: null
+      weight_overrides: null
+      probability_override: 0.45
+    - when: military_connection == 'Active Duty'
+      multiply: null
+      add: null
+      weight_overrides: null
+      probability_override: 0.2
+    - when: military_connection == 'Military Spouse/Dependent'
+      multiply: null
+      add: null
+      weight_overrides: null
+      probability_override: 0.1
+    - when: military_connection == 'Defense Contractor'
+      multiply: null
+      add: null
+      weight_overrides: null
+      probability_override: 0.08
+    - when: military_connection == 'No Military Connection'
+      multiply: null
+      add: null
+      weight_overrides: null
+      probability_override: 0.02
+  grounding:
+    level: medium
+    method: extrapolated
+    source: 'VA Annual Benefits Report 2023: ~9M veterans enrolled in VA healthcare
+      nationally; VA Hampton health care system serves large regional veteran population;
+      ~15.1% veteran rate in VA-2'
+    note: Base ~18% reflects elevated veteran/military population in VA-2. Among veterans
+      specifically, ~40-50% use VA healthcare. Active duty use TRICARE not VA. Military
+      spouses/dependents rarely use VA directly. Non-military connection always False
+      (enforced by constraint).
+  constraints:
+  - type: expression
+    value: null
+    expression: va_system_user == False or military_connection in ['Active Duty',
+      'Veteran', 'Military Spouse/Dependent']
+    reason: VA system use restricted to those with military connection (veterans,
+      active duty, qualifying dependents)
+- name: institution_trust
+  type: categorical
+  category: population_specific
+  description: 'General trust level in major institutions (government, military, media):
+    High Trust, Moderate Trust, Low Trust, Deeply Skeptical'
+  scope: individual
+  semantic_type: null
+  identity_type: null
+  display_format: null
+  sampling:
+    strategy: conditional
+    distribution:
+      type: categorical
+      options:
+      - High Trust
+      - Moderate Trust
+      - Low Trust
+      - Deeply Skeptical
+      weights:
+      - 0.15
+      - 0.32
+      - 0.3
+      - 0.23
+    formula: null
+    depends_on:
+    - party_affiliation
+    - military_connection
+    modifiers:
+    - when: party_affiliation == 'Republican' and military_connection in ['Active
+        Duty', 'Veteran', 'Military Spouse/Dependent']
+      multiply: null
+      add: null
+      weight_overrides:
+        High Trust: 0.18
+        Moderate Trust: 0.34
+        Low Trust: 0.3
+        Deeply Skeptical: 0.18
+      probability_override: null
+    - when: party_affiliation == 'Republican' and military_connection == 'No Military
+        Connection'
+      multiply: null
+      add: null
+      weight_overrides:
+        High Trust: 0.08
+        Moderate Trust: 0.26
+        Low Trust: 0.36
+        Deeply Skeptical: 0.3
+      probability_override: null
+    - when: party_affiliation == 'Democrat' and military_connection in ['Active Duty',
+        'Veteran', 'Military Spouse/Dependent']
+      multiply: null
+      add: null
+      weight_overrides:
+        High Trust: 0.22
+        Moderate Trust: 0.42
+        Low Trust: 0.26
+        Deeply Skeptical: 0.1
+      probability_override: null
+    - when: party_affiliation == 'Democrat' and military_connection == 'No Military
+        Connection'
+      multiply: null
+      add: null
+      weight_overrides:
+        High Trust: 0.18
+        Moderate Trust: 0.4
+        Low Trust: 0.28
+        Deeply Skeptical: 0.14
+      probability_override: null
+    - when: party_affiliation == 'Independent/No Party'
+      multiply: null
+      add: null
+      weight_overrides:
+        High Trust: 0.1
+        Moderate Trust: 0.3
+        Low Trust: 0.36
+        Deeply Skeptical: 0.24
+      probability_override: null
+    - when: party_affiliation == 'Other'
+      multiply: null
+      add: null
+      weight_overrides:
+        High Trust: 0.08
+        Moderate Trust: 0.24
+        Low Trust: 0.36
+        Deeply Skeptical: 0.32
+      probability_override: null
+  grounding:
+    level: medium
+    method: extrapolated
+    source: Gallup 2023 institutional confidence survey (Congress ~8% high confidence,
+      military ~60%); Pew Research trust in government 2023; Reagan-era military trust
+      literature
+    note: Military community tends to have higher trust in the military as an institution
+      but lower trust in Congress and media. Gallup shows very low congressional trust
+      (~8%) nationally. Deeply Skeptical elevated in a competitive district with anti-establishment
+      currents on both sides. Party affiliation (out-of-power party more skeptical)
+      and military_connection modifiers will be significant.
+  constraints:
+  - type: spec_expression
+    value: null
+    expression: abs(sum(weights) - 1.0) < 0.001
+    reason: Weights must sum to 1
+- name: susceptibility_to_persuasion
+  type: float
+  category: personality
+  description: Likelihood of shifting political views or vote choice in response to
+    new information or messaging
+  scope: individual
+  semantic_type: null
+  identity_type: null
+  display_format: null
+  sampling:
+    strategy: conditional
+    distribution:
+      type: beta
+      alpha: 2.5
+      beta: 4.6
+      min: 0.0
+      max: 1.0
+      min_formula: null
+      max_formula: null
+    formula: null
+    depends_on:
+    - partisanship_strength
+    - openness
+    modifiers:
+    - when: partisanship_strength == 'Strong'
+      multiply: 0.55
+      add: -0.05
+      weight_overrides: null
+      probability_override: null
+    - when: partisanship_strength == 'Moderate'
+      multiply: 0.85
+      add: 0.0
+      weight_overrides: null
+      probability_override: null
+    - when: partisanship_strength == 'Lean/Weak'
+      multiply: 1.1
+      add: 0.05
+      weight_overrides: null
+      probability_override: null
+    - when: partisanship_strength == 'True Independent'
+      multiply: 1.25
+      add: 0.1
+      weight_overrides: null
+      probability_override: null
+  grounding:
+    level: low
+    method: estimated
+    source: Pew Research partisan sorting literature; ANES persuadable voter estimates;
+      competitive district swing voter analysis
+    note: 'Mean ~0.35 reflects that most adults have settled partisan views; true
+      persuadables are a minority. Beta distribution keeps values bounded [0,1] with
+      right skew (most people low-to-moderate). Modifiers: high openness and True
+      Independent partisanship_strength will strongly increase; Strong partisan identity
+      and low openness will decrease. This is a latent construct — no direct survey
+      benchmark.'
+  constraints:
+  - type: hard_min
+    value: 0.0
+    expression: null
+    reason: Probability floor
+  - type: hard_max
+    value: 1.0
+    expression: null
+    reason: Probability ceiling
+sampling_order:
+- age
+- agreeableness
+- authoritarian_orientation
+- conscientiousness
+- education_level
+- extraversion
+- gender
+- marital_status
+- household_size
+- dual_income_household
+- military_connection
+- employment_status
+- household_income
+- healthcare_coverage
+- healthcare_cost_burden
+- housing_tenure
+- military_branch
+- neuroticism
+- occupation
+- openness
+- party_affiliation
+- institution_trust
+- partisanship_strength
+- political_engagement
+- primary_news_source
+- race_ethnicity
+- religious_affiliation
+- social_media_political_use
+- sub_geography
+- susceptibility_to_persuasion
+- top_issue
+- va_system_user
+- vote_2024
+- years_of_service
+- receives_military_pension
+- economic_security
